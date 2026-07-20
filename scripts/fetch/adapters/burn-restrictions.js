@@ -48,12 +48,14 @@ export function parseCoemRestrictionHtml(html) {
   const map = new Map();
   const raw = String(html ?? '');
 
-  // Strip tags lightly for text matching across headings
+  // Strip tags lightly for text matching across headings.
+  // End tags allow optional attrs/whitespace before `>` (browsers accept
+  // `</script >` / `</script foo>` even though they are parse errors).
   const text = raw
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script\b[\s\S]*?<\/script\b[^>]*>/gi, ' ')
+    .replace(/<style\b[\s\S]*?<\/style\b[^>]*>/gi, ' ')
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(?:p|div|h[1-6]|li|tr)>/gi, '\n')
+    .replace(/<\/(?:p|div|h[1-6]|li|tr)\b[^>]*>/gi, '\n')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
     .replace(/&amp;/gi, '&')
