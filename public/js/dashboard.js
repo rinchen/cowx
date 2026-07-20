@@ -104,29 +104,26 @@ function seriesHasValues(arr) {
  * Hash routing owns `location.hash`, so in-page jumps use data-jump-to + click handler.
  * @param {string} label
  * @param {string} valueHtml — trusted HTML for the value line (already escaped text or SVG)
- * @param {string | null | undefined} [source]
  * @param {string | null | undefined} [href] — section id (`hourly-heading`) or https URL
  */
-function detailItemLinked(label, valueHtml, source, href) {
+function detailItemLinked(label, valueHtml, href) {
   if (valueHtml == null || valueHtml === '') return '';
-  const src = source ? ` <span class="detail-source">${escapeHtml(source)}</span>` : '';
-  const value = `${valueHtml}${src}`;
   if (!href) {
-    return `<div><dt>${escapeHtml(label)}</dt><dd>${value}</dd></div>`;
+    return `<div><dt>${escapeHtml(label)}</dt><dd>${valueHtml}</dd></div>`;
   }
   const external = /^https?:\/\//i.test(href);
   if (external) {
     return `<div class="summary-detail">
       <a class="detail-jump" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">
         <span class="detail-jump__label">${escapeHtml(label)}</span>
-        <span class="detail-jump__value">${value}</span>
+        <span class="detail-jump__value">${valueHtml}</span>
       </a>
     </div>`;
   }
   return `<div class="summary-detail">
     <a class="detail-jump" href="#${escapeHtml(href)}" data-jump-to="${escapeHtml(href)}">
       <span class="detail-jump__label">${escapeHtml(label)}</span>
-      <span class="detail-jump__value">${value}</span>
+      <span class="detail-jump__value">${valueHtml}</span>
     </a>
   </div>`;
 }
@@ -134,24 +131,22 @@ function detailItemLinked(label, valueHtml, source, href) {
 /**
  * @param {string} label
  * @param {string | null | undefined} value
- * @param {string | null | undefined} [source]
  * @param {string | null | undefined} [href]
  */
-function detailItem(label, value, source, href) {
+function detailItem(label, value, href) {
   if (value == null || value === '') return '';
-  return detailItemLinked(label, escapeHtml(value), source, href);
+  return detailItemLinked(label, escapeHtml(value), href);
 }
 
 /**
  * Like detailItem but allows trusted HTML in the value (e.g. wind compass SVG).
  * @param {string} label
  * @param {string | null | undefined} html
- * @param {string | null | undefined} [source]
  * @param {string | null | undefined} [href]
  */
-function detailItemHtml(label, html, source, href) {
+function detailItemHtml(label, html, href) {
   if (html == null || html === '') return '';
-  return detailItemLinked(label, html, source, href);
+  return detailItemLinked(label, html, href);
 }
 
 /**
@@ -674,19 +669,6 @@ function airQualityPlain(airnow, purpleair, omaq) {
 }
 
 /**
- * @param {Record<string, unknown> | null} airnow
- * @param {Record<string, unknown> | null} purpleair
- * @param {Record<string, unknown> | null} omaq
- * @returns {string | null}
- */
-function airQualitySourceLabel(airnow, purpleair, omaq) {
-  if (airnow?.aqi != null) return 'AirNow';
-  if (purpleair?.aqi_pm25 != null) return 'PurpleAir';
-  if (omaq?.us_aqi != null) return 'Open-Meteo AQ';
-  return null;
-}
-
-/**
  * @param {Record<string, unknown>[]} alerts
  * @returns {string}
  */
@@ -733,7 +715,6 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
   const sunrises = /** @type {string[]} */ (daily?.sunrise ?? []);
   const sunsets = /** @type {string[]} */ (daily?.sunset ?? []);
   const nowIsDay = isDaytime(new Date().toISOString(), sunrises, sunsets);
-  const omSrc = 'Open-Meteo';
 
   const header = document.createElement('header');
   header.className = 'dashboard-header';
@@ -804,7 +785,6 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
     const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
     const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
     const aq = airQualityPlain(airnow, purpleair, omaq);
-    const aqSrc = airQualitySourceLabel(airnow, purpleair, omaq);
 
     const aviation = /** @type {Record<string, unknown> | null} */ (data.aviation ?? null);
     const flightCat =
@@ -852,8 +832,8 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
       current.precip_in != null ? `${Number(current.precip_in).toFixed(2)} in this hour` : null;
 
     const alertBody = hasAlerts
-      ? `<strong>Alerts:</strong> ${escapeHtml(alertText)} <span class="detail-source">NWS</span>`
-      : '<strong>Alerts:</strong> None active for this area. <span class="detail-source">NWS</span>';
+      ? `<strong>Alerts:</strong> ${escapeHtml(alertText)}`
+      : '<strong>Alerts:</strong> None active for this area.';
 
     summarySection.innerHTML = `
       <h2 id="summary-heading">Current conditions</h2>
@@ -867,28 +847,28 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
             <p class="summary-temp" aria-label="Temperature">
               ${Math.round(Number(current.temp_f))}°F
             </p>
-            <p class="summary-conditions">${escapeHtml(String(current.condition ?? wmoLabel(code)))} <span class="detail-source">${escapeHtml(omSrc)}</span></p>
+            <p class="summary-conditions">${escapeHtml(String(current.condition ?? wmoLabel(code)))}</p>
           </a>
         </div>
         <dl class="summary-details">
-          ${detailItem('Feels like', current.feels_like_f != null ? `${Math.round(Number(current.feels_like_f))}°F` : null, omSrc, 'hourly-heading')}
-          ${detailItem('Today’s range', todayHi != null && todayLo != null ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F` : null, omSrc, 'daily-heading')}
-          ${detailItem('Chance of precip', precipChance != null ? `${precipChance}% this hour` : null, omSrc, 'hourly-heading')}
-          ${detailItem('Precipitation', precipIn, omSrc, 'hourly-heading')}
-          ${detailItem('Humidity', current.humidity != null ? `${current.humidity}%` : null, omSrc, 'hourly-heading')}
-          ${detailItem('Dewpoint', hourDew != null ? `${Math.round(hourDew)}°F` : null, omSrc, 'hourly-heading')}
-          ${detailItemHtml('Wind', windHtml, omSrc, 'hourly-heading')}
-          ${detailItem('Thunderstorm', tstormNow, omSrc, 'hourly-heading')}
-          ${detailItem('Visibility', hourVis != null ? fmtVisibility(hourVis) : null, omSrc, 'hourly-heading')}
-          ${detailItem('Cloud cover', current.cloud_cover != null ? `${current.cloud_cover}%` : null, omSrc, 'hourly-heading')}
-          ${detailItem('Pressure', current.pressure_mb != null ? `${Math.round(Number(current.pressure_mb))} mb` : null, omSrc, 'sources-heading')}
-          ${detailItem('UV index', uvPlain(/** @type {number | null} */ (current.uv_index ?? null)), omSrc, 'daily-heading')}
-          ${detailItem('Air quality', aq, aqSrc, aq ? 'aqi-heading' : null)}
-          ${detailItem('Sunrise', sunrise ? fmtClock(sunrise) : null, omSrc, 'daily-heading')}
-          ${detailItem('Sunset', sunset ? fmtClock(sunset) : null, omSrc, 'daily-heading')}
-          ${detailItem('Morning golden hour', golden.morning, omSrc, 'daily-heading')}
-          ${detailItem('Evening golden hour', golden.evening, omSrc, 'daily-heading')}
-          ${detailItem('Aviation', flightCat, flightCat ? 'AWC METAR' : null, flightCat ? 'metar-heading' : null)}
+          ${detailItem('Feels like', current.feels_like_f != null ? `${Math.round(Number(current.feels_like_f))}°F` : null, 'hourly-heading')}
+          ${detailItem('Today’s range', todayHi != null && todayLo != null ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F` : null, 'daily-heading')}
+          ${detailItem('Chance of precip', precipChance != null ? `${precipChance}% this hour` : null, 'hourly-heading')}
+          ${detailItem('Precipitation', precipIn, 'hourly-heading')}
+          ${detailItem('Humidity', current.humidity != null ? `${current.humidity}%` : null, 'hourly-heading')}
+          ${detailItem('Dewpoint', hourDew != null ? `${Math.round(hourDew)}°F` : null, 'hourly-heading')}
+          ${detailItemHtml('Wind', windHtml, 'hourly-heading')}
+          ${detailItem('Thunderstorm', tstormNow, 'hourly-heading')}
+          ${detailItem('Visibility', hourVis != null ? fmtVisibility(hourVis) : null, 'hourly-heading')}
+          ${detailItem('Cloud cover', current.cloud_cover != null ? `${current.cloud_cover}%` : null, 'hourly-heading')}
+          ${detailItem('Pressure', current.pressure_mb != null ? `${Math.round(Number(current.pressure_mb))} mb` : null, 'sources-heading')}
+          ${detailItem('UV index', uvPlain(/** @type {number | null} */ (current.uv_index ?? null)), 'daily-heading')}
+          ${detailItem('Air quality', aq, aq ? 'aqi-heading' : null)}
+          ${detailItem('Sunrise', sunrise ? fmtClock(sunrise) : null, 'daily-heading')}
+          ${detailItem('Sunset', sunset ? fmtClock(sunset) : null, 'daily-heading')}
+          ${detailItem('Morning golden hour', golden.morning, 'daily-heading')}
+          ${detailItem('Evening golden hour', golden.evening, 'daily-heading')}
+          ${detailItem('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
         </dl>
       </div>
       ${data.updatedAt ? `<p class="updated-at">Location snapshot ${fmtDateTime(String(data.updatedAt))} · <a class="detail-jump detail-jump--inline" href="#sources-heading" data-jump-to="sources-heading">Live data sources</a></p>` : ''}

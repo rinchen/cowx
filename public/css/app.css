@@ -603,19 +603,6 @@ main {
   color: var(--color-accent-hover);
 }
 
-.detail-source {
-  display: inline;
-  margin-left: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--color-text-muted);
-}
-
-.detail-source::before {
-  content: '· ';
-}
-
 .sources-card {
   margin: 1.25rem 0 0;
   padding: 1.25rem 1.35rem;
