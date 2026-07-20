@@ -1271,7 +1271,68 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
   root.appendChild(summarySection);
   bindDetailJumps(summarySection);
 
+  appendDeepForecast(root, data, {
+    sources: metaSources,
+    sunrises,
+    sunsets,
+    elevationFt,
+    links,
+    includeMapSlot: true,
+  });
+
+  const favBtn = /** @type {HTMLButtonElement | null} */ (root.querySelector('#btn-favorite'));
+  favBtn?.addEventListener('click', () => {
+    const next = onFavoriteToggle(slug);
+    favBtn.setAttribute('aria-pressed', String(next));
+    favBtn.setAttribute('aria-label', next ? 'Remove from favorites' : 'Add to favorites');
+    const span = favBtn.querySelector('span');
+    if (span) span.textContent = next ? '★' : '☆';
+  });
+}
+
+/**
+ * Hourly/daily tables + collapsible detail sections (no summary header or map).
+ * @param {HTMLElement} root
+ * @param {Record<string, unknown>} data
+ * @param {{ sources?: unknown[], includeMapSlot?: boolean }} [options]
+ */
+export function renderDeepForecast(root, data, options = {}) {
+  const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
+  const sunrises = /** @type {string[]} */ (daily?.sunrise ?? []);
+  const sunsets = /** @type {string[]} */ (daily?.sunset ?? []);
+  const elevationFt =
+    data.elevation_ft != null && !Number.isNaN(Number(data.elevation_ft))
+      ? Number(data.elevation_ft)
+      : null;
+  const links = /** @type {Record<string, string | null>} */ (data.links ?? {});
+  const metaSources = Array.isArray(options.sources) ? options.sources : [];
+  appendDeepForecast(root, data, {
+    sources: metaSources,
+    sunrises,
+    sunsets,
+    elevationFt,
+    links,
+    includeMapSlot: options.includeMapSlot === true,
+  });
+}
+
+/**
+ * @param {HTMLElement} root
+ * @param {Record<string, unknown>} data
+ * @param {{
+ *   sources: unknown[],
+ *   sunrises: string[],
+ *   sunsets: string[],
+ *   elevationFt: number | null,
+ *   links: Record<string, string | null>,
+ *   includeMapSlot?: boolean,
+ * }} ctx
+ */
+function appendDeepForecast(root, data, ctx) {
+  const { sunrises, sunsets, elevationFt, links, sources: metaSources } = ctx;
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
+  const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
+
   if (!hourly?.time || !Array.isArray(hourly.time) || hourly.time.length === 0) {
     const empty = document.createElement('div');
     renderEmpty(
@@ -1309,10 +1370,11 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
     );
   }
 
-  const mapSlot = document.createElement('div');
-  mapSlot.id = 'map-slot';
-  mapSlot.className = 'map-slot';
-  mapSlot.innerHTML = `
+  if (ctx.includeMapSlot) {
+    const mapSlot = document.createElement('div');
+    mapSlot.id = 'map-slot';
+    mapSlot.className = 'map-slot';
+    mapSlot.innerHTML = `
     <section class="map-section" aria-labelledby="map-heading">
       <h2 id="map-heading">Local map &amp; radar</h2>
       <p class="map-lead">Regional view with RainViewer radar (zoom fixed for supported radar tiles). Alert polygons load when available.</p>
@@ -1329,7 +1391,8 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
       <div id="map-container" class="map-container"></div>
     </section>
   `;
-  root.appendChild(mapSlot);
+    root.appendChild(mapSlot);
+  }
 
   const sections = document.createElement('div');
   sections.className = 'dashboard-sections';
@@ -1831,13 +1894,5 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
 
   renderLiveSourcesPanel(sections, data, metaSources);
   root.appendChild(sections);
-
-  const favBtn = /** @type {HTMLButtonElement | null} */ (root.querySelector('#btn-favorite'));
-  favBtn?.addEventListener('click', () => {
-    const next = onFavoriteToggle(slug);
-    favBtn.setAttribute('aria-pressed', String(next));
-    favBtn.setAttribute('aria-label', next ? 'Remove from favorites' : 'Add to favorites');
-    const span = favBtn.querySelector('span');
-    if (span) span.textContent = next ? '★' : '☆';
-  });
+  bindDetailJumps(root);
 }

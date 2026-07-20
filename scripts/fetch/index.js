@@ -18,6 +18,8 @@ import { fetchPurpleAir } from './adapters/purpleair.js';
 import { fetchAirNow } from './adapters/airnow.js';
 import { fetchUsgs } from './adapters/usgs.js';
 import { fetchSnotel } from './adapters/snotel.js';
+import { fetchCdot } from './adapters/cdot.js';
+import { fetchCwop } from './adapters/cwop.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
@@ -102,6 +104,16 @@ export async function runFetch() {
   totalCalls += snotel.calls ?? 0;
   console.log(`  snotel: ${snotel.status} (${snotel.bySlug.size} locs)`);
 
+  const cdot = await fetchCdot(locations);
+  sources.push(sourceMeta('cdot', cdot));
+  totalCalls += cdot.calls ?? 0;
+  console.log(`  cdot: ${cdot.status}`);
+
+  const cwop = await fetchCwop(locations);
+  sources.push(sourceMeta('cwop', cwop));
+  totalCalls += cwop.calls ?? 0;
+  console.log(`  cwop: ${cwop.status}`);
+
   const updatedAt = new Date().toISOString();
   const index = [];
   let staleCount = 0;
@@ -139,6 +151,8 @@ export async function runFetch() {
     const omaq = openmeteoAq.bySlug.get(loc.slug) ?? null;
     const gauge = usgs.bySlug.get(loc.slug) ?? null;
     const snow = snotel.bySlug.get(loc.slug) ?? null;
+    const cdotRec = cdot.bySlug.get(loc.slug) ?? null;
+    const cwopRec = cwop.bySlug.get(loc.slug) ?? null;
 
     const payload = {
       slug: loc.slug,
@@ -165,6 +179,10 @@ export async function runFetch() {
       openmeteo_aq: omaq,
       usgs: gauge,
       snotel: snow,
+      cdot_camera: cdotRec?.camera ?? null,
+      cdot_rwis: cdotRec?.rwis ?? null,
+      cwop: cwopRec,
+      rf_comms: om?.rf_comms ?? prior?.rf_comms ?? null,
       links: {
         nws_forecast: `https://forecast.weather.gov/MapClick.php?lat=${loc.lat}&lon=${loc.lon}`,
         pws: loc.pws_id
@@ -177,6 +195,7 @@ export async function runFetch() {
         rainviewer: 'https://www.rainviewer.com/map.html',
         usgs: gauge?.url ?? 'https://waterdata.usgs.gov/nwis/rt',
         snotel: snow?.url ?? 'https://www.nrcs.usda.gov/wps/portal/wcc/home/',
+        cotrip: 'https://maps.cotrip.org/',
       },
     };
 
@@ -213,6 +232,18 @@ export async function runFetch() {
   await writeFile(
     path.join(DATA_DIR, 'alerts.geojson'),
     JSON.stringify(nws.alertsGeoJson ?? { type: 'FeatureCollection', features: [] }),
+    'utf8',
+  );
+
+  await writeFile(
+    path.join(DATA_DIR, 'cdot-cameras.geojson'),
+    JSON.stringify(cdot.camerasGeoJson ?? { type: 'FeatureCollection', features: [] }),
+    'utf8',
+  );
+
+  await writeFile(
+    path.join(DATA_DIR, 'cwop.geojson'),
+    JSON.stringify(cwop.geojson ?? { type: 'FeatureCollection', features: [] }),
     'utf8',
   );
 

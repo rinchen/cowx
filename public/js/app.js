@@ -7,8 +7,8 @@ import {
   toggleFavorite,
 } from './favorites.js';
 import { getFavoriteLocations, searchLocations } from './search.js';
-import { renderDashboard } from './dashboard.js';
-import { bindRadarControls, destroyMap, initStateMap, setRadarOverlay } from './map.js';
+import { renderWorkspace } from './workspace.js';
+import { destroyMap } from './map.js';
 
 /** @typedef {{ slug: string; name: string; lat: number; lon: number; county?: string }} IndexEntry */
 /** @typedef {{ city: string; county: string; slug: string }} ZipEntry */
@@ -178,6 +178,8 @@ function updateFooterTimestamp() {
     aviation: 'AWC',
     purpleair: 'PurpleAir',
     airnow: 'AirNow',
+    cdot: 'CDOT',
+    cwop: 'CWOP/APRS',
   };
   const names = sourceIds
     .map((id) => sourceLabels[/** @type {keyof typeof sourceLabels} */ (id)] ?? id)
@@ -211,6 +213,7 @@ function formatTimestamp(iso) {
 async function renderResolveView() {
   if (!els.main) return;
   destroyMap();
+  document.body.classList.remove('workspace-active');
 
   const preferred = getPreferredSlug();
   const preferredLoc = preferred ? findLocation(preferred) : null;
@@ -374,6 +377,7 @@ async function renderLocationView(slug) {
 
   const indexEntry = findLocation(slug);
   if (!indexEntry) {
+    document.body.classList.remove('workspace-active');
     els.main.innerHTML = `
       <section class="error-card">
         <h1>Location not found</h1>
@@ -393,6 +397,7 @@ async function renderLocationView(slug) {
   try {
     payload = await fetchJson(`locations/${slug}.json`);
   } catch {
+    document.body.classList.remove('workspace-active');
     els.main.innerHTML = `
       <section class="error-card">
         <h1>Data unavailable</h1>
@@ -405,57 +410,26 @@ async function renderLocationView(slug) {
     return;
   }
 
-  els.main.innerHTML = `<div id="dashboard-root"></div>`;
+  els.main.innerHTML = `<div id="workspace-root"></div>`;
+  const wsRoot = document.getElementById('workspace-root');
+  if (!wsRoot) return;
 
-  const dashRoot = document.getElementById('dashboard-root');
-  if (!dashRoot) return;
+  document.body.classList.add('workspace-active');
 
-  const syncFavorite = (s) => {
-    const starred = toggleFavorite(s);
-    renderFavoritesList(null);
-    return starred;
-  };
-
-  renderDashboard(
-    dashRoot,
-    /** @type {Record<string, unknown>} */ (payload),
-    syncFavorite,
-    isFavorite(slug),
-    {
-      sources: Array.isArray(meta?.sources) ? /** @type {unknown[]} */ (meta.sources) : [],
+  const { headline } = renderWorkspace(wsRoot, /** @type {Record<string, unknown>} */ (payload), {
+    locations,
+    starred: isFavorite(slug),
+    onFavoriteToggle: (s) => {
+      const starred = toggleFavorite(s);
+      renderFavoritesList(null);
+      return starred;
     },
-  );
-
-  const mapContainer = /** @type {HTMLElement | null} */ (document.getElementById('map-container'));
-  const mapControls = /** @type {HTMLElement | null} */ (
-    document.querySelector('#map-slot .map-controls')
-  );
-  if (!mapContainer || !mapControls) return;
-
-  initStateMap(mapContainer, locations, slug, (s) => navigateTo(s), {
-    loadAlerts: true,
-    alertsUrl: `${DATA_BASE}/alerts.geojson`,
-    fixedView: true,
-    onAlertsError: (msg) => {
-      announce(`Alert map unavailable: ${msg}`);
-    },
+    sources: Array.isArray(meta?.sources) ? /** @type {unknown[]} */ (meta.sources) : [],
+    onAnnounce: announce,
+    dataBase: DATA_BASE,
   });
-  bindRadarControls(
-    mapControls,
-    async (enabled, opacity) => {
-      const ok = await setRadarOverlay(enabled, opacity);
-      if (enabled && !ok) {
-        announce('RainViewer radar could not load; map basemap is still available.');
-        const toggle = /** @type {HTMLInputElement | null} */ (
-          document.getElementById('radar-toggle')
-        );
-        if (toggle) toggle.checked = false;
-      }
-    },
-    { defaultOn: true },
-  );
 
-  announce(`Showing weather for ${indexEntry.name}`);
+  announce(`Showing weather for ${indexEntry.name}. ${headline}`);
   document.title = `${indexEntry.name} — COWX`;
 }
 

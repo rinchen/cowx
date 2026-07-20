@@ -1345,3 +1345,437 @@ main {
 .page-content p {
   color: var(--color-text-muted);
 }
+
+/* —— Locality workspace (Option D) —— */
+:root {
+  --glass-bg: rgb(15 23 42 / 72%);
+  --glass-bg-strong: rgb(15 23 42 / 88%);
+  --glass-border: rgb(148 163 184 / 28%);
+  --glass-text: #f1f5f9;
+  --glass-muted: #cbd5e1;
+  --glass-accent: #7dd3fc;
+}
+
+body.workspace-active {
+  background: linear-gradient(160deg, #0f172a 0%, #1e293b 42%, #0f172a 100%);
+  color: var(--glass-text);
+}
+
+body.workspace-active .site-header {
+  background: rgb(15 23 42 / 85%);
+  border-bottom-color: var(--glass-border);
+  color: var(--glass-text);
+}
+
+body.workspace-active .site-logo,
+body.workspace-active .site-nav a {
+  color: var(--glass-text);
+}
+
+body.workspace-active .site-logo span,
+body.workspace-active .site-nav-github {
+  color: var(--glass-muted);
+}
+
+body.workspace-active .site-footer,
+body.workspace-active .site-notice {
+  color: var(--glass-muted);
+  background: transparent;
+  border-color: var(--glass-border);
+}
+
+body.workspace-active #main-content {
+  max-width: none;
+  padding: 0;
+}
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem var(--page-gutter) 2rem;
+  min-height: calc(100vh - var(--header-height) - 4rem);
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--glass-text);
+  padding: 1rem 1.1rem;
+  box-shadow: 0 8px 32px rgb(0 0 0 / 25%);
+}
+
+.glass-panel__title {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--glass-muted);
+}
+
+.workspace__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  position: sticky;
+  top: var(--header-height);
+  z-index: 40;
+  background: var(--glass-bg-strong);
+}
+
+.workspace__header h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+  color: var(--glass-text);
+}
+
+.workspace__header .location-meta {
+  color: var(--glass-muted);
+}
+
+.workspace__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.workspace__grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .workspace__grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    grid-template-rows: auto;
+  }
+
+  .workspace__map {
+    position: sticky;
+    top: calc(var(--header-height) + 4.5rem);
+    max-height: calc(100vh - var(--header-height) - 5.5rem);
+    overflow: auto;
+  }
+}
+
+.workspace-map-details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--glass-text);
+  margin-bottom: 0.5rem;
+}
+
+.map-container--workspace .leaflet-map,
+.map-container--workspace .leaflet-map--locality {
+  height: min(42vh, 360px);
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+}
+
+@media (min-width: 960px) {
+  .map-container--workspace .leaflet-map,
+  .map-container--workspace .leaflet-map--locality {
+    height: min(52vh, 440px);
+  }
+}
+
+.map-controls--loop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  margin-bottom: 0.65rem;
+  font-size: 0.8125rem;
+  color: var(--glass-muted);
+}
+
+.map-controls--loop .opacity-label,
+.map-controls--loop .checkbox-label {
+  color: var(--glass-muted);
+}
+
+.radar-time {
+  font-variant-numeric: tabular-nums;
+  min-width: 4.5rem;
+}
+
+.workspace__intel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bottom-line {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--glass-text);
+}
+
+.bottom-line--hazard {
+  color: #fecaca;
+}
+
+.bottom-line--wind,
+.bottom-line--fire {
+  color: #fde68a;
+}
+
+.bottom-line--precip,
+.bottom-line--temp {
+  color: #bae6fd;
+}
+
+.bottom-line--aq {
+  color: #f0abfc;
+}
+
+.intel-now {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.intel-temp {
+  margin: 0.25rem 0;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.intel-cond,
+.intel-wind,
+.intel-muted {
+  margin: 0.25rem 0 0;
+  color: var(--glass-muted);
+  font-size: 0.9375rem;
+}
+
+.aqi-ring {
+  flex-shrink: 0;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 50%;
+  border: 4px solid currentColor;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.25rem;
+}
+
+.aqi-ring__value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.aqi-ring__label {
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aqi-ring__cat {
+  font-size: 0.6rem;
+  line-height: 1.2;
+  max-width: 4.8rem;
+  color: var(--glass-muted);
+}
+
+.aqi-ring--good {
+  color: #4ade80;
+}
+.aqi-ring--moderate {
+  color: #facc15;
+}
+.aqi-ring--usg {
+  color: #fb923c;
+}
+.aqi-ring--unhealthy {
+  color: #f87171;
+}
+.aqi-ring--very {
+  color: #c084fc;
+}
+.aqi-ring--hazardous {
+  color: #fb7185;
+}
+.aqi-ring--na {
+  color: #94a3b8;
+}
+
+.meteogram-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.meteogram-row__label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--glass-muted);
+  margin-bottom: 0.2rem;
+}
+
+.meteogram {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+
+.intel-alert-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.intel-jump {
+  background: transparent;
+  border: 0;
+  color: var(--glass-accent);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  padding: 0.15rem 0;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.intel-jump:focus-visible {
+  outline: 3px solid var(--glass-accent);
+  outline-offset: 2px;
+}
+
+.intel-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+}
+
+.cdot-cam {
+  display: block;
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  margin: 0.5rem 0;
+  background: #0f172a;
+}
+
+.rf-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  margin: 0 0 0.75rem;
+}
+
+.rf-badge__status {
+  font-weight: 600;
+}
+
+.rf-badge__detail {
+  font-size: 0.85rem;
+  color: var(--glass-muted);
+}
+
+.rf-badge--ducting {
+  border-color: #86efac;
+  background: rgb(22 101 52 / 25%);
+}
+
+.rf-badge--poor {
+  border-color: #fca5a5;
+  background: rgb(127 29 29 / 25%);
+}
+
+.rf-badge--nominal {
+  border-color: var(--glass-border);
+}
+
+.metric-list--compact {
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.metric-list--compact dt {
+  color: var(--glass-muted);
+}
+
+.workspace__deep {
+  padding: 1rem 1.1rem 1.5rem;
+}
+
+body.workspace-active .workspace__deep .forecast-card,
+body.workspace-active .workspace__deep .dash-section,
+body.workspace-active .workspace__deep .sources-panel {
+  background: rgb(15 23 42 / 45%);
+  border-color: var(--glass-border);
+  color: var(--glass-text);
+}
+
+body.workspace-active .workspace__deep h2,
+body.workspace-active .workspace__deep .dash-section-title,
+body.workspace-active .workspace__deep th,
+body.workspace-active .workspace__deep td,
+body.workspace-active .workspace__deep .table-hint {
+  color: var(--glass-text);
+}
+
+body.workspace-active .workspace__deep .table-hint,
+body.workspace-active .workspace__deep .empty-state {
+  color: var(--glass-muted);
+}
+
+body.workspace-active .workspace__deep a {
+  color: var(--glass-accent);
+}
+
+body.workspace-active .btn-secondary {
+  background: rgb(30 41 59 / 80%);
+  border-color: var(--glass-border);
+  color: var(--glass-text);
+}
+
+body.workspace-active .btn-favorite {
+  color: #fde68a;
+}
+
+@media (max-width: 959px) {
+  .workspace__map {
+    order: 2;
+  }
+
+  .workspace__intel {
+    order: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace,
+  .glass-panel {
+    transition: none;
+  }
+}

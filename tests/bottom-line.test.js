@@ -1,0 +1,74 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { synthesizeBottomLine } from '../public/js/bottom-line.js';
+
+describe('synthesizeBottomLine', () => {
+  it('prioritizes severe NWS warnings', () => {
+    const { headline, priority } = synthesizeBottomLine({
+      current: { humidity: 12, wind_gust_mph: 40, temp_f: 90, condition: 'Clear' },
+      alerts: [{ event: 'Red Flag Warning', severity: 'Severe', headline: 'Red Flag Warning' }],
+    });
+    assert.equal(priority, 'hazard');
+    assert.match(headline, /Red Flag/i);
+    assert.match(headline, /12%/);
+  });
+
+  it('flags strong winds for travel', () => {
+    const { headline, priority } = synthesizeBottomLine({
+      name: 'Vail Pass',
+      elevation_ft: 10600,
+      region: 'mountains',
+      current: { wind_speed_mph: 22, wind_gust_mph: 38, condition: 'Windy', humidity: 40 },
+      alerts: [],
+      hourly: { time: [] },
+    });
+    assert.equal(priority, 'wind');
+    assert.match(headline, /38/);
+    assert.match(headline, /pass|mountain/i);
+  });
+
+  it('reports upcoming precip timing', () => {
+    const now = new Date();
+    const times = [];
+    for (let i = 0; i < 8; i += 1) {
+      const t = new Date(now.getTime() + i * 3600_000);
+      times.push(t.toISOString().slice(0, 16));
+    }
+    const { headline, priority } = synthesizeBottomLine({
+      current: { wind_speed_mph: 5, condition: 'Cloudy', humidity: 50, temp_f: 45 },
+      alerts: [],
+      hourly: {
+        time: times,
+        precipitation_probability: [10, 20, 55, 70, 40, 20, 10, 5],
+        precipitation: [0, 0, 0.05, 0.1, 0, 0, 0, 0],
+        rain: [0, 0, 0.05, 0.1, 0, 0, 0, 0],
+        snowfall: [0, 0, 0, 0, 0, 0, 0, 0],
+        temperature_2m: [45, 44, 43, 42, 41, 40, 39, 38],
+      },
+    });
+    assert.equal(priority, 'precip');
+    assert.match(headline, /Rain|Precipitation/i);
+  });
+
+  it('flags elevated AQI', () => {
+    const { headline, priority } = synthesizeBottomLine({
+      current: { wind_speed_mph: 5, condition: 'Haze', humidity: 30, temp_f: 80 },
+      alerts: [],
+      hourly: { time: [] },
+      airnow: { aqi: 155, category: 'Unhealthy' },
+    });
+    assert.equal(priority, 'aq');
+    assert.match(headline, /155/);
+  });
+
+  it('falls back to nominal pleasant summary', () => {
+    const { headline, priority } = synthesizeBottomLine({
+      current: { wind_speed_mph: 4, condition: 'Clear', humidity: 35, temp_f: 72 },
+      alerts: [],
+      hourly: { time: [] },
+    });
+    assert.equal(priority, 'nominal');
+    assert.match(headline, /Clear/);
+    assert.match(headline, /ideal outdoor/i);
+  });
+});

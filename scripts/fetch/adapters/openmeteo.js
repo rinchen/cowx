@@ -6,6 +6,7 @@
  */
 
 import { fetchJson } from '../../lib/http.js';
+import { estimateRfComms } from '../../lib/rf-comms.js';
 
 const CHUNK = 20;
 const CHUNK_DELAY_MS = 10_000;
@@ -62,7 +63,7 @@ function buildUrl(chunk) {
   return (
     `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
     `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pressure_msl,surface_pressure,is_day,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,uv_index` +
-    `&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,wind_speed_80m,wind_direction_80m,relative_humidity_2m,dewpoint_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,uv_index,soil_temperature_6cm,soil_moisture_3_to_9cm,cape,shortwave_radiation,freezing_level_height,is_day` +
+    `&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,wind_speed_80m,wind_direction_80m,relative_humidity_2m,dewpoint_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,uv_index,soil_temperature_6cm,soil_moisture_3_to_9cm,cape,shortwave_radiation,freezing_level_height,is_day,pressure_msl,temperature_850hPa` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,precipitation_probability_max,precipitation_hours,snowfall_sum,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,uv_index_max,sunrise,sunset,sunshine_duration,daylight_duration,shortwave_radiation_sum,et0_fao_evapotranspiration` +
     `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FDenver&forecast_days=10&forecast_hours=48`
   );
@@ -210,6 +211,8 @@ export function mapResult(r, condition) {
           shortwave_radiation: sliceHourly(r.hourly.shortwave_radiation),
           freezing_level_height: sliceHourly(r.hourly.freezing_level_height),
           is_day: sliceHourly(r.hourly.is_day),
+          pressure_msl: sliceHourly(r.hourly.pressure_msl),
+          temperature_850hPa: sliceHourly(r.hourly.temperature_850hPa),
           thunderstorm_probability: [],
         }
       : null,
@@ -265,6 +268,32 @@ export function mergeThunderstormProbability(payload, nbmHourly) {
 }
 
 /**
+ * Attach model-derived RF ducting estimate. Mutates payload.
+ * @param {ReturnType<typeof mapResult>} payload
+ * @param {number | null | undefined} elevationFt
+ */
+export function attachRfComms(payload, elevationFt) {
+  const times = payload.hourly?.time ?? [];
+  const series = payload.hourly?.temperature_850hPa ?? [];
+  let t850 = null;
+  if (times.length && series.length) {
+    const now = Date.now();
+    let best = 0;
+    let bestDiff = Infinity;
+    times.forEach((t, i) => {
+      const diff = Math.abs(new Date(String(t)).getTime() - now);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        best = i;
+      }
+    });
+    const v = series[best];
+    t850 = v == null || Number.isNaN(Number(v)) ? null : Number(v);
+  }
+  payload.rf_comms = estimateRfComms(payload.current ?? {}, t850, elevationFt);
+}
+
+/**
  * @param {import('../../lib/types.js').Location[]} chunk
  * @param {Map<string, object>} bySlug
  * @param {string[]} errors
@@ -316,7 +345,9 @@ export async function fetchOpenMeteo(locations) {
         const loc = chunk[j];
         const r = results[j];
         if (!r?.current) continue;
-        bySlug.set(loc.slug, mapResult(r, wmoLabel(r.current.weather_code)));
+        const mapped = mapResult(r, wmoLabel(r.current.weather_code));
+        attachRfComms(mapped, loc.elevation_ft);
+        bySlug.set(loc.slug, mapped);
       }
       calls += await fetchAndMergeNbm(chunk, bySlug, errors);
     } catch (err) {
@@ -346,7 +377,9 @@ export async function fetchOpenMeteo(locations) {
           const loc = chunk[j];
           const r = results[j];
           if (!r?.current) continue;
-          bySlug.set(loc.slug, mapResult(r, wmoLabel(r.current.weather_code)));
+          const mapped = mapResult(r, wmoLabel(r.current.weather_code));
+          attachRfComms(mapped, loc.elevation_ft);
+          bySlug.set(loc.slug, mapped);
         }
         calls += await fetchAndMergeNbm(chunk, bySlug, errors);
       } catch (err) {

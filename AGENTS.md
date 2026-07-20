@@ -172,6 +172,8 @@ Approximate call budget per run (target — record counts in `meta.json` when im
 | NWS alerts + AFD + grid    | ~8–12 selective            | User-Agent header   |
 | CoAgMET `latest.json`      | 1                          | None                |
 | Aviation Weather METAR/TAF | 1–3 batched                | None                |
+| CDOT cameras + RWIS        | 2                          | None                |
+| CWOP / APRS (aprs.me grid) | ~15–20                     | None                |
 | PurpleAir                  | 1–2 (only if key set)      | `PURPLEAIR_API_KEY` |
 | AirNow                     | 1–2 (only if key set)      | `AIRNOW_API_KEY`    |
 
@@ -183,7 +185,7 @@ Partial adapter failure is acceptable; total failure (zero locations written or 
 
 Citizen, pilot, farmer, and firefighter needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, etc.). The public dashboard shows **all** available sections for every location — there is no persona filter bar.
 
-Locality pages are deep drill-downs: expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons on a map centered on the site (RainViewer radar on by default), NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links.
+Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, 24h meteograms, CDOT camera/RWIS, RF ducting, CWOP) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links.
 
 Data commits may use `[skip ci]` when only JSON snapshots change, to avoid redundant Pages deploys — follow workflow conventions in `.github/workflows/`.
 
