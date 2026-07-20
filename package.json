@@ -1,0 +1,36 @@
+{
+  "name": "cowx",
+  "version": "0.1.0",
+  "description": "Colorado Weather — aggregated air quality and weather data",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "fetch": "node scripts/fetch/index.js",
+    "test": "node --test tests/**/*.test.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "validate:locations": "node scripts/validate-locations.js",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,html}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "eslint": "^9.28.0",
+    "globals": "^16.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.0",
+    "prettier": "^3.5.3"
+  },
+  "packageManager": "pnpm@10.34.3"
+}

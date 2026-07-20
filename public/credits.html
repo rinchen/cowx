@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Credits and data sources for Cowx Colorado Weather." />
+    <title>Credits — Cowx</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <header class="site-header">
+      <a class="site-logo" href="index.html">
+        <strong>Cowx</strong>
+        <span>Colorado Weather</span>
+      </a>
+      <nav class="site-nav" aria-label="Site">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="how-it-works.html">How it works</a></li>
+          <li><a href="credits.html" aria-current="page">Credits</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="main-content" class="page-content" tabindex="-1">
+      <h1>Credits</h1>
+      <p>
+        Cowx aggregates publicly available weather, air quality, agricultural, and aviation data for
+        Colorado. This project is <strong>unofficial</strong> and is not affiliated with NOAA, the
+        National Weather Service, EPA, CSU, PurpleAir, or any other data provider.
+      </p>
+
+      <h2>Weather &amp; forecasts</h2>
+      <ul>
+        <li>
+          <a href="https://open-meteo.com/" rel="noopener noreferrer" target="_blank">Open-Meteo</a>
+          — model forecasts (current, hourly, daily)
+        </li>
+        <li>
+          <a href="https://www.weather.gov/" rel="noopener noreferrer" target="_blank"
+            >National Weather Service</a
+          >
+          /
+          <a href="https://api.weather.gov/" rel="noopener noreferrer" target="_blank"
+            >api.weather.gov</a
+          >
+          — active alerts, Area Forecast Discussions, point-forecast links
+        </li>
+      </ul>
+
+      <h2>Air quality</h2>
+      <ul>
+        <li>
+          <a href="https://www.airnow.gov/" rel="noopener noreferrer" target="_blank">AirNow</a>
+          (EPA) — official AQI observations when configured
+        </li>
+        <li>
+          <a href="https://www.purpleair.com/" rel="noopener noreferrer" target="_blank"
+            >PurpleAir</a
+          >
+          — community PM sensors when configured
+        </li>
+      </ul>
+
+      <h2>Agriculture</h2>
+      <ul>
+        <li>
+          <a href="https://coagmet.colostate.edu/" rel="noopener noreferrer" target="_blank"
+            >CoAgMET</a
+          >
+          — Colorado State University / Colorado Climate Center research stations
+        </li>
+      </ul>
+
+      <h2>Aviation</h2>
+      <ul>
+        <li>
+          <a href="https://aviationweather.gov/" rel="noopener noreferrer" target="_blank"
+            >Aviation Weather Center</a
+          >
+          — METAR and TAF products
+        </li>
+      </ul>
+
+      <h2>Maps &amp; UI</h2>
+      <ul>
+        <li>
+          Base map tiles:
+          <a href="https://carto.com/" rel="noopener noreferrer" target="_blank">CARTO</a> /
+          OpenStreetMap contributors
+        </li>
+        <li>
+          Map library:
+          <a href="https://leafletjs.com/" rel="noopener noreferrer" target="_blank">Leaflet</a>
+        </li>
+        <li>
+          Radar overlay:
+          <a href="https://www.rainviewer.com/" rel="noopener noreferrer" target="_blank"
+            >RainViewer</a
+          >
+        </li>
+        <li>Typeface: Outfit via Google Fonts</li>
+        <li>Client IP geolocation: third-party CORS geo APIs (see How it works)</li>
+      </ul>
+
+      <p>
+        Trademarks remain the property of their respective owners. Use of upstream data is subject
+        to each provider’s terms of service and attribution requirements.
+      </p>
+      <p><a href="index.html">← Back to Cowx</a></p>
+    </main>
+
+    <footer class="site-footer">
+      <p>Colorado Weather — cowx</p>
+    </footer>
+  </body>
+</html>

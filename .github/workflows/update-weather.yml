@@ -1,0 +1,100 @@
+name: Update Weather
+
+on:
+  schedule:
+    - cron: '*/45 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Fetch weather data
+        env:
+          PURPLEAIR_API_KEY: ${{ secrets.PURPLEAIR_API_KEY }}
+          AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
+        run: pnpm fetch
+
+      - name: Commit data changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet public/data; then
+            echo "No data changes to commit"
+            exit 0
+          fi
+          git add public/data
+          git commit -m "chore: update weather data [skip ci]"
+          git push
+
+  notify-on-failure:
+    runs-on: ubuntu-latest
+    needs: fetch
+    if: failure()
+    steps:
+      - name: Post Discord notification
+        env:
+          NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+        run: |
+          if [ -z "$NOTIFY_WEBHOOK_URL" ]; then
+            echo "NOTIFY_WEBHOOK_URL not configured, skipping Discord notification"
+            exit 0
+          fi
+          payload=$(jq -n \
+            --arg content "cowx weather fetch failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            '{content: $content}')
+          curl -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_WEBHOOK_URL"
+
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'Weather fetch failed';
+            const body = [
+              'Scheduled weather fetch workflow failed.',
+              '',
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '',
+              'Check adapter logs and API key secrets.',
+            ].join('\n');
+
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+
+            const existing = issues.data.find((issue) => issue.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `${body}\n\n_(updated ${new Date().toISOString()})_`,
+              });
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+            });

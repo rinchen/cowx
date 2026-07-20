@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cowx.dev/schemas/weather-payload.schema.json",
+  "title": "CowxWeatherPayload",
+  "description": "Per-location weather and air quality snapshot",
+  "type": "object",
+  "required": ["slug", "updatedAt"],
+  "additionalProperties": true,
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "temperatureF": {
+      "type": ["number", "null"]
+    },
+    "humidityPct": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "windMph": {
+      "type": ["number", "null"]
+    },
+    "aqi": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "pm25": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "conditions": {
+      "type": ["string", "null"]
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok", "error", "unavailable"]
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

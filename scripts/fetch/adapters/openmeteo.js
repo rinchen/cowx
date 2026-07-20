@@ -1,0 +1,221 @@
+/**
+ * Open-Meteo forecast adapter — bulk current/hourly/daily for CO locations.
+ * Failure point: API timeout / 429 / weight limits.
+ * Fallback: return status error/partial; other adapters still run.
+ */
+
+import { fetchJson } from '../../lib/http.js';
+
+const CHUNK = 40;
+
+const WMO = {
+  0: 'Clear',
+  1: 'Mostly Clear',
+  2: 'Partly Cloudy',
+  3: 'Overcast',
+  45: 'Fog',
+  48: 'Depositing Rime Fog',
+  51: 'Light Drizzle',
+  53: 'Drizzle',
+  55: 'Dense Drizzle',
+  61: 'Slight Rain',
+  63: 'Rain',
+  65: 'Heavy Rain',
+  71: 'Slight Snow',
+  73: 'Snow',
+  75: 'Heavy Snow',
+  80: 'Rain Showers',
+  81: 'Rain Showers',
+  82: 'Violent Rain Showers',
+  85: 'Snow Showers',
+  86: 'Heavy Snow Showers',
+  95: 'Thunderstorm',
+  96: 'Thunderstorm with Hail',
+  99: 'Thunderstorm with Hail',
+};
+
+/**
+ * @param {number} ms
+ */
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * @param {number} code
+ * @returns {string}
+ */
+export function wmoLabel(code) {
+  return WMO[code] ?? `Code ${code}`;
+}
+
+/**
+ * @param {import('../../lib/types.js').Location[]} locations
+ * @returns {Promise<{ status: string, bySlug: Map<string, object>, error?: string, calls: number }>}
+ */
+export async function fetchOpenMeteo(locations) {
+  const bySlug = new Map();
+  let calls = 0;
+  const errors = [];
+
+  for (let i = 0; i < locations.length; i += CHUNK) {
+    if (i > 0) await sleep(2500);
+    const chunk = locations.slice(i, i + CHUNK);
+    const lats = chunk.map((l) => l.lat).join(',');
+    const lons = chunk.map((l) => l.lon).join(',');
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
+      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation` +
+      `&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,cloud_cover` +
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,sunrise,sunset` +
+      `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FDenver&forecast_days=10&forecast_hours=48`;
+
+    try {
+      calls += 1;
+      const data = await fetchJson(url, { timeoutMs: 90_000 });
+      const results = Array.isArray(data) ? data : [data];
+      for (let j = 0; j < chunk.length; j += 1) {
+        const loc = chunk[j];
+        const r = results[j];
+        if (!r?.current) continue;
+        const cur = r.current;
+        bySlug.set(loc.slug, {
+          current: {
+            temp_f: cur.temperature_2m,
+            feels_like_f: cur.apparent_temperature,
+            humidity: cur.relative_humidity_2m,
+            weather_code: cur.weather_code,
+            condition: wmoLabel(cur.weather_code),
+            cloud_cover: cur.cloud_cover,
+            pressure_mb: cur.pressure_msl,
+            wind_speed_mph: cur.wind_speed_10m,
+            wind_dir_deg: cur.wind_direction_10m,
+            wind_gust_mph: cur.wind_gusts_10m,
+            precip_in: cur.precipitation,
+            uv_index: cur.uv_index ?? null,
+          },
+          hourly: r.hourly
+            ? {
+                time: r.hourly.time?.slice(0, 48) ?? [],
+                temperature_2m: r.hourly.temperature_2m?.slice(0, 48) ?? [],
+                precipitation_probability: r.hourly.precipitation_probability?.slice(0, 48) ?? [],
+                precipitation: r.hourly.precipitation?.slice(0, 48) ?? [],
+                weather_code: r.hourly.weather_code?.slice(0, 48) ?? [],
+                wind_speed_10m: r.hourly.wind_speed_10m?.slice(0, 48) ?? [],
+                wind_gusts_10m: r.hourly.wind_gusts_10m?.slice(0, 48) ?? [],
+                relative_humidity_2m: r.hourly.relative_humidity_2m?.slice(0, 48) ?? [],
+                cloud_cover: r.hourly.cloud_cover?.slice(0, 48) ?? [],
+                visibility: r.hourly.visibility?.slice(0, 48) ?? [],
+                uv_index: r.hourly.uv_index?.slice(0, 48) ?? [],
+              }
+            : null,
+          daily: r.daily
+            ? {
+                time: r.daily.time ?? [],
+                weather_code: r.daily.weather_code ?? [],
+                temperature_2m_max: r.daily.temperature_2m_max ?? [],
+                temperature_2m_min: r.daily.temperature_2m_min ?? [],
+                precipitation_sum: r.daily.precipitation_sum ?? [],
+                precipitation_probability_max: r.daily.precipitation_probability_max ?? [],
+                wind_speed_10m_max: r.daily.wind_speed_10m_max ?? [],
+                wind_gusts_10m_max: r.daily.wind_gusts_10m_max ?? [],
+                uv_index_max: r.daily.uv_index_max ?? [],
+                sunrise: r.daily.sunrise ?? [],
+                sunset: r.daily.sunset ?? [],
+              }
+            : null,
+        });
+      }
+    } catch (err) {
+      errors.push(err instanceof Error ? err.message : String(err));
+      await sleep(5000);
+    }
+  }
+
+  if (bySlug.size === 0) {
+    return { status: 'error', bySlug, error: errors.join('; ') || 'no data', calls };
+  }
+
+  // Retry missing locations one-by-one in small batches after cool-down
+  const missing = locations.filter((l) => !bySlug.has(l.slug));
+  if (missing.length > 0) {
+    await sleep(5000);
+    const RETRY_CHUNK = 20;
+    for (let i = 0; i < missing.length; i += RETRY_CHUNK) {
+      if (i > 0) await sleep(3000);
+      const chunk = missing.slice(i, i + RETRY_CHUNK);
+      const lats = chunk.map((l) => l.lat).join(',');
+      const lons = chunk.map((l) => l.lon).join(',');
+      const url =
+        `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
+        `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation` +
+        `&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,relative_humidity_2m` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset` +
+        `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FDenver&forecast_days=10&forecast_hours=48`;
+      try {
+        calls += 1;
+        const data = await fetchJson(url, { timeoutMs: 90_000 });
+        const results = Array.isArray(data) ? data : [data];
+        for (let j = 0; j < chunk.length; j += 1) {
+          const loc = chunk[j];
+          const r = results[j];
+          if (!r?.current) continue;
+          const cur = r.current;
+          bySlug.set(loc.slug, {
+            current: {
+              temp_f: cur.temperature_2m,
+              feels_like_f: cur.apparent_temperature,
+              humidity: cur.relative_humidity_2m,
+              weather_code: cur.weather_code,
+              condition: wmoLabel(cur.weather_code),
+              cloud_cover: cur.cloud_cover,
+              pressure_mb: cur.pressure_msl,
+              wind_speed_mph: cur.wind_speed_10m,
+              wind_dir_deg: cur.wind_direction_10m,
+              wind_gust_mph: cur.wind_gusts_10m,
+              precip_in: cur.precipitation,
+              uv_index: null,
+            },
+            hourly: r.hourly
+              ? {
+                  time: r.hourly.time?.slice(0, 48) ?? [],
+                  temperature_2m: r.hourly.temperature_2m?.slice(0, 48) ?? [],
+                  precipitation_probability: r.hourly.precipitation_probability?.slice(0, 48) ?? [],
+                  precipitation: r.hourly.precipitation?.slice(0, 48) ?? [],
+                  weather_code: r.hourly.weather_code?.slice(0, 48) ?? [],
+                  wind_speed_10m: r.hourly.wind_speed_10m?.slice(0, 48) ?? [],
+                  wind_gusts_10m: [],
+                  relative_humidity_2m: r.hourly.relative_humidity_2m?.slice(0, 48) ?? [],
+                  cloud_cover: [],
+                  visibility: [],
+                  uv_index: [],
+                }
+              : null,
+            daily: r.daily
+              ? {
+                  time: r.daily.time ?? [],
+                  weather_code: r.daily.weather_code ?? [],
+                  temperature_2m_max: r.daily.temperature_2m_max ?? [],
+                  temperature_2m_min: r.daily.temperature_2m_min ?? [],
+                  precipitation_sum: r.daily.precipitation_sum ?? [],
+                  precipitation_probability_max: r.daily.precipitation_probability_max ?? [],
+                  wind_speed_10m_max: [],
+                  wind_gusts_10m_max: [],
+                  uv_index_max: [],
+                  sunrise: r.daily.sunrise ?? [],
+                  sunset: r.daily.sunset ?? [],
+                }
+              : null,
+          });
+        }
+      } catch (err) {
+        errors.push(err instanceof Error ? err.message : String(err));
+      }
+    }
+  }
+
+  if (errors.length > 0 || bySlug.size < locations.length) {
+    return { status: 'partial', bySlug, error: errors.join('; '), calls };
+  }
+  return { status: 'ok', bySlug, calls };
+}

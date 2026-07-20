@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="How Cowx resolves your location and loads Colorado weather data."
+    />
+    <title>How it works — Cowx</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <header class="site-header">
+      <a class="site-logo" href="index.html">
+        <strong>Cowx</strong>
+        <span>Colorado Weather</span>
+      </a>
+      <nav class="site-nav" aria-label="Site">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="how-it-works.html" aria-current="page">How it works</a></li>
+          <li><a href="credits.html">Credits</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="main-content" class="page-content" tabindex="-1">
+      <h1>How it works</h1>
+      <p>
+        Cowx is a <strong>static site</strong> hosted on GitHub Pages. There is no application
+        server. Weather data is pre-fetched by a GitHub Action about every
+        <strong>45 minutes</strong> and written into JSON files under <code>public/data/</code>.
+        Your browser loads only the location you need.
+      </p>
+
+      <h2>Finding your location</h2>
+      <ol>
+        <li>
+          If you previously viewed or favorited a site, we offer that first (stored only in your
+          browser).
+        </li>
+        <li>You can search by city/county name or Colorado ZIP code.</li>
+        <li>The Locate button uses the browser Geolocation API (permission required).</li>
+        <li>
+          If needed, a coarse IP-based location is requested from a public geolocation API in your
+          browser, then snapped to the nearest Colorado catalog site. Out-of-state visitors still
+          get the nearest CO site.
+        </li>
+      </ol>
+
+      <h2>Data pipeline</h2>
+      <p>
+        The <code>pnpm fetch</code> orchestrator calls independent adapters (Open-Meteo, NWS,
+        CoAgMET, Aviation Weather, optional PurpleAir and AirNow). Each source can succeed or fail
+        on its own. Results are merged into:
+      </p>
+      <ul>
+        <li><code>index.json</code> — slim list for search and the map</li>
+        <li><code>locations/{slug}.json</code> — full drill-down payload</li>
+        <li><code>alerts.geojson</code> — warning polygons when geometry is available</li>
+        <li>
+          <code>meta.json</code> — build time and per-source status (<code>ok</code> /
+          <code>partial</code> / <code>error</code> / <code>skipped</code>)
+        </li>
+        <li><code>co-zips.json</code> — ZIP centroids for search</li>
+      </ul>
+      <p>
+        If a non-critical source fails, the site still publishes. If critical sources all fail, the
+        Action fails and operators are notified.
+      </p>
+
+      <h2>Dashboards</h2>
+      <p>
+        Location pages show current conditions, hourly and multi-day forecasts, alerts, agricultural
+        stations, aviation METARs/TAFs, and air quality — filterable for citizens, pilots, farmers,
+        and firefighters. Offsite links always point back to authoritative providers.
+      </p>
+
+      <h2>Failure notifications</h2>
+      <p>
+        When the scheduled update workflow fails, GitHub Actions can post to a Discord webhook
+        configured as the repository secret <code>NOTIFY_WEBHOOK_URL</code>, and open or update a
+        GitHub Issue with a link to the failed run. Secret values are never committed to the
+        repository.
+      </p>
+
+      <h2>Privacy</h2>
+      <ul>
+        <li>No accounts and no cowx backend database.</li>
+        <li>
+          Favorites use <code>localStorage</code> keys <code>cowx:favorites</code> and
+          <code>cowx:lastLocation</code> only.
+        </li>
+        <li>No third-party analytics by default.</li>
+        <li>
+          API keys for PurpleAir/AirNow are used only in GitHub Actions at build time — never in the
+          browser.
+        </li>
+      </ul>
+
+      <p>
+        Contributors and agents: see
+        <a href="https://github.com/rinchen/cowx/blob/main/AGENTS.md">AGENTS.md</a>
+        in the repository for adapter and location contribution rules.
+      </p>
+      <p><a href="index.html">← Back to Cowx</a></p>
+    </main>
+
+    <footer class="site-footer">
+      <p>Colorado Weather — cowx</p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "generatedAt": "2026-07-20T19:16:19.347Z",
+  "version": "1.0.0",
+  "sources": [
+    {
+      "id": "openmeteo",
+      "status": "partial",
+      "fetchedAt": "2026-07-20T19:16:06.232Z",
+      "error": "HTTP 429 for https://api.open-meteo.com/v1/forecast?latitude=38.0717,37.8397,37.9131,39.64,39.5361,39.3667,38.45,40.2522,40.2,40.15,39.8833,39.6,39.2667,39.0833,37,38.0667,40.75,39,37.5,37.5,40.8,39.315,39.3831,38.75,38.9467,39.0167,39.2567,39.4,39.2286,39.25,39.5667,39.65,39.6333,39.7333,39.7833,38.3667,38.1347,38.1358,38.3667,38.45&longitude=-107.4628,-107.9925,-107.5042,-104.85,-105.0706,-106.8167,-107.3333,-105.8231,-105.85,-105.85,-106.3333,-106.0667,-106.4,-106.3833,-107.65,-102.9333,-106.25,-105.9,-105.8,-103.5,-104.2,-105.8931,-105.8003,-105.5167,-105.3583,-105.5167,-105.2783,-104.95,-104.8861,-104.9833,-105.2333,-105.3,-105.2833,-105.2333,-105.4167,-105.1333,-105.4658,-105.4425,-105.6833,-105.8333&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,cloud_cover&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FDenver&forecast_days=10&forecast_hours=48: {\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\",\"error\":true}; HTTP 429 for https://api.open-meteo.com/v1/forecast?latitude=38.4167,38.35,38.05,37.985,38.0667,38.2167,38.1833,38.1333,38.0167,38.1167,38.1667,38.2333,38.8,37.3833,37.1,37.5667,37.3667,37.3833,39.74,39.76,39.65,39.61,39.9167,40.05,40.7317,40.85,40.4667,40.5167,39.85,39.8667,39.1833,38.9667,38.35,39.1069,37.8967,37.95,38.5167,38.1833,37.9833,37.95&longitude=-105.9667,-105.15,-103.7167,-103.5433,-103.2167,-103.7667,-103.85,-104.0167,-103.6333,-103.8667,-103.95,-103.6667,-102.4,-102.2833,-102.5833,-102.7333,-102.8667,-102.45,-105.53,-105.69,-106.05,-105.92,-105.85,-106.1833,-106.2836,-106.3167,-106.1833,-106.0333,-106.65,-106.8833,-107.3167,-107.1167,-106.2833,-106.5672,-107.3167,-107.7667,-106.0833,-106.5833,-107.2333,-106.5833&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,cloud_cover&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FDenver&forecast_days=10&forecast_hours=48: {\"reason\":\"Minutely API request limit exceeded. Please try again in one minute.\",\"error\":true}"
+    },
+    {
+      "id": "nws",
+      "status": "ok",
+      "fetchedAt": "2026-07-20T19:16:07.123Z"
+    },
+    {
+      "id": "coagmet",
+      "status": "ok",
+      "fetchedAt": "2026-07-20T19:16:09.090Z"
+    },
+    {
+      "id": "aviation",
+      "status": "ok",
+      "fetchedAt": "2026-07-20T19:16:13.679Z"
+    },
+    {
+      "id": "purpleair",
+      "status": "ok",
+      "fetchedAt": "2026-07-20T19:16:13.991Z"
+    },
+    {
+      "id": "airnow",
+      "status": "ok",
+      "fetchedAt": "2026-07-20T19:16:19.347Z"
+    }
+  ],
+  "locationCount": 338,
+  "apiCalls": 61
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cowx.dev/schemas/location.schema.json",
+  "title": "CowxLocation",
+  "description": "Full location record used by fetch adapters",
+  "type": "object",
+  "required": ["slug", "name", "lat", "lon", "region", "county", "wfo", "elevation_ft"],
+  "additionalProperties": false,
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lat": {
+      "type": "number",
+      "minimum": -90,
+      "maximum": 90
+    },
+    "lon": {
+      "type": "number",
+      "minimum": -180,
+      "maximum": 180
+    },
+    "region": {
+      "type": "string",
+      "enum": [
+        "front-range",
+        "mountains",
+        "western-slope",
+        "eastern-plains",
+        "southwest",
+        "northwest"
+      ]
+    },
+    "county": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wfo": {
+      "type": "string",
+      "enum": ["BOU", "PUB", "GJT"]
+    },
+    "elevation_ft": {
+      "type": "number"
+    },
+    "icao": {
+      "type": ["string", "null"]
+    },
+    "pws_id": {
+      "type": ["string", "null"]
+    },
+    "coagmet_id": {
+      "type": ["string", "null"]
+    }
+  }
+}

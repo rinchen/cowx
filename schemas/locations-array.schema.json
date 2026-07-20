@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cowx.dev/schemas/locations-array.schema.json",
+  "title": "Colorado Locations Catalog",
+  "description": "Array of Colorado weather location entries.",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "$ref": "location.schema.json"
+  }
+}

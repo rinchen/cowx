@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.DS_Store
+coverage/
+*.log
+.npm
+.pnpm-debug.log*
+
+# Committed weather data snapshots
+!public/data/
+!public/data/**

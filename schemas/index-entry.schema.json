@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cowx.dev/schemas/index-entry.schema.json",
+  "title": "CowxIndexEntry",
+  "description": "Slim location index entry for client-side lookup",
+  "type": "object",
+  "required": ["slug", "name", "lat", "lon"],
+  "additionalProperties": false,
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "URL-safe location identifier"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lat": {
+      "type": "number",
+      "minimum": -90,
+      "maximum": 90
+    },
+    "lon": {
+      "type": "number",
+      "minimum": -180,
+      "maximum": 180
+    },
+    "elevationFt": {
+      "type": "number"
+    },
+    "county": {
+      "type": "string"
+    }
+  }
+}
