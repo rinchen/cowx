@@ -10,6 +10,8 @@ let radarLayer = null;
 let alertsLayer = null;
 /** @type {import('leaflet').GeoJSON | null} */
 let cwopLayer = null;
+/** @type {import('leaflet').LayerGroup | null} */
+let aqiLayer = null;
 /** @type {RadarLoopController | null} */
 let radarLoop = null;
 
@@ -179,6 +181,61 @@ export async function loadAlertPolygons(url, onError) {
 }
 
 /**
+ * AQI color for US AQI scale (light-mode readable fills).
+ * @param {number | null | undefined} aqi
+ */
+function aqiMarkerColor(aqi) {
+  const n = Number(aqi);
+  if (!Number.isFinite(n)) return { stroke: '#64748b', fill: '#94a3b8' };
+  if (n <= 50) return { stroke: '#166534', fill: '#4ade80' };
+  if (n <= 100) return { stroke: '#a16207', fill: '#facc15' };
+  if (n <= 150) return { stroke: '#c2410c', fill: '#fb923c' };
+  if (n <= 200) return { stroke: '#b91c1c', fill: '#f87171' };
+  if (n <= 300) return { stroke: '#7e22ce', fill: '#c084fc' };
+  return { stroke: '#9f1239', fill: '#fb7185' };
+}
+
+/**
+ * Toggle catalog AQI markers on the locality map.
+ * @param {boolean} enabled
+ * @param {{ slug: string, name: string, lat: number, lon: number, aqi?: number | null }[]} locations
+ * @param {string | null} [activeSlug]
+ * @returns {boolean}
+ */
+export function setAqiLayer(enabled, locations, activeSlug = null) {
+  if (!stateMap || typeof L === 'undefined') return false;
+
+  if (aqiLayer) {
+    stateMap.removeLayer(aqiLayer);
+    aqiLayer = null;
+  }
+  if (!enabled) return false;
+
+  const withAqi = (locations ?? []).filter(
+    (l) => l && Number.isFinite(Number(l.lat)) && Number.isFinite(Number(l.lon)) && l.aqi != null,
+  );
+  if (!withAqi.length) return false;
+
+  aqiLayer = L.layerGroup();
+  for (const loc of withAqi) {
+    const aqi = Number(loc.aqi);
+    const colors = aqiMarkerColor(aqi);
+    const marker = L.circleMarker([loc.lat, loc.lon], {
+      radius: loc.slug === activeSlug ? 9 : 6,
+      color: colors.stroke,
+      fillColor: colors.fill,
+      fillOpacity: 0.85,
+      weight: loc.slug === activeSlug ? 2.5 : 1.5,
+    });
+    marker.bindTooltip(`${loc.name}: AQI ${Math.round(aqi)}`, { direction: 'top' });
+    aqiLayer.addLayer(marker);
+  }
+  aqiLayer.addTo(stateMap);
+  return true;
+}
+
+/**
+ * @deprecated CWOP map toggle removed from UI; kept for tests if needed.
  * Toggle CWOP/APRS GeoJSON layer.
  * @param {boolean} enabled
  * @param {string} url
@@ -392,5 +449,6 @@ export function destroyMap() {
     radarLayer = null;
     alertsLayer = null;
     cwopLayer = null;
+    aqiLayer = null;
   }
 }

@@ -2,8 +2,10 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   detectPressureDip,
+  formatMeteogramTimeLabels,
   mbToInHg,
   meteogramHtml,
+  meteogramTimeAxisHtml,
   sparklineHtml,
 } from '../public/js/sparkline.js';
 import { selectRadarFrames, radarTileUrl } from '../public/js/radar-loop.js';
@@ -36,6 +38,27 @@ describe('sparkline / meteogram', () => {
     });
     assert.match(html, /aria-label="Wind"/);
     assert.match(html, /polyline/);
+  });
+
+  it('keeps aligned length when values include null gaps', () => {
+    const html = meteogramHtml([30.1, null, 30.0, 29.9], { label: 'Pressure' });
+    assert.match(html, /viewBox="0 0 320/);
+  });
+
+  it('renders shared time axis labels', () => {
+    const labels = formatMeteogramTimeLabels([
+      '2026-07-20T13:00',
+      '2026-07-20T18:00',
+      '2026-07-21T01:00',
+    ]);
+    assert.ok(labels.start);
+    assert.ok(labels.end);
+    const axis = meteogramTimeAxisHtml([
+      '2026-07-20T13:00',
+      '2026-07-20T18:00',
+      '2026-07-21T01:00',
+    ]);
+    assert.match(axis, /meteogram--axis/);
   });
 });
 

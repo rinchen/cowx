@@ -4,7 +4,7 @@
 
 import { renderDeepForecast } from './dashboard.js';
 import { renderIntel } from './intel.js';
-import { bindRadarLoopControls, destroyMap, initStateMap, setCwopLayer } from './map.js';
+import { bindRadarLoopControls, destroyMap, initStateMap, setAqiLayer } from './map.js';
 
 /**
  * @param {unknown} s
@@ -99,8 +99,8 @@ export function renderWorkspace(root, data, options) {
                 <input type="range" id="radar-opacity" min="10" max="90" value="55" />
               </label>
               <label class="checkbox-label">
-                <input type="checkbox" id="cwop-toggle" />
-                CWOP / APRS
+                <input type="checkbox" id="aqi-toggle" />
+                Air quality
               </label>
             </div>
             <div id="map-container" class="map-container map-container--workspace"></div>
@@ -162,12 +162,18 @@ export function renderWorkspace(root, data, options) {
     options.onAnnounce?.('RainViewer radar could not load; map basemap is still available.');
   }
 
-  const cwopToggle = /** @type {HTMLInputElement | null} */ (root.querySelector('#cwop-toggle'));
-  cwopToggle?.addEventListener('change', async () => {
-    const ok = await setCwopLayer(cwopToggle.checked, `${options.dataBase ?? 'data'}/cwop.geojson`);
-    if (cwopToggle.checked && !ok) {
-      cwopToggle.checked = false;
-      options.onAnnounce?.('CWOP / APRS layer unavailable.');
+  const aqiToggle = /** @type {HTMLInputElement | null} */ (root.querySelector('#aqi-toggle'));
+  aqiToggle?.addEventListener('change', () => {
+    const ok = setAqiLayer(
+      aqiToggle.checked,
+      /** @type {{ slug: string, name: string, lat: number, lon: number, aqi?: number | null }[]} */ (
+        options.locations
+      ),
+      slug,
+    );
+    if (aqiToggle.checked && !ok) {
+      aqiToggle.checked = false;
+      options.onAnnounce?.('Air quality markers unavailable for the catalog.');
     }
   });
 

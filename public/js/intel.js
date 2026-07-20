@@ -5,7 +5,13 @@
 import { synthesizeBottomLine } from './bottom-line.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { estimateRfComms } from './rf-comms.js';
-import { detectPressureDip, mbToInHg, meteogramHtml, miniBarChartHtml } from './sparkline.js';
+import {
+  detectPressureDip,
+  mbToInHg,
+  meteogramHtml,
+  meteogramTimeAxisHtml,
+  miniBarChartHtml,
+} from './sparkline.js';
 import { windCompassHtml, windDirLabel } from './wind.js';
 
 /**
@@ -104,17 +110,63 @@ export function renderIntel(root, data, options = {}) {
   const sliceEnd = Math.min(times.length, hi + 24);
   const sliceStart = Math.max(0, sliceEnd - 24);
 
-  const temps = /** @type {number[]} */ (hourly?.temperature_2m ?? []).slice(sliceStart, sliceEnd);
-  const winds = /** @type {number[]} */ (hourly?.wind_speed_10m ?? []).slice(sliceStart, sliceEnd);
-  const gusts = /** @type {number[]} */ (hourly?.wind_gusts_10m ?? []).slice(sliceStart, sliceEnd);
-  const pressureMb = /** @type {number[]} */ (hourly?.pressure_msl ?? []).slice(
+  const temps = /** @type {(number | null)[]} */ (hourly?.temperature_2m ?? []).slice(
+    sliceStart,
+    sliceEnd,
+  );
+  const winds = /** @type {(number | null)[]} */ (hourly?.wind_speed_10m ?? []).slice(
+    sliceStart,
+    sliceEnd,
+  );
+  const gusts = /** @type {(number | null)[]} */ (hourly?.wind_gusts_10m ?? []).slice(
+    sliceStart,
+    sliceEnd,
+  );
+  const pressureMb = /** @type {(number | null)[]} */ (hourly?.pressure_msl ?? []).slice(
     sliceStart,
     sliceEnd,
   );
   const pressureIn = pressureMb.map((v) =>
-    Number.isFinite(Number(v)) ? mbToInHg(Number(v)) : NaN,
+    Number.isFinite(Number(v)) ? mbToInHg(Number(v)) : null,
   );
-  const dip = detectPressureDip(pressureIn.filter((v) => Number.isFinite(v)));
+  const dip = detectPressureDip(pressureIn);
+  const chartTimes = times.slice(sliceStart, sliceEnd);
+  const probs = /** @type {(number | null)[]} */ (hourly?.precipitation_probability ?? []).slice(
+    sliceStart,
+    sliceEnd,
+  );
+
+  const todayHi = /** @type {number[]} */ (daily?.temperature_2m_max ?? [])[0];
+  const todayLo = /** @type {number[]} */ (daily?.temperature_2m_min ?? [])[0];
+  const precipChance =
+    hourly && Array.isArray(hourly.precipitation_probability)
+      ? /** @type {number[]} */ (hourly.precipitation_probability)[hi]
+      : null;
+  const hourDew =
+    hourly && Array.isArray(hourly.dewpoint_2m)
+      ? /** @type {number[]} */ (hourly.dewpoint_2m)[hi]
+      : null;
+  const aviation = /** @type {Record<string, unknown> | null} */ (data.aviation ?? null);
+  const flightCat =
+    aviation?.flight_category != null
+      ? `${aviation.flight_category}${aviation.icao ? ` at ${aviation.icao}` : ''}`
+      : null;
+
+  /**
+   * @param {string} label
+   * @param {string | null} value
+   * @param {string | null} jumpId
+   */
+  function metricLink(label, value, jumpId) {
+    if (value == null || value === '') return '';
+    if (!jumpId) {
+      return `<div class="intel-metric"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`;
+    }
+    return `<div class="intel-metric">
+      <dt>${escapeHtml(label)}</dt>
+      <dd><button type="button" class="intel-jump intel-jump--metric" data-jump-to="${escapeHtml(jumpId)}">${escapeHtml(value)}</button></dd>
+    </div>`;
+  }
 
   const sunrises = /** @type {string[]} */ (daily?.sunrise ?? []);
   const sunsets = /** @type {string[]} */ (daily?.sunset ?? []);
@@ -159,10 +211,8 @@ export function renderIntel(root, data, options = {}) {
           ? 'Nominal'
           : null;
 
-  const probs = /** @type {number[]} */ (hourly?.precipitation_probability ?? []).slice(
-    hi,
-    hi + 12,
-  );
+  const pressureDisplay =
+    current?.surface_pressure_mb != null ? current.surface_pressure_mb : current?.pressure_mb;
 
   root.innerHTML = `
     <section class="glass-panel glass-panel--headline" aria-labelledby="bottom-line-heading">
@@ -176,23 +226,65 @@ export function renderIntel(root, data, options = {}) {
           <h2 id="intel-now-heading" class="glass-panel__title">Now</h2>
           ${
             current?.temp_f != null
-              ? `${weatherIconHtml(code, { isDay, size: 56, className: 'weather-icon weather-icon--lg', alt: String(current.condition ?? wmoLabel(code)) })}
-                 <p class="intel-temp">${Math.round(Number(current.temp_f))}°F</p>
-                 <p class="intel-cond">${escapeHtml(String(current.condition ?? wmoLabel(code)))}</p>`
+              ? `<button type="button" class="intel-jump intel-jump--temp" data-jump-to="hourly-heading">
+                  ${weatherIconHtml(code, { isDay, size: 56, className: 'weather-icon weather-icon--lg', alt: String(current.condition ?? wmoLabel(code)) })}
+                  <p class="intel-temp">${Math.round(Number(current.temp_f))}°F</p>
+                  <p class="intel-cond">${escapeHtml(String(current.condition ?? wmoLabel(code)))}</p>
+                </button>`
               : `<p class="empty-state">Current conditions unavailable.</p>`
           }
           ${
             current?.wind_speed_mph != null
-              ? `<p class="intel-wind">${compass ? compass : ''} ${Math.round(Number(current.wind_speed_mph))} mph${current.wind_gust_mph != null ? ` · gusts ${Math.round(Number(current.wind_gust_mph))}` : ''}${windDirLabel(windDeg) ? ` from ${escapeHtml(windDirLabel(windDeg) ?? '')}` : ''}</p>`
+              ? `<button type="button" class="intel-jump intel-jump--wind" data-jump-to="hourly-heading"><span class="intel-wind">${compass ? compass : ''} ${Math.round(Number(current.wind_speed_mph))} mph${current.wind_gust_mph != null ? ` · gusts ${Math.round(Number(current.wind_gust_mph))}` : ''}${windDirLabel(windDeg) ? ` from ${escapeHtml(windDirLabel(windDeg) ?? '')}` : ''}</span></button>`
               : ''
           }
         </div>
-        <div class="aqi-ring ${cat.className}" role="img" aria-label="Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}">
+        <button type="button" class="aqi-ring ${cat.className} intel-jump" data-jump-to="aqi-heading" aria-label="Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}. Open air quality details.">
           <span class="aqi-ring__value">${aq.aqi != null ? Math.round(aq.aqi) : '—'}</span>
           <span class="aqi-ring__label">AQI</span>
           <span class="aqi-ring__cat">${escapeHtml(cat.label)}</span>
-        </div>
+        </button>
       </div>
+      <dl class="intel-metrics">
+        ${metricLink(
+          'Feels like',
+          current?.feels_like_f != null ? `${Math.round(Number(current.feels_like_f))}°F` : null,
+          'hourly-heading',
+        )}
+        ${metricLink(
+          'Today’s range',
+          todayHi != null && todayLo != null
+            ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F`
+            : null,
+          'daily-heading',
+        )}
+        ${metricLink(
+          'Precip chance',
+          precipChance != null ? `${Math.round(Number(precipChance))}% this hour` : null,
+          'hourly-heading',
+        )}
+        ${metricLink(
+          'Humidity',
+          current?.humidity != null ? `${current.humidity}%` : null,
+          'hourly-heading',
+        )}
+        ${metricLink(
+          'Dewpoint',
+          hourDew != null ? `${Math.round(Number(hourDew))}°F` : null,
+          'hourly-heading',
+        )}
+        ${metricLink(
+          'Pressure',
+          pressureDisplay != null ? `${Math.round(Number(pressureDisplay))} mb` : null,
+          'hourly-heading',
+        )}
+        ${metricLink('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
+        ${metricLink(
+          'Air quality',
+          aq.aqi != null ? `AQI ${Math.round(aq.aqi)} (${cat.label})` : null,
+          'aqi-heading',
+        )}
+      </dl>
     </section>
 
     <section class="glass-panel" aria-labelledby="meteogram-heading">
@@ -200,41 +292,55 @@ export function renderIntel(root, data, options = {}) {
       <div class="meteogram-stack">
         <div class="meteogram-row">
           <span class="meteogram-row__label">Temp °F</span>
-          ${meteogramHtml(temps, { color: '#0369a1', label: 'Temperature trend Fahrenheit', fill: true }) || '<p class="empty-state">No temperature series</p>'}
+          <div class="meteogram-row__chart">
+            ${meteogramHtml(temps, { color: '#0369a1', label: 'Temperature trend Fahrenheit', fill: true }) || '<p class="empty-state">No temperature series</p>'}
+          </div>
         </div>
         <div class="meteogram-row">
           <span class="meteogram-row__label">Pressure inHg${dip.dip ? ' · front dip' : ''}</span>
-          ${
-            meteogramHtml(
-              pressureIn.filter((v) => Number.isFinite(v)),
-              {
+          <div class="meteogram-row__chart">
+            ${
+              meteogramHtml(pressureIn, {
                 color: dip.dip ? '#a16207' : '#4338ca',
                 label: dip.dip
                   ? `Pressure trend with rapid dip of ${dip.delta.toFixed(2)} inches`
                   : 'Barometric pressure trend inches of mercury',
                 highlightFrom: dip.dip ? dip.index : undefined,
                 fill: true,
-              },
-            ) || '<p class="empty-state">No pressure series</p>'
-          }
+              }) || '<p class="empty-state">No pressure series</p>'
+            }
+          </div>
         </div>
         <div class="meteogram-row">
           <span class="meteogram-row__label">Wind / gust mph</span>
-          ${
-            meteogramHtml(winds, {
-              color: '#166534',
-              secondary: gusts,
-              secondaryColor: '#c2410c',
-              label: 'Wind speed and gusts miles per hour',
-              fill: false,
-            }) || '<p class="empty-state">No wind series</p>'
-          }
+          <div class="meteogram-row__chart">
+            ${
+              meteogramHtml(winds, {
+                color: '#166534',
+                secondary: gusts,
+                secondaryColor: '#c2410c',
+                label: 'Wind speed and gusts miles per hour',
+                fill: false,
+              }) || '<p class="empty-state">No wind series</p>'
+            }
+          </div>
         </div>
         <div class="meteogram-row">
           <span class="meteogram-row__label">Precip chance</span>
-          ${miniBarChartHtml(probs, { width: 220, height: 36, color: '#0284c7' }) || '<p class="empty-state">No precip probability</p>'}
+          <div class="meteogram-row__chart">
+            ${miniBarChartHtml(probs, { color: '#0284c7' }) || '<p class="empty-state">No precip probability</p>'}
+          </div>
+        </div>
+        <div class="meteogram-row meteogram-row--axis">
+          <span class="meteogram-row__label" aria-hidden="true"></span>
+          <div class="meteogram-row__chart">
+            ${meteogramTimeAxisHtml(chartTimes)}
+          </div>
         </div>
       </div>
+      <p class="intel-muted meteogram-hint">
+        <button type="button" class="intel-jump" data-jump-to="hourly-heading">Open full 48-hour table</button>
+      </p>
     </section>
 
     <section class="glass-panel" aria-labelledby="intel-alerts-heading">
