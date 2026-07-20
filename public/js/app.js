@@ -216,7 +216,7 @@ async function renderResolveView() {
   const preferredLoc = preferred ? findLocation(preferred) : null;
 
   els.main.innerHTML = `
-    <section class="resolve-card" aria-labelledby="resolve-heading">
+    <section class="resolve-card resolve-card--compact" aria-labelledby="resolve-heading">
       <h1 id="resolve-heading">Find your Colorado weather</h1>
       <p class="lead">Search, locate yourself, or continue where you left off.</p>
       <div class="resolve-actions">
@@ -228,45 +228,27 @@ async function renderResolveView() {
         <button type="button" class="btn ${preferredLoc ? 'btn-secondary' : 'btn-primary'}" id="btn-locate">Locate me</button>
       </div>
       <p class="resolve-status" id="resolve-status" aria-live="polite"></p>
+      <div class="search-inline" id="search-panel">
+        <label class="sr-only" for="location-search">City, county, or ZIP</label>
+        <input
+          type="search"
+          id="location-search"
+          name="q"
+          placeholder="City, county, or ZIP"
+          autocomplete="off"
+          enterkeyhint="search"
+        />
+        <ul id="search-results" class="search-results" role="listbox" aria-label="Search results"></ul>
+      </div>
     </section>
-    <section class="search-panel" id="search-panel" aria-labelledby="search-heading">
-      <h2 id="search-heading">Search locations</h2>
-      <label for="location-search">City, county, or ZIP</label>
-      <input type="search" id="location-search" name="q" autocomplete="off" enterkeyhint="search" />
-      <ul id="search-results" class="search-results" role="listbox" aria-label="Search results"></ul>
-    </section>
-    <section class="favorites-panel" id="favorites-panel" aria-labelledby="favorites-heading" hidden>
+    <section class="favorites-panel favorites-panel--compact" id="favorites-panel" aria-labelledby="favorites-heading" hidden>
       <h2 id="favorites-heading">Favorites</h2>
       <ul id="favorites-list" class="location-list"></ul>
-    </section>
-    <section class="map-section" aria-labelledby="map-heading">
-      <h2 id="map-heading">Colorado overview</h2>
-      <div class="map-controls">
-        <label class="checkbox-label">
-          <input type="checkbox" id="radar-toggle" />
-          RainViewer radar
-        </label>
-        <label for="radar-opacity" class="opacity-label">
-          Opacity
-          <input type="range" id="radar-opacity" min="10" max="90" value="50" />
-        </label>
-      </div>
-      <div id="map-container" class="map-container"></div>
     </section>
   `;
 
   renderFavoritesList(document.getElementById('favorites-list'));
   bindSearch(document.getElementById('search-panel'));
-  initStateMap(
-    /** @type {HTMLElement} */ (document.getElementById('map-container')),
-    locations,
-    null,
-    (slug) => navigateTo(slug),
-  );
-  bindRadarControls(
-    /** @type {HTMLElement} */ (document.querySelector('.map-controls')),
-    (enabled, opacity) => setRadarOverlay(enabled, opacity),
-  );
 
   const statusEl = document.getElementById('resolve-status');
 
