@@ -159,15 +159,16 @@ export function renderIntel(root, data, options = {}) {
    * @param {string | null} value
    * @param {string | null} jumpId
    */
-  function metricLink(label, value, jumpId) {
+  function metricRow(label, value, jumpId) {
     if (value == null || value === '') return '';
+    const labelHtml = `<span class="intel-metric__label">${escapeHtml(label)}</span>`;
+    const valueHtml = `<span class="intel-metric__value">${escapeHtml(value)}</span>`;
     if (!jumpId) {
-      return `<div class="intel-metric"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`;
+      return `<div class="intel-metric">${labelHtml}${valueHtml}</div>`;
     }
-    return `<div class="intel-metric">
-      <dt>${escapeHtml(label)}</dt>
-      <dd><button type="button" class="intel-jump intel-jump--metric" data-jump-to="${escapeHtml(jumpId)}">${escapeHtml(value)}</button></dd>
-    </div>`;
+    return `<button type="button" class="intel-metric intel-metric--jump" data-jump-to="${escapeHtml(jumpId)}" aria-label="${escapeHtml(label)}: ${escapeHtml(value)}. Jump to details.">
+      ${labelHtml}${valueHtml}
+    </button>`;
   }
 
   const sunrises = /** @type {string[]} */ (daily?.sunrise ?? []);
@@ -179,7 +180,19 @@ export function renderIntel(root, data, options = {}) {
   const code = /** @type {number | null} */ (current?.weather_code ?? null);
 
   const windDeg = /** @type {number | null} */ (current?.wind_dir_deg ?? null);
-  const compass = windCompassHtml(windDeg, { size: 36 });
+  const compass = windCompassHtml(windDeg, { size: 28 });
+  const windMetaParts = [];
+  if (current?.wind_gust_mph != null) {
+    windMetaParts.push(`gusts ${Math.round(Number(current.wind_gust_mph))}`);
+  }
+  const windDir = windDirLabel(windDeg);
+  if (windDir) {
+    windMetaParts.push(
+      windDeg != null && Number.isFinite(Number(windDeg))
+        ? `from ${windDir} (${Math.round(Number(windDeg))}°)`
+        : `from ${windDir}`,
+    );
+  }
 
   const alerts = /** @type {Record<string, unknown>[]} */ (data.alerts ?? []);
   const cam = /** @type {Record<string, unknown> | null} */ (data.cdot_camera ?? null);
@@ -223,70 +236,73 @@ export function renderIntel(root, data, options = {}) {
     </section>
 
     <section class="glass-panel" aria-labelledby="intel-now-heading">
-      <div class="intel-now">
-        <div class="intel-now__primary">
-          <h2 id="intel-now-heading" class="glass-panel__title">Now</h2>
-          ${
-            current?.temp_f != null
-              ? `<button type="button" class="intel-jump intel-jump--temp" data-jump-to="hourly-heading">
-                  ${weatherIconHtml(code, { isDay, size: 56, className: 'weather-icon weather-icon--lg', alt: String(current.condition ?? wmoLabel(code)) })}
-                  <p class="intel-temp">${Math.round(Number(current.temp_f))}°F</p>
-                  <p class="intel-cond">${escapeHtml(String(current.condition ?? wmoLabel(code)))}</p>
-                </button>`
-              : `<p class="empty-state">Current conditions unavailable.</p>`
-          }
-          ${
-            current?.wind_speed_mph != null
-              ? `<button type="button" class="intel-jump intel-jump--wind" data-jump-to="hourly-heading"><span class="intel-wind">${compass ? compass : ''} ${Math.round(Number(current.wind_speed_mph))} mph${current.wind_gust_mph != null ? ` · gusts ${Math.round(Number(current.wind_gust_mph))}` : ''}${windDirLabel(windDeg) ? ` from ${escapeHtml(windDirLabel(windDeg) ?? '')}` : ''}</span></button>`
-              : ''
-          }
-        </div>
-        <button type="button" class="aqi-ring ${cat.className} intel-jump" data-jump-to="aqi-heading" aria-label="Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}. Open air quality details.">
+      <div class="intel-now-head">
+        <h2 id="intel-now-heading" class="glass-panel__title">Now</h2>
+        <button type="button" class="aqi-ring ${cat.className}" data-jump-to="aqi-heading" aria-label="Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}. Open air quality details.">
           <span class="aqi-ring__value">${aq.aqi != null ? Math.round(aq.aqi) : '—'}</span>
           <span class="aqi-ring__label">AQI</span>
           <span class="aqi-ring__cat">${escapeHtml(cat.label)}</span>
         </button>
       </div>
-      <dl class="intel-metrics">
-        ${metricLink(
+      <div class="intel-now">
+        ${
+          current?.temp_f != null
+            ? `<button type="button" class="intel-now-hero" data-jump-to="hourly-heading" aria-label="Current conditions ${Math.round(Number(current.temp_f))} degrees Fahrenheit, ${String(current.condition ?? wmoLabel(code))}. Open hourly forecast.">
+                ${weatherIconHtml(code, { isDay, size: 52, className: 'weather-icon weather-icon--lg', alt: '' })}
+                <span class="intel-now-hero__text">
+                  <span class="intel-temp">${Math.round(Number(current.temp_f))}°F</span>
+                  <span class="intel-cond">${escapeHtml(String(current.condition ?? wmoLabel(code)))}</span>
+                </span>
+              </button>`
+            : `<p class="empty-state">Current conditions unavailable.</p>`
+        }
+        ${
+          current?.wind_speed_mph != null
+            ? `<button type="button" class="intel-now-wind" data-jump-to="hourly-heading" aria-label="Wind ${Math.round(Number(current.wind_speed_mph))} miles per hour${windMetaParts.length ? `, ${windMetaParts.join(', ')}` : ''}. Open hourly forecast.">
+                ${compass || ''}
+                <span class="intel-now-wind__text">
+                  <span class="intel-now-wind__speed">${Math.round(Number(current.wind_speed_mph))} mph</span>
+                  ${windMetaParts.length ? `<span class="intel-now-wind__meta">${escapeHtml(windMetaParts.join(' · '))}</span>` : ''}
+                </span>
+              </button>`
+            : ''
+        }
+      </div>
+      <div class="intel-metrics">
+        ${metricRow(
           'Feels like',
           current?.feels_like_f != null ? `${Math.round(Number(current.feels_like_f))}°F` : null,
           'hourly-heading',
         )}
-        ${metricLink(
+        ${metricRow(
           'Today’s range',
           todayHi != null && todayLo != null
             ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F`
             : null,
           'daily-heading',
         )}
-        ${metricLink(
+        ${metricRow(
           'Precip chance',
           precipChance != null ? `${Math.round(Number(precipChance))}% this hour` : null,
           'hourly-heading',
         )}
-        ${metricLink(
+        ${metricRow(
           'Humidity',
           current?.humidity != null ? `${current.humidity}%` : null,
           'hourly-heading',
         )}
-        ${metricLink(
+        ${metricRow(
           'Dewpoint',
           hourDew != null ? `${Math.round(Number(hourDew))}°F` : null,
           'hourly-heading',
         )}
-        ${metricLink(
+        ${metricRow(
           'Pressure',
           pressureDisplay != null ? `${Math.round(Number(pressureDisplay))} mb` : null,
           'hourly-heading',
         )}
-        ${metricLink('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
-        ${metricLink(
-          'Air quality',
-          aq.aqi != null ? `AQI ${Math.round(aq.aqi)} (${cat.label})` : null,
-          'aqi-heading',
-        )}
-      </dl>
+        ${metricRow('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
+      </div>
     </section>
 
     <section class="glass-panel" aria-labelledby="meteogram-heading">
