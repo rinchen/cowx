@@ -1,100 +1,98 @@
 {
-  "generatedAt": "2026-07-20T22:49:16.964Z",
+  "generatedAt": "2026-07-20T23:54:08.455Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-20T22:47:34.401Z",
-      "error": "HTTP 429 for https://api.open-meteo.com/v1/forecast?latitude=39.7392,39.7294,39.7047,40.015,40.1672,40.5853,40.3978,40.4233,39.8367,39.8028,39.868,39.5792,39.5483,39.5186,39.3722,39.6133,39.6478,39.9205,39.8855,39.9853&longitude=-104.9903,-104.8319,-105.0814,-105.2705,-105.1019,-105.0844,-105.0749,-104.7091,-105.0372,-105.0875,-104.9719,-104.8769,-104.9739,-104.7614,-104.8561,-105.0166,-104.9878,-105.0867,-104.9819,-104.8205&current=temperature_2m,relative_humidity_2m,apparent_temperature,weathe"
+      "fetchedAt": "2026-07-20T23:50:18.883Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
-      "status": "ok",
-      "fetchedAt": "2026-07-20T22:48:43.904Z"
+      "status": "partial",
+      "fetchedAt": "2026-07-20T23:51:57.455Z",
+      "error": "fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-20T22:48:45.688Z"
+      "fetchedAt": "2026-07-20T23:51:58.741Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-20T22:48:45.859Z"
+      "fetchedAt": "2026-07-20T23:51:59.142Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-20T22:48:47.079Z"
+      "fetchedAt": "2026-07-20T23:52:00.622Z"
     },
     {
       "id": "purpleair",
-      "status": "skipped",
-      "fetchedAt": "2026-07-20T22:48:47.080Z",
-      "error": "PURPLEAIR_API_KEY not set"
+      "status": "ok",
+      "fetchedAt": "2026-07-20T23:52:01.224Z"
     },
     {
       "id": "airnow",
-      "status": "skipped",
-      "fetchedAt": "2026-07-20T22:48:47.080Z",
-      "error": "AIRNOW_API_KEY not set"
+      "status": "ok",
+      "fetchedAt": "2026-07-20T23:53:36.752Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-07-20T22:48:47.904Z"
+      "fetchedAt": "2026-07-20T23:53:37.876Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-07-20T22:49:02.570Z"
+      "fetchedAt": "2026-07-20T23:53:54.817Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-20T22:49:03.512Z"
+      "fetchedAt": "2026-07-20T23:53:55.891Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-20T22:49:15.033Z"
+      "fetchedAt": "2026-07-20T23:54:06.747Z"
     },
     {
       "id": "synoptic",
       "status": "skipped",
-      "fetchedAt": "2026-07-20T22:49:15.033Z",
+      "fetchedAt": "2026-07-20T23:54:06.748Z",
       "error": "SYNOPTIC_API_TOKEN not set"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-07-20T22:49:15.361Z"
+      "fetchedAt": "2026-07-20T23:54:06.979Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-20T22:49:16.401Z"
+      "fetchedAt": "2026-07-20T23:54:07.410Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-20T22:49:16.705Z"
+      "fetchedAt": "2026-07-20T23:54:07.819Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-20T22:49:16.854Z"
+      "fetchedAt": "2026-07-20T23:54:08.169Z"
     },
     {
       "id": "space_weather",
-      "status": "partial",
-      "fetchedAt": "2026-07-20T22:49:16.964Z",
-      "error": "xray: Unexpected non-whitespace character after JSON at position 163497 (line 1 column 163498)"
+      "status": "ok",
+      "fetchedAt": "2026-07-20T23:54:08.454Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 120,
-  "forecastStaleCount": 0,
-  "openmeteoCoverage": 338
+  "apiCalls": 339,
+  "forecastStaleCount": 60,
+  "openmeteoCoverage": 278
 }

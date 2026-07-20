@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-07-20T22:49:16.964Z",
+  "generatedAt": "2026-07-20T23:54:08.454Z",
   "kp": {
     "value": 0.33,
-    "observed": "2026-07-20T22:46:00",
+    "observed": "2026-07-20T23:50:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 1.6,
-    "observed": "2026-07-20T22:42:00"
+    "value": 2.0999999,
+    "observed": "2026-07-20T23:49:00"
   },
   "sfi": {
     "value": 137,
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-07-20T22:48:00Z",
+    "observed": "2026-07-20T23:52:00Z",
     "forecast": [
       {
         "date": "2026-07-20",
@@ -76,7 +76,11 @@
       }
     ]
   },
-  "xray": null,
+  "xray": {
+    "class": "C1.7",
+    "flux": 0.0000017383759995936998,
+    "observed": "2026-07-20T23:51:00Z"
+  },
   "aurora_co": {
     "chance": "unlikely",
     "detail": "Kp 0.3 — aurora unlikely at Colorado latitudes (estimate)."
