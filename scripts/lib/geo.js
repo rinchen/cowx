@@ -54,6 +54,23 @@ export function nearestPoint(target, candidates) {
 }
 
 /**
+ * Nearest candidates sorted by distance (ascending), capped at `limit`.
+ * @param {{ lat: number; lon: number }} target
+ * @param {GeoPoint[]} candidates
+ * @param {number} [limit=3]
+ * @returns {{ point: GeoPoint; distanceKm: number }[]}
+ */
+export function nearestPoints(target, candidates, limit = 3) {
+  if (!Array.isArray(candidates) || candidates.length === 0 || limit <= 0) {
+    return [];
+  }
+  return candidates
+    .map((point) => ({ point, distanceKm: haversineKm(target, point) }))
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .slice(0, limit);
+}
+
+/**
  * Assign nearest candidate within maxKm to each location.
  * @template T
  * @param {{ slug: string, lat: number, lon: number }[]} locations

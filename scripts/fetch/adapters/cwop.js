@@ -1,36 +1,58 @@
 /**
  * CWOP / APRS weather via aprs.me nearby API (no token).
  * Failure point: aprs.me timeout / rate limits.
- * Fallback: status skipped/error; payloads get cwop: null.
+ * Fallback: status skipped/error; payloads get cwop/pws null.
  */
 
 import { fetchJson } from '../../lib/http.js';
-import { nearestPoint } from '../../lib/geo.js';
+import { nearestPoints } from '../../lib/geo.js';
 
 const NEARBY_URL = 'https://aprs.me/api/v1/weather/nearby';
-const MAX_DISTANCE_KM = 40;
+const MAX_DISTANCE_KM = 60;
+const MAX_STATIONS = 2;
 const GRID_RADIUS_MI = 55;
 const GRID_LIMIT = 80;
 
-/** Colorado sampling grid (covers Front Range + mountains + western slope). */
+/** Denser Colorado sampling grid (Front Range + mountains + western slope + plains). */
 const SAMPLE_POINTS = [
-  { lat: 40.6, lon: -105.0 },
+  { lat: 40.7, lon: -104.9 },
+  { lat: 40.5, lon: -105.1 },
+  { lat: 40.4, lon: -105.5 },
+  { lat: 40.2, lon: -105.1 },
   { lat: 40.0, lon: -105.3 },
+  { lat: 39.9, lon: -105.0 },
   { lat: 39.7, lon: -104.9 },
+  { lat: 39.6, lon: -105.2 },
+  { lat: 39.4, lon: -104.8 },
   { lat: 39.2, lon: -104.7 },
+  { lat: 38.9, lon: -104.8 },
   { lat: 38.8, lon: -104.8 },
+  { lat: 38.5, lon: -104.6 },
   { lat: 38.3, lon: -104.6 },
+  { lat: 37.8, lon: -104.8 },
   { lat: 37.5, lon: -105.0 },
   { lat: 40.5, lon: -106.8 },
+  { lat: 40.0, lon: -106.5 },
   { lat: 39.6, lon: -106.4 },
+  { lat: 39.4, lon: -106.2 },
   { lat: 39.2, lon: -106.9 },
+  { lat: 38.9, lon: -106.3 },
   { lat: 38.5, lon: -106.0 },
+  { lat: 38.0, lon: -106.5 },
   { lat: 37.8, lon: -106.9 },
+  { lat: 37.3, lon: -107.0 },
+  { lat: 40.5, lon: -107.5 },
   { lat: 40.3, lon: -108.0 },
+  { lat: 39.5, lon: -108.0 },
   { lat: 39.1, lon: -108.5 },
+  { lat: 38.5, lon: -108.0 },
   { lat: 38.0, lon: -108.0 },
+  { lat: 37.5, lon: -108.0 },
+  { lat: 40.5, lon: -103.5 },
   { lat: 40.0, lon: -103.2 },
+  { lat: 39.0, lon: -103.0 },
   { lat: 38.5, lon: -102.8 },
+  { lat: 37.5, lon: -102.5 },
 ];
 
 /**
@@ -55,12 +77,10 @@ export function parseNearbyStations(raw) {
     const lat = num(row.position?.lat ?? row.lat);
     const lon = num(row.position?.lon ?? row.lon);
     if (lat == null || lon == null) continue;
-    // Rough CO bbox filter
     if (lat < 36.8 || lat > 41.2 || lon < -109.3 || lon > -101.8) continue;
     const callsign = String(row.callsign ?? row.base_callsign ?? '');
     if (!callsign) continue;
     const wx = row.weather ?? {};
-    // aprs.me weather nearby returns °F and mph for US CWOP/APRS packets.
     out.push({
       callsign,
       lat,
@@ -78,11 +98,53 @@ export function parseNearbyStations(raw) {
 }
 
 /**
+ * Build pws payload from nearest CWOP stations.
+ * @param {{ lat: number, lon: number }} loc
+ * @param {ReturnType<typeof parseNearbyStations>} stations
+ * @param {{ wunderground?: string | null }} [linkOpts]
+ */
+export function assignPwsFromStations(loc, stations, linkOpts = {}) {
+  const hits = nearestPoints(loc, stations, MAX_STATIONS).filter(
+    (h) => h.distanceKm <= MAX_DISTANCE_KM,
+  );
+  if (!hits.length) return null;
+
+  const mapped = hits.map((h) => {
+    const p = /** @type {ReturnType<typeof parseNearbyStations>[0]} */ (h.point);
+    return {
+      callsign: p.callsign,
+      network: 'CWOP/APRS',
+      lat: p.lat,
+      lon: p.lon,
+      temp_f: p.temp_f,
+      humidity: p.humidity,
+      pressure_mb: p.pressure_mb,
+      wind_speed_mph: p.wind_speed_mph,
+      wind_gust_mph: p.wind_gust_mph,
+      wind_dir_deg: p.wind_dir_deg,
+      observed: p.observed,
+      distance_km: Math.round(h.distanceKm * 10) / 10,
+    };
+  });
+
+  return {
+    primary: mapped[0],
+    nearby: mapped.slice(1),
+    links: {
+      aprs: `https://aprs.fi/#!call=a%2F${encodeURIComponent(mapped[0].callsign)}`,
+      wunderground: linkOpts.wunderground ?? null,
+    },
+  };
+}
+
+/**
  * @param {import('../../lib/types.js').Location[]} locations
  */
 export async function fetchCwop(locations) {
   /** @type {Map<string, object | null>} */
   const bySlug = new Map();
+  /** @type {Map<string, object | null>} */
+  const pwsBySlug = new Map();
   let calls = 0;
   /** @type {Map<string, ReturnType<typeof parseNearbyStations>[0]>} */
   const byCall = new Map();
@@ -94,22 +156,24 @@ export async function fetchCwop(locations) {
         const raw = await fetchJson(url, { timeoutMs: 20_000 });
         calls += 1;
         for (const st of parseNearbyStations(raw)) {
-          const prev = byCall.get(st.callsign);
-          if (!prev) byCall.set(st.callsign, st);
+          if (!byCall.has(st.callsign)) byCall.set(st.callsign, st);
         }
       } catch {
         calls += 1;
-        /* continue other grid cells */
       }
-      await new Promise((r) => setTimeout(r, 150));
+      await new Promise((r) => setTimeout(r, 120));
     }
 
     const stations = [...byCall.values()];
     if (stations.length === 0) {
-      for (const loc of locations) bySlug.set(loc.slug, null);
+      for (const loc of locations) {
+        bySlug.set(loc.slug, null);
+        pwsBySlug.set(loc.slug, null);
+      }
       return {
         status: 'skipped',
         bySlug,
+        pwsBySlug,
         geojson: { type: 'FeatureCollection', features: [] },
         calls,
         error: 'No CWOP/APRS stations returned from aprs.me',
@@ -134,31 +198,61 @@ export async function fetchCwop(locations) {
 
     let matched = 0;
     for (const loc of locations) {
-      const hit = nearestPoint({ lat: loc.lat, lon: loc.lon }, stations);
-      if (hit && hit.distanceKm <= MAX_DISTANCE_KM) {
+      const wu = loc.pws_id
+        ? `https://www.wunderground.com/dashboard/pws/${encodeURIComponent(loc.pws_id)}`
+        : null;
+      const pws = assignPwsFromStations({ lat: loc.lat, lon: loc.lon }, stations, {
+        wunderground: wu,
+      });
+      if (pws) {
         matched += 1;
-        const p = /** @type {ReturnType<typeof parseNearbyStations>[0]} */ (hit.point);
+        const primary = pws.primary;
         bySlug.set(loc.slug, {
-          ...p,
-          distance_km: Math.round(hit.distanceKm * 10) / 10,
+          callsign: primary.callsign,
+          lat: primary.lat,
+          lon: primary.lon,
+          temp_f: primary.temp_f,
+          humidity: primary.humidity,
+          pressure_mb: primary.pressure_mb,
+          wind_speed_mph: primary.wind_speed_mph,
+          wind_gust_mph: primary.wind_gust_mph,
+          wind_dir_deg: primary.wind_dir_deg,
+          observed: primary.observed,
+          distance_km: primary.distance_km,
         });
+        pwsBySlug.set(loc.slug, pws);
       } else {
         bySlug.set(loc.slug, null);
+        pwsBySlug.set(
+          loc.slug,
+          wu
+            ? {
+                primary: null,
+                nearby: [],
+                links: { aprs: null, wunderground: wu },
+              }
+            : null,
+        );
       }
     }
 
     return {
       status: matched === 0 ? 'partial' : matched < locations.length ? 'partial' : 'ok',
       bySlug,
+      pwsBySlug,
       geojson,
       calls,
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    for (const loc of locations) bySlug.set(loc.slug, null);
+    for (const loc of locations) {
+      bySlug.set(loc.slug, null);
+      pwsBySlug.set(loc.slug, null);
+    }
     return {
       status: 'error',
       bySlug,
+      pwsBySlug,
       geojson: { type: 'FeatureCollection', features: [] },
       calls,
       error: msg.slice(0, 500),

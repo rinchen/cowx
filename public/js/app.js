@@ -269,8 +269,12 @@ function updateFooterTimestamp() {
     aviation: 'AWC',
     purpleair: 'PurpleAir',
     airnow: 'AirNow',
+    usgs: 'USGS',
+    snotel: 'SNOTEL',
     cdot: 'CDOT',
     cwop: 'CWOP/APRS',
+    synoptic: 'Synoptic',
+    hms: 'HMS smoke',
   };
   const names = sourceIds
     .map((id) => sourceLabels[/** @type {keyof typeof sourceLabels} */ (id)] ?? id)

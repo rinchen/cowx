@@ -55,6 +55,25 @@
     },
     "coagmet_id": {
       "type": ["string", "null"]
+    },
+    "webcam_links": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "required": ["name", "url"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "url": {
+            "type": "string",
+            "pattern": "^https://"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["city", "county", "nws", "ski", "other"]
+          }
+        }
+      }
     }
   }
 }

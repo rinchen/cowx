@@ -61,6 +61,37 @@ describe('synthesizeBottomLine', () => {
     assert.match(headline, /155/);
   });
 
+  it('flags CDOT chain law / closures for travel', () => {
+    const { headline, priority } = synthesizeBottomLine({
+      current: { wind_speed_mph: 5, condition: 'Clear', humidity: 40, temp_f: 30 },
+      alerts: [],
+      hourly: { time: [] },
+      cdot_roads: {
+        alerts: [
+          {
+            title: 'I-70 chain law',
+            chain_law: true,
+            closure: false,
+            distance_km: 12,
+          },
+        ],
+      },
+    });
+    assert.equal(priority, 'travel');
+    assert.match(headline, /Chain law/i);
+  });
+
+  it('flags HMS medium/heavy smoke', () => {
+    const { headline, priority } = synthesizeBottomLine({
+      current: { wind_speed_mph: 5, condition: 'Haze', humidity: 30, temp_f: 80 },
+      alerts: [],
+      hourly: { time: [] },
+      hms_smoke: { density: 'heavy', observed: '2026-07-20' },
+    });
+    assert.equal(priority, 'smoke');
+    assert.match(headline, /smoke/i);
+  });
+
   it('falls back to nominal pleasant summary', () => {
     const { headline, priority } = synthesizeBottomLine({
       current: { wind_speed_mph: 4, condition: 'Clear', humidity: 35, temp_f: 72 },

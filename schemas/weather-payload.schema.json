@@ -112,6 +112,16 @@
       "type": ["object", "null"],
       "additionalProperties": true
     },
+    "cdot_roads": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "updatedAt": { "type": "string" },
+        "alerts": { "type": "array" },
+        "cameras": { "type": "array" },
+        "rwis": { "type": ["object", "null"] }
+      }
+    },
     "cwop": {
       "type": ["object", "null"],
       "additionalProperties": true,
@@ -119,6 +129,22 @@
         "callsign": { "type": "string" },
         "temp_f": { "type": ["number", "null"] },
         "distance_km": { "type": "number" }
+      }
+    },
+    "pws": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    },
+    "hms_smoke": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "density": {
+          "type": "string",
+          "enum": ["none", "light", "medium", "heavy"]
+        },
+        "observed": { "type": ["string", "null"] },
+        "sourceUrl": { "type": ["string", "null"] }
       }
     },
     "rf_comms": {

@@ -20,7 +20,7 @@ pnpm test
 npx serve public
 ```
 
-Point GitHub Pages at `public/` (see `.github/workflows/pages.yml`). Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
+Point GitHub Pages at `public/` (see `.github/workflows/pages.yml`). Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `SYNOPTIC_API_TOKEN`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
 
 ---
 
@@ -51,8 +51,26 @@ Replace every entry with sites in your state. Each object needs at least:
 | `wfo`          | NWS office id (e.g. `BOU`) — update schema enum                |
 | `elevation_ft` | Elevation                                                      |
 
-Useful optional fields: `icao`, `pws_id`, `coagmet_id`. PurpleAir and AirNow resolve by nearest
-sensor/grid (no per-location sensor ids).
+Useful optional fields: `icao`, `pws_id` (WU dashboard link only), `coagmet_id`,
+`webcam_links` (municipal/ski/NWS camera **portals** as new-tab links — do not scrape or hotlink stills).
+
+### Local webcam links (forking)
+
+City and county camera portals are rarely embeddable. Add them to the catalog:
+
+```json
+"webcam_links": [
+  { "name": "City traffic cameras", "url": "https://example.gov/cameras/", "kind": "city" }
+]
+```
+
+Rules:
+
+- Prefer **official** city/county/NWS/DOT `https://` pages
+- UI opens each link in a **new tab** (`target="_blank"` `rel="noopener noreferrer"`)
+- Do **not** scrape private feeds or embed third-party stills without clear redistribution rights
+- Replace Colorado examples (Longmont, Boulder, Larimer, Colorado Springs) with your state’s portals, or omit
+- Extend `schemas/location.schema.json` if you change the `webcam_links` shape
 
 Also update state filters in adapters that hardcode Colorado:
 
@@ -96,6 +114,9 @@ Most sources are national APIs keyed by lat/lon. These are Colorado-hardcoded to
 | [`scripts/fetch/adapters/purpleair.js`](scripts/fetch/adapters/purpleair.js)       | Bounding box constants (N/S/W/E)                                                                                         |
 | [`scripts/fetch/adapters/aviation.js`](scripts/fetch/adapters/aviation.js)         | Seed ICAO list (`KDEN`, …) → major airports in your state                                                                |
 | [`scripts/fetch/adapters/coagmet.js`](scripts/fetch/adapters/coagmet.js)           | **Colorado-only** (CSU CoAgMET). Replace with your ag network or remove the adapter, orchestrator wiring, and UI section |
+| [`scripts/fetch/adapters/cdot.js`](scripts/fetch/adapters/cdot.js)                 | Colorado DOT cameras / RWIS / alerts — replace with your DOT traveler feeds or remove                                    |
+| [`scripts/fetch/adapters/cwop.js`](scripts/fetch/adapters/cwop.js) / `synoptic.js` | Adjust CO bbox / sample grid; Synoptic uses optional `SYNOPTIC_API_TOKEN`                                                |
+| [`scripts/fetch/adapters/hms.js`](scripts/fetch/adapters/hms.js)                   | National HMS smoke — keep; adjust CO bbox clip if desired                                                                |
 | [`scripts/lib/http.js`](scripts/lib/http.js)                                       | NWS `User-Agent` string — use your project name + contact URL/email                                                      |
 
 National / keep with new coords: Open-Meteo forecast & AQ, AirNow (with key), RainViewer, NWS point links.

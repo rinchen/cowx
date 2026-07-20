@@ -133,6 +133,19 @@ export function synthesizeBottomLine(data) {
     return { headline: bits.filter(Boolean).join(': '), priority: 'hazard' };
   }
 
+  // 1b. CDOT road closure / chain law nearby
+  const roads = /** @type {Record<string, unknown> | null} */ (data.cdot_roads ?? null);
+  const roadAlerts = /** @type {Record<string, unknown>[]} */ (roads?.alerts ?? []);
+  const travelHit = roadAlerts.find((a) => a.closure || a.chain_law);
+  if (travelHit) {
+    const title = str(travelHit.title || travelHit.roads || 'Road advisory');
+    const kind = travelHit.chain_law ? 'Chain law' : 'Road closure';
+    return {
+      headline: `${kind}: ${title}${travelHit.distance_km != null ? ` (${travelHit.distance_km} km)` : ''}`,
+      priority: 'travel',
+    };
+  }
+
   // 2. Wind & travel
   const maxWind = Math.max(wind ?? 0, gust ?? 0);
   if (maxWind >= 30) {
@@ -197,6 +210,16 @@ export function synthesizeBottomLine(data) {
     };
   }
 
+  // 3b. HMS smoke
+  const hms = /** @type {Record<string, unknown> | null} */ (data.hms_smoke ?? null);
+  const smokeDensity = str(hms?.density).toLowerCase();
+  if (smokeDensity === 'heavy' || smokeDensity === 'medium') {
+    return {
+      headline: `Satellite smoke plume overhead (${smokeDensity}) — check air quality before outdoor exertion`,
+      priority: 'smoke',
+    };
+  }
+
   // 4. AQ / smoke
   const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
   const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
@@ -213,7 +236,8 @@ export function synthesizeBottomLine(data) {
     };
   }
 
-  // 5. Nominal
+  // 5. Nominal (+ high UV note)
+  const uv = num(current?.uv_index);
   const windBit =
     maxWind < 8
       ? 'mild winds'
@@ -221,8 +245,9 @@ export function synthesizeBottomLine(data) {
         ? 'light breeze'
         : `breezy (${Math.round(maxWind)} mph)`;
   const sky = condition || 'Mixed skies';
+  const uvBit = uv != null && uv >= 8 ? `; UV ${Math.round(uv)} — sun protection advised` : '';
   return {
-    headline: `${sky}, ${windBit}, ideal outdoor conditions`,
+    headline: `${sky}, ${windBit}, ideal outdoor conditions${uvBit}`,
     priority: 'nominal',
   };
 }

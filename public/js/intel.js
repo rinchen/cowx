@@ -139,10 +139,39 @@ export function renderIntel(root, data, options = {}) {
   }
 
   const alerts = /** @type {Record<string, unknown>[]} */ (data.alerts ?? []);
-  const cam = /** @type {Record<string, unknown> | null} */ (data.cdot_camera ?? null);
-  const rwis = /** @type {Record<string, unknown> | null} */ (data.cdot_rwis ?? null);
-  const cwop = /** @type {Record<string, unknown> | null} */ (data.cwop ?? null);
+  const roads = /** @type {Record<string, unknown> | null} */ (data.cdot_roads ?? null);
+  const cams = /** @type {Record<string, unknown>[]} */ (
+    roads?.cameras ?? (data.cdot_camera ? [data.cdot_camera] : [])
+  );
+  const rwis = /** @type {Record<string, unknown> | null} */ (
+    roads?.rwis ?? data.cdot_rwis ?? null
+  );
+  const roadAlerts = /** @type {Record<string, unknown>[]} */ (roads?.alerts ?? []);
+  const pws = /** @type {Record<string, unknown> | null} */ (data.pws ?? null);
+  const pwsPrimary = /** @type {Record<string, unknown> | null} */ (pws?.primary ?? null);
+  const cwop = pwsPrimary ?? /** @type {Record<string, unknown> | null} */ (data.cwop ?? null);
   const coag = /** @type {Record<string, unknown> | null} */ (data.coagmet ?? null);
+  const hms = /** @type {Record<string, unknown> | null} */ (data.hms_smoke ?? null);
+  const snotel = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
+  const links = /** @type {Record<string, unknown>} */ (data.links ?? {});
+  const webcamLinks = /** @type {{ name?: string, url?: string }[]} */ (links.webcam_links ?? []);
+
+  const hourVis =
+    hourly && Array.isArray(hourly.visibility)
+      ? /** @type {number[]} */ (hourly.visibility)[hi]
+      : null;
+  const hourUv =
+    current?.uv_index != null
+      ? Number(current.uv_index)
+      : hourly && Array.isArray(hourly.uv_index)
+        ? /** @type {number[]} */ (hourly.uv_index)[hi]
+        : null;
+  const tstorm =
+    current?.thunderstorm_probability != null
+      ? Number(current.thunderstorm_probability)
+      : hourly && Array.isArray(hourly.thunderstorm_probability)
+        ? /** @type {number[]} */ (hourly.thunderstorm_probability)[hi]
+        : null;
 
   let rf = /** @type {Record<string, unknown> | null} */ (data.rf_comms ?? null);
 
@@ -234,6 +263,23 @@ export function renderIntel(root, data, options = {}) {
         ${metricRow(
           'Pressure',
           pressureDisplay != null ? `${Math.round(Number(pressureDisplay))} mb` : null,
+          'hourly-heading',
+        )}
+        ${metricRow(
+          'UV index',
+          hourUv != null && Number.isFinite(hourUv) ? String(Math.round(hourUv)) : null,
+          'hourly-heading',
+        )}
+        ${metricRow(
+          'Visibility',
+          hourVis != null && Number.isFinite(hourVis)
+            ? `${(Number(hourVis) / 1609.34).toFixed(1)} mi`
+            : null,
+          'hourly-heading',
+        )}
+        ${metricRow(
+          'Thunderstorm',
+          tstorm != null && Number.isFinite(tstorm) ? `${Math.round(tstorm)}%` : null,
           'hourly-heading',
         )}
         ${metricRow('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
@@ -339,18 +385,29 @@ export function renderIntel(root, data, options = {}) {
     </section>
 
     ${(() => {
-      const imageUrl = safeHttpsUrl(cam?.imageUrl);
-      const pageUrl = safeHttpsUrl(cam?.pageUrl);
-      if (imageUrl || pageUrl) {
-        return `<section class="glass-panel" aria-labelledby="cam-heading" id="cdot-camera-panel">
-            <h2 id="cam-heading" class="glass-panel__title">CDOT camera</h2>
-            <p class="intel-muted">${escapeHtml(String(cam.name ?? 'Nearby camera'))}${cam.distance_km != null ? ` · ${cam.distance_km} km` : ''}</p>
+      const topAlert = roadAlerts[0];
+      if (!topAlert && !cams.length && !rwis) return '';
+      const alertBits = roadAlerts
+        .slice(0, 3)
+        .map((a) => {
+          const flags = [
+            a.chain_law ? 'chain law' : null,
+            a.closure ? 'closure' : null,
+            a.pass_relevant ? 'pass' : null,
+          ]
+            .filter(Boolean)
+            .join(', ');
+          return `<li><button type="button" class="intel-jump" data-jump-to="roads-heading"><strong>${escapeHtml(String(a.title ?? 'Travel alert'))}</strong>${a.distance_km != null ? ` · ${a.distance_km} km` : ''}${flags ? ` · ${escapeHtml(flags)}` : ''}</button></li>`;
+        })
+        .join('');
+      return `<section class="glass-panel" aria-labelledby="roads-intel-heading">
+            <h2 id="roads-intel-heading" class="glass-panel__title">Roads &amp; passes</h2>
             ${
-              imageUrl
-                ? `<img class="cdot-cam" src="${escapeHtml(imageUrl)}?t=${Date.now()}" alt="CDOT traffic camera: ${escapeHtml(String(cam.name ?? 'Colorado roadway'))}" loading="lazy" decoding="async" data-cdot-cam />`
-                : ''
+              topAlert
+                ? `<ul class="intel-alert-list">${alertBits}</ul>
+                   <button type="button" class="btn btn-link intel-jump" data-jump-to="roads-heading">All road alerts</button>`
+                : `<p class="intel-muted">No nearby CDOT travel alerts.</p>`
             }
-            ${pageUrl ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer">Open on COtrip</a></p>` : ''}
             ${
               rwis
                 ? `<dl class="metric-list metric-list--compact">
@@ -361,40 +418,86 @@ export function renderIntel(root, data, options = {}) {
                   </dl>`
                 : ''
             }
+            <p><a class="btn btn-secondary btn-sm" href="https://maps.cotrip.org/" target="_blank" rel="noopener noreferrer" aria-label="Open COtrip map (opens in new tab)">Open COtrip</a></p>
           </section>`;
-      }
-      if (rwis) {
-        return `<section class="glass-panel" aria-labelledby="rwis-heading">
-              <h2 id="rwis-heading" class="glass-panel__title">CDOT RWIS</h2>
-              <dl class="metric-list metric-list--compact">
-                <dt>Station</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${rwis.distance_km != null ? ` (${rwis.distance_km} km)` : ''}</dd>
-                ${rwis.air_temp_f != null ? `<dt>Air</dt><dd>${Math.round(Number(rwis.air_temp_f))}°F</dd>` : ''}
-                ${rwis.surface_temp_f != null ? `<dt>Pavement</dt><dd>${Math.round(Number(rwis.surface_temp_f))}°F</dd>` : ''}
-                ${rwis.surface_status ? `<dt>Surface</dt><dd>${escapeHtml(String(rwis.surface_status))}</dd>` : ''}
-              </dl>
-            </section>`;
-      }
-      return '';
+    })()}
+
+    ${(() => {
+      if (!cams.length && !webcamLinks.length) return '';
+      const camHtml = cams
+        .slice(0, 3)
+        .map((c) => {
+          const imageUrl = safeHttpsUrl(c.imageUrl);
+          const pageUrl = safeHttpsUrl(c.pageUrl);
+          return `<figure class="cdot-cam-card">
+              <figcaption class="intel-muted">${escapeHtml(String(c.name ?? 'Camera'))}${c.distance_km != null ? ` · ${c.distance_km} km` : ''}</figcaption>
+              ${
+                imageUrl
+                  ? `<img class="cdot-cam" src="${escapeHtml(imageUrl)}?t=${Date.now()}" alt="CDOT traffic camera: ${escapeHtml(String(c.name ?? 'Colorado roadway'))}" loading="lazy" decoding="async" data-cdot-cam />`
+                  : ''
+              }
+              ${pageUrl ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(String(c.name ?? 'camera'))} on COtrip (opens in new tab)">Open on COtrip</a></p>` : ''}
+            </figure>`;
+        })
+        .join('');
+      const localLinks = webcamLinks
+        .filter((l) => safeHttpsUrl(l.url))
+        .map(
+          (l) =>
+            `<li><a href="${escapeHtml(String(safeHttpsUrl(l.url)))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(String(l.name ?? 'Webcam'))} (opens in new tab)">${escapeHtml(String(l.name ?? 'Local webcam'))}</a></li>`,
+        )
+        .join('');
+      return `<section class="glass-panel" aria-labelledby="cam-heading" id="cdot-camera-panel">
+            <h2 id="cam-heading" class="glass-panel__title">Road cameras</h2>
+            <div class="cdot-cam-strip">${camHtml || '<p class="intel-muted">No CDOT camera assigned.</p>'}</div>
+            ${
+              localLinks
+                ? `<h3 class="glass-panel__subtitle">Local webcams</h3>
+                   <ul class="link-list link-list--compact">${localLinks}</ul>
+                   <p class="intel-muted">City and county portals open in a new tab.</p>`
+                : ''
+            }
+          </section>`;
     })()}
 
     ${
-      rfLabel || cwop
+      hms && hms.density && hms.density !== 'none'
+        ? `<section class="glass-panel" aria-labelledby="smoke-intel-heading">
+            <h2 id="smoke-intel-heading" class="glass-panel__title">Fire &amp; smoke</h2>
+            <p>HMS satellite smoke: <strong>${escapeHtml(String(hms.density))}</strong>${hms.observed ? ` · ${escapeHtml(String(hms.observed))}` : ''}</p>
+            <button type="button" class="btn btn-link intel-jump" data-jump-to="smoke-heading">Smoke &amp; air quality detail</button>
+          </section>`
+        : ''
+    }
+
+    ${
+      pwsPrimary || cwop
+        ? `<section class="glass-panel" aria-labelledby="pws-heading">
+            <h2 id="pws-heading" class="glass-panel__title">Nearby PWS</h2>
+            <dl class="metric-list metric-list--compact">
+              <dt>Station</dt><dd>${escapeHtml(String(cwop?.callsign ?? ''))}${cwop?.network ? ` · ${escapeHtml(String(cwop.network))}` : ''}${cwop?.distance_km != null ? ` · ${cwop.distance_km} km` : ''}</dd>
+              ${cwop?.temp_f != null ? `<dt>Temp</dt><dd>${Math.round(Number(cwop.temp_f))}°F</dd>` : ''}
+              ${cwop?.humidity != null ? `<dt>Humidity</dt><dd>${Math.round(Number(cwop.humidity))}%</dd>` : ''}
+              ${cwop?.wind_speed_mph != null ? `<dt>Wind</dt><dd>${Math.round(Number(cwop.wind_speed_mph))} mph</dd>` : ''}
+              ${cwop?.observed ? `<dt>Observed</dt><dd>${escapeHtml(String(cwop.observed))}</dd>` : ''}
+            </dl>
+            ${
+              links.pws
+                ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(links.pws) || links.pws))}" target="_blank" rel="noopener noreferrer" aria-label="Weather Underground PWS (opens in new tab)">Weather Underground</a></p>`
+                : ''
+            }
+          </section>`
+        : ''
+    }
+
+    ${
+      rfLabel || (data.cwop && !pwsPrimary)
         ? `<section class="glass-panel" aria-labelledby="rf-heading">
             <h2 id="rf-heading" class="glass-panel__title">Field ops / RF</h2>
             ${
               rfLabel
                 ? `<p class="rf-badge ${rfClass}"><span class="rf-badge__status">VHF/UHF: ${escapeHtml(rfLabel)}</span>
                     <span class="rf-badge__detail">${escapeHtml(String(rf?.detail ?? 'Model-derived estimate'))}</span></p>`
-                : ''
-            }
-            ${
-              cwop
-                ? `<dl class="metric-list metric-list--compact">
-                    <dt>CWOP / APRS</dt><dd>${escapeHtml(String(cwop.callsign))}${cwop.distance_km != null ? ` · ${cwop.distance_km} km` : ''}</dd>
-                    ${cwop.temp_f != null ? `<dt>Temp</dt><dd>${Math.round(Number(cwop.temp_f))}°F</dd>` : ''}
-                    ${cwop.humidity != null ? `<dt>Humidity</dt><dd>${Math.round(Number(cwop.humidity))}%</dd>` : ''}
-                    ${cwop.wind_speed_mph != null ? `<dt>Wind</dt><dd>${Math.round(Number(cwop.wind_speed_mph))} mph</dd>` : ''}
-                  </dl>`
                 : ''
             }
           </section>`
@@ -409,9 +512,25 @@ export function renderIntel(root, data, options = {}) {
               <dt>Station</dt><dd>${escapeHtml(String(coag.station_name ?? coag.station_id ?? ''))}</dd>
               ${coag.soil_temp_5cm_f != null ? `<dt>Soil 5 cm</dt><dd>${coag.soil_temp_5cm_f}°F</dd>` : ''}
               ${coag.soil_temp_15cm_f != null ? `<dt>Soil 15 cm</dt><dd>${coag.soil_temp_15cm_f}°F</dd>` : ''}
+              ${coag.soil_moisture_5cm != null ? `<dt>Moisture 5 cm</dt><dd>${escapeHtml(String(coag.soil_moisture_5cm))}</dd>` : ''}
               ${coag.eto_in != null ? `<dt>ET₀</dt><dd>${escapeHtml(String(coag.eto_in))}</dd>` : ''}
             </dl>
             <button type="button" class="btn btn-link intel-jump" data-jump-to="coagmet-heading">Full agriculture section</button>
+          </section>`
+        : ''
+    }
+
+    ${
+      snotel && Number(data.elevation_ft) >= 7000
+        ? `<section class="glass-panel" aria-labelledby="snow-intel-heading">
+            <h2 id="snow-intel-heading" class="glass-panel__title">Snowpack</h2>
+            <dl class="metric-list metric-list--compact">
+              <dt>SNOTEL</dt><dd>${escapeHtml(String(snotel.station_name ?? snotel.station_id ?? ''))}${snotel.distance_km != null ? ` · ${snotel.distance_km} km` : ''}</dd>
+              ${snotel.snow_depth_in != null ? `<dt>Depth</dt><dd>${escapeHtml(String(snotel.snow_depth_in))} in</dd>` : ''}
+              ${snotel.swe_in != null ? `<dt>SWE</dt><dd>${escapeHtml(String(snotel.swe_in))} in</dd>` : ''}
+              ${snotel.precipitation_24h_in != null ? `<dt>24h precip</dt><dd>${escapeHtml(String(snotel.precipitation_24h_in))} in</dd>` : ''}
+            </dl>
+            <button type="button" class="btn btn-link intel-jump" data-jump-to="snowpack-heading">Full snowpack section</button>
           </section>`
         : ''
     }
@@ -422,8 +541,10 @@ export function renderIntel(root, data, options = {}) {
         <li><button type="button" class="intel-jump" data-jump-to="hourly-heading">48-hour hourly</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="daily-heading">10-day daily</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="alerts-heading">Alerts &amp; discussion</button></li>
+        <li><button type="button" class="intel-jump" data-jump-to="roads-heading">Roads &amp; passes</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="metar-heading">Aviation</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="aqi-heading">Air quality detail</button></li>
+        <li><button type="button" class="intel-jump" data-jump-to="smoke-heading">Fire &amp; smoke</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="links-heading">External tools</button></li>
       </ul>
     </nav>
@@ -436,16 +557,15 @@ export function renderIntel(root, data, options = {}) {
     });
   });
 
-  const img = /** @type {HTMLImageElement | null} */ (root.querySelector('[data-cdot-cam]'));
-  img?.addEventListener('error', () => {
-    const panel = root.querySelector('#cdot-camera-panel');
-    if (panel instanceof HTMLElement) {
+  root.querySelectorAll('[data-cdot-cam]').forEach((imgEl) => {
+    imgEl.addEventListener('error', () => {
+      const img = /** @type {HTMLImageElement} */ (imgEl);
       img.remove();
       const note = document.createElement('p');
       note.className = 'intel-muted';
       note.textContent = 'Live camera image unavailable; use COtrip link if shown.';
-      panel.appendChild(note);
-    }
+      img.parentElement?.appendChild(note);
+    });
   });
 
   const stack = /** @type {HTMLElement | null} */ (root.querySelector('[data-meteogram-stack]'));

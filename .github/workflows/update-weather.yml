@@ -29,6 +29,7 @@ jobs:
         env:
           PURPLEAIR_API_KEY: ${{ secrets.PURPLEAIR_API_KEY }}
           AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
+          SYNOPTIC_API_TOKEN: ${{ secrets.SYNOPTIC_API_TOKEN }}
         run: pnpm fetch
 
       - name: Commit data changes

@@ -93,15 +93,18 @@
       <p>
         The <code>pnpm fetch</code> orchestrator calls independent adapters (Open-Meteo forecast and
         air quality, NWS alerts/AFD/HWO, CoAgMET, Aviation Weather METAR/TAF, USGS gauges, SNOTEL,
-        CDOT cameras/RWIS, CWOP/APRS, and optional PurpleAir and AirNow). Each source can succeed or
-        fail on its own. Results are merged into:
+        CDOT cameras/RWIS/road alerts, CWOP/APRS (and optional Synoptic) neighborhood PWS, NOAA HMS
+        smoke, and optional PurpleAir and AirNow). Each source can succeed or fail on its own.
+        Results are merged into:
       </p>
       <ul>
         <li><code>index.json</code> — slim list for search and the map</li>
         <li><code>locations/{slug}.json</code> — full drill-down payload</li>
         <li><code>alerts.geojson</code> — warning polygons when geometry is available</li>
         <li>
-          <code>cdot-cameras.geojson</code> / <code>cwop.geojson</code> — roadway and APRS layers
+          <code>cdot-cameras.geojson</code> / <code>cdot-alerts.geojson</code> /
+          <code>cwop.geojson</code> / <code>hms-smoke.geojson</code> — roadway, APRS, and smoke
+          layers
         </li>
         <li><code>co-zips.json</code> — ZIP search table</li>
         <li>
@@ -121,11 +124,12 @@
       <p>
         Each location opens a dual-pane <strong>workspace</strong>: a glass intel column with a
         plain-English bottom-line headline, now conditions, AQI badge, 24-hour meteograms, CDOT
-        camera/RWIS when nearby, and model-derived VHF/UHF ducting cues — beside an animated
-        RainViewer radar loop with playback controls. Below that, expandable 48-hour hourly and
-        10-day daily tables keep full forecast depth (wind compass, NBM thunderstorm probability via
-        Open-Meteo, and related metrics). A <strong>Live data sources</strong> panel lists
-        fetch/observation times and links to each provider.
+        cameras/RWIS/road alerts when nearby, local city webcam links (new tab), nearby PWS, HMS
+        smoke density, and model-derived VHF/UHF ducting cues — beside an animated RainViewer radar
+        loop with playback controls. Below that, expandable 48-hour hourly and 10-day daily tables
+        keep full forecast depth (wind compass, NBM thunderstorm probability via Open-Meteo, and
+        related metrics). A <strong>Live data sources</strong> panel lists fetch/observation times
+        and links to each provider.
       </p>
       <p>
         NWS alert polygons draw on the locality map. Links to NOAA radar, CSU CIRA satellite, and

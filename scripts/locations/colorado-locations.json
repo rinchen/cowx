@@ -49,7 +49,14 @@
     "elevation_ft": 5328,
     "icao": "KBDU",
     "pws_id": "KCOBOULD325",
-    "coagmet_id": null
+    "coagmet_id": null,
+    "webcam_links": [
+      {
+        "name": "Boulder traffic cameras",
+        "url": "https://webappsprod.bouldercolorado.gov/webcams/",
+        "kind": "city"
+      }
+    ]
   },
   {
     "slug": "longmont",
@@ -62,7 +69,19 @@
     "elevation_ft": 4984,
     "icao": "KLMO",
     "pws_id": "KCOLONGM52",
-    "coagmet_id": null
+    "coagmet_id": null,
+    "webcam_links": [
+      {
+        "name": "Longmont street snow cams",
+        "url": "https://longmontcolorado.gov/transportation/snow-ice-control/street-snow-cams/",
+        "kind": "city"
+      },
+      {
+        "name": "Longmont webcams hub",
+        "url": "https://longmontcolorado.gov/information/webcams/",
+        "kind": "city"
+      }
+    ]
   },
   {
     "slug": "fort-collins",
@@ -75,7 +94,14 @@
     "elevation_ft": 5003,
     "icao": "KFNL",
     "pws_id": "KCOFORTC265",
-    "coagmet_id": null
+    "coagmet_id": null,
+    "webcam_links": [
+      {
+        "name": "Larimer County webcams & real-time weather",
+        "url": "https://www.larimer.gov/roads/real-time-weather",
+        "kind": "county"
+      }
+    ]
   },
   {
     "slug": "loveland",
@@ -712,7 +738,14 @@
     "elevation_ft": 6035,
     "icao": "KCOS",
     "pws_id": "KCOCOLOR598",
-    "coagmet_id": null
+    "coagmet_id": null,
+    "webcam_links": [
+      {
+        "name": "Colorado Springs traffic cameras",
+        "url": "https://coloradosprings.gov/traffic-and-transportation-engineering/page/traffic-cameras",
+        "kind": "city"
+      }
+    ]
   },
   {
     "slug": "manitou-springs",
@@ -820,7 +853,7 @@
   },
   {
     "slug": "canon-city",
-    "name": "Ca\u00f1on City",
+    "name": "Cañon City",
     "lat": 38.4519,
     "lon": -105.2425,
     "region": "front-range",

@@ -22,6 +22,8 @@ import { fetchUsgs } from './adapters/usgs.js';
 import { fetchSnotel } from './adapters/snotel.js';
 import { fetchCdot } from './adapters/cdot.js';
 import { fetchCwop } from './adapters/cwop.js';
+import { fetchSynoptic } from './adapters/synoptic.js';
+import { fetchHms } from './adapters/hms.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
@@ -74,7 +76,7 @@ export async function runFetch() {
     const result = /** @type {any} */ (await runAdapterSafely(/** @type {any} */ (fn)));
     sources.push(sourceMeta(id, result));
     totalCalls += result.calls ?? 0;
-    const extra = detail ? detail(result) : `(${result.bySlug.size} locs)`;
+    const extra = detail ? detail(result) : `(${result.bySlug?.size ?? 0} locs)`;
     console.log(`  ${id}: ${result.status}${extra ? ` ${extra}` : ''}`);
     return result;
   }
@@ -100,6 +102,16 @@ export async function runFetch() {
   const cwop = await runAdapter(
     'cwop',
     () => fetchCwop(locations),
+    () => '',
+  );
+  const synoptic = await runAdapter(
+    'synoptic',
+    () => fetchSynoptic(locations, process.env, cwop.pwsBySlug ?? new Map()),
+    () => '',
+  );
+  const hms = await runAdapter(
+    'hms',
+    () => fetchHms(locations),
     () => '',
   );
 
@@ -142,6 +154,9 @@ export async function runFetch() {
     const snow = snotel.bySlug.get(loc.slug) ?? null;
     const cdotRec = cdot.bySlug.get(loc.slug) ?? null;
     const cwopRec = cwop.bySlug.get(loc.slug) ?? null;
+    const pwsRec = synoptic.bySlug.get(loc.slug) ?? cwop.pwsBySlug?.get(loc.slug) ?? null;
+    const hmsRec = hms.bySlug.get(loc.slug) ?? null;
+    const webcamLinks = Array.isArray(loc.webcam_links) ? loc.webcam_links : [];
 
     const payload = {
       slug: loc.slug,
@@ -170,7 +185,10 @@ export async function runFetch() {
       snotel: snow,
       cdot_camera: cdotRec?.camera ?? null,
       cdot_rwis: cdotRec?.rwis ?? null,
+      cdot_roads: cdotRec?.cdot_roads ?? null,
       cwop: cwopRec,
+      pws: pwsRec,
+      hms_smoke: hmsRec,
       rf_comms: om?.rf_comms ?? prior?.rf_comms ?? null,
       links: {
         nws_forecast: `https://forecast.weather.gov/MapClick.php?lat=${loc.lat}&lon=${loc.lon}`,
@@ -185,6 +203,7 @@ export async function runFetch() {
         usgs: gauge?.url ?? 'https://waterdata.usgs.gov/nwis/rt',
         snotel: snow?.url ?? 'https://www.nrcs.usda.gov/wps/portal/wcc/home/',
         cotrip: 'https://maps.cotrip.org/',
+        webcam_links: webcamLinks,
       },
     };
 
@@ -206,6 +225,7 @@ export async function runFetch() {
       condition: current?.condition ?? null,
       humidity: current?.humidity ?? null,
       wind_speed_mph: current?.wind_speed_mph ?? null,
+      uv_index: current?.uv_index ?? null,
       aqi: an?.aqi ?? pa?.aqi_pm25 ?? omaq?.us_aqi ?? null,
       nws_alert: alerts.length > 0,
       forecast_stale: forecastStale,
@@ -231,8 +251,20 @@ export async function runFetch() {
   );
 
   await writeFile(
+    path.join(DATA_DIR, 'cdot-alerts.geojson'),
+    JSON.stringify(cdot.alertsGeoJson ?? { type: 'FeatureCollection', features: [] }),
+    'utf8',
+  );
+
+  await writeFile(
     path.join(DATA_DIR, 'cwop.geojson'),
     JSON.stringify(cwop.geojson ?? { type: 'FeatureCollection', features: [] }),
+    'utf8',
+  );
+
+  await writeFile(
+    path.join(DATA_DIR, 'hms-smoke.geojson'),
+    JSON.stringify(hms.smokeGeoJson ?? { type: 'FeatureCollection', features: [] }),
     'utf8',
   );
 
@@ -251,7 +283,7 @@ export async function runFetch() {
 
   const meta = {
     generatedAt: updatedAt,
-    version: '1.1.0',
+    version: '1.2.0',
     sources,
     locationCount: index.length,
     apiCalls: totalCalls,

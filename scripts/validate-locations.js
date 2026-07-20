@@ -85,6 +85,34 @@ export function validateLocationsData(data) {
     if ('elevation_ft' in entry && typeof entry.elevation_ft !== 'number') {
       errors.push(`${prefix}: elevation_ft must be a number`);
     }
+
+    if ('webcam_links' in entry && entry.webcam_links != null) {
+      if (!Array.isArray(entry.webcam_links)) {
+        errors.push(`${prefix}: webcam_links must be an array or null`);
+      } else {
+        for (let j = 0; j < entry.webcam_links.length; j += 1) {
+          const link = entry.webcam_links[j];
+          const lp = `${prefix}.webcam_links[${j}]`;
+          if (!isObject(link)) {
+            errors.push(`${lp}: must be an object`);
+            continue;
+          }
+          if (typeof link.name !== 'string' || !link.name.trim()) {
+            errors.push(`${lp}: name must be a non-empty string`);
+          }
+          if (typeof link.url !== 'string' || !/^https:\/\//.test(link.url)) {
+            errors.push(`${lp}: url must be an https:// URL`);
+          }
+          if (
+            'kind' in link &&
+            link.kind != null &&
+            !['city', 'county', 'nws', 'ski', 'other'].includes(String(link.kind))
+          ) {
+            errors.push(`${lp}: kind must be city|county|nws|ski|other`);
+          }
+        }
+      }
+    }
   }
 
   return errors;

@@ -1480,6 +1480,77 @@ function appendDeepForecast(root, data, ctx) {
 
   renderCollapsibleSection(
     sections,
+    'roads-heading',
+    'Roads & passes (CDOT)',
+    () => {
+      const roads = /** @type {Record<string, unknown> | null} */ (data.cdot_roads ?? null);
+      const roadAlerts = /** @type {Record<string, unknown>[]} */ (roads?.alerts ?? []);
+      const cams = /** @type {Record<string, unknown>[]} */ (
+        roads?.cameras ?? (data.cdot_camera ? [data.cdot_camera] : [])
+      );
+      const rwis = /** @type {Record<string, unknown> | null} */ (
+        roads?.rwis ?? data.cdot_rwis ?? null
+      );
+      const wrap = document.createDocumentFragment();
+      if (!roadAlerts.length && !cams.length && !rwis) {
+        renderEmpty(wrap, 'No CDOT road data', 'for this location right now.');
+        return wrap;
+      }
+      if (roadAlerts.length) {
+        const ul = document.createElement('ul');
+        ul.className = 'alert-list';
+        roadAlerts.forEach((a) => {
+          const li = document.createElement('li');
+          const flags = [
+            a.chain_law ? 'Chain law' : null,
+            a.closure ? 'Closure' : null,
+            a.pass_relevant ? 'Pass corridor' : null,
+          ]
+            .filter(Boolean)
+            .join(' · ');
+          li.innerHTML = `
+            <strong>${escapeHtml(String(a.title ?? 'Travel alert'))}</strong>
+            ${a.distance_km != null ? `<span class="alert-ends">${escapeHtml(String(a.distance_km))} km</span>` : ''}
+            ${flags ? `<p>${escapeHtml(flags)}</p>` : ''}
+            ${a.roads ? `<p>Road: ${escapeHtml(String(a.roads))}</p>` : ''}
+            ${a.description ? `<p>${escapeHtml(String(a.description))}</p>` : ''}
+            ${a.observed ? `<p class="table-hint">Updated ${escapeHtml(fmtDateTime(String(a.observed)))}</p>` : ''}
+          `;
+          ul.appendChild(li);
+        });
+        wrap.appendChild(ul);
+      }
+      if (rwis) {
+        const dl = document.createElement('dl');
+        dl.className = 'metric-list';
+        dl.innerHTML = `
+          <dt>RWIS</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${rwis.distance_km != null ? ` (${rwis.distance_km} km)` : ''}</dd>
+          ${rwis.air_temp_f != null ? `<dt>Air</dt><dd>${Math.round(Number(rwis.air_temp_f))}°F</dd>` : ''}
+          ${rwis.surface_temp_f != null ? `<dt>Pavement</dt><dd>${Math.round(Number(rwis.surface_temp_f))}°F</dd>` : ''}
+          ${rwis.surface_status ? `<dt>Surface</dt><dd>${escapeHtml(String(rwis.surface_status))}</dd>` : ''}
+        `;
+        wrap.appendChild(dl);
+      }
+      if (cams.length) {
+        const p = document.createElement('p');
+        p.className = 'table-hint';
+        p.textContent = `${cams.length} nearby CDOT camera${cams.length === 1 ? '' : 's'} shown in the intel column.`;
+        wrap.appendChild(p);
+      }
+      const linkP = document.createElement('p');
+      linkP.innerHTML = sourceLink(
+        'https://maps.cotrip.org/',
+        'Open COtrip map',
+        'btn btn-secondary btn-sm',
+      );
+      wrap.appendChild(linkP);
+      return wrap;
+    },
+    { open: false },
+  );
+
+  renderCollapsibleSection(
+    sections,
     'coagmet-heading',
     'Agriculture (CoAgMET)',
     () => {
@@ -1499,6 +1570,15 @@ function appendDeepForecast(root, data, ctx) {
         ['Station', `${coag.station_name ?? coag.station_id} (${coag.distance_km} km)`],
         ['Soil 5 cm', soil5 != null ? `${soil5}°F` : null],
         ['Soil 15 cm', soil15 != null ? `${soil15}°F` : null],
+        [
+          'Soil moisture 5 cm',
+          coagValue(coag.soil_moisture_5cm) != null ? String(coag.soil_moisture_5cm) : null,
+        ],
+        [
+          'Soil moisture 15 cm',
+          coagValue(coag.soil_moisture_15cm) != null ? String(coag.soil_moisture_15cm) : null,
+        ],
+        ['Precip', coagValue(coag.precip_in) != null ? `${coag.precip_in} in` : null],
         ['ET₀', coagValue(coag.eto_in) != null ? String(coag.eto_in) : null],
         [
           'Vapor pressure',
@@ -1724,6 +1804,47 @@ function appendDeepForecast(root, data, ctx) {
 
   renderCollapsibleSection(
     sections,
+    'smoke-heading',
+    'Fire & smoke (HMS)',
+    () => {
+      const hms = /** @type {Record<string, unknown> | null} */ (data.hms_smoke ?? null);
+      const wrap = document.createDocumentFragment();
+      if (!hms || !hms.density) {
+        renderEmpty(
+          wrap,
+          'No HMS smoke data',
+          'Satellite smoke analysis unavailable for this run.',
+        );
+        return wrap;
+      }
+      const dl = document.createElement('dl');
+      dl.className = 'metric-list';
+      dl.innerHTML = `
+        <dt>Smoke density</dt><dd>${escapeHtml(String(hms.density))}</dd>
+        ${hms.observed ? `<dt>Analysis date</dt><dd>${escapeHtml(String(hms.observed))}</dd>` : ''}
+      `;
+      wrap.appendChild(dl);
+      const note = document.createElement('p');
+      note.className = 'table-hint';
+      note.textContent =
+        'NOAA Hazard Mapping System smoke polygons. Density is estimated at this location.';
+      wrap.appendChild(note);
+      if (hms.sourceUrl) {
+        const p = document.createElement('p');
+        p.innerHTML = sourceLink(
+          String(hms.sourceUrl),
+          'HMS source archive',
+          'btn btn-secondary btn-sm',
+        );
+        wrap.appendChild(p);
+      }
+      return wrap;
+    },
+    { open: false },
+  );
+
+  renderCollapsibleSection(
+    sections,
     'hydrology-heading',
     'Hydrology (USGS)',
     () => {
@@ -1846,14 +1967,23 @@ function appendDeepForecast(root, data, ctx) {
         ['NOAA / NWS radar', imgUrls.nwsRadar],
         ['CSU CIRA GOES satellite', imgUrls.ciraSlider],
         ['RainViewer full map', links.rainviewer || imgUrls.rainviewer],
-        ['Personal weather station', links.pws],
+        ['Personal weather station (WU)', links.pws],
         ['PurpleAir map', links.purpleair_map],
         ['AirNow', links.airnow],
         ['CoAgMET', links.coagmet],
         ['Aviation Weather', links.aviation],
         ['USGS stream gauge', links.usgs],
         ['SNOTEL snowpack', links.snotel],
+        ['COtrip traveler map', links.cotrip || 'https://maps.cotrip.org/'],
       ].filter(([, url]) => Boolean(url));
+
+      const webcamLinks = /** @type {{ name?: string, url?: string }[]} */ (
+        links.webcam_links ?? []
+      );
+      for (const w of webcamLinks) {
+        if (w?.url && w?.name) entries.push([String(w.name), String(w.url)]);
+      }
+
       if (!entries.length) {
         const frag = document.createDocumentFragment();
         renderEmpty(frag, 'No links', '');
@@ -1862,7 +1992,7 @@ function appendDeepForecast(root, data, ctx) {
       const note = document.createElement('p');
       note.className = 'table-hint';
       note.textContent =
-        'Optional deep-dives. Forecast tables and the map above already show on-page detail.';
+        'Optional deep-dives open in a new tab. City webcams and WU dashboards are link-outs (not embedded).';
       const ul = document.createElement('ul');
       ul.className = 'link-list';
       entries.forEach(([label, url]) => {
@@ -1872,6 +2002,7 @@ function appendDeepForecast(root, data, ctx) {
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
         a.textContent = String(label);
+        a.setAttribute('aria-label', `${label} (opens in new tab)`);
         li.appendChild(a);
         ul.appendChild(li);
       });

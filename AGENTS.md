@@ -35,7 +35,9 @@ cowx/   # repo directory (brand: COWX)
 │       ├── co-zips.json      # ZIP lookup table
 │       ├── alerts.geojson    # NWS alert polygons
 │       ├── cdot-cameras.geojson
+│       ├── cdot-alerts.geojson
 │       ├── cwop.geojson
+│       ├── hms-smoke.geojson
 │       └── locations/{slug}.json   # Full per-location payload
 ├── tests/                    # Node test runner (`pnpm test`) — fixtures only, no live APIs
 │   └── fixtures/             # Recorded API responses for adapter/unit tests
@@ -78,9 +80,22 @@ Optional fields used by adapters (add when known):
 
 - `icao` — nearest airport for aviation METAR/TAF
 - `coagmet_id` — CoAgMET station crosswalk
-- `pws_id` — personal weather station id (Wunderground link)
+- `pws_id` — Weather Underground station id (**offsite dashboard link only** — not live-fetched)
+- `webcam_links` — array of `{ name, url, kind? }` for municipal/ski/NWS camera portals that must **not** be embedded; UI opens them in a new tab (`https://` only). Prefer official city/county/DOT/NWS pages.
 
 PurpleAir and AirNow resolve by nearest sensor/grid point (no per-location sensor ids in the catalog).
+
+**Webcam link example:**
+
+```json
+"webcam_links": [
+  {
+    "name": "Longmont street snow cams",
+    "url": "https://longmontcolorado.gov/transportation/snow-ice-control/street-snow-cams/",
+    "kind": "city"
+  }
+]
+```
 
 **Steps:**
 
@@ -152,6 +167,7 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 | -------------------- | --------------------------------------------------------------------- |
 | `PURPLEAIR_API_KEY`  | PurpleAir API access for build-time sensor snapshots                  |
 | `AIRNOW_API_KEY`     | AirNow API access for official AQI near locations                     |
+| `SYNOPTIC_API_TOKEN` | Optional Synoptic/MesoWest denser PWS/mesonet (skip if unset)         |
 | `NOTIFY_WEBHOOK_URL` | Discord (or compatible) webhook URL for fetch/workflow failure alerts |
 
 **Never** commit secret values to git, docs, issues, logs, or test fixtures. Reference secret **names** only.
@@ -160,25 +176,28 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 ## Fetch cadence & API budget
 
-- **Schedule:** GitHub Actions runs `pnpm fetch` **every 45 minutes** (`*/45 * * * *`) plus manual `workflow_dispatch`.
+- **Schedule:** GitHub Actions runs `pnpm fetch` **every 45 minutes** (`*/45 * * * *`) plus manual `workflow_dispatch` (`.github/workflows/update-weather.yml`).
 - **Runs per day:** ~32 scheduled fetches.
 - **Design goal:** Stay within free-tier limits; do not poll faster than 45 minutes.
 
 Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):
 
-| Source                     | Calls / run (approx @ ~340 locs) | Auth                |
-| -------------------------- | -------------------------------- | ------------------- |
-| Open-Meteo Forecast        | ~34+ (chunk 20 + NBM per chunk)  | None                |
-| Open-Meteo Air Quality     | ~9 (chunk 40)                    | None                |
-| NWS alerts + AFD/HWO       | ~8–12 selective                  | User-Agent header   |
-| CoAgMET                    | 1–2                              | None                |
-| Aviation Weather METAR/TAF | 1–3 batched                      | None                |
-| USGS NWIS                  | 1                                | None                |
-| SNOTEL                     | 1–2                              | None                |
-| CDOT cameras + RWIS        | 2                                | None                |
-| CWOP / APRS (aprs.me grid) | ~15–20                           | None                |
-| PurpleAir                  | 1–2 (only if key set)            | `PURPLEAIR_API_KEY` |
-| AirNow                     | many grid points when keyed      | `AIRNOW_API_KEY`    |
+| Source                       | Calls / run (approx @ ~340 locs) | Auth                 |
+| ---------------------------- | -------------------------------- | -------------------- |
+| Open-Meteo Forecast          | ~34+ (chunk 20 + NBM per chunk)  | None                 |
+| Open-Meteo Air Quality       | ~9 (chunk 40)                    | None                 |
+| NWS alerts + AFD/HWO         | ~8–12 selective                  | User-Agent header    |
+| CoAgMET                      | 1–2                              | None                 |
+| Aviation Weather METAR/TAF   | 1–3 batched                      | None                 |
+| USGS NWIS                    | 1                                | None                 |
+| SNOTEL                       | 1–2                              | None                 |
+| CDOT cameras + RWIS + alerts | 4                                | None                 |
+| CWOP / APRS (aprs.me grid)   | ~35–40                           | None                 |
+| Synoptic latest              | 0–1 (only if token set)          | `SYNOPTIC_API_TOKEN` |
+| NOAA HMS smoke               | 1–3 (zip download)               | None                 |
+| PurpleAir                    | 1–2 (only if key set)            | `PURPLEAIR_API_KEY`  |
+| AirNow                       | many grid points when keyed      | `AIRNOW_API_KEY`     |
+| Catalog `webcam_links`       | 0 (copied into payloads)         | None                 |
 
 Partial adapter failure is acceptable; total failure (zero locations written or all critical adapters down) should fail the workflow so notifications fire.
 
@@ -186,9 +205,9 @@ Partial adapter failure is acceptable; total failure (zero locations written or 
 
 ## Audience data coverage (not UI filters)
 
-Citizen, pilot, farmer, and firefighter needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, etc.). The public dashboard shows **all** available sections for every location — there is no persona filter bar.
+Citizen, pilot, farmer, and firefighter needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, road alerts, etc.). The public dashboard shows **all** available sections for every location — there is no persona filter bar.
 
-Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, 24h meteograms, CDOT camera/RWIS, RF ducting, CWOP) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links.
+Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, 24h meteograms, CDOT cameras/RWIS/road alerts, local webcam **new-tab links**, nearby PWS, HMS smoke, RF ducting) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links.
 
 Data commits may use `[skip ci]` when only JSON snapshots change, to avoid redundant Pages deploys — follow workflow conventions in `.github/workflows/`.
 

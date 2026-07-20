@@ -1921,6 +1921,27 @@ body.workspace-active #main-content {
   background: var(--color-surface-2);
 }
 
+.cdot-cam-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cdot-cam-card {
+  margin: 0;
+}
+
+.glass-panel__subtitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.link-list--compact {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.1rem;
+}
+
 .rf-badge {
   display: flex;
   flex-direction: column;

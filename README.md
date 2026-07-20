@@ -47,9 +47,10 @@ Optional secrets improve inline sensor/AQI data and failure alerting. Configure 
 | -------------------- | ------------------------------------------------------------------ |
 | `PURPLEAIR_API_KEY`  | PurpleAir sensor readings at build time                            |
 | `AIRNOW_API_KEY`     | EPA AirNow AQI near locations                                      |
+| `SYNOPTIC_API_TOKEN` | Optional Synoptic/MesoWest denser neighborhood PWS                 |
 | `NOTIFY_WEBHOOK_URL` | Webhook for Discord (or compatible) alerts when fetch/update fails |
 
-The site works without these keys; affected sources degrade to skipped status in `meta.json` and offsite links in the UI.
+The site works without these keys; affected sources degrade to skipped status in `meta.json` and offsite links in the UI. CDOT cameras, road alerts, CWOP PWS, and HMS smoke need no secrets. City webcam portals are catalog **links** (new tab), not embedded feeds.
 
 ## Privacy
 
