@@ -627,14 +627,6 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false) {
     },
     {
       open: false,
-      actionsHtml:
-        data.coagmet?.url || links.coagmet
-          ? sourceLink(
-              String(data.coagmet?.url || links.coagmet),
-              'Station',
-              'btn btn-secondary btn-sm',
-            )
-          : '',
     },
   );
 
