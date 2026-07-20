@@ -39,6 +39,14 @@ export async function fetchNws() {
       const severity = props.severity ?? null;
       const areas = props.areaDesc ?? '';
 
+      const rawId = props.id ?? props['@id'] ?? null;
+      const url =
+        rawId == null
+          ? null
+          : String(rawId).startsWith('http')
+            ? String(rawId)
+            : `https://api.weather.gov/alerts/${rawId}`;
+
       const summary = {
         event,
         headline,
@@ -46,6 +54,8 @@ export async function fetchNws() {
         ends,
         severity,
         areaDesc: areas,
+        id: rawId != null ? String(rawId) : null,
+        url,
       };
 
       for (const part of String(areas).split(';')) {

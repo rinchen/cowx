@@ -31,7 +31,7 @@ cowx/   # repo directory (brand: COWX)
 │   └── data/                 # Generated JSON — committed after fetch runs
 │       ├── index.json        # Slim location index for search/geo
 │       ├── meta.json         # Build time + per-source status
-│       ├── alerts.geojson    # NWS alert polygons (when implemented)
+│       ├── alerts.geojson    # NWS alert polygons (drawn on locality maps)
 │       └── locations/{slug}.json   # Full per-location payload
 ├── tests/                    # Node test runner (`pnpm test`) — fixtures only, no live APIs
 │   └── fixtures/             # Recorded API responses for adapter/unit tests
@@ -182,6 +182,8 @@ Partial adapter failure is acceptable; total failure (zero locations written or 
 ## Audience data coverage (not UI filters)
 
 Citizen, pilot, farmer, and firefighter needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, etc.). The public dashboard shows **all** available sections for every location — there is no persona filter bar.
+
+Locality pages are deep drill-downs: expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons on a map centered on the site (RainViewer radar on by default), NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links.
 
 Data commits may use `[skip ci]` when only JSON snapshots change, to avoid redundant Pages deploys — follow workflow conventions in `.github/workflows/`.
 

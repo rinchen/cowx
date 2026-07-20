@@ -61,7 +61,7 @@ function buildUrl(chunk) {
   return (
     `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
     `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,uv_index` +
-    `&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,cloud_cover,uv_index` +
+    `&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,dewpoint_2m,cloud_cover,visibility,uv_index` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max,sunrise,sunset` +
     `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FDenver&forecast_days=10&forecast_hours=48`
   );
@@ -92,14 +92,16 @@ function mapResult(r, condition) {
       ? {
           time: r.hourly.time?.slice(0, 48) ?? [],
           temperature_2m: r.hourly.temperature_2m?.slice(0, 48) ?? [],
+          apparent_temperature: r.hourly.apparent_temperature?.slice(0, 48) ?? [],
           precipitation_probability: r.hourly.precipitation_probability?.slice(0, 48) ?? [],
           precipitation: r.hourly.precipitation?.slice(0, 48) ?? [],
           weather_code: r.hourly.weather_code?.slice(0, 48) ?? [],
           wind_speed_10m: r.hourly.wind_speed_10m?.slice(0, 48) ?? [],
           wind_gusts_10m: r.hourly.wind_gusts_10m?.slice(0, 48) ?? [],
           relative_humidity_2m: r.hourly.relative_humidity_2m?.slice(0, 48) ?? [],
+          dewpoint_2m: r.hourly.dewpoint_2m?.slice(0, 48) ?? [],
           cloud_cover: r.hourly.cloud_cover?.slice(0, 48) ?? [],
-          visibility: [],
+          visibility: r.hourly.visibility?.slice(0, 48) ?? [],
           uv_index: r.hourly.uv_index?.slice(0, 48) ?? [],
         }
       : null,

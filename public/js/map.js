@@ -4,18 +4,38 @@
 let stateMap = null;
 /** @type {import('leaflet').TileLayer | null} */
 let radarLayer = null;
+/** @type {import('leaflet').GeoJSON | null} */
+let alertsLayer = null;
 
 const CO_CENTER = [39.0, -105.5];
 const CO_ZOOM = 7;
+const LOCALITY_ZOOM = 10;
+
+const SEVERITY_COLORS = {
+  Extreme: '#7f1d1d',
+  Severe: '#b91c1c',
+  Moderate: '#c2410c',
+  Minor: '#a16207',
+  Unknown: '#64748b',
+};
 
 /**
- * Initialize or refresh the statewide Leaflet map.
+ * @param {string | null | undefined} severity
+ */
+function severityColor(severity) {
+  if (!severity) return SEVERITY_COLORS.Unknown;
+  return SEVERITY_COLORS[severity] ?? SEVERITY_COLORS.Unknown;
+}
+
+/**
+ * Initialize or refresh the Leaflet map.
  * @param {HTMLElement} container
  * @param {IndexEntry[]} locations
  * @param {string | null} activeSlug
  * @param {(slug: string) => void} onSelect
+ * @param {{ loadAlerts?: boolean, alertsUrl?: string, onAlertsError?: (msg: string) => void }} [options]
  */
-export function initStateMap(container, locations, activeSlug, onSelect) {
+export function initStateMap(container, locations, activeSlug, onSelect, options = {}) {
   if (typeof L === 'undefined') {
     container.innerHTML = '<p class="empty-state">Map library failed to load.</p>';
     return;
@@ -25,6 +45,7 @@ export function initStateMap(container, locations, activeSlug, onSelect) {
     stateMap.remove();
     stateMap = null;
     radarLayer = null;
+    alertsLayer = null;
   }
 
   container.innerHTML = '';
@@ -32,12 +53,17 @@ export function initStateMap(container, locations, activeSlug, onSelect) {
   mapEl.className = 'leaflet-map';
   mapEl.id = 'state-map';
   mapEl.setAttribute('role', 'application');
-  mapEl.setAttribute('aria-label', 'Colorado locations map');
+  mapEl.setAttribute(
+    'aria-label',
+    activeSlug ? 'Locality map with radar' : 'Colorado locations map',
+  );
   container.appendChild(mapEl);
 
+  const active = activeSlug ? locations.find((l) => l.slug === activeSlug) : null;
+
   stateMap = L.map(mapEl, {
-    center: CO_CENTER,
-    zoom: CO_ZOOM,
+    center: active ? [active.lat, active.lon] : CO_CENTER,
+    zoom: active ? LOCALITY_ZOOM : CO_ZOOM,
     scrollWheelZoom: false,
   });
 
@@ -52,11 +78,11 @@ export function initStateMap(container, locations, activeSlug, onSelect) {
   locations.forEach((loc) => {
     const isActive = loc.slug === activeSlug;
     const marker = L.circleMarker([loc.lat, loc.lon], {
-      radius: isActive ? 10 : 7,
+      radius: isActive ? 11 : 6,
       color: isActive ? '#0c4a6e' : '#0369a1',
       fillColor: isActive ? '#0284c7' : '#38bdf8',
-      fillOpacity: 0.85,
-      weight: 2,
+      fillOpacity: isActive ? 0.95 : 0.7,
+      weight: isActive ? 3 : 2,
     }).addTo(stateMap);
 
     marker.bindPopup(`<strong>${loc.name}</strong>${loc.county ? `<br>${loc.county} County` : ''}`);
@@ -64,27 +90,82 @@ export function initStateMap(container, locations, activeSlug, onSelect) {
     bounds.push([loc.lat, loc.lon]);
   });
 
-  if (bounds.length) {
+  if (active) {
+    stateMap.setView([active.lat, active.lon], LOCALITY_ZOOM);
+  } else if (bounds.length) {
     stateMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
   }
 
   setTimeout(() => stateMap?.invalidateSize(), 100);
+
+  if (options.loadAlerts) {
+    void loadAlertPolygons(options.alertsUrl ?? 'data/alerts.geojson', options.onAlertsError);
+  }
+}
+
+/**
+ * Draw NWS alert polygons. Failures leave the basemap usable.
+ * @param {string} url
+ * @param {(msg: string) => void} [onError]
+ */
+export async function loadAlertPolygons(url, onError) {
+  if (!stateMap || typeof L === 'undefined') return;
+
+  if (alertsLayer) {
+    stateMap.removeLayer(alertsLayer);
+    alertsLayer = null;
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Alerts geojson HTTP ${response.status}`);
+    const geojson = await response.json();
+    if (!geojson?.features?.length) return;
+
+    alertsLayer = L.geoJSON(geojson, {
+      style(feature) {
+        const sev = feature?.properties?.severity;
+        return {
+          color: severityColor(sev),
+          weight: 2,
+          fillColor: severityColor(sev),
+          fillOpacity: 0.2,
+        };
+      },
+      onEachFeature(feature, layer) {
+        const p = feature.properties ?? {};
+        const title = p.event ?? 'Alert';
+        const sev = p.severity ? ` (${p.severity})` : '';
+        const area = p.areaDesc ? `<br>${p.areaDesc}` : '';
+        const ends = p.ends ? `<br>Until ${p.ends}` : '';
+        const link = p.url
+          ? `<br><a href="${p.url}" target="_blank" rel="noopener noreferrer">NWS alert details</a>`
+          : '';
+        layer.bindPopup(`<strong>${title}${sev}</strong>${area}${ends}${link}`);
+      },
+    });
+    alertsLayer.addTo(stateMap);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    onError?.(msg);
+  }
 }
 
 /**
  * Toggle RainViewer radar overlay.
  * @param {boolean} enabled
  * @param {number} opacity 0–1
+ * @returns {Promise<boolean>} whether radar is showing
  */
 export async function setRadarOverlay(enabled, opacity = 0.5) {
-  if (!stateMap || typeof L === 'undefined') return;
+  if (!stateMap || typeof L === 'undefined') return false;
 
   if (!enabled) {
     if (radarLayer) {
       stateMap.removeLayer(radarLayer);
       radarLayer = null;
     }
-    return;
+    return false;
   }
 
   try {
@@ -105,27 +186,35 @@ export async function setRadarOverlay(enabled, opacity = 0.5) {
       attribution: '&copy; <a href="https://www.rainviewer.com/">RainViewer</a>',
     });
     radarLayer.addTo(stateMap);
+    return true;
   } catch {
     /* Graceful degradation — radar stays off */
+    return false;
   }
 }
 
 /**
  * @param {HTMLElement} controlsEl
  * @param {(enabled: boolean, opacity: number) => void} onChange
+ * @param {{ defaultOn?: boolean }} [options]
  */
-export function bindRadarControls(controlsEl, onChange) {
-  const toggle = controlsEl.querySelector('#radar-toggle');
+export function bindRadarControls(controlsEl, onChange, options = {}) {
+  const toggle = /** @type {HTMLInputElement | null} */ (controlsEl.querySelector('#radar-toggle'));
   const opacity = controlsEl.querySelector('#radar-opacity');
 
   const emit = () => {
-    const enabled = /** @type {HTMLInputElement} */ (toggle)?.checked ?? false;
+    const enabled = toggle?.checked ?? false;
     const op = Number(/** @type {HTMLInputElement} */ (opacity)?.value ?? 50) / 100;
     onChange(enabled, op);
   };
 
   toggle?.addEventListener('change', emit);
   opacity?.addEventListener('input', emit);
+
+  if (options.defaultOn && toggle) {
+    toggle.checked = true;
+    emit();
+  }
 }
 
 export function destroyMap() {
@@ -133,5 +222,6 @@ export function destroyMap() {
     stateMap.remove();
     stateMap = null;
     radarLayer = null;
+    alertsLayer = null;
   }
 }

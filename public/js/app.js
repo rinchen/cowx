@@ -408,7 +408,8 @@ async function renderLocationView(slug) {
     </p>
     <div id="dashboard-root"></div>
     <section class="map-section" aria-labelledby="map-heading">
-      <h2 id="map-heading">Statewide map</h2>
+      <h2 id="map-heading">Local map &amp; radar</h2>
+      <p class="map-lead">Centered on this location. RainViewer radar is on by default; alert polygons load when available.</p>
       <div class="map-controls">
         <label class="checkbox-label">
           <input type="checkbox" id="radar-toggle" />
@@ -416,7 +417,7 @@ async function renderLocationView(slug) {
         </label>
         <label for="radar-opacity" class="opacity-label">
           Opacity
-          <input type="range" id="radar-opacity" min="10" max="90" value="50" />
+          <input type="range" id="radar-opacity" min="10" max="90" value="55" />
         </label>
       </div>
       <div id="map-container" class="map-container"></div>
@@ -444,10 +445,27 @@ async function renderLocationView(slug) {
     locations,
     slug,
     (s) => navigateTo(s),
+    {
+      loadAlerts: true,
+      alertsUrl: `${DATA_BASE}/alerts.geojson`,
+      onAlertsError: (msg) => {
+        announce(`Alert map unavailable: ${msg}`);
+      },
+    },
   );
   bindRadarControls(
     /** @type {HTMLElement} */ (document.querySelector('.map-section .map-controls')),
-    (enabled, opacity) => setRadarOverlay(enabled, opacity),
+    async (enabled, opacity) => {
+      const ok = await setRadarOverlay(enabled, opacity);
+      if (enabled && !ok) {
+        announce('RainViewer radar could not load; map basemap is still available.');
+        const toggle = /** @type {HTMLInputElement | null} */ (
+          document.getElementById('radar-toggle')
+        );
+        if (toggle) toggle.checked = false;
+      }
+    },
+    { defaultOn: true },
   );
 
   announce(`Showing weather for ${indexEntry.name}`);
