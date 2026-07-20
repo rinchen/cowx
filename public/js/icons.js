@@ -1,11 +1,14 @@
 /**
  * Meteocons helpers — WMO / Open-Meteo weather codes → icon slugs.
- * @see https://meteocons.com/
- * CDN: jsDelivr hosts @meteocons/svg (cdn.meteocons.com/latest is 404).
+ * @see https://meteocons.com/docs/getting-started/
+ *
+ * Icons are vendored under public/img/meteocons/ using the CDN path layout:
+ * {format}/{style}/{slug}.svg (svg | svg-static, fill).
+ * Resolved via import.meta.url so paths work with or without a trailing slash on /cowx.
  */
 
-const METEOCONS_SVG = 'https://cdn.jsdelivr.net/npm/@meteocons/svg@0.1.0/fill';
-const METEOCONS_STATIC = 'https://cdn.jsdelivr.net/npm/@meteocons/svg-static@0.1.0/fill';
+/** Base URL for vendored icons (…/img/meteocons/), always correct from this module. */
+const METEOCONS_BASE = new URL('../img/meteocons/', import.meta.url);
 
 /**
  * @param {number | null | undefined} code
@@ -16,18 +19,17 @@ export function wmoToMeteoconSlug(code, isDay = true) {
   const day = isDay !== false;
   const c = code == null || Number.isNaN(Number(code)) ? -1 : Number(code);
 
-  if (c === 0) return day ? 'clear-day' : 'clear-night';
-  if (c === 1) return day ? 'clear-day' : 'clear-night';
+  if (c === 0 || c === 1) return day ? 'clear-day' : 'clear-night';
   if (c === 2) return day ? 'partly-cloudy-day' : 'partly-cloudy-night';
   if (c === 3) return day ? 'overcast-day' : 'overcast-night';
-  if (c === 45 || c === 48) return 'fog';
+  if (c === 45 || c === 48) return day ? 'fog-day' : 'fog';
   if (c >= 51 && c <= 57) return 'drizzle';
   if (c >= 61 && c <= 67) return 'rain';
   if (c >= 71 && c <= 77) return 'snow';
   if (c >= 80 && c <= 82) return 'rain';
   if (c >= 85 && c <= 86) return 'snow';
   if (c === 95) return 'thunderstorms';
-  if (c === 96 || c === 99) return 'thunderstorms-rain';
+  if (c === 96 || c === 99) return day ? 'thunderstorms-day-rain' : 'thunderstorms-rain';
   return 'not-available';
 }
 
@@ -87,8 +89,8 @@ export function weatherIconHtml(code, opts = {}) {
   const slug = wmoToMeteoconSlug(code, isDay);
   const alt = opts.alt ?? wmoLabel(code);
   const className = opts.className ?? 'weather-icon';
-  const base = prefersReducedMotion() ? METEOCONS_STATIC : METEOCONS_SVG;
-  const src = `${base}/${slug}.svg`;
+  const format = prefersReducedMotion() ? 'svg-static' : 'svg';
+  const src = new URL(`${format}/fill/${slug}.svg`, METEOCONS_BASE).href;
   return `<img class="${className}" src="${src}" width="${size}" height="${size}" alt="${escapeAttr(alt)}" loading="lazy" decoding="async" />`;
 }
 
