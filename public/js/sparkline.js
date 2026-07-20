@@ -116,6 +116,22 @@ export function formatMeteogramTimeLabels(times) {
 }
 
 /**
+ * Format a single ISO hour for scrubber / axis readout.
+ * @param {string} iso
+ * @returns {string}
+ */
+export function formatMeteogramHour(iso) {
+  if (!iso) return '';
+  try {
+    return new Intl.DateTimeFormat(undefined, { weekday: 'short', hour: 'numeric' }).format(
+      new Date(iso),
+    );
+  } catch {
+    return String(iso).slice(0, 16);
+  }
+}
+
+/**
  * Shared time-axis row under aligned meteograms.
  * @param {string[]} times
  * @param {{ width?: number }} [opts]
@@ -127,10 +143,166 @@ export function meteogramTimeAxisHtml(times, opts = {}) {
   if (!labels.start) return '';
   const h = 18;
   return `<svg class="meteogram meteogram--axis" viewBox="0 0 ${width} ${h}" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-    <text x="0" y="13" font-size="11" fill="currentColor">${escapeXml(labels.start)}</text>
-    <text x="${width / 2}" y="13" font-size="11" fill="currentColor" text-anchor="middle">${escapeXml(labels.mid)}</text>
-    <text x="${width}" y="13" font-size="11" fill="currentColor" text-anchor="end">${escapeXml(labels.end)}</text>
+    <line x1="0" y1="2" x2="${width}" y2="2" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
+    <line x1="0" y1="2" x2="0" y2="6" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
+    <line x1="${width / 2}" y1="2" x2="${width / 2}" y2="6" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
+    <line x1="${width}" y1="2" x2="${width}" y2="6" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
+    <text x="0" y="15" font-size="10" fill="currentColor">${escapeXml(labels.start)}</text>
+    <text x="${width / 2}" y="15" font-size="10" fill="currentColor" text-anchor="middle">${escapeXml(labels.mid)}</text>
+    <text x="${width}" y="15" font-size="10" fill="currentColor" text-anchor="end">${escapeXml(labels.end)}</text>
   </svg>`;
+}
+
+/**
+ * Map a pointer X to the nearest hour index.
+ * @param {number} clientX
+ * @param {{ left: number, width: number }} rect
+ * @param {number} count
+ * @returns {number}
+ */
+export function meteogramIndexFromX(clientX, rect, count) {
+  if (count <= 1) return 0;
+  const width = Math.max(rect.width, 1);
+  const x = Math.min(Math.max(clientX - rect.left, 0), width);
+  return Math.round((x / width) * (count - 1));
+}
+
+/**
+ * Left % for the scrubber line at a given index.
+ * @param {number} index
+ * @param {number} count
+ * @returns {number}
+ */
+export function meteogramScrubPercent(index, count) {
+  if (count <= 1) return 0;
+  const i = Math.min(Math.max(index, 0), count - 1);
+  return (i / (count - 1)) * 100;
+}
+
+/**
+ * Bind a draggable vertical hour marker across the meteogram chart column.
+ * @param {HTMLElement} stack
+ * @param {{
+ *   times: string[],
+ *   formatReadout: (index: number) => string,
+ *   initialIndex?: number,
+ * }} opts
+ * @returns {() => void} cleanup
+ */
+export function bindMeteogramScrubber(stack, opts) {
+  const times = Array.isArray(opts.times) ? opts.times : [];
+  const layer = /** @type {HTMLElement | null} */ (
+    stack.querySelector('[data-meteogram-scrub-layer]')
+  );
+  const scrubber = /** @type {HTMLElement | null} */ (
+    stack.querySelector('[data-meteogram-scrubber]')
+  );
+  const handle = /** @type {HTMLElement | null} */ (stack.querySelector('[data-meteogram-handle]'));
+  const readout = /** @type {HTMLElement | null} */ (
+    stack.querySelector('[data-meteogram-readout]')
+  );
+  if (!layer || !scrubber || times.length === 0) return () => {};
+
+  let index = Math.min(Math.max(opts.initialIndex ?? 0, 0), times.length - 1);
+  let dragging = false;
+
+  /**
+   * @param {number} next
+   */
+  function setIndex(next) {
+    index = Math.min(Math.max(next, 0), times.length - 1);
+    scrubber.style.left = `${meteogramScrubPercent(index, times.length)}%`;
+    const text = opts.formatReadout(index);
+    if (readout) readout.textContent = text;
+    if (handle) {
+      handle.setAttribute('aria-valuenow', String(index));
+      handle.setAttribute('aria-valuetext', text);
+    }
+  }
+
+  /**
+   * @param {PointerEvent} e
+   */
+  function indexFromPointer(e) {
+    return meteogramIndexFromX(e.clientX, layer.getBoundingClientRect(), times.length);
+  }
+
+  /**
+   * @param {PointerEvent} e
+   */
+  function onPointerDown(e) {
+    if (e.button != null && e.button !== 0) return;
+    dragging = true;
+    layer.classList.add('is-dragging');
+    try {
+      layer.setPointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+    setIndex(indexFromPointer(e));
+    e.preventDefault();
+  }
+
+  /**
+   * @param {PointerEvent} e
+   */
+  function onPointerMove(e) {
+    if (!dragging) return;
+    setIndex(indexFromPointer(e));
+  }
+
+  /**
+   * @param {PointerEvent} e
+   */
+  function onPointerUp(e) {
+    if (!dragging) return;
+    dragging = false;
+    layer.classList.remove('is-dragging');
+    try {
+      layer.releasePointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /**
+   * @param {KeyboardEvent} e
+   */
+  function onKeyDown(e) {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      setIndex(index - 1);
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      setIndex(index + 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setIndex(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      setIndex(times.length - 1);
+    }
+  }
+
+  layer.addEventListener('pointerdown', onPointerDown);
+  layer.addEventListener('pointermove', onPointerMove);
+  layer.addEventListener('pointerup', onPointerUp);
+  layer.addEventListener('pointercancel', onPointerUp);
+  handle?.addEventListener('keydown', onKeyDown);
+
+  if (handle) {
+    handle.setAttribute('aria-valuemin', '0');
+    handle.setAttribute('aria-valuemax', String(times.length - 1));
+  }
+  setIndex(index);
+
+  return () => {
+    layer.removeEventListener('pointerdown', onPointerDown);
+    layer.removeEventListener('pointermove', onPointerMove);
+    layer.removeEventListener('pointerup', onPointerUp);
+    layer.removeEventListener('pointercancel', onPointerUp);
+    handle?.removeEventListener('keydown', onKeyDown);
+  };
 }
 
 /**

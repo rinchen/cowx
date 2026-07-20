@@ -6,7 +6,9 @@ import { synthesizeBottomLine } from './bottom-line.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { estimateRfComms } from './rf-comms.js';
 import {
+  bindMeteogramScrubber,
   detectPressureDip,
+  formatMeteogramHour,
   mbToInHg,
   meteogramHtml,
   meteogramTimeAxisHtml,
@@ -289,52 +291,78 @@ export function renderIntel(root, data, options = {}) {
 
     <section class="glass-panel" aria-labelledby="meteogram-heading">
       <h2 id="meteogram-heading" class="glass-panel__title">Next 24 hours</h2>
-      <div class="meteogram-stack">
-        <div class="meteogram-row">
-          <span class="meteogram-row__label">Temp °F</span>
-          <div class="meteogram-row__chart">
-            ${meteogramHtml(temps, { color: '#0369a1', label: 'Temperature trend Fahrenheit', fill: true }) || '<p class="empty-state">No temperature series</p>'}
+      <div class="meteogram-stack" data-meteogram-stack>
+        <p class="meteogram-scrub-readout" data-meteogram-readout aria-live="polite">
+          Drag the marker across the charts to inspect each hour.
+        </p>
+        <div class="meteogram-stack__body">
+          <div class="meteogram-row">
+            <span class="meteogram-row__label">Temp °F</span>
+            <div class="meteogram-row__chart">
+              <div class="meteogram-plot">
+                ${meteogramHtml(temps, { color: '#0369a1', label: 'Temperature trend Fahrenheit', fill: true }) || '<p class="empty-state">No temperature series</p>'}
+                ${meteogramTimeAxisHtml(chartTimes)}
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="meteogram-row">
-          <span class="meteogram-row__label">Pressure inHg${dip.dip ? ' · front dip' : ''}</span>
-          <div class="meteogram-row__chart">
-            ${
-              meteogramHtml(pressureIn, {
-                color: dip.dip ? '#a16207' : '#4338ca',
-                label: dip.dip
-                  ? `Pressure trend with rapid dip of ${dip.delta.toFixed(2)} inches`
-                  : 'Barometric pressure trend inches of mercury',
-                highlightFrom: dip.dip ? dip.index : undefined,
-                fill: true,
-              }) || '<p class="empty-state">No pressure series</p>'
-            }
+          <div class="meteogram-row">
+            <span class="meteogram-row__label">Pressure inHg${dip.dip ? ' · front dip' : ''}</span>
+            <div class="meteogram-row__chart">
+              <div class="meteogram-plot">
+                ${
+                  meteogramHtml(pressureIn, {
+                    color: dip.dip ? '#a16207' : '#4338ca',
+                    label: dip.dip
+                      ? `Pressure trend with rapid dip of ${dip.delta.toFixed(2)} inches`
+                      : 'Barometric pressure trend inches of mercury',
+                    highlightFrom: dip.dip ? dip.index : undefined,
+                    fill: true,
+                  }) || '<p class="empty-state">No pressure series</p>'
+                }
+                ${meteogramTimeAxisHtml(chartTimes)}
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="meteogram-row">
-          <span class="meteogram-row__label">Wind / gust mph</span>
-          <div class="meteogram-row__chart">
-            ${
-              meteogramHtml(winds, {
-                color: '#166534',
-                secondary: gusts,
-                secondaryColor: '#c2410c',
-                label: 'Wind speed and gusts miles per hour',
-                fill: false,
-              }) || '<p class="empty-state">No wind series</p>'
-            }
+          <div class="meteogram-row">
+            <span class="meteogram-row__label">Wind / gust mph</span>
+            <div class="meteogram-row__chart">
+              <div class="meteogram-plot">
+                ${
+                  meteogramHtml(winds, {
+                    color: '#166534',
+                    secondary: gusts,
+                    secondaryColor: '#c2410c',
+                    label: 'Wind speed and gusts miles per hour',
+                    fill: false,
+                  }) || '<p class="empty-state">No wind series</p>'
+                }
+                ${meteogramTimeAxisHtml(chartTimes)}
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="meteogram-row">
-          <span class="meteogram-row__label">Precip chance</span>
-          <div class="meteogram-row__chart">
-            ${miniBarChartHtml(probs, { color: '#0284c7' }) || '<p class="empty-state">No precip probability</p>'}
+          <div class="meteogram-row">
+            <span class="meteogram-row__label">Precip chance</span>
+            <div class="meteogram-row__chart">
+              <div class="meteogram-plot">
+                ${miniBarChartHtml(probs, { color: '#0284c7' }) || '<p class="empty-state">No precip probability</p>'}
+                ${meteogramTimeAxisHtml(chartTimes)}
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="meteogram-row meteogram-row--axis">
-          <span class="meteogram-row__label" aria-hidden="true"></span>
-          <div class="meteogram-row__chart">
-            ${meteogramTimeAxisHtml(chartTimes)}
+          <div class="meteogram-scrub-layer" data-meteogram-scrub-layer>
+            <div class="meteogram-scrubber" data-meteogram-scrubber style="left: 0%">
+              <div class="meteogram-scrubber__line" aria-hidden="true"></div>
+              <button
+                type="button"
+                class="meteogram-scrubber__handle"
+                data-meteogram-handle
+                role="slider"
+                aria-label="Forecast hour marker"
+                aria-valuemin="0"
+                aria-valuemax="${Math.max(0, chartTimes.length - 1)}"
+                aria-valuenow="0"
+              ></button>
+            </div>
           </div>
         </div>
       </div>
@@ -464,6 +492,38 @@ export function renderIntel(root, data, options = {}) {
       panel.appendChild(note);
     }
   });
+
+  const stack = /** @type {HTMLElement | null} */ (root.querySelector('[data-meteogram-stack]'));
+  if (stack && chartTimes.length) {
+    /**
+     * @param {number | null | undefined} v
+     * @param {string} unit
+     * @param {number} [digits]
+     */
+    function fmt(v, unit, digits = 0) {
+      if (v == null || !Number.isFinite(Number(v))) return null;
+      const n = Number(v);
+      return `${digits > 0 ? n.toFixed(digits) : Math.round(n)}${unit}`;
+    }
+
+    bindMeteogramScrubber(stack, {
+      times: chartTimes,
+      initialIndex: 0,
+      formatReadout(i) {
+        const parts = [formatMeteogramHour(chartTimes[i])];
+        const t = fmt(temps[i], '°F');
+        if (t) parts.push(t);
+        const p = fmt(pressureIn[i], ' inHg', 2);
+        if (p) parts.push(p);
+        const w = fmt(winds[i], ' mph');
+        const g = fmt(gusts[i], '');
+        if (w) parts.push(g ? `${w} (gust ${g})` : w);
+        const pr = fmt(probs[i], '% precip');
+        if (pr) parts.push(pr);
+        return parts.join(' · ');
+      },
+    });
+  }
 
   return { headline };
 }

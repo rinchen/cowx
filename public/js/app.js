@@ -14,6 +14,8 @@ import { destroyMap } from './map.js';
 /** @typedef {{ city: string; county: string; slug: string }} ZipEntry */
 
 const DATA_BASE = 'data';
+/** Poll interval for new fetch snapshots (scheduled fetch is ~45 min). */
+const DATA_POLL_MS = 90_000;
 
 /** @type {IndexEntry[]} */
 let locations = [];
@@ -21,6 +23,11 @@ let locations = [];
 let zipTable = [];
 /** @type {Record<string, unknown> | null} */
 let meta = null;
+/** @type {string | null} */
+let knownDataVersion = null;
+/** @type {ReturnType<typeof setInterval> | null} */
+let dataPollTimer = null;
+let refreshInFlight = false;
 
 const els = {
   status: /** @type {HTMLElement | null} */ (null),
@@ -58,22 +65,42 @@ function showError(message) {
 
 /**
  * @param {string} path
+ * @param {{ bustCache?: boolean }} [opts]
  * @returns {Promise<unknown>}
  */
-async function fetchJson(path) {
-  const response = await fetch(`${DATA_BASE}/${path}`);
+async function fetchJson(path, opts = {}) {
+  const bust = opts.bustCache ? `?_=${Date.now()}` : '';
+  const response = await fetch(`${DATA_BASE}/${path}${bust}`, {
+    cache: opts.bustCache ? 'no-store' : 'default',
+  });
   if (!response.ok) throw new Error(`Failed to load ${path} (${response.status})`);
   return response.json();
 }
 
 /**
- * Load core datasets. Partial failure surfaces banner but keeps UI usable.
+ * Stable snapshot id from meta.json (fetch build time). Prefer generatedAt so
+ * client poll and known version stay aligned even when index.updated_at is copied in.
+ * @param {Record<string, unknown> | null} m
+ * @returns {string | null}
  */
-async function loadCoreData() {
+function dataVersionFromMeta(m) {
+  if (!m) return null;
+  const v = m.generatedAt ?? m.updated_at;
+  return v != null ? String(v) : null;
+}
+
+/**
+ * Load core datasets. Partial failure surfaces banner but keeps UI usable.
+ * @param {{ bustCache?: boolean }} [opts]
+ */
+async function loadCoreData(opts = {}) {
   const errors = [];
+  const bust = Boolean(opts.bustCache);
 
   try {
-    meta = /** @type {Record<string, unknown>} */ (await fetchJson('meta.json'));
+    meta = /** @type {Record<string, unknown>} */ (
+      await fetchJson('meta.json', { bustCache: bust })
+    );
   } catch {
     errors.push('Could not load data freshness metadata.');
     meta = null;
@@ -81,7 +108,7 @@ async function loadCoreData() {
 
   try {
     const index = /** @type {{ locations?: IndexEntry[]; updated_at?: string } } */ (
-      await fetchJson('index.json')
+      await fetchJson('index.json', { bustCache: bust })
     );
     locations = index.locations ?? [];
     if (index.updated_at && meta) {
@@ -93,7 +120,7 @@ async function loadCoreData() {
   }
 
   try {
-    const zipsRaw = await fetchJson('co-zips.json');
+    const zipsRaw = await fetchJson('co-zips.json', { bustCache: bust });
     zipTable = Array.isArray(zipsRaw)
       ? /** @type {ZipEntry[]} */ (zipsRaw)
       : /** @type {Record<string, ZipEntry>} */ (zipsRaw);
@@ -102,8 +129,63 @@ async function loadCoreData() {
     zipTable = [];
   }
 
+  knownDataVersion = dataVersionFromMeta(meta);
   showError(errors.length ? errors.join(' ') : null);
   updateFooterTimestamp();
+}
+
+/**
+ * Peek at meta.json without mutating app state.
+ * @returns {Promise<string | null>}
+ */
+async function peekRemoteDataVersion() {
+  try {
+    const remote = /** @type {Record<string, unknown>} */ (
+      await fetchJson('meta.json', { bustCache: true })
+    );
+    return dataVersionFromMeta(remote);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * When a newer fetch snapshot is published, reload core data and re-render.
+ */
+async function refreshIfDataUpdated() {
+  if (refreshInFlight || document.visibilityState === 'hidden') return;
+  refreshInFlight = true;
+  try {
+    const remoteVersion = await peekRemoteDataVersion();
+    if (!remoteVersion || remoteVersion === knownDataVersion) return;
+
+    announce('New weather data available. Refreshing…');
+    await loadCoreData({ bustCache: true });
+    await handleRoute({ bustCache: true });
+    announce('Weather data updated.');
+  } finally {
+    refreshInFlight = false;
+  }
+}
+
+/**
+ * Poll for newer public/data snapshots; pause while the tab is hidden.
+ */
+function startDataRefreshWatcher() {
+  if (dataPollTimer) {
+    clearInterval(dataPollTimer);
+    dataPollTimer = null;
+  }
+
+  dataPollTimer = setInterval(() => {
+    void refreshIfDataUpdated();
+  }, DATA_POLL_MS);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      void refreshIfDataUpdated();
+    }
+  });
 }
 
 /**
@@ -371,8 +453,9 @@ function renderFavoritesList(listEl) {
 
 /**
  * @param {string} slug
+ * @param {{ bustCache?: boolean }} [opts]
  */
-async function renderLocationView(slug) {
+async function renderLocationView(slug, opts = {}) {
   if (!els.main) return;
 
   const indexEntry = findLocation(slug);
@@ -395,7 +478,7 @@ async function renderLocationView(slug) {
 
   let payload;
   try {
-    payload = await fetchJson(`locations/${slug}.json`);
+    payload = await fetchJson(`locations/${slug}.json`, { bustCache: Boolean(opts.bustCache) });
   } catch {
     document.body.classList.remove('workspace-active');
     els.main.innerHTML = `
@@ -436,13 +519,14 @@ async function renderLocationView(slug) {
 /**
  * Route handler.
  * `#/` and `#/search` always show the main find-location page (no auto-redirect).
+ * @param {{ bustCache?: boolean }} [opts]
  */
-async function handleRoute() {
+async function handleRoute(opts = {}) {
   showError(null);
   const slug = parseRoute();
 
   if (slug) {
-    await renderLocationView(slug);
+    await renderLocationView(slug, opts);
     return;
   }
 
@@ -460,6 +544,7 @@ async function init() {
   bindHomeNavigation();
   window.addEventListener('hashchange', () => handleRoute());
   await handleRoute();
+  startDataRefreshWatcher();
 }
 
 init();

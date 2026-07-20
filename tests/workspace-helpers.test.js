@@ -2,9 +2,12 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   detectPressureDip,
+  formatMeteogramHour,
   formatMeteogramTimeLabels,
   mbToInHg,
   meteogramHtml,
+  meteogramIndexFromX,
+  meteogramScrubPercent,
   meteogramTimeAxisHtml,
   sparklineHtml,
 } from '../public/js/sparkline.js';
@@ -59,6 +62,17 @@ describe('sparkline / meteogram', () => {
       '2026-07-21T01:00',
     ]);
     assert.match(axis, /meteogram--axis/);
+    assert.match(axis, /<line/);
+  });
+
+  it('maps pointer X to hour index and scrub percent', () => {
+    assert.equal(meteogramIndexFromX(0, { left: 0, width: 100 }, 5), 0);
+    assert.equal(meteogramIndexFromX(100, { left: 0, width: 100 }, 5), 4);
+    assert.equal(meteogramIndexFromX(50, { left: 0, width: 100 }, 5), 2);
+    assert.equal(meteogramScrubPercent(0, 5), 0);
+    assert.equal(meteogramScrubPercent(4, 5), 100);
+    assert.equal(formatMeteogramHour('2026-07-20T16:00'), formatMeteogramHour('2026-07-20T16:00'));
+    assert.ok(formatMeteogramHour('2026-07-20T16:00').length > 0);
   });
 });
 

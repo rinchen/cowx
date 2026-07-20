@@ -1591,15 +1591,33 @@ body.workspace-active #main-content {
 .meteogram-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.meteogram-scrub-readout {
+  margin: 0;
+  min-height: 1.35em;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--glass-text);
+}
+
+.meteogram-stack__body {
+  --meteogram-label-w: 7.5rem;
+  --meteogram-gap: 0.65rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
   width: 100%;
 }
 
 .meteogram-row {
   display: grid;
-  grid-template-columns: 7.5rem minmax(0, 1fr);
-  gap: 0.65rem;
-  align-items: center;
+  grid-template-columns: var(--meteogram-label-w) minmax(0, 1fr);
+  gap: var(--meteogram-gap);
+  align-items: start;
   width: 100%;
 }
 
@@ -1608,10 +1626,18 @@ body.workspace-active #main-content {
   font-size: 0.75rem;
   color: var(--glass-muted);
   line-height: 1.25;
+  padding-top: 0.35rem;
 }
 
 .meteogram-row__chart {
   min-width: 0;
+  width: 100%;
+}
+
+.meteogram-plot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
   width: 100%;
 }
 
@@ -1626,8 +1652,78 @@ body.workspace-active #main-content {
   height: 18px;
 }
 
-.meteogram-row--axis .meteogram-row__label {
-  visibility: hidden;
+.meteogram-scrub-layer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--meteogram-label-w) + var(--meteogram-gap));
+  right: 0;
+  z-index: 2;
+  cursor: ew-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.meteogram-scrubber {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0%;
+  width: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.meteogram-scrubber__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  margin-left: -0.5px;
+  background: #0369a1;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 55%);
+}
+
+.meteogram-scrubber__handle {
+  pointer-events: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 28px;
+  padding: 0;
+  border: 1.5px solid #0369a1;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(26 43 60 / 25%);
+  cursor: grab;
+}
+
+.meteogram-scrubber__handle::before {
+  content: '';
+  position: absolute;
+  inset: 6px 5px;
+  border-left: 1px solid #0369a1;
+  border-right: 1px solid #0369a1;
+  opacity: 0.7;
+}
+
+.meteogram-scrub-layer.is-dragging .meteogram-scrubber__handle,
+.meteogram-scrubber__handle:active {
+  cursor: grabbing;
+}
+
+.meteogram-scrubber__handle:focus-visible {
+  outline: 2px solid var(--glass-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meteogram-scrubber {
+    transition: none;
+  }
 }
 
 .meteogram-hint {
