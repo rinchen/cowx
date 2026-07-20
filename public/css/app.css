@@ -1113,17 +1113,6 @@ main {
   border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
 }
 
-.intel-now-hero--static,
-.intel-now-wind--static {
-  cursor: default;
-  pointer-events: none;
-}
-
-.intel-now-hero--static:hover,
-.intel-now-wind--static:hover {
-  background: transparent;
-}
-
 .summary-primary {
   display: flex;
   flex-direction: column;

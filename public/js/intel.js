@@ -64,7 +64,7 @@ function distanceLabel(km, fromYou) {
  * @returns {{ headline: string }}
  */
 export function renderIntel(root, data, options = {}) {
-  const current = /** @type {Record<string, unknown> | null} */ (data.current ?? null);
+  const catalogCurrent = /** @type {Record<string, unknown> | null} */ (data.current ?? null);
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
   const spaceWeather = options.spaceWeather ?? null;
@@ -74,6 +74,10 @@ export function renderIntel(root, data, options = {}) {
   const pin = options.pin ?? null;
   const hyperlocal = options.hyperlocal ?? null;
   const fromYou = Boolean(pin);
+  const pinCurrent =
+    hyperlocal?.current && typeof hyperlocal.current === 'object' ? hyperlocal.current : null;
+  const usingPinNow = Boolean(pin && pinCurrent?.temp_f != null);
+  const current = usingPinNow ? pinCurrent : catalogCurrent;
 
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   const hi = times.length ? nearestHourIndex(times) : 0;
@@ -155,11 +159,7 @@ export function renderIntel(root, data, options = {}) {
   }
   const windDir = windDirLabel(windDeg);
   if (windDir) {
-    windMetaParts.push(
-      windDeg != null && Number.isFinite(Number(windDeg))
-        ? `from ${windDir} (${Math.round(Number(windDeg))}°)`
-        : `from ${windDir}`,
-    );
+    windMetaParts.push(`from ${windDir}`);
   }
 
   const alerts = /** @type {Record<string, unknown>[]} */ (data.alerts ?? []);
@@ -177,8 +177,6 @@ export function renderIntel(root, data, options = {}) {
   const pws = hyperlocal?.pws && typeof hyperlocal.pws === 'object' ? hyperlocal.pws : catalogPws;
   const pwsPrimary = /** @type {Record<string, unknown> | null} */ (pws?.primary ?? null);
   const cwop = pwsPrimary ?? /** @type {Record<string, unknown> | null} */ (data.cwop ?? null);
-  const pinCurrent =
-    hyperlocal?.current && typeof hyperlocal.current === 'object' ? hyperlocal.current : null;
   const coag = /** @type {Record<string, unknown> | null} */ (data.coagmet ?? null);
   const hms = /** @type {Record<string, unknown> | null} */ (data.hms_smoke ?? null);
   const fireWeather = /** @type {Record<string, unknown> | null} */ (data.fire_weather ?? null);
@@ -201,9 +199,11 @@ export function renderIntel(root, data, options = {}) {
   const hourUv =
     current?.uv_index != null
       ? Number(current.uv_index)
-      : hourly && Array.isArray(hourly.uv_index)
-        ? /** @type {number[]} */ (hourly.uv_index)[hi]
-        : null;
+      : catalogCurrent?.uv_index != null
+        ? Number(catalogCurrent.uv_index)
+        : hourly && Array.isArray(hourly.uv_index)
+          ? /** @type {number[]} */ (hourly.uv_index)[hi]
+          : null;
   const tstorm =
     current?.thunderstorm_probability != null
       ? Number(current.thunderstorm_probability)
@@ -270,59 +270,23 @@ export function renderIntel(root, data, options = {}) {
   const showHamPanel = Boolean(rfLabel || sw);
 
   const pressureDisplay =
-    current?.surface_pressure_mb != null ? current.surface_pressure_mb : current?.pressure_mb;
+    current?.surface_pressure_mb != null
+      ? current.surface_pressure_mb
+      : current?.pressure_mb != null
+        ? current.pressure_mb
+        : catalogCurrent?.surface_pressure_mb != null
+          ? catalogCurrent.surface_pressure_mb
+          : catalogCurrent?.pressure_mb;
 
-  const pinCode = /** @type {number | null} */ (pinCurrent?.weather_code ?? null);
-  const pinIsDay =
-    pinCurrent?.is_day === 0 || pinCurrent?.is_day === 1 ? pinCurrent.is_day === 1 : isDay;
   const pinSourceLabel =
     pin?.source === 'gps' ? 'GPS' : pin?.source === 'address' ? 'address' : 'network';
-  const pinStrip =
-    pin && pinCurrent?.temp_f != null
-      ? `<section class="glass-panel glass-panel--pin-now" aria-labelledby="pin-now-heading">
-          <h2 id="pin-now-heading" class="glass-panel__title">At your location</h2>
-          <p class="intel-muted" id="pin-now-desc">
-            Current conditions at your ${escapeHtml(pinSourceLabel)} pin
-            ${
-              pin.accuracy_m != null && pin.accuracy_m < 5000
-                ? `(±${Math.round(pin.accuracy_m)} m accuracy)`
-                : ''
-            } — catalog Now below uses the nearest city point.
-          </p>
-          <div class="intel-now intel-now--pin" aria-describedby="pin-now-desc">
-            <div class="intel-now-hero intel-now-hero--static">
-              ${weatherIconHtml(pinCode, { isDay: pinIsDay, size: 44, className: 'weather-icon', alt: '' })}
-              <span class="intel-now-hero__text">
-                <span class="intel-temp">${Math.round(Number(pinCurrent.temp_f))}°F</span>
-                <span class="intel-cond">${escapeHtml(String(pinCurrent.condition ?? wmoLabel(pinCode)))}</span>
-              </span>
-            </div>
-            ${
-              pinCurrent.wind_speed_mph != null
-                ? `<div class="intel-now-wind intel-now-wind--static">
-                    ${windCompassHtml(/** @type {number | null} */ (pinCurrent.wind_dir_deg ?? null), { size: 24 }) || ''}
-                    <span class="intel-now-wind__text">
-                      <span class="intel-now-wind__speed">${Math.round(Number(pinCurrent.wind_speed_mph))} mph</span>
-                      ${
-                        pinCurrent.humidity != null
-                          ? `<span class="intel-now-wind__meta">${Math.round(Number(pinCurrent.humidity))}% RH</span>`
-                          : ''
-                      }
-                    </span>
-                  </div>`
-                : ''
-            }
-          </div>
-        </section>`
-      : pin
-        ? `<section class="glass-panel glass-panel--pin-now" aria-labelledby="pin-now-heading" role="status">
-            <h2 id="pin-now-heading" class="glass-panel__title">At your location</h2>
-            <p class="intel-muted">
-              Pin set (${escapeHtml(pinSourceLabel)}) — cameras and nearby PWS are refined for your coordinates.
-              Live temperature at the pin is temporarily unavailable; catalog Now below still works.
-            </p>
-          </section>`
-        : '';
+  const pinNowNote =
+    pin && !usingPinNow
+      ? `<p class="intel-muted" role="status">
+          Pin set (${escapeHtml(pinSourceLabel)}) — cameras and nearby PWS are ranked from your coordinates.
+          Live temperature at the pin is temporarily unavailable; showing nearest catalog point.
+        </p>`
+      : '';
 
   root.innerHTML = `
     <section class="glass-panel glass-panel--headline" aria-labelledby="bottom-line-heading">
@@ -330,17 +294,16 @@ export function renderIntel(root, data, options = {}) {
       <p class="bottom-line bottom-line--${escapeHtml(priority)}" role="status">${escapeHtml(headline)}</p>
     </section>
 
-    ${pinStrip}
-
-    <section class="glass-panel" aria-labelledby="intel-now-heading">
+    <section class="glass-panel${usingPinNow ? ' glass-panel--pin-now' : ''}" aria-labelledby="intel-now-heading">
       <div class="intel-now-head">
-        <h2 id="intel-now-heading" class="glass-panel__title">${pin ? 'Now (catalog)' : 'Now'}</h2>
+        <h2 id="intel-now-heading" class="glass-panel__title">${usingPinNow ? 'At your location' : 'Now'}</h2>
         <button type="button" class="aqi-ring ${cat.className}" data-jump-to="aqi-heading" aria-label="Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}. Open air quality details.">
           <span class="aqi-ring__value">${aq.aqi != null ? Math.round(aq.aqi) : '—'}</span>
           <span class="aqi-ring__label">AQI</span>
           <span class="aqi-ring__cat">${escapeHtml(cat.label)}</span>
         </button>
       </div>
+      ${pinNowNote}
       <div class="intel-now">
         ${
           current?.temp_f != null
