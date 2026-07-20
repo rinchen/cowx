@@ -69,7 +69,7 @@ export async function renderWorkspace(root, data, options) {
   const pinSourceLabel =
     pin?.source === 'gps' ? 'GPS' : pin?.source === 'address' ? 'address' : 'network';
   const pinNote = pin
-    ? `<p class="hyperlocal-banner" role="status">
+    ? `<p class="workspace__pin" role="status">
         <strong>Refined for your ${escapeHtml(pinSourceLabel)} pin</strong>
         ${catalogDistKm != null ? ` · ${catalogDistKm} km from ${escapeHtml(name)} catalog center` : ''}
         ${
@@ -78,32 +78,34 @@ export async function renderWorkspace(root, data, options) {
             : ''
         }.
         Cameras, road alerts, and nearby PWS are ranked from your coordinates.
-        ${pin.label ? `<span class="hyperlocal-banner__label">${escapeHtml(pin.label)}</span>` : ''}
+        ${pin.label ? `<span class="workspace__pin-label">${escapeHtml(pin.label)}</span>` : ''}
       </p>`
     : '';
 
   root.innerHTML = `
     <div class="workspace" id="workspace">
       <header class="workspace__header glass-panel glass-panel--header">
-        <div class="workspace__title-block">
-          <h1 id="location-name">${escapeHtml(name)}</h1>
-          <p class="location-meta">
-            ${data.county ? `<span>${escapeHtml(String(data.county))} County</span>` : ''}
-            ${data.elevation_ft != null ? `<span>${Number(data.elevation_ft).toLocaleString()} ft</span>` : ''}
-            ${data.region ? `<span>${escapeHtml(String(data.region))}</span>` : ''}
-            ${data.wfo ? `<span>NWS ${escapeHtml(String(data.wfo))}</span>` : ''}
-            ${data.lat != null && data.lon != null ? `<span>${Number(data.lat).toFixed(2)}, ${Number(data.lon).toFixed(2)}</span>` : ''}
-          </p>
+        <div class="workspace__header-main">
+          <div class="workspace__title-block">
+            <h1 id="location-name">${escapeHtml(name)}</h1>
+            <p class="location-meta">
+              ${data.county ? `<span>${escapeHtml(String(data.county))} County</span>` : ''}
+              ${data.elevation_ft != null ? `<span>${Number(data.elevation_ft).toLocaleString()} ft</span>` : ''}
+              ${data.region ? `<span>${escapeHtml(String(data.region))}</span>` : ''}
+              ${data.wfo ? `<span>NWS ${escapeHtml(String(data.wfo))}</span>` : ''}
+              ${data.lat != null && data.lon != null ? `<span>${Number(data.lat).toFixed(2)}, ${Number(data.lon).toFixed(2)}</span>` : ''}
+            </p>
+          </div>
+          <div class="workspace__actions">
+            <button type="button" class="btn-favorite" id="btn-favorite" aria-pressed="${options.starred}" aria-label="${options.starred ? 'Remove from favorites' : 'Add to favorites'}">
+              <span aria-hidden="true">${options.starred ? '★' : '☆'}</span>
+            </button>
+            <a class="btn btn-secondary btn-sm" href="#/refine">Refine location</a>
+            <a class="btn btn-secondary btn-sm" href="#/" data-nav-home>All locations</a>
+          </div>
         </div>
-        <div class="workspace__actions">
-          <button type="button" class="btn-favorite" id="btn-favorite" aria-pressed="${options.starred}" aria-label="${options.starred ? 'Remove from favorites' : 'Add to favorites'}">
-            <span aria-hidden="true">${options.starred ? '★' : '☆'}</span>
-          </button>
-          <a class="btn btn-secondary btn-sm" href="#/refine">Refine location</a>
-          <a class="btn btn-secondary btn-sm" href="#/" data-nav-home>All locations</a>
-        </div>
+        ${pinNote}
       </header>
-      ${pinNote}
       ${
         data.forecastStale
           ? `<p class="stale-banner" role="status">Showing last successful forecast — a newer model pull was rate-limited.</p>`

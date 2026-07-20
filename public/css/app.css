@@ -1091,20 +1091,21 @@ main {
   font-size: 0.9375rem;
 }
 
-.hyperlocal-banner {
-  margin: 0 0 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
-  color: var(--color-text);
-  font-size: 0.9375rem;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
+.workspace__pin {
+  margin: 0;
+  color: var(--glass-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
 }
 
-.hyperlocal-banner__label {
+.workspace__pin strong {
+  color: var(--glass-text);
+  font-weight: 600;
+}
+
+.workspace__pin-label {
   display: block;
-  margin-top: 0.35rem;
-  font-size: 0.8125rem;
+  margin-top: 0.25rem;
   opacity: 0.9;
 }
 
@@ -1461,14 +1462,20 @@ body.workspace-active #main-content {
 
 .workspace__header {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem 1.25rem;
+  flex-direction: column;
+  gap: 0.5rem;
   position: sticky;
   top: var(--header-height);
   z-index: 40;
   background: var(--glass-bg-strong);
+}
+
+.workspace__header-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
 }
 
 .workspace__header h1 {
