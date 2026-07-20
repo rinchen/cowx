@@ -1,6 +1,6 @@
-# cowx — Colorado Weather
+# COWX — Colorado Weather
 
-Aggregated weather and air-quality data for Colorado locations, built as a static site on GitHub Pages. A scheduled fetch job merges public data sources into JSON under `public/data/`; the browser app geo-locates you to the nearest site and offers deep drill-down panels.
+**COWX** (COlorado + Weather) aggregates weather and air-quality data for Colorado locations, built as a static site on GitHub Pages. A scheduled fetch job merges public data sources into JSON under `public/data/`; the browser app geo-locates you to the nearest site and offers deep drill-down panels.
 
 **Scope:** Colorado only. Unofficial project — not affiliated with NWS, NOAA, or other government agencies.
 
@@ -55,7 +55,7 @@ The site works without these keys; affected sources degrade to skipped status in
 
 - **No accounts** and no server-side storage of personal data.
 - **Favorites and last-viewed location** are stored only in your browser (`localStorage` keys such as `cowx:favorites` and `cowx:lastLocation`).
-- **IP geolocation** runs in the browser from public CORS geo APIs to suggest the nearest Colorado site. Coordinates are not sent to a cowx backend (there is none).
+- **IP geolocation** runs in the browser from public CORS geo APIs to suggest the nearest Colorado site. Coordinates are not sent to a COWX backend (there is none).
 - **No third-party analytics** by default.
 
 See [how-it-works.html](public/how-it-works.html) for details.

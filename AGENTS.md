@@ -1,6 +1,6 @@
-# AGENTS.md — Colorado Weather (cowx)
+# AGENTS.md — Colorado Weather (COWX)
 
-Guide for AI agents and contributors working on **cowx**, a Colorado-scoped static weather site deployed on GitHub Pages. Data is fetched on a schedule, written to `public/data/`, and consumed by a client-side HTML/CSS/JS frontend.
+Guide for AI agents and contributors working on **COWX** (COlorado + Weather), a Colorado-scoped static weather site deployed on GitHub Pages. Data is fetched on a schedule, written to `public/data/`, and consumed by a client-side HTML/CSS/JS frontend.
 
 **Scope:** Colorado only. Do not add locations outside Colorado or expand coverage to other states.
 
@@ -9,7 +9,7 @@ Guide for AI agents and contributors working on **cowx**, a Colorado-scoped stat
 ## Repo map
 
 ```
-cowx/
+cowx/   # repo directory (brand: COWX)
 ├── AGENTS.md                 # This file
 ├── README.md                 # Human quick start
 ├── package.json              # pnpm scripts (fetch, test, lint, validate:locations)

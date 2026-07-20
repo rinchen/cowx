@@ -57,7 +57,7 @@ jobs:
             exit 0
           fi
           payload=$(jq -n \
-            --arg content "cowx weather fetch failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --arg content "COWX weather fetch failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             '{content: $content}')
           curl -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_WEBHOOK_URL"
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cowx.dev/schemas/weather-payload.schema.json",
-  "title": "CowxWeatherPayload",
+  "title": "COWXWeatherPayload",
   "description": "Per-location weather and air quality snapshot",
   "type": "object",
   "required": ["slug", "updatedAt"],

@@ -36,4 +36,4 @@ export async function fetchJson(url, options = {}) {
   return res.json();
 }
 
-export const NWS_USER_AGENT = 'cowx/1.0 (https://github.com/rinchen/cowx; colorado-weather)';
+export const NWS_USER_AGENT = 'COWX/1.0 (https://github.com/rinchen/cowx; colorado-weather)';

@@ -1,7 +1,7 @@
 {
   "name": "cowx",
   "version": "0.1.0",
-  "description": "Colorado Weather — aggregated air quality and weather data",
+  "description": "COWX — Colorado Weather: aggregated air quality and weather data",
   "type": "module",
   "private": true,
   "engines": {

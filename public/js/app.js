@@ -406,7 +406,7 @@ async function renderLocationView(slug) {
   );
 
   announce(`Showing weather for ${indexEntry.name}`);
-  document.title = `${indexEntry.name} — Cowx`;
+  document.title = `${indexEntry.name} — COWX`;
 }
 
 /**
@@ -421,7 +421,7 @@ async function handleRoute() {
     return;
   }
 
-  document.title = 'Cowx — Colorado Weather';
+  document.title = 'COWX — Colorado Weather';
   const preferred = getPreferredSlug();
   if (preferred && findLocation(preferred)) {
     navigateTo(preferred);
