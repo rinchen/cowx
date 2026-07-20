@@ -108,12 +108,12 @@
 
       <h2>Data pipeline</h2>
       <p>
-        The <code>pnpm fetch</code> orchestrator calls independent adapters (Open-Meteo forecast and
-        air quality, NWS alerts/AFD/HWO, CoAgMET, Aviation Weather METAR/TAF, USGS gauges, SNOTEL,
-        CDOT cameras/RWIS/road alerts, CWOP/APRS (and optional Synoptic) neighborhood PWS, NOAA HMS
-        smoke, SPC fire weather outlooks, NIFC nearby wildfire locations, Colorado burn-restriction
-        status/links, and optional PurpleAir and AirNow). Each source can succeed or fail on its
-        own. Results are merged into:
+        The <code>pnpm fetch:data</code> orchestrator calls independent adapters (Open-Meteo
+        forecast and air quality, NWS alerts/AFD/HWO, CoAgMET, Aviation Weather METAR/TAF, USGS
+        gauges, SNOTEL, CDOT cameras/RWIS/road alerts, CWOP/APRS (and optional Synoptic)
+        neighborhood PWS, NOAA HMS smoke, SPC fire weather outlooks, NIFC nearby wildfire locations,
+        Colorado burn-restriction status/links, and optional PurpleAir and AirNow). Each source can
+        succeed or fail on its own. Results are merged into:
       </p>
       <ul>
         <li><code>index.json</code> — slim list for search and the map</li>

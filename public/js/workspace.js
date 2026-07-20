@@ -70,15 +70,14 @@ export async function renderWorkspace(root, data, options) {
     pin?.source === 'gps' ? 'GPS' : pin?.source === 'address' ? 'address' : 'network';
   const pinNote = pin
     ? `<p class="workspace__pin" role="status">
-        <strong>Refined for your ${escapeHtml(pinSourceLabel)} pin</strong>
-        ${catalogDistKm != null ? ` · ${catalogDistKm} km from ${escapeHtml(name)} catalog center` : ''}
+        <strong>${escapeHtml(pinSourceLabel)} pin</strong>
+        ${catalogDistKm != null ? ` · ${catalogDistKm} km from catalog` : ''}
         ${
           pin.accuracy_m != null && pin.accuracy_m < 5000
-            ? ` · ±${Math.round(pin.accuracy_m)} m accuracy`
+            ? ` · ±${Math.round(pin.accuracy_m)} m`
             : ''
-        }.
-        Cameras, road alerts, and nearby PWS are ranked from your coordinates.
-        ${pin.label ? `<span class="workspace__pin-label">${escapeHtml(pin.label)}</span>` : ''}
+        }
+        ${pin.label ? ` · <span class="workspace__pin-label">${escapeHtml(pin.label)}</span>` : ''}
       </p>`
     : '';
 

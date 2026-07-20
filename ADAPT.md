@@ -15,7 +15,7 @@ git clone https://github.com/<you>/<your-repo>.git
 cd <your-repo>
 pnpm install
 pnpm validate:locations
-pnpm fetch          # needs network; writes public/data/
+pnpm fetch:data     # needs network; writes public/data/
 pnpm test
 npx serve public
 ```
@@ -31,7 +31,7 @@ Point GitHub Pages at `public/` (see `.github/workflows/pages.yml`). Optional Ac
 3. **Fetch adapters** — NWS area, WFOs, timezone, bbox, ICAOs; ag network
 4. **Frontend** — brand strings, map center, flag, `localStorage` keys
 5. **Docs / CI copy** — README, AGENTS, HTML pages, notify messages
-6. **Regenerate data** — `pnpm validate:locations` → `pnpm fetch` → `pnpm test`
+6. **Regenerate data** — `pnpm validate:locations` → `pnpm fetch:data` → `pnpm test`
 
 ---
 
@@ -128,7 +128,7 @@ After adapter edits:
 
 ```bash
 pnpm validate:locations
-pnpm fetch
+pnpm fetch:data
 pnpm test
 ```
 
@@ -185,7 +185,7 @@ If you want a thin proof fork before a full catalog:
 2. Set NWS `area=XX` and matching `OFFICES`.
 3. Set Open-Meteo timezone and map `CO_CENTER`.
 4. Rename brand strings in `index.html` + `app.js`.
-5. `pnpm validate:locations && pnpm fetch && npx serve public`.
+5. `pnpm validate:locations && pnpm fetch:data && npx serve public`.
 
 Then expand the catalog, ZIPs, PurpleAir bbox, aviation ICAOs, and decide on an ag-data adapter.
 

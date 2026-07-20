@@ -13,7 +13,7 @@ git clone <repository-url>
 cd cowx
 pnpm install
 pnpm validate:locations
-pnpm fetch
+pnpm fetch:data
 npx serve public
 ```
 
@@ -25,7 +25,7 @@ Without running `fetch`, only committed snapshot data in `public/data/` is avail
 
 | Command                   | Description                                                   |
 | ------------------------- | ------------------------------------------------------------- |
-| `pnpm fetch`              | Run the fetch orchestrator; write/update `public/data/*.json` |
+| `pnpm fetch:data`         | Run the fetch orchestrator; write/update `public/data/*.json` |
 | `pnpm test`               | Unit tests (fixtures only — no live API calls)                |
 | `pnpm lint`               | ESLint                                                        |
 | `pnpm validate:locations` | Validate `scripts/locations/colorado-locations.json`          |

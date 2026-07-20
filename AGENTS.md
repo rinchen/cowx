@@ -105,7 +105,7 @@ PurpleAir and AirNow resolve by nearest sensor/grid point (no per-location senso
 1. Add the object to the array (Colorado locations only).
 2. Ensure `slug` is unique across the file.
 3. Run `pnpm validate:locations`.
-4. Run `pnpm fetch` (or wait for the scheduled Action) so `public/data/` includes the new site.
+4. Run `pnpm fetch:data` (or wait for the scheduled Action) so `public/data/` includes the new site.
 5. For ZIP search, update `scripts/locations/co-zips.json` (copied to `public/data/co-zips.json` on fetch).
 
 Use `scripts/lib/slugify.js` to derive slugs from names when needed.
@@ -179,7 +179,7 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 ## Fetch cadence & API budget
 
-- **Schedule:** GitHub Actions runs `pnpm fetch` **every 45 minutes** (`*/45 * * * *`) plus manual `workflow_dispatch` (`.github/workflows/update-weather.yml`).
+- **Schedule:** GitHub Actions runs `pnpm fetch:data` **every 45 minutes** (`*/45 * * * *`) plus manual `workflow_dispatch` (`.github/workflows/update-weather.yml`).
 - **Runs per day:** ~32 scheduled fetches.
 - **Design goal:** Stay within free-tier limits; do not poll faster than 45 minutes.
 
@@ -218,7 +218,7 @@ Locality pages are dual-pane **workspace** views: glass intel column (bottom-lin
 
 **Hyperlocal pin (client, no API keys):** Locate (high-accuracy GPS), IP “Go to”, or Colorado street-address Set pin (`public/js/geocode.js` → Nominatim, CO-bounded, submit-only) stores a session-only pin (`sessionStorage` `cowx:hyperlocalPin`). Always force-refresh the workspace after setting a pin even if the catalog slug is unchanged. The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip (fallback status if that fails). Searching a city clears the pin. Do not add client API **keys**; keep address geocode user-triggered and Colorado-bounded.
 
-Data commits may use `[skip ci]` when only JSON snapshots change, to avoid redundant Pages deploys — follow workflow conventions in `.github/workflows/`.
+Scheduled data commits should **not** use `[skip ci]` — Pages must redeploy so the live site picks up fresh JSON. Code-only pushes still trigger Pages as usual.
 
 ---
 
@@ -283,7 +283,7 @@ When `update-weather.yml` fails, a notify job POSTs a summary to `NOTIFY_WEBHOOK
 ```bash
 pnpm install
 pnpm validate:locations
-pnpm fetch          # writes public/data/ (requires network for live fetch)
+pnpm fetch:data     # writes public/data/ (requires network for live fetch)
 pnpm test
 pnpm lint
 npx serve public    # local preview

@@ -552,11 +552,48 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
     href: links.rainviewer || 'https://www.rainviewer.com/',
   });
 
-  if (links.pws) {
+  const pws = /** @type {Record<string, unknown> | null} */ (data.pws ?? null);
+  const cwop = /** @type {Record<string, unknown> | null} */ (pws?.primary ?? data.cwop ?? null);
+  if (cwop?.callsign) {
+    const cwopInfo = metaSourceInfo(metaSources, 'cwop');
+    rows.push({
+      title: 'Nearby PWS (CWOP / APRS)',
+      body: `${cwop.callsign}${cwop.distance_km != null ? ` · ${cwop.distance_km} km` : ''}${cwop.temp_f != null ? ` · ${Math.round(Number(cwop.temp_f))}°F` : ''}${cwopInfo.fetchedAt ? ` · fetched ${fmtDateTime(cwopInfo.fetchedAt)}` : ''}${sourceStatusNote(cwopInfo.status)}`,
+      href:
+        pws?.links &&
+        typeof pws.links === 'object' &&
+        /** @type {Record<string, unknown>} */ (pws.links).aprs
+          ? String(/** @type {Record<string, unknown>} */ (pws.links).aprs)
+          : links.pws || 'https://aprs.fi/',
+    });
+  } else if (links.pws) {
     rows.push({
       title: 'Personal weather station',
       body: 'Nearby WUnderground PWS dashboard (live observations offsite)',
       href: String(links.pws),
+    });
+  }
+
+  const cdotRoads = /** @type {Record<string, unknown> | null} */ (data.cdot_roads ?? null);
+  const cdotCam = /** @type {Record<string, unknown> | null} */ (
+    cdotRoads?.cameras?.[0] ?? data.cdot_camera ?? null
+  );
+  if (cdotCam || cdotRoads) {
+    const cdotInfo = metaSourceInfo(metaSources, 'cdot');
+    const camCount = Array.isArray(cdotRoads?.cameras) ? cdotRoads.cameras.length : cdotCam ? 1 : 0;
+    rows.push({
+      title: 'Roads & cameras (CDOT / COtrip)',
+      body: `${camCount ? `${camCount} nearby camera${camCount === 1 ? '' : 's'}` : 'Road network'}${cdotCam?.name ? ` · ${cdotCam.name}` : ''}${cdotInfo.fetchedAt ? ` · fetched ${fmtDateTime(cdotInfo.fetchedAt)}` : ''}${sourceStatusNote(cdotInfo.status)}`,
+      href: links.cotrip || 'https://maps.cotrip.org/',
+    });
+  }
+
+  const webcamLinks = /** @type {{ name?: string, url?: string }[]} */ (links.webcam_links ?? []);
+  if (webcamLinks.length) {
+    rows.push({
+      title: 'Local webcams',
+      body: webcamLinks.map((w) => w.name || 'Webcam').join(' · '),
+      href: webcamLinks[0]?.url ? String(webcamLinks[0].url) : null,
     });
   }
 
