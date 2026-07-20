@@ -21,8 +21,6 @@ let locations = [];
 let zipTable = [];
 /** @type {Record<string, unknown> | null} */
 let meta = null;
-/** @type {string} */
-let currentPersona = 'all';
 
 const els = {
   status: /** @type {HTMLElement | null} */ (null),
@@ -392,22 +390,9 @@ async function renderLocationView(slug) {
   renderDashboard(
     dashRoot,
     /** @type {Record<string, unknown>} */ (payload),
-    currentPersona,
     syncFavorite,
     isFavorite(slug),
   );
-
-  dashRoot.addEventListener('persona-change', (e) => {
-    currentPersona = /** @type {CustomEvent} */ (e).detail.persona;
-    renderDashboard(
-      dashRoot,
-      /** @type {Record<string, unknown>} */ (payload),
-      currentPersona,
-      syncFavorite,
-      isFavorite(slug),
-    );
-    announce(`Showing ${currentPersona === 'all' ? 'all' : currentPersona} view`);
-  });
 
   initStateMap(
     /** @type {HTMLElement} */ (document.getElementById('map-container')),

@@ -9,7 +9,7 @@
     "wfo": "BOU",
     "elevation_ft": 5280,
     "icao": "KDEN",
-    "pws_id": null,
+    "pws_id": "KCODENVE523",
     "coagmet_id": null
   },
   {
@@ -22,7 +22,7 @@
     "wfo": "BOU",
     "elevation_ft": 5438,
     "icao": "KAPA",
-    "pws_id": null,
+    "pws_id": "KCOAUROR234",
     "coagmet_id": null
   },
   {
@@ -35,7 +35,7 @@
     "wfo": "BOU",
     "elevation_ft": 5512,
     "icao": "KBJC",
-    "pws_id": null,
+    "pws_id": "KCOLAKEW98",
     "coagmet_id": null
   },
   {
@@ -48,7 +48,7 @@
     "wfo": "BOU",
     "elevation_ft": 5328,
     "icao": "KBDU",
-    "pws_id": null,
+    "pws_id": "KCOBOULD325",
     "coagmet_id": null
   },
   {
@@ -61,7 +61,7 @@
     "wfo": "BOU",
     "elevation_ft": 4984,
     "icao": "KLMO",
-    "pws_id": null,
+    "pws_id": "KCOLONGM52",
     "coagmet_id": null
   },
   {
@@ -74,7 +74,7 @@
     "wfo": "BOU",
     "elevation_ft": 5003,
     "icao": "KFNL",
-    "pws_id": null,
+    "pws_id": "KCOFORTC265",
     "coagmet_id": null
   },
   {
@@ -87,7 +87,7 @@
     "wfo": "BOU",
     "elevation_ft": 4980,
     "icao": "KFNL",
-    "pws_id": null,
+    "pws_id": "KCOLOVEL48",
     "coagmet_id": null
   },
   {
@@ -100,7 +100,7 @@
     "wfo": "BOU",
     "elevation_ft": 4665,
     "icao": "KGXY",
-    "pws_id": null,
+    "pws_id": "KCOGREEL52",
     "coagmet_id": null
   },
   {
@@ -113,7 +113,7 @@
     "wfo": "BOU",
     "elevation_ft": 5338,
     "icao": "KBJC",
-    "pws_id": null,
+    "pws_id": "KCOWESTM67",
     "coagmet_id": null
   },
   {
@@ -126,7 +126,7 @@
     "wfo": "BOU",
     "elevation_ft": 5430,
     "icao": "KBJC",
-    "pws_id": null,
+    "pws_id": "KCOARVAD45",
     "coagmet_id": null
   },
   {
@@ -152,7 +152,7 @@
     "wfo": "BOU",
     "elevation_ft": 5883,
     "icao": "KAPA",
-    "pws_id": null,
+    "pws_id": "KCOCENTE89",
     "coagmet_id": null
   },
   {
@@ -165,7 +165,7 @@
     "wfo": "BOU",
     "elevation_ft": 5974,
     "icao": "KAPA",
-    "pws_id": null,
+    "pws_id": "KCOHIGHL78",
     "coagmet_id": null
   },
   {
@@ -178,7 +178,7 @@
     "wfo": "BOU",
     "elevation_ft": 5866,
     "icao": "KAPA",
-    "pws_id": null,
+    "pws_id": "KCOPARKE43",
     "coagmet_id": null
   },
   {
@@ -191,7 +191,7 @@
     "wfo": "BOU",
     "elevation_ft": 6224,
     "icao": "KAPA",
-    "pws_id": null,
+    "pws_id": "KCOCASTL56",
     "coagmet_id": null
   },
   {
@@ -204,7 +204,7 @@
     "wfo": "BOU",
     "elevation_ft": 5352,
     "icao": "KAPA",
-    "pws_id": null,
+    "pws_id": "KCOLITTL55",
     "coagmet_id": null
   },
   {
@@ -217,7 +217,7 @@
     "wfo": "BOU",
     "elevation_ft": 5371,
     "icao": "KAPA",
-    "pws_id": null,
+    "pws_id": "KCOENGLE29",
     "coagmet_id": null
   },
   {
@@ -230,7 +230,7 @@
     "wfo": "BOU",
     "elevation_ft": 5420,
     "icao": "KBJC",
-    "pws_id": null,
+    "pws_id": "KCOBROOM34",
     "coagmet_id": null
   },
   {
@@ -282,7 +282,7 @@
     "wfo": "BOU",
     "elevation_ft": 5672,
     "icao": "KBJC",
-    "pws_id": null,
+    "pws_id": "KCOGOLDE41",
     "coagmet_id": null
   },
   {
@@ -464,7 +464,7 @@
     "wfo": "BOU",
     "elevation_ft": 7522,
     "icao": "KAEJ",
-    "pws_id": null,
+    "pws_id": "KCOESTES38",
     "coagmet_id": null
   },
   {
@@ -711,7 +711,7 @@
     "wfo": "PUB",
     "elevation_ft": 6035,
     "icao": "KCOS",
-    "pws_id": null,
+    "pws_id": "KCOCOLOR598",
     "coagmet_id": null
   },
   {
@@ -737,7 +737,7 @@
     "wfo": "PUB",
     "elevation_ft": 8475,
     "icao": "KCOS",
-    "pws_id": null,
+    "pws_id": "KCOWOODL22",
     "coagmet_id": null
   },
   {
@@ -802,7 +802,7 @@
     "wfo": "PUB",
     "elevation_ft": 4662,
     "icao": "KPUB",
-    "pws_id": null,
+    "pws_id": "KCOPUEBL52",
     "coagmet_id": null
   },
   {
@@ -820,7 +820,7 @@
   },
   {
     "slug": "canon-city",
-    "name": "Cañon City",
+    "name": "Ca\u00f1on City",
     "lat": 38.4519,
     "lon": -105.2425,
     "region": "front-range",
@@ -828,7 +828,7 @@
     "wfo": "PUB",
     "elevation_ft": 5332,
     "icao": "KCSM",
-    "pws_id": null,
+    "pws_id": "KCOCANON20",
     "coagmet_id": null
   },
   {
@@ -867,7 +867,7 @@
     "wfo": "PUB",
     "elevation_ft": 7085,
     "icao": "KANK",
-    "pws_id": null,
+    "pws_id": "KCOSALID17",
     "coagmet_id": null
   },
   {
@@ -1023,7 +1023,7 @@
     "wfo": "BOU",
     "elevation_ft": 6724,
     "icao": "KHDN",
-    "pws_id": null,
+    "pws_id": "KCOSTEAM41",
     "coagmet_id": null
   },
   {
@@ -1127,7 +1127,7 @@
     "wfo": "GJT",
     "elevation_ft": 8150,
     "icao": "KEGE",
-    "pws_id": null,
+    "pws_id": "KCOVAIL32",
     "coagmet_id": null
   },
   {
@@ -1309,7 +1309,7 @@
     "wfo": "BOU",
     "elevation_ft": 9600,
     "icao": "KEGE",
-    "pws_id": null,
+    "pws_id": "KCOBRECK28",
     "coagmet_id": null
   },
   {
@@ -1348,7 +1348,7 @@
     "wfo": "GJT",
     "elevation_ft": 7908,
     "icao": "KASE",
-    "pws_id": null,
+    "pws_id": "KCOASPEN45",
     "coagmet_id": null
   },
   {
@@ -1400,7 +1400,7 @@
     "wfo": "GJT",
     "elevation_ft": 5761,
     "icao": "KGWS",
-    "pws_id": null,
+    "pws_id": "KCOGLENW24",
     "coagmet_id": null
   },
   {
@@ -1439,7 +1439,7 @@
     "wfo": "GJT",
     "elevation_ft": 5350,
     "icao": "KRIL",
-    "pws_id": null,
+    "pws_id": "KCORIFLE15",
     "coagmet_id": null
   },
   {
@@ -1465,7 +1465,7 @@
     "wfo": "GJT",
     "elevation_ft": 4593,
     "icao": "KGJT",
-    "pws_id": null,
+    "pws_id": "KCOGRAND112",
     "coagmet_id": null
   },
   {
@@ -1582,7 +1582,7 @@
     "wfo": "GJT",
     "elevation_ft": 5804,
     "icao": "KMTJ",
-    "pws_id": null,
+    "pws_id": "KCOMONTR33",
     "coagmet_id": null
   },
   {
@@ -1634,7 +1634,7 @@
     "wfo": "GJT",
     "elevation_ft": 8750,
     "icao": "KTEX",
-    "pws_id": null,
+    "pws_id": "KCOTELLU19",
     "coagmet_id": null
   },
   {
@@ -1725,7 +1725,7 @@
     "wfo": "GJT",
     "elevation_ft": 7703,
     "icao": "KGUC",
-    "pws_id": null,
+    "pws_id": "KCOGUNNI22",
     "coagmet_id": null
   },
   {
@@ -1790,7 +1790,7 @@
     "wfo": "GJT",
     "elevation_ft": 6512,
     "icao": "KDRO",
-    "pws_id": null,
+    "pws_id": "KCODURAN67",
     "coagmet_id": null
   },
   {
@@ -1907,7 +1907,7 @@
     "wfo": "PUB",
     "elevation_ft": 7543,
     "icao": "KALS",
-    "pws_id": null,
+    "pws_id": "KCOALAMO18",
     "coagmet_id": null
   },
   {
@@ -2102,7 +2102,7 @@
     "wfo": "PUB",
     "elevation_ft": 6006,
     "icao": "KTAD",
-    "pws_id": null,
+    "pws_id": "KCOTRINI16",
     "coagmet_id": null
   },
   {
@@ -2141,7 +2141,7 @@
     "wfo": "PUB",
     "elevation_ft": 3934,
     "icao": "KSTK",
-    "pws_id": null,
+    "pws_id": "KCOSTERL27",
     "coagmet_id": null
   },
   {
@@ -2167,7 +2167,7 @@
     "wfo": "PUB",
     "elevation_ft": 4318,
     "icao": "KFMM",
-    "pws_id": null,
+    "pws_id": "KCOFORTM21",
     "coagmet_id": null
   },
   {
@@ -2336,7 +2336,7 @@
     "wfo": "PUB",
     "elevation_ft": 3626,
     "icao": "KLAA",
-    "pws_id": null,
+    "pws_id": "KCOLAMAR19",
     "coagmet_id": null
   },
   {

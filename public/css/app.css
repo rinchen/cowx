@@ -444,47 +444,39 @@ main {
   color: var(--color-text-muted);
 }
 
-.persona-highlights {
-  background: var(--color-accent-soft);
+.weather-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.weather-icon--lg {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.cond-cell {
+  white-space: nowrap;
+}
+
+.cond-cell span {
+  margin-left: 0.25rem;
+  vertical-align: middle;
+}
+
+.stale-banner {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
   border-radius: var(--radius);
-  padding: 1rem 1.25rem;
-  margin-bottom: 1rem;
+  background: #fef3c7;
+  color: #78350f;
+  font-size: 0.9375rem;
 }
 
-.persona-highlights h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1rem;
-}
-
-.persona-highlights ul {
-  margin: 0;
-  padding-left: 1.25rem;
-}
-
-.persona-filters {
+.summary-primary {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.persona-btn {
-  padding: 0.4375rem 0.875rem;
-  border: 2px solid var(--color-border);
-  border-radius: 999px;
-  background: var(--color-surface);
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  color: var(--color-text);
-}
-
-.persona-btn.is-active,
-.persona-btn[aria-pressed='true'] {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: #fff;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .collapsible {

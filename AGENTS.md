@@ -177,6 +177,12 @@ Approximate call budget per run (target — record counts in `meta.json` when im
 
 Partial adapter failure is acceptable; total failure (zero locations written or all critical adapters down) should fail the workflow so notifications fire.
 
+---
+
+## Audience data coverage (not UI filters)
+
+Citizen, pilot, farmer, and firefighter needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, etc.). The public dashboard shows **all** available sections for every location — there is no persona filter bar.
+
 Data commits may use `[skip ci]` when only JSON snapshots change, to avoid redundant Pages deploys — follow workflow conventions in `.github/workflows/`.
 
 ---

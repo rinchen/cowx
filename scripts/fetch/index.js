@@ -2,7 +2,7 @@
 /**
  * Colorado Weather fetch orchestrator.
  * Failure point: all critical adapters fail or zero locations written → exit 1.
- * Fallback: partial source failures recorded in meta.json; successful sources still published.
+ * Fallback: partial source failures recorded in meta.json; carry-forward prior forecast on Open-Meteo miss.
  */
 
 import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
@@ -10,6 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { fetchOpenMeteo } from './adapters/openmeteo.js';
+import { fetchOpenMeteoAq } from './adapters/openmeteo-aq.js';
 import { fetchNws } from './adapters/nws.js';
 import { fetchCoagmet } from './adapters/coagmet.js';
 import { fetchAviation } from './adapters/aviation.js';
@@ -22,6 +23,19 @@ const DATA_DIR = path.join(ROOT, 'public/data');
 const LOCATIONS_PATH = path.join(ROOT, 'scripts/locations/colorado-locations.json');
 const ZIPS_SRC = path.join(ROOT, 'scripts/locations/co-zips.json');
 const ZIPS_DST = path.join(DATA_DIR, 'co-zips.json');
+
+/**
+ * @param {string} slug
+ * @returns {Promise<object | null>}
+ */
+async function readPrior(slug) {
+  try {
+    const raw = await readFile(path.join(DATA_DIR, 'locations', `${slug}.json`), 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * @returns {Promise<void>}
@@ -45,6 +59,11 @@ export async function runFetch() {
   sources.push(sourceMeta('openmeteo', openmeteo));
   totalCalls += openmeteo.calls ?? 0;
   console.log(`  openmeteo: ${openmeteo.status} (${openmeteo.bySlug.size} locs)`);
+
+  const openmeteoAq = await fetchOpenMeteoAq(locations);
+  sources.push(sourceMeta('openmeteo_aq', openmeteoAq));
+  totalCalls += openmeteoAq.calls ?? 0;
+  console.log(`  openmeteo_aq: ${openmeteoAq.status} (${openmeteoAq.bySlug.size} locs)`);
 
   const nws = await fetchNws();
   sources.push(sourceMeta('nws', nws));
@@ -73,9 +92,24 @@ export async function runFetch() {
 
   const updatedAt = new Date().toISOString();
   const index = [];
+  let staleCount = 0;
 
   for (const loc of locations) {
     const om = openmeteo.bySlug.get(loc.slug);
+    const prior = om ? null : await readPrior(loc.slug);
+    let current = om?.current ?? null;
+    let hourly = om?.hourly ?? null;
+    let daily = om?.daily ?? null;
+    let forecastStale = false;
+
+    if (!current && prior?.current) {
+      current = prior.current;
+      hourly = prior.hourly ?? null;
+      daily = prior.daily ?? null;
+      forecastStale = true;
+      staleCount += 1;
+    }
+
     const countyKey = String(loc.county ?? '').toLowerCase();
     const alerts = nws.byCounty?.get(countyKey) ?? [];
     const afd = nws.afdByWfo?.get(loc.wfo) ?? null;
@@ -83,8 +117,8 @@ export async function runFetch() {
     const av = aviation.bySlug.get(loc.slug) ?? null;
     const pa = purpleair.bySlug.get(loc.slug) ?? null;
     const an = airnow.bySlug.get(loc.slug) ?? null;
+    const omaq = openmeteoAq.bySlug.get(loc.slug) ?? null;
 
-    const current = om?.current ?? null;
     const payload = {
       slug: loc.slug,
       name: loc.name,
@@ -96,15 +130,17 @@ export async function runFetch() {
       elevation_ft: loc.elevation_ft,
       icao: loc.icao ?? null,
       updatedAt,
+      forecastStale,
       current,
-      hourly: om?.hourly ?? null,
-      daily: om?.daily ?? null,
+      hourly,
+      daily,
       alerts,
       afd,
       coagmet: ag,
       aviation: av,
       purpleair: pa,
       airnow: an,
+      openmeteo_aq: omaq,
       links: {
         nws_forecast: `https://forecast.weather.gov/MapClick.php?lat=${loc.lat}&lon=${loc.lon}`,
         pws: loc.pws_id
@@ -136,8 +172,9 @@ export async function runFetch() {
       condition: current?.condition ?? null,
       humidity: current?.humidity ?? null,
       wind_speed_mph: current?.wind_speed_mph ?? null,
-      aqi: an?.aqi ?? pa?.aqi_pm25 ?? null,
+      aqi: an?.aqi ?? pa?.aqi_pm25 ?? omaq?.us_aqi ?? null,
       nws_alert: alerts.length > 0,
+      forecast_stale: forecastStale,
       updated_at: updatedAt,
     });
   }
@@ -163,18 +200,23 @@ export async function runFetch() {
     openmeteo.status === 'ok' ||
     openmeteo.status === 'partial' ||
     nws.status === 'ok' ||
-    nws.status === 'partial';
+    nws.status === 'partial' ||
+    staleCount > 0;
 
   const meta = {
     generatedAt: updatedAt,
-    version: '1.0.0',
+    version: '1.1.0',
     sources,
     locationCount: index.length,
     apiCalls: totalCalls,
+    forecastStaleCount: staleCount,
+    openmeteoCoverage: openmeteo.bySlug.size,
   };
   await writeFile(path.join(DATA_DIR, 'meta.json'), `${JSON.stringify(meta, null, 2)}\n`, 'utf8');
 
-  console.log(`fetch: wrote ${index.length} locations, ${totalCalls} API calls`);
+  console.log(
+    `fetch: wrote ${index.length} locations, ${totalCalls} API calls, ${staleCount} stale forecasts`,
+  );
 
   if (!criticalOk || index.length === 0) {
     throw new Error('Critical weather sources failed or no locations written');
@@ -190,7 +232,7 @@ function sourceMeta(id, result) {
     id,
     status: result.status,
     fetchedAt: new Date().toISOString(),
-    ...(result.error ? { error: result.error } : {}),
+    ...(result.error ? { error: String(result.error).slice(0, 500) } : {}),
   };
 }
 
