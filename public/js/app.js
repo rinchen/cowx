@@ -165,8 +165,27 @@ function findLocation(slug) {
 function updateFooterTimestamp() {
   if (!els.updatedFooter) return;
   const ts = meta?.updated_at ?? meta?.generatedAt;
+  const sourceIds = Array.isArray(meta?.sources)
+    ? /** @type {{ id?: string; status?: string }[]} */ (meta.sources)
+        .filter((s) => s?.status === 'ok' && s.id)
+        .map((s) => String(s.id))
+    : [];
+  const sourceLabels = {
+    openmeteo: 'Open-Meteo',
+    openmeteo_aq: 'Open-Meteo AQ',
+    nws: 'NWS',
+    coagmet: 'CoAgMET',
+    aviation: 'AWC',
+    purpleair: 'PurpleAir',
+    airnow: 'AirNow',
+  };
+  const names = sourceIds
+    .map((id) => sourceLabels[/** @type {keyof typeof sourceLabels} */ (id)] ?? id)
+    .filter(Boolean);
+  const unique = [...new Set(names)];
+  const srcBit = unique.length ? ` · Sources: ${unique.join(', ')}` : '';
   els.updatedFooter.textContent = ts
-    ? `Data updated ${formatTimestamp(String(ts))}`
+    ? `Data updated ${formatTimestamp(String(ts))}${srcBit}`
     : 'Data update time unknown';
 }
 
@@ -423,6 +442,9 @@ async function renderLocationView(slug) {
     /** @type {Record<string, unknown>} */ (payload),
     syncFavorite,
     isFavorite(slug),
+    {
+      sources: Array.isArray(meta?.sources) ? /** @type {unknown[]} */ (meta.sources) : [],
+    },
   );
 
   const mapContainer = /** @type {HTMLElement | null} */ (document.getElementById('map-container'));

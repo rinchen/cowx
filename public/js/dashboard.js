@@ -130,10 +130,190 @@ function seriesHasValues(arr) {
 /**
  * @param {string} label
  * @param {string | null | undefined} value
+ * @param {string | null | undefined} [source]
  */
-function detailItem(label, value) {
+function detailItem(label, value, source) {
   if (value == null || value === '') return '';
-  return `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`;
+  const src = source ? ` <span class="detail-source">${escapeHtml(source)}</span>` : '';
+  return `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}${src}</dd></div>`;
+}
+
+/**
+ * @param {unknown} sources
+ * @param {string} id
+ * @returns {{ fetchedAt: string | null, status: string | null }}
+ */
+function metaSourceInfo(sources, id) {
+  if (!Array.isArray(sources)) return { fetchedAt: null, status: null };
+  const hit = sources.find((s) => s && typeof s === 'object' && s.id === id);
+  if (!hit) return { fetchedAt: null, status: null };
+  const rec = /** @type {Record<string, unknown>} */ (hit);
+  return {
+    fetchedAt: typeof rec.fetchedAt === 'string' ? rec.fetchedAt : null,
+    status: typeof rec.status === 'string' ? rec.status : null,
+  };
+}
+
+/**
+ * @param {string | null} status
+ * @returns {string}
+ */
+function sourceStatusNote(status) {
+  if (!status || status === 'ok') return '';
+  return ` · last pull: ${status}`;
+}
+
+/**
+ * @param {unknown} observed
+ * @returns {string | null}
+ */
+function fmtObserved(observed) {
+  if (observed == null || observed === '') return null;
+  if (typeof observed === 'number') {
+    const ms = observed > 1e12 ? observed : observed * 1000;
+    return fmtDateTime(new Date(ms).toISOString());
+  }
+  const s = String(observed);
+  // AirNow often sends "YYYY-MM-DD HH"
+  if (/^\d{4}-\d{2}-\d{2} \d{1,2}$/.test(s)) {
+    try {
+      return fmtDateTime(`${s.replace(' ', 'T')}:00:00`);
+    } catch {
+      return s;
+    }
+  }
+  return fmtDateTime(s);
+}
+
+/**
+ * Always-visible live source references for this locality snapshot.
+ * @param {HTMLElement} parent
+ * @param {Record<string, unknown>} data
+ * @param {unknown[]} [metaSources]
+ */
+function renderLiveSourcesPanel(parent, data, metaSources = []) {
+  const links = /** @type {Record<string, string | null>} */ (data.links ?? {});
+  const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
+  const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
+  const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
+  const coag = /** @type {Record<string, unknown> | null} */ (data.coagmet ?? null);
+  const aviation = /** @type {Record<string, unknown> | null} */ (data.aviation ?? null);
+  const afd = /** @type {Record<string, unknown> | null} */ (data.afd ?? null);
+  const alerts = /** @type {unknown[]} */ (data.alerts ?? []);
+
+  /** @type {{ title: string, body: string, href: string | null }[]} */
+  const rows = [];
+
+  const omInfo = metaSourceInfo(metaSources, 'openmeteo');
+  const omWhen = omInfo.fetchedAt ?? data.updatedAt;
+  rows.push({
+    title: 'Forecast & current conditions',
+    body: `${data.forecastStale ? 'Open-Meteo (stale carry-forward)' : 'Open-Meteo model'} · snapshot ${omWhen ? fmtDateTime(String(omWhen)) : 'time unknown'}${sourceStatusNote(omInfo.status)}`,
+    href: 'https://open-meteo.com/',
+  });
+
+  const nwsInfo = metaSourceInfo(metaSources, 'nws');
+  rows.push({
+    title: 'Alerts & forecast discussion',
+    body: `National Weather Service${alerts.length ? ` · ${alerts.length} active alert${alerts.length === 1 ? '' : 's'}` : ' · no active alerts'}${afd?.office ? ` · AFD ${afd.office}` : ''}${afd?.issued ? ` issued ${fmtDateTime(String(afd.issued))}` : ''}${nwsInfo.fetchedAt ? ` · fetched ${fmtDateTime(nwsInfo.fetchedAt)}` : ''}${sourceStatusNote(nwsInfo.status)}`,
+    href: links.nws_forecast || 'https://www.weather.gov/',
+  });
+
+  if (airnow || purpleair || omaq) {
+    const bits = [];
+    if (airnow?.aqi != null) {
+      bits.push(
+        `AirNow AQI ${airnow.aqi}${airnow.observed ? ` (observed ${fmtObserved(airnow.observed) ?? airnow.observed})` : ''}`,
+      );
+    }
+    if (purpleair?.aqi_pm25 != null) {
+      bits.push(`PurpleAir est. AQI ${purpleair.aqi_pm25}`);
+    }
+    if (omaq?.us_aqi != null) {
+      bits.push(`Open-Meteo model US AQI ${omaq.us_aqi}`);
+    }
+    const primaryAq = airnow
+      ? metaSourceInfo(metaSources, 'airnow')
+      : purpleair
+        ? metaSourceInfo(metaSources, 'purpleair')
+        : metaSourceInfo(metaSources, 'openmeteo_aq');
+    rows.push({
+      title: 'Air quality',
+      body: `${bits.join(' · ')}${primaryAq.fetchedAt ? ` · fetched ${fmtDateTime(primaryAq.fetchedAt)}` : ''}${sourceStatusNote(primaryAq.status)}`,
+      href: airnow?.url
+        ? String(airnow.url)
+        : purpleair?.url
+          ? String(purpleair.url)
+          : links.airnow || 'https://www.airnow.gov/',
+    });
+  }
+
+  if (coag) {
+    const coagInfo = metaSourceInfo(metaSources, 'coagmet');
+    rows.push({
+      title: 'Agriculture (CoAgMET)',
+      body: `${coag.station_name ?? coag.station_id}${coag.distance_km != null ? ` · ${coag.distance_km} km away` : ''}${coagInfo.fetchedAt ? ` · fetched ${fmtDateTime(coagInfo.fetchedAt)}` : ''}${sourceStatusNote(coagInfo.status)}`,
+      href: coag.url ? String(coag.url) : links.coagmet || 'https://coagmet.colostate.edu/',
+    });
+  }
+
+  if (aviation?.raw_metar) {
+    const avInfo = metaSourceInfo(metaSources, 'aviation');
+    const obs = fmtObserved(aviation.observed);
+    rows.push({
+      title: 'Aviation (METAR / TAF)',
+      body: `${aviation.icao ?? 'Nearest station'}${aviation.flight_category ? ` · ${aviation.flight_category}` : ''}${obs ? ` · observed ${obs}` : ''}${avInfo.fetchedAt ? ` · fetched ${fmtDateTime(avInfo.fetchedAt)}` : ''}${sourceStatusNote(avInfo.status)}`,
+      href: aviation.url ? String(aviation.url) : links.aviation || 'https://aviationweather.gov/',
+    });
+  }
+
+  rows.push({
+    title: 'Radar overlay',
+    body: 'RainViewer live tiles on the map below (refreshed from their public weather-maps API)',
+    href: links.rainviewer || 'https://www.rainviewer.com/',
+  });
+
+  if (links.pws) {
+    rows.push({
+      title: 'Personal weather station',
+      body: 'Nearby WUnderground PWS dashboard (live observations offsite)',
+      href: String(links.pws),
+    });
+  }
+
+  const section = document.createElement('section');
+  section.className = 'sources-card';
+  section.setAttribute('aria-labelledby', 'sources-heading');
+  section.innerHTML = `
+    <h2 id="sources-heading">Live data sources</h2>
+    <p class="sources-lead">
+      This page is a Colorado snapshot refreshed about every 45 minutes. Values below name the
+      upstream feed and when we last pulled it — open a link for the provider’s live product.
+    </p>
+    <ul class="sources-list">
+      ${rows
+        .map(
+          (r) => `
+        <li>
+          <strong>${escapeHtml(r.title)}</strong>
+          <span class="sources-body">${escapeHtml(r.body)}</span>
+          ${
+            r.href
+              ? `<a href="${escapeHtml(r.href)}" target="_blank" rel="noopener noreferrer">Open source</a>`
+              : ''
+          }
+        </li>`,
+        )
+        .join('')}
+    </ul>
+    <p class="sources-footer">
+      Full attribution:
+      <a href="credits.html">Credits</a>
+      ·
+      <a href="how-it-works.html">How it works</a>
+    </p>
+  `;
+  parent.appendChild(section);
 }
 
 /**
@@ -416,6 +596,19 @@ function airQualityPlain(airnow, purpleair, omaq) {
 }
 
 /**
+ * @param {Record<string, unknown> | null} airnow
+ * @param {Record<string, unknown> | null} purpleair
+ * @param {Record<string, unknown> | null} omaq
+ * @returns {string | null}
+ */
+function airQualitySourceLabel(airnow, purpleair, omaq) {
+  if (airnow?.aqi != null) return 'AirNow';
+  if (purpleair?.aqi_pm25 != null) return 'PurpleAir';
+  if (omaq?.us_aqi != null) return 'Open-Meteo AQ';
+  return null;
+}
+
+/**
  * @param {Record<string, unknown>[]} alerts
  * @returns {string}
  */
@@ -450,9 +643,11 @@ function uvPlain(uv) {
  * @param {Record<string, unknown>} data
  * @param {(slug: string) => boolean} onFavoriteToggle
  * @param {boolean} [starred]
+ * @param {{ sources?: unknown[] }} [options]
  */
-export function renderDashboard(root, data, onFavoriteToggle, starred = false) {
+export function renderDashboard(root, data, onFavoriteToggle, starred = false, options = {}) {
   root.innerHTML = '';
+  const metaSources = Array.isArray(options.sources) ? options.sources : [];
   const slug = String(data.slug ?? '');
   const current = /** @type {Record<string, unknown> | null} */ (data.current ?? null);
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
@@ -460,6 +655,7 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false) {
   const sunrises = /** @type {string[]} */ (daily?.sunrise ?? []);
   const sunsets = /** @type {string[]} */ (daily?.sunset ?? []);
   const nowIsDay = isDaytime(new Date().toISOString(), sunrises, sunsets);
+  const omSrc = 'Open-Meteo';
 
   const header = document.createElement('header');
   header.className = 'dashboard-header';
@@ -526,11 +722,11 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false) {
     const alertText = alertsPlain(alerts);
     const hasAlerts = alerts.length > 0;
 
-    const aq = airQualityPlain(
-      /** @type {Record<string, unknown> | null} */ (data.airnow ?? null),
-      /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null),
-      /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null),
-    );
+    const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
+    const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
+    const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
+    const aq = airQualityPlain(airnow, purpleair, omaq);
+    const aqSrc = airQualitySourceLabel(airnow, purpleair, omaq);
 
     const aviation = /** @type {Record<string, unknown> | null} */ (data.aviation ?? null);
     const flightCat =
@@ -550,7 +746,7 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false) {
     summarySection.innerHTML = `
       <h2 id="summary-heading">Current conditions</h2>
       <p class="summary-alert ${hasAlerts ? 'summary-alert--active' : 'summary-alert--clear'}" role="status">
-        ${hasAlerts ? `<strong>Alerts:</strong> ${escapeHtml(alertText)}` : '<strong>Alerts:</strong> None active for this area.'}
+        ${hasAlerts ? `<strong>Alerts:</strong> ${escapeHtml(alertText)} <span class="detail-source">NWS</span>` : '<strong>Alerts:</strong> None active for this area. <span class="detail-source">NWS</span>'}
       </p>
       <div class="summary-grid">
         <div class="summary-primary">
@@ -558,32 +754,33 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false) {
           <p class="summary-temp" aria-label="Temperature">
             ${Math.round(Number(current.temp_f))}°F
           </p>
-          <p class="summary-conditions">${escapeHtml(String(current.condition ?? wmoLabel(code)))}</p>
+          <p class="summary-conditions">${escapeHtml(String(current.condition ?? wmoLabel(code)))} <span class="detail-source">${escapeHtml(omSrc)}</span></p>
         </div>
         <dl class="summary-details">
-          ${detailItem('Feels like', current.feels_like_f != null ? `${Math.round(Number(current.feels_like_f))}°F` : null)}
-          ${detailItem('Today’s range', todayHi != null && todayLo != null ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F` : null)}
-          ${detailItem('Chance of precip', precipChance != null ? `${precipChance}% this hour` : null)}
-          ${detailItem('Precipitation', precipIn)}
-          ${detailItem('Humidity', current.humidity != null ? `${current.humidity}%` : null)}
-          ${detailItem('Dewpoint', hourDew != null ? `${Math.round(hourDew)}°F` : null)}
-          ${detailItem('Wind', wind)}
-          ${detailItem('Visibility', hourVis != null ? fmtVisibility(hourVis) : null)}
-          ${detailItem('Cloud cover', current.cloud_cover != null ? `${current.cloud_cover}%` : null)}
-          ${detailItem('Pressure', current.pressure_mb != null ? `${Math.round(Number(current.pressure_mb))} mb` : null)}
-          ${detailItem('UV index', uvPlain(/** @type {number | null} */ (current.uv_index ?? null)))}
-          ${detailItem('Air quality', aq)}
-          ${detailItem('Sunrise', sunrise ? fmtClock(sunrise) : null)}
-          ${detailItem('Sunset', sunset ? fmtClock(sunset) : null)}
-          ${detailItem('Morning golden hour', golden.morning)}
-          ${detailItem('Evening golden hour', golden.evening)}
-          ${detailItem('Aviation', flightCat)}
+          ${detailItem('Feels like', current.feels_like_f != null ? `${Math.round(Number(current.feels_like_f))}°F` : null, omSrc)}
+          ${detailItem('Today’s range', todayHi != null && todayLo != null ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F` : null, omSrc)}
+          ${detailItem('Chance of precip', precipChance != null ? `${precipChance}% this hour` : null, omSrc)}
+          ${detailItem('Precipitation', precipIn, omSrc)}
+          ${detailItem('Humidity', current.humidity != null ? `${current.humidity}%` : null, omSrc)}
+          ${detailItem('Dewpoint', hourDew != null ? `${Math.round(hourDew)}°F` : null, omSrc)}
+          ${detailItem('Wind', wind, omSrc)}
+          ${detailItem('Visibility', hourVis != null ? fmtVisibility(hourVis) : null, omSrc)}
+          ${detailItem('Cloud cover', current.cloud_cover != null ? `${current.cloud_cover}%` : null, omSrc)}
+          ${detailItem('Pressure', current.pressure_mb != null ? `${Math.round(Number(current.pressure_mb))} mb` : null, omSrc)}
+          ${detailItem('UV index', uvPlain(/** @type {number | null} */ (current.uv_index ?? null)), omSrc)}
+          ${detailItem('Air quality', aq, aqSrc)}
+          ${detailItem('Sunrise', sunrise ? fmtClock(sunrise) : null, omSrc)}
+          ${detailItem('Sunset', sunset ? fmtClock(sunset) : null, omSrc)}
+          ${detailItem('Morning golden hour', golden.morning, omSrc)}
+          ${detailItem('Evening golden hour', golden.evening, omSrc)}
+          ${detailItem('Aviation', flightCat, flightCat ? 'AWC METAR' : null)}
         </dl>
       </div>
-      ${data.updatedAt ? `<p class="updated-at">Location data updated ${fmtDateTime(String(data.updatedAt))}</p>` : ''}
+      ${data.updatedAt ? `<p class="updated-at">Location snapshot ${fmtDateTime(String(data.updatedAt))} · see Live data sources below</p>` : ''}
     `;
   }
   root.appendChild(summarySection);
+  renderLiveSourcesPanel(root, data, metaSources);
 
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   if (!hourly?.time || !Array.isArray(hourly.time) || hourly.time.length === 0) {
