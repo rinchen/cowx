@@ -164,6 +164,24 @@ summary:focus-visible {
   text-underline-offset: 0.2em;
 }
 
+.site-nav-github {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  line-height: 0;
+}
+
+.site-nav-github:hover,
+.site-nav-github:focus-visible {
+  color: var(--color-text);
+}
+
+.site-nav-github-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
 .site-notice {
   margin: 0;
   padding: 0.5rem 1.25rem;
