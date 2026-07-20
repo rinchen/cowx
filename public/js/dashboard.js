@@ -1609,7 +1609,7 @@ function appendDeepForecast(root, data, ctx) {
       }
       return wrap;
     },
-    { open: true },
+    { open: false },
   );
 
   renderCollapsibleSection(
