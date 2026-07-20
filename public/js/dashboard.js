@@ -242,7 +242,7 @@ function fmtObserved(observed) {
 }
 
 /**
- * Always-visible live source references for this locality snapshot.
+ * Live source references for this locality snapshot (collapsed by default).
  * @param {HTMLElement} parent
  * @param {Record<string, unknown>} data
  * @param {unknown[]} [metaSources]
@@ -325,7 +325,7 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
 
   rows.push({
     title: 'Radar overlay',
-    body: 'RainViewer live tiles on the map below (refreshed from their public weather-maps API)',
+    body: 'RainViewer live tiles on the map above (refreshed from their public weather-maps API)',
     href: links.rainviewer || 'https://www.rainviewer.com/',
   });
 
@@ -337,17 +337,21 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
     });
   }
 
-  const section = document.createElement('section');
-  section.className = 'sources-card';
-  section.setAttribute('aria-labelledby', 'sources-heading');
-  section.innerHTML = `
-    <h2 id="sources-heading">Live data sources</h2>
-    <p class="sources-lead">
-      This page is a Colorado snapshot refreshed about every 45 minutes. Values below name the
-      upstream feed and when we last pulled it — open a link for the provider’s live product.
-    </p>
-    <ul class="sources-list">
-      ${rows
+  renderCollapsibleSection(
+    parent,
+    'sources-heading',
+    'Live data sources',
+    () => {
+      const wrap = document.createDocumentFragment();
+      const lead = document.createElement('p');
+      lead.className = 'sources-lead';
+      lead.textContent =
+        'This page is a Colorado snapshot refreshed about every 45 minutes. Values below name the upstream feed and when we last pulled it — open a link for the provider’s live product.';
+      wrap.appendChild(lead);
+
+      const ul = document.createElement('ul');
+      ul.className = 'sources-list';
+      ul.innerHTML = rows
         .map(
           (r) => `
         <li>
@@ -360,16 +364,20 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
           }
         </li>`,
         )
-        .join('')}
-    </ul>
-    <p class="sources-footer">
-      Full attribution:
+        .join('');
+      wrap.appendChild(ul);
+
+      const footer = document.createElement('p');
+      footer.className = 'sources-footer';
+      footer.innerHTML = `Full attribution:
       <a href="credits.html">Credits</a>
       ·
-      <a href="how-it-works.html">How it works</a>
-    </p>
-  `;
-  parent.appendChild(section);
+      <a href="how-it-works.html">How it works</a>`;
+      wrap.appendChild(footer);
+      return wrap;
+    },
+    { open: false },
+  );
 }
 
 /**
@@ -1305,8 +1313,8 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
     { open: false },
   );
 
+  renderLiveSourcesPanel(sections, data, metaSources);
   root.appendChild(sections);
-  renderLiveSourcesPanel(root, data, metaSources);
 
   const favBtn = /** @type {HTMLButtonElement | null} */ (root.querySelector('#btn-favorite'));
   favBtn?.addEventListener('click', () => {

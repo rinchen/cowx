@@ -18,7 +18,9 @@
   --font-sans: 'Outfit', system-ui, sans-serif;
   --radius: 10px;
   --shadow: 0 1px 3px rgb(26 43 60 / 8%), 0 4px 16px rgb(26 43 60 / 6%);
-  --max-width: 960px;
+  /* Fluid page shell: full-bleed on phones, grows with viewport, caps on ultrawide */
+  --page-gutter: clamp(0.75rem, 2.8vw, 2.5rem);
+  --max-width: min(92rem, 100%);
   --header-height: 3.5rem;
 }
 
@@ -106,7 +108,7 @@ summary:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem var(--page-gutter);
   background: rgb(255 255 255 / 92%);
   border-bottom: 1px solid var(--color-border);
   backdrop-filter: blur(8px);
@@ -141,6 +143,12 @@ summary:focus-visible {
 .site-logo span {
   font-size: 0.875rem;
   color: var(--color-text-muted);
+}
+
+@media (max-width: 520px) {
+  .site-logo span {
+    display: none;
+  }
 }
 
 .site-nav ul {
@@ -184,7 +192,7 @@ summary:focus-visible {
 
 .site-notice {
   margin: 0;
-  padding: 0.5rem 1.25rem;
+  padding: 0.5rem var(--page-gutter);
   font-size: 0.875rem;
   line-height: 1.45;
   color: var(--color-text-muted);
@@ -199,7 +207,7 @@ summary:focus-visible {
 
 .error-banner {
   margin: 0;
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem var(--page-gutter);
   background: var(--color-error-bg);
   color: var(--color-error-text);
   border-bottom: 1px solid #fecaca;
@@ -211,15 +219,19 @@ summary:focus-visible {
 }
 
 main {
+  width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 3rem;
+  padding: clamp(1rem, 2.5vw, 2rem) var(--page-gutter) clamp(2rem, 5vw, 3.5rem);
+  box-sizing: border-box;
 }
 
 .site-footer {
+  width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 1rem 1.25rem 2rem;
+  padding: 1rem var(--page-gutter) 2rem;
+  box-sizing: border-box;
   color: var(--color-text-muted);
   font-size: 0.875rem;
   border-top: 1px solid var(--color-border);
@@ -286,7 +298,7 @@ main {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 1.5rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
   margin-bottom: 1.25rem;
   box-shadow: var(--shadow);
 }
@@ -436,7 +448,7 @@ main {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 1.25rem 1.5rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
   margin-bottom: 1rem;
   box-shadow: var(--shadow);
 }
@@ -480,7 +492,7 @@ main {
 
 .summary-temp {
   margin: 0;
-  font-size: 3.25rem;
+  font-size: clamp(2.5rem, 8vw, 3.25rem);
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -495,7 +507,7 @@ main {
 
 .summary-details {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(11rem, 100%), 1fr));
   gap: 0.75rem;
   margin: 0;
 }
@@ -600,19 +612,6 @@ main {
 .detail-jump--inline:hover {
   background: transparent;
   color: var(--color-accent-hover);
-}
-
-.sources-card {
-  margin: 1.25rem 0 0;
-  padding: 1.25rem 1.35rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius, 0.5rem);
-  background: var(--color-surface, transparent);
-}
-
-.sources-card h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1.125rem;
 }
 
 .sources-lead {
@@ -742,7 +741,7 @@ main {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 1.25rem 1.5rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
   margin-bottom: 1rem;
   box-shadow: var(--shadow);
 }
