@@ -1,4 +1,11 @@
-import { findNearestLocation, resolveBrowserGeolocation, resolveIpGeolocation } from './geo.js';
+import {
+  clearHyperlocalPin,
+  findNearestLocation,
+  getHyperlocalPin,
+  resolveBrowserGeolocation,
+  resolveIpGeolocation,
+  setHyperlocalPin,
+} from './geo.js';
 import {
   getFavorites,
   getPreferredSlug,
@@ -357,14 +364,27 @@ async function renderResolveView() {
   });
 
   document.getElementById('btn-locate')?.addEventListener('click', async () => {
-    if (statusEl) statusEl.textContent = 'Requesting device location…';
-    announce('Requesting device location');
-    const coords = await resolveBrowserGeolocation();
+    if (statusEl) statusEl.textContent = 'Requesting precise device location…';
+    announce('Requesting precise device location');
+    const coords = await resolveBrowserGeolocation({ highAccuracy: true });
     if (coords) {
+      setHyperlocalPin({
+        lat: coords.lat,
+        lon: coords.lon,
+        accuracy_m: coords.accuracy_m,
+        at: new Date().toISOString(),
+        source: 'gps',
+      });
       const nearest = findNearestLocation(coords.lat, coords.lon, locations);
       if (nearest) {
         setLastLocation(nearest.slug);
-        announce(`Located near ${nearest.name}`);
+        const acc =
+          coords.accuracy_m != null && coords.accuracy_m < 5000
+            ? ` (±${Math.round(coords.accuracy_m)} m)`
+            : '';
+        announce(
+          `Located near ${nearest.name}${acc}. Refining cameras and conditions for your pin.`,
+        );
         navigateTo(nearest.slug);
         return;
       }
@@ -399,6 +419,13 @@ async function suggestFromIp(statusEl) {
         go.className = 'btn btn-link';
         go.textContent = `Go to ${nearest.name}`;
         go.addEventListener('click', () => {
+          setHyperlocalPin({
+            lat: ip.lat,
+            lon: ip.lon,
+            accuracy_m: null,
+            at: new Date().toISOString(),
+            source: 'ip',
+          });
           setLastLocation(nearest.slug);
           navigateTo(nearest.slug);
         });
@@ -432,6 +459,7 @@ function bindSearch(panel) {
       btn.setAttribute('role', 'option');
       btn.textContent = `${loc.name}${loc.county ? ` · ${loc.county} County` : ''}`;
       btn.addEventListener('click', () => {
+        clearHyperlocalPin();
         setLastLocation(loc.slug);
         navigateTo(loc.slug);
       });
@@ -543,6 +571,7 @@ async function renderLocationView(slug, opts = {}) {
         sources: Array.isArray(meta?.sources) ? /** @type {unknown[]} */ (meta.sources) : [],
         onAnnounce: announce,
         dataBase: DATA_BASE,
+        pin: getHyperlocalPin(),
       },
     );
 

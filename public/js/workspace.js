@@ -4,6 +4,8 @@
 
 import { renderDeepForecast } from './dashboard.js';
 import { escapeHtml, jumpToSection } from './dom.js';
+import { getHyperlocalPin, pinDistanceKm } from './geo.js';
+import { buildHyperlocalOverlay } from './hyperlocal.js';
 import { renderIntel } from './intel.js';
 import { bindRadarLoopControls, destroyMap, initStateMap, setAqiLayer } from './map.js';
 
@@ -17,6 +19,7 @@ import { bindRadarLoopControls, destroyMap, initStateMap, setAqiLayer } from './
  *   sources?: unknown[],
  *   onAnnounce?: (msg: string) => void,
  *   dataBase?: string,
+ *   pin?: import('./geo.js').HyperlocalPin | null,
  * }} options
  * @returns {Promise<{ headline: string, destroy: () => void }>}
  */
@@ -24,6 +27,32 @@ export async function renderWorkspace(root, data, options) {
   const slug = String(data.slug ?? '');
   const name = String(data.name ?? slug);
   destroyMap();
+
+  const pin = options.pin ?? getHyperlocalPin();
+  const catalogDistKm = pinDistanceKm(pin, data);
+
+  let hyperlocal = null;
+  if (pin) {
+    try {
+      hyperlocal = await buildHyperlocalOverlay(pin, { dataBase: options.dataBase ?? 'data' });
+    } catch (err) {
+      console.warn('hyperlocal overlay failed', err);
+      options.onAnnounce?.('Could not refine cameras for your pin; showing catalog nearest.');
+    }
+  }
+
+  const pinNote = pin
+    ? `<p class="hyperlocal-banner" role="status">
+        Showing <strong>${escapeHtml(name)}</strong> forecast
+        ${catalogDistKm != null ? `· catalog center ${catalogDistKm} km from you` : ''}
+        · cameras &amp; nearby PWS refined for your ${pin.source === 'gps' ? 'GPS' : 'network'} pin
+        ${
+          pin.accuracy_m != null && pin.accuracy_m < 5000
+            ? `(±${Math.round(pin.accuracy_m)} m)`
+            : ''
+        }.
+      </p>`
+    : '';
 
   root.innerHTML = `
     <div class="workspace" id="workspace">
@@ -45,6 +74,7 @@ export async function renderWorkspace(root, data, options) {
           <a class="btn btn-secondary btn-sm" href="#/" data-nav-home>All locations</a>
         </div>
       </header>
+      ${pinNote}
       ${
         data.forecastStale
           ? `<p class="stale-banner" role="status">Showing last successful forecast — a newer model pull was rate-limited.</p>`
@@ -93,7 +123,11 @@ export async function renderWorkspace(root, data, options) {
   const mapContainer = /** @type {HTMLElement} */ (root.querySelector('#map-container'));
   const radarControls = /** @type {HTMLElement} */ (root.querySelector('#radar-controls'));
 
-  const { headline } = renderIntel(intelRoot, data, { onJump: jumpToSection });
+  const { headline } = renderIntel(intelRoot, data, {
+    onJump: jumpToSection,
+    pin,
+    hyperlocal,
+  });
 
   renderDeepForecast(deepRoot, data, {
     sources: options.sources ?? [],

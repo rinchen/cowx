@@ -38,9 +38,28 @@ function nearestHourIndex(times) {
 }
 
 /**
+ * @param {number | null | undefined} km
+ * @param {boolean} fromYou
+ * @returns {string}
+ */
+function distanceLabel(km, fromYou) {
+  if (km == null || !Number.isFinite(Number(km))) return '';
+  return fromYou ? ` · ${km} km from you` : ` · ${km} km`;
+}
+
+/**
  * @param {HTMLElement} root
  * @param {Record<string, unknown>} data
- * @param {{ onJump?: (id: string) => void }} [options]
+ * @param {{
+ *   onJump?: (id: string) => void,
+ *   pin?: import('./geo.js').HyperlocalPin | null,
+ *   hyperlocal?: {
+ *     cameras?: Record<string, unknown>[],
+ *     alerts?: Record<string, unknown>[],
+ *     pws?: Record<string, unknown> | null,
+ *     current?: Record<string, unknown> | null,
+ *   } | null,
+ * }} [options]
  * @returns {{ headline: string }}
  */
 export function renderIntel(root, data, options = {}) {
@@ -50,6 +69,9 @@ export function renderIntel(root, data, options = {}) {
   const { headline, priority } = synthesizeBottomLine(data);
   const aq = pickAqi(data);
   const cat = aqiCategory(aq.aqi);
+  const pin = options.pin ?? null;
+  const hyperlocal = options.hyperlocal ?? null;
+  const fromYou = Boolean(pin);
 
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   const hi = times.length ? nearestHourIndex(times) : 0;
@@ -140,20 +162,29 @@ export function renderIntel(root, data, options = {}) {
 
   const alerts = /** @type {Record<string, unknown>[]} */ (data.alerts ?? []);
   const roads = /** @type {Record<string, unknown> | null} */ (data.cdot_roads ?? null);
-  const cams = /** @type {Record<string, unknown>[]} */ (
+  const catalogCams = /** @type {Record<string, unknown>[]} */ (
     roads?.cameras ?? (data.cdot_camera ? [data.cdot_camera] : [])
   );
+  const cams = hyperlocal?.cameras?.length ? hyperlocal.cameras : catalogCams;
   const rwis = /** @type {Record<string, unknown> | null} */ (
     roads?.rwis ?? data.cdot_rwis ?? null
   );
-  const roadAlerts = /** @type {Record<string, unknown>[]} */ (roads?.alerts ?? []);
-  const pws = /** @type {Record<string, unknown> | null} */ (data.pws ?? null);
+  const catalogRoadAlerts = /** @type {Record<string, unknown>[]} */ (roads?.alerts ?? []);
+  const roadAlerts = hyperlocal?.alerts?.length ? hyperlocal.alerts : catalogRoadAlerts;
+  const catalogPws = /** @type {Record<string, unknown> | null} */ (data.pws ?? null);
+  const pws = hyperlocal?.pws && typeof hyperlocal.pws === 'object' ? hyperlocal.pws : catalogPws;
   const pwsPrimary = /** @type {Record<string, unknown> | null} */ (pws?.primary ?? null);
   const cwop = pwsPrimary ?? /** @type {Record<string, unknown> | null} */ (data.cwop ?? null);
+  const pinCurrent =
+    hyperlocal?.current && typeof hyperlocal.current === 'object' ? hyperlocal.current : null;
   const coag = /** @type {Record<string, unknown> | null} */ (data.coagmet ?? null);
   const hms = /** @type {Record<string, unknown> | null} */ (data.hms_smoke ?? null);
   const snotel = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
   const links = /** @type {Record<string, unknown>} */ (data.links ?? {});
+  const pwsLinks =
+    pws?.links && typeof pws.links === 'object'
+      ? /** @type {Record<string, unknown>} */ (pws.links)
+      : {};
   const webcamLinks = /** @type {{ name?: string, url?: string }[]} */ (links.webcam_links ?? []);
 
   const hourVis =
@@ -193,15 +224,59 @@ export function renderIntel(root, data, options = {}) {
   const pressureDisplay =
     current?.surface_pressure_mb != null ? current.surface_pressure_mb : current?.pressure_mb;
 
+  const pinCode = /** @type {number | null} */ (pinCurrent?.weather_code ?? null);
+  const pinIsDay =
+    pinCurrent?.is_day === 0 || pinCurrent?.is_day === 1 ? pinCurrent.is_day === 1 : isDay;
+  const pinStrip =
+    pinCurrent?.temp_f != null
+      ? `<section class="glass-panel glass-panel--pin-now" aria-labelledby="pin-now-heading">
+          <h2 id="pin-now-heading" class="glass-panel__title">At your location</h2>
+          <p class="intel-muted" id="pin-now-desc">
+            Current conditions at your ${pin?.source === 'gps' ? 'GPS' : 'network'} pin
+            ${
+              pin?.accuracy_m != null && pin.accuracy_m < 5000
+                ? `(±${Math.round(pin.accuracy_m)} m accuracy)`
+                : ''
+            } — catalog Now below uses the nearest city point.
+          </p>
+          <div class="intel-now intel-now--pin" aria-describedby="pin-now-desc">
+            <div class="intel-now-hero intel-now-hero--static">
+              ${weatherIconHtml(pinCode, { isDay: pinIsDay, size: 44, className: 'weather-icon', alt: '' })}
+              <span class="intel-now-hero__text">
+                <span class="intel-temp">${Math.round(Number(pinCurrent.temp_f))}°F</span>
+                <span class="intel-cond">${escapeHtml(String(pinCurrent.condition ?? wmoLabel(pinCode)))}</span>
+              </span>
+            </div>
+            ${
+              pinCurrent.wind_speed_mph != null
+                ? `<div class="intel-now-wind intel-now-wind--static">
+                    ${windCompassHtml(/** @type {number | null} */ (pinCurrent.wind_dir_deg ?? null), { size: 24 }) || ''}
+                    <span class="intel-now-wind__text">
+                      <span class="intel-now-wind__speed">${Math.round(Number(pinCurrent.wind_speed_mph))} mph</span>
+                      ${
+                        pinCurrent.humidity != null
+                          ? `<span class="intel-now-wind__meta">${Math.round(Number(pinCurrent.humidity))}% RH</span>`
+                          : ''
+                      }
+                    </span>
+                  </div>`
+                : ''
+            }
+          </div>
+        </section>`
+      : '';
+
   root.innerHTML = `
     <section class="glass-panel glass-panel--headline" aria-labelledby="bottom-line-heading">
       <h2 id="bottom-line-heading" class="sr-only">Bottom line</h2>
       <p class="bottom-line bottom-line--${escapeHtml(priority)}" role="status">${escapeHtml(headline)}</p>
     </section>
 
+    ${pinStrip}
+
     <section class="glass-panel" aria-labelledby="intel-now-heading">
       <div class="intel-now-head">
-        <h2 id="intel-now-heading" class="glass-panel__title">Now</h2>
+        <h2 id="intel-now-heading" class="glass-panel__title">${pinStrip ? 'Now (catalog)' : 'Now'}</h2>
         <button type="button" class="aqi-ring ${cat.className}" data-jump-to="aqi-heading" aria-label="Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}. Open air quality details.">
           <span class="aqi-ring__value">${aq.aqi != null ? Math.round(aq.aqi) : '—'}</span>
           <span class="aqi-ring__label">AQI</span>
@@ -397,7 +472,7 @@ export function renderIntel(root, data, options = {}) {
           ]
             .filter(Boolean)
             .join(', ');
-          return `<li><button type="button" class="intel-jump" data-jump-to="roads-heading"><strong>${escapeHtml(String(a.title ?? 'Travel alert'))}</strong>${a.distance_km != null ? ` · ${a.distance_km} km` : ''}${flags ? ` · ${escapeHtml(flags)}` : ''}</button></li>`;
+          return `<li><button type="button" class="intel-jump" data-jump-to="roads-heading"><strong>${escapeHtml(String(a.title ?? 'Travel alert'))}</strong>${distanceLabel(/** @type {number | null} */ (a.distance_km), fromYou && Boolean(hyperlocal?.alerts?.length))}${flags ? ` · ${escapeHtml(flags)}` : ''}</button></li>`;
         })
         .join('');
       return `<section class="glass-panel" aria-labelledby="roads-intel-heading">
@@ -411,7 +486,7 @@ export function renderIntel(root, data, options = {}) {
             ${
               rwis
                 ? `<dl class="metric-list metric-list--compact">
-                    <dt>Nearest RWIS</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${rwis.distance_km != null ? ` (${rwis.distance_km} km)` : ''}</dd>
+                    <dt>Nearest RWIS</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${distanceLabel(/** @type {number | null} */ (rwis.distance_km), false)}</dd>
                     ${rwis.air_temp_f != null ? `<dt>Air</dt><dd>${Math.round(Number(rwis.air_temp_f))}°F</dd>` : ''}
                     ${rwis.surface_temp_f != null ? `<dt>Pavement</dt><dd>${Math.round(Number(rwis.surface_temp_f))}°F${rwis.surface_status ? ` · ${escapeHtml(String(rwis.surface_status))}` : ''}</dd>` : ''}
                     ${rwis.wind_speed_mph != null ? `<dt>Wind</dt><dd>${Math.round(Number(rwis.wind_speed_mph))} mph</dd>` : ''}
@@ -430,7 +505,7 @@ export function renderIntel(root, data, options = {}) {
           const imageUrl = safeHttpsUrl(c.imageUrl);
           const pageUrl = safeHttpsUrl(c.pageUrl);
           return `<figure class="cdot-cam-card">
-              <figcaption class="intel-muted">${escapeHtml(String(c.name ?? 'Camera'))}${c.distance_km != null ? ` · ${c.distance_km} km` : ''}</figcaption>
+              <figcaption class="intel-muted">${escapeHtml(String(c.name ?? 'Camera'))}${distanceLabel(/** @type {number | null} */ (c.distance_km), fromYou && Boolean(hyperlocal?.cameras?.length))}</figcaption>
               ${
                 imageUrl
                   ? `<img class="cdot-cam" src="${escapeHtml(imageUrl)}?t=${Date.now()}" alt="CDOT traffic camera: ${escapeHtml(String(c.name ?? 'Colorado roadway'))}" loading="lazy" decoding="async" data-cdot-cam />`
@@ -475,16 +550,18 @@ export function renderIntel(root, data, options = {}) {
         ? `<section class="glass-panel" aria-labelledby="pws-heading">
             <h2 id="pws-heading" class="glass-panel__title">Nearby PWS</h2>
             <dl class="metric-list metric-list--compact">
-              <dt>Station</dt><dd>${escapeHtml(String(cwop?.callsign ?? ''))}${cwop?.network ? ` · ${escapeHtml(String(cwop.network))}` : ''}${cwop?.distance_km != null ? ` · ${cwop.distance_km} km` : ''}</dd>
+              <dt>Station</dt><dd>${escapeHtml(String(cwop?.callsign ?? ''))}${cwop?.network ? ` · ${escapeHtml(String(cwop.network))}` : ''}${distanceLabel(/** @type {number | null} */ (cwop?.distance_km), fromYou && Boolean(hyperlocal?.pws))}</dd>
               ${cwop?.temp_f != null ? `<dt>Temp</dt><dd>${Math.round(Number(cwop.temp_f))}°F</dd>` : ''}
               ${cwop?.humidity != null ? `<dt>Humidity</dt><dd>${Math.round(Number(cwop.humidity))}%</dd>` : ''}
               ${cwop?.wind_speed_mph != null ? `<dt>Wind</dt><dd>${Math.round(Number(cwop.wind_speed_mph))} mph</dd>` : ''}
               ${cwop?.observed ? `<dt>Observed</dt><dd>${escapeHtml(String(cwop.observed))}</dd>` : ''}
             </dl>
             ${
-              links.pws
-                ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(links.pws) || links.pws))}" target="_blank" rel="noopener noreferrer" aria-label="Weather Underground PWS (opens in new tab)">Weather Underground</a></p>`
-                : ''
+              pwsLinks.aprs && safeHttpsUrl(String(pwsLinks.aprs))
+                ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(String(pwsLinks.aprs))))}" target="_blank" rel="noopener noreferrer" aria-label="Open station on aprs.fi (opens in new tab)">aprs.fi</a></p>`
+                : links.pws
+                  ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(links.pws) || links.pws))}" target="_blank" rel="noopener noreferrer" aria-label="Weather Underground PWS (opens in new tab)">Weather Underground</a></p>`
+                  : ''
             }
           </section>`
         : ''

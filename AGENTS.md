@@ -28,7 +28,7 @@ cowx/   # repo directory (brand: COWX)
 │   ├── how-it-works.html     # Architecture & privacy (user-facing)
 │   ├── credits.html          # Data provider attribution
 │   ├── css/app.css           # Shared styles
-│   ├── js/                   # Client modules (workspace, intel, dashboard, map, …)
+│   ├── js/                   # Client modules (workspace, intel, hyperlocal, geo, …)
 │   └── data/                 # Generated JSON — committed after fetch runs
 │       ├── index.json        # Slim location index for search/geo
 │       ├── meta.json         # Build time + per-source status + apiCalls
@@ -207,7 +207,9 @@ Partial adapter failure is acceptable; total failure (zero locations written or 
 
 Citizen, pilot, farmer, and firefighter needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, road alerts, etc.). The public dashboard shows **all** available sections for every location — there is no persona filter bar.
 
-Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, 24h meteograms, CDOT cameras/RWIS/road alerts, local webcam **new-tab links**, nearby PWS, HMS smoke, RF ducting) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links.
+Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, optional pin “At your location” current strip, 24h meteograms, CDOT cameras/RWIS/road alerts, local webcam **new-tab links**, nearby PWS, HMS smoke, RF ducting) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links.
+
+**Hyperlocal pin (client, no API keys):** Locate uses high-accuracy GPS and stores a session-only pin (`sessionStorage` `cowx:hyperlocalPin`). The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip. Failure → hide strip / keep catalog cams. Searching a city clears the pin. Do not add client API keys or street-address geocoders.
 
 Data commits may use `[skip ci]` when only JSON snapshots change, to avoid redundant Pages deploys — follow workflow conventions in `.github/workflows/`.
 
@@ -257,7 +259,7 @@ Include a detailed body for non-trivial changes: **what** changed and **why**. F
 ## Colorado-only scope
 
 - Locations must be in Colorado (including passes, peaks, parks, and CDOT-relevant sites).
-- Client geo resolves to the **nearest catalog point in Colorado**; out-of-state visitors see nearest CO site plus search.
+- Client geo resolves to the **nearest catalog point in Colorado**; out-of-state visitors see nearest CO site plus search. Optional session pin refines cameras/PWS/alerts and pin-current without changing the catalog slug.
 - Do not add national/global primary views or non-CO location catalogs.
 - To fork this project for another state, follow [ADAPT.md](ADAPT.md).
 

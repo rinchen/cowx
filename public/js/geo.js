@@ -1,8 +1,11 @@
 /** @typedef {{ slug: string; name: string; lat: number; lon: number; county?: string; elevationFt?: number }} IndexEntry */
 
+/** @typedef {{ lat: number; lon: number; accuracy_m: number | null; at: string; source: 'gps' | 'ip' }} HyperlocalPin */
+
 const EARTH_RADIUS_KM = 6371;
 const IP_GEO_TIMEOUT_MS = 5000;
 const IP_GEO_ENDPOINTS = ['https://ipwho.is/', 'https://get.geojs.io/v1/ip/geo.json'];
+const PIN_STORAGE_KEY = 'cowx:hyperlocalPin';
 
 /**
  * Haversine distance in kilometers between two WGS84 points.
@@ -47,6 +50,70 @@ export function findNearestLocation(lat, lon, locations) {
   }
 
   return nearest;
+}
+
+/**
+ * Distance from pin to a catalog entry (km), or null.
+ * @param {HyperlocalPin | null | undefined} pin
+ * @param {{ lat?: unknown, lon?: unknown } | null | undefined} loc
+ * @returns {number | null}
+ */
+export function pinDistanceKm(pin, loc) {
+  if (!pin || loc?.lat == null || loc?.lon == null) return null;
+  const lat = Number(loc.lat);
+  const lon = Number(loc.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return Math.round(haversineKm(pin.lat, pin.lon, lat, lon) * 10) / 10;
+}
+
+/**
+ * Persist hyperlocal pin for this browser tab session only.
+ * @param {HyperlocalPin} pin
+ */
+export function setHyperlocalPin(pin) {
+  try {
+    sessionStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(pin));
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+/**
+ * @returns {HyperlocalPin | null}
+ */
+export function getHyperlocalPin() {
+  try {
+    const raw = sessionStorage.getItem(PIN_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    const lat = Number(parsed.lat);
+    const lon = Number(parsed.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    return {
+      lat,
+      lon,
+      accuracy_m:
+        parsed.accuracy_m != null && Number.isFinite(Number(parsed.accuracy_m))
+          ? Number(parsed.accuracy_m)
+          : null,
+      at: typeof parsed.at === 'string' ? parsed.at : new Date().toISOString(),
+      source: parsed.source === 'ip' ? 'ip' : 'gps',
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clear session pin (e.g. user navigates via search without locate).
+ */
+export function clearHyperlocalPin() {
+  try {
+    sessionStorage.removeItem(PIN_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 /**
@@ -118,9 +185,11 @@ export async function resolveIpGeolocation(timeoutMs = IP_GEO_TIMEOUT_MS) {
  * Request browser geolocation (requires user gesture for best UX).
  * Failure point: permission denied or unavailable hardware.
  * Fallback: caller tries IP geo or search UI.
- * @returns {Promise<{ lat: number; lon: number } | null>}
+ * @param {{ highAccuracy?: boolean }} [opts]
+ * @returns {Promise<{ lat: number; lon: number; accuracy_m: number | null } | null>}
  */
-export function resolveBrowserGeolocation() {
+export function resolveBrowserGeolocation(opts = {}) {
+  const highAccuracy = opts.highAccuracy !== false;
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
       resolve(null);
@@ -129,10 +198,22 @@ export function resolveBrowserGeolocation() {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        const accuracy =
+          typeof pos.coords.accuracy === 'number' && Number.isFinite(pos.coords.accuracy)
+            ? pos.coords.accuracy
+            : null;
+        resolve({
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          accuracy_m: accuracy,
+        });
       },
       () => resolve(null),
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 },
+      {
+        enableHighAccuracy: highAccuracy,
+        timeout: highAccuracy ? 20000 : 15000,
+        maximumAge: highAccuracy ? 60_000 : 300_000,
+      },
     );
   });
 }
