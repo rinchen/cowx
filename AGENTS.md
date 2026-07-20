@@ -216,7 +216,7 @@ Citizen, pilot, farmer, firefighter, and ham radio operator needs define **what 
 
 Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, optional pin “At your location” current strip, 24h meteograms, CDOT cameras/RWIS/road alerts, local webcam **new-tab links**, nearby PWS, fire weather (SPC outlooks, HMS smoke, nearby NIFC incidents, burn-restriction links), ham radio / RF (SWPC scales, SFI/Kp, HF band estimates, VHF ducting)) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links. Planetary space weather is written once to `public/data/space-weather.json` (not duplicated per location).
 
-**Hyperlocal pin (client, no API keys):** Locate (high-accuracy GPS), IP “Go to”, or Colorado street-address Set pin (`public/js/geocode.js` → Nominatim, CO-bounded, submit-only) stores a session-only pin (`sessionStorage` `cowx:hyperlocalPin`). Always force-refresh the workspace after setting a pin even if the catalog slug is unchanged. The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip (fallback status if that fails). Searching a city clears the pin. Do not add client API **keys**; keep address geocode user-triggered and Colorado-bounded.
+**Hyperlocal pin (client, no API keys):** Locate (high-accuracy GPS), IP “Go to”, or Colorado street-address Set pin (`public/js/geocode.js` → Nominatim, CO-bounded, submit-only) stores a browser-persistent pin (`localStorage` `cowx:hyperlocalPin`; migrates any legacy `sessionStorage` value). Survives refresh and new tabs; cleared when the user searches a catalog city or clears site data. Always force-refresh the workspace after setting a pin even if the catalog slug is unchanged. The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip (fallback status if that fails). Searching a city clears the pin. Do not add client API **keys**; keep address geocode user-triggered and Colorado-bounded.
 
 Scheduled data commits should **not** use `[skip ci]` — Pages must redeploy so the live site picks up fresh JSON. Code-only pushes still trigger Pages as usual.
 
@@ -266,7 +266,7 @@ Include a detailed body for non-trivial changes: **what** changed and **why**. F
 ## Colorado-only scope
 
 - Locations must be in Colorado (including passes, peaks, parks, and CDOT-relevant sites).
-- Client geo resolves to the **nearest catalog point in Colorado**; out-of-state visitors see nearest CO site plus search. Optional session pin refines cameras/PWS/alerts and pin-current without changing the catalog slug.
+- Client geo resolves to the **nearest catalog point in Colorado**; out-of-state visitors see nearest CO site plus search. Optional saved pin refines cameras/PWS/alerts and pin-current without changing the catalog slug.
 - Do not add national/global primary views or non-CO location catalogs.
 - To fork this project for another state, follow [ADAPT.md](ADAPT.md).
 

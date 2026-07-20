@@ -67,12 +67,20 @@ export function pinDistanceKm(pin, loc) {
 }
 
 /**
- * Persist hyperlocal pin for this browser tab session only.
+ * Persist hyperlocal pin in this browser (localStorage).
+ * Survives refresh and new tabs on the same origin; cleared when the user
+ * searches a catalog city or clears site data.
  * @param {HyperlocalPin} pin
  */
 export function setHyperlocalPin(pin) {
   try {
-    sessionStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(pin));
+    const raw = JSON.stringify(pin);
+    localStorage.setItem(PIN_STORAGE_KEY, raw);
+    try {
+      sessionStorage.removeItem(PIN_STORAGE_KEY);
+    } catch {
+      /* ignore legacy session key cleanup */
+    }
   } catch {
     /* private mode / quota */
   }
@@ -83,7 +91,19 @@ export function setHyperlocalPin(pin) {
  */
 export function getHyperlocalPin() {
   try {
-    const raw = sessionStorage.getItem(PIN_STORAGE_KEY);
+    let raw = localStorage.getItem(PIN_STORAGE_KEY);
+    if (!raw) {
+      // Migrate one-time from older session-only pins so a refresh mid-upgrade keeps them.
+      try {
+        raw = sessionStorage.getItem(PIN_STORAGE_KEY);
+        if (raw) {
+          localStorage.setItem(PIN_STORAGE_KEY, raw);
+          sessionStorage.removeItem(PIN_STORAGE_KEY);
+        }
+      } catch {
+        raw = null;
+      }
+    }
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return null;
@@ -112,9 +132,14 @@ export function getHyperlocalPin() {
 }
 
 /**
- * Clear session pin (e.g. user navigates via search without locate).
+ * Clear saved pin (e.g. user navigates via search without locate).
  */
 export function clearHyperlocalPin() {
+  try {
+    localStorage.removeItem(PIN_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
   try {
     sessionStorage.removeItem(PIN_STORAGE_KEY);
   } catch {

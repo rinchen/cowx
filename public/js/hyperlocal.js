@@ -1,5 +1,5 @@
 /**
- * House-level hyperlocal overlays from session GPS pin.
+ * House-level hyperlocal overlays from a browser-saved pin.
  * Failure point: geojson missing / Open-Meteo timeout.
  * Fallback: caller keeps catalog-assigned cameras/PWS/current.
  */

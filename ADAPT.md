@@ -140,16 +140,16 @@ Wipe stale Colorado payloads under `public/data/locations/` if old slugs remain.
 
 Sweep “COWX”, “Colorado”, and the flag:
 
-| Area                | Files                                                                                  |
-| ------------------- | -------------------------------------------------------------------------------------- |
-| Titles / meta / nav | `public/index.html`, `how-it-works.html`, `credits.html`                               |
-| UI copy             | `public/js/app.js` (“Find your Colorado weather”, “Colorado overview”, document title) |
-| Map overview        | `public/js/map.js` — `CO_CENTER`, `CO_ZOOM` (and aria labels)                          |
-| Imagery defaults    | `public/js/imagery.js` — default map center for CIRA/NWS deep links                    |
-| Snapshot copy       | `public/js/dashboard.js` — “Colorado snapshot…”, CoAgMET labels if removed             |
-| Favicon / logo      | `public/favicon.svg`, `public/img/colorado-flag.svg` (replace + update `src`)          |
-| localStorage        | `public/js/favorites.js` — `cowx:favorites`, `cowx:lastLocation` → your prefix         |
-| package / schemas   | `package.json` name & description; schema `$id` / titles if desired                    |
+| Area                | Files                                                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Titles / meta / nav | `public/index.html`, `how-it-works.html`, `credits.html`                                                                  |
+| UI copy             | `public/js/app.js` (“Find your Colorado weather”, “Colorado overview”, document title)                                    |
+| Map overview        | `public/js/map.js` — `CO_CENTER`, `CO_ZOOM` (and aria labels)                                                             |
+| Imagery defaults    | `public/js/imagery.js` — default map center for CIRA/NWS deep links                                                       |
+| Snapshot copy       | `public/js/dashboard.js` — “Colorado snapshot…”, CoAgMET labels if removed                                                |
+| Favicon / logo      | `public/favicon.svg`, `public/img/colorado-flag.svg` (replace + update `src`)                                             |
+| localStorage        | `public/js/favorites.js` + `public/js/geo.js` — `cowx:favorites`, `cowx:lastLocation`, `cowx:hyperlocalPin` → your prefix |
+| package / schemas   | `package.json` name & description; schema `$id` / titles if desired                                                       |
 
 Deploy URL and GitHub links in HTML should point at **your** repo / Pages site.
 

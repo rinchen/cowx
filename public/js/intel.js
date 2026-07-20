@@ -152,7 +152,7 @@ export function renderIntel(root, data, options = {}) {
   const code = /** @type {number | null} */ (current?.weather_code ?? null);
 
   const windDeg = /** @type {number | null} */ (current?.wind_dir_deg ?? null);
-  const compass = windCompassHtml(windDeg, { size: 28 });
+  const compass = windCompassHtml(windDeg, { size: 22 });
   const windMetaParts = [];
   if (current?.wind_gust_mph != null) {
     windMetaParts.push(`gusts ${Math.round(Number(current.wind_gust_mph))}`);
@@ -294,7 +294,7 @@ export function renderIntel(root, data, options = {}) {
       <p class="bottom-line bottom-line--${escapeHtml(priority)}" role="status">${escapeHtml(headline)}</p>
     </section>
 
-    <section class="glass-panel${usingPinNow ? ' glass-panel--pin-now' : ''}" aria-labelledby="intel-now-heading">
+    <section class="glass-panel glass-panel--now${usingPinNow ? ' glass-panel--pin-now' : ''}" aria-labelledby="intel-now-heading">
       <div class="intel-now-head">
         <h2 id="intel-now-heading" class="glass-panel__title">${usingPinNow ? 'At your location' : 'Now'}</h2>
         <button type="button" class="aqi-ring ${cat.className}" data-jump-to="aqi-heading" aria-label="Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}. Open air quality details.">
@@ -308,7 +308,7 @@ export function renderIntel(root, data, options = {}) {
         ${
           current?.temp_f != null
             ? `<button type="button" class="intel-now-hero" data-jump-to="hourly-heading" aria-label="Current conditions ${Math.round(Number(current.temp_f))} degrees Fahrenheit, ${String(current.condition ?? wmoLabel(code))}. Open hourly forecast.">
-                ${weatherIconHtml(code, { isDay, size: 52, className: 'weather-icon weather-icon--lg', alt: '' })}
+                ${weatherIconHtml(code, { isDay, size: 40, className: 'weather-icon', alt: '' })}
                 <span class="intel-now-hero__text">
                   <span class="intel-temp">${Math.round(Number(current.temp_f))}°F</span>
                   <span class="intel-cond">${escapeHtml(String(current.condition ?? wmoLabel(code)))}</span>
@@ -464,7 +464,7 @@ export function renderIntel(root, data, options = {}) {
       </p>
     </section>
 
-    <section class="glass-panel" aria-labelledby="intel-alerts-heading">
+    <section class="glass-panel glass-panel--alerts${alerts.length ? '' : ' glass-panel--quiet'}" aria-labelledby="intel-alerts-heading">
       <h2 id="intel-alerts-heading" class="glass-panel__title">Alerts</h2>
       ${
         alerts.length
@@ -476,7 +476,7 @@ export function renderIntel(root, data, options = {}) {
               })
               .join('')}</ul>
              <button type="button" class="btn btn-link intel-jump" data-jump-to="alerts-heading">Full alert text</button>`
-          : `<p class="intel-muted">No active NWS alerts for this area.</p>`
+          : `<p class="intel-muted intel-muted--inline">No active NWS alerts for this area.</p>`
       }
     </section>
 

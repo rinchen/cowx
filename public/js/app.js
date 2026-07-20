@@ -369,7 +369,7 @@ async function renderResolveView() {
           <button type="submit" class="btn btn-secondary" id="btn-address-pin">Set pin</button>
         </div>
         <p class="resolve-hint">
-          Sets a session pin for nearby cameras and “At your location” conditions.
+          Sets a saved pin (in this browser) for nearby cameras and “At your location” conditions.
           Address is sent once to OpenStreetMap Nominatim (not stored by COWX).
         </p>
       </form>

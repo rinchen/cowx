@@ -55,7 +55,7 @@ The site works without these keys; affected sources degrade to skipped status in
 ## Privacy
 
 - **No accounts** and no server-side storage of personal data.
-- **Favorites and last-viewed location** are stored only in your browser (`localStorage` keys such as `cowx:favorites` and `cowx:lastLocation`).
+- **Favorites, last-viewed location, and hyperlocal pin** are stored only in your browser (`localStorage` keys such as `cowx:favorites`, `cowx:lastLocation`, and `cowx:hyperlocalPin`). The pin (lat/lon) survives refresh; searching a city clears it. Address query text is not retained after geocoding.
 - **IP geolocation** runs in the browser from public CORS geo APIs to suggest the nearest Colorado site. Coordinates are not sent to a COWX backend (there is none).
 - **No third-party analytics** by default.
 
