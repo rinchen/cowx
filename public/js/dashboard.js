@@ -349,6 +349,103 @@ function buildDailyTable(daily) {
 }
 
 /**
+ * @param {string[]} times
+ * @returns {number}
+ */
+function nearestHourIndex(times) {
+  const now = Date.now();
+  let best = 0;
+  let bestDiff = Infinity;
+  times.forEach((t, i) => {
+    const diff = Math.abs(new Date(t).getTime() - now);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = i;
+    }
+  });
+  return best;
+}
+
+/**
+ * Approximate golden hour windows: first hour after sunrise, last hour before sunset.
+ * @param {string | null | undefined} sunriseIso
+ * @param {string | null | undefined} sunsetIso
+ * @returns {{ morning: string | null, evening: string | null }}
+ */
+function goldenHourWindows(sunriseIso, sunsetIso) {
+  if (!sunriseIso || !sunsetIso) return { morning: null, evening: null };
+  try {
+    const rise = new Date(sunriseIso);
+    const set = new Date(sunsetIso);
+    const morningEnd = new Date(rise.getTime() + 60 * 60_000);
+    const eveningStart = new Date(set.getTime() - 60 * 60_000);
+    return {
+      morning: `${fmtClock(rise.toISOString())}–${fmtClock(morningEnd.toISOString())}`,
+      evening: `${fmtClock(eveningStart.toISOString())}–${fmtClock(set.toISOString())}`,
+    };
+  } catch {
+    return { morning: null, evening: null };
+  }
+}
+
+/**
+ * @param {Record<string, unknown> | null} airnow
+ * @param {Record<string, unknown> | null} purpleair
+ * @param {Record<string, unknown> | null} omaq
+ * @returns {string | null}
+ */
+function airQualityPlain(airnow, purpleair, omaq) {
+  if (airnow?.aqi != null) {
+    const cat = airnow.category ? String(airnow.category) : '';
+    const param = airnow.parameter ? String(airnow.parameter) : '';
+    const area = airnow.reporting_area ? String(airnow.reporting_area) : '';
+    const parts = [`AQI ${airnow.aqi}`];
+    if (cat) parts.unshift(cat);
+    if (param) parts.push(`(${param})`);
+    let line = parts.join(' ');
+    if (area) line += ` near ${area}`;
+    return line;
+  }
+  if (purpleair?.aqi_pm25 != null) {
+    return `About AQI ${purpleair.aqi_pm25} from a nearby PurpleAir sensor${purpleair.pm25 != null ? ` (PM2.5 ${purpleair.pm25} µg/m³)` : ''}`;
+  }
+  if (omaq?.us_aqi != null) {
+    return `Model US AQI ${omaq.us_aqi}${omaq.pm25 != null ? ` · PM2.5 ${omaq.pm25} µg/m³` : ''}`;
+  }
+  return null;
+}
+
+/**
+ * @param {Record<string, unknown>[]} alerts
+ * @returns {string}
+ */
+function alertsPlain(alerts) {
+  if (!alerts.length) return 'No active weather alerts';
+  return alerts
+    .map((a) => {
+      const event = String(a.event ?? a.headline ?? 'Alert');
+      const sev = a.severity ? ` (${a.severity})` : '';
+      return `${event}${sev}`;
+    })
+    .join('; ');
+}
+
+/**
+ * @param {number | null | undefined} uv
+ * @returns {string | null}
+ */
+function uvPlain(uv) {
+  if (uv == null || Number.isNaN(Number(uv))) return null;
+  const n = Number(uv);
+  let level = 'Low';
+  if (n >= 11) level = 'Extreme';
+  else if (n >= 8) level = 'Very high';
+  else if (n >= 6) level = 'High';
+  else if (n >= 3) level = 'Moderate';
+  return `${n} (${level})`;
+}
+
+/**
  * @param {HTMLElement} root
  * @param {Record<string, unknown>} data
  * @param {(slug: string) => boolean} onFavoriteToggle
@@ -403,16 +500,58 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false) {
       ${data.updatedAt ? `<p class="updated-at">Location data updated ${fmtDateTime(String(data.updatedAt))}</p>` : ''}
     `;
   } else {
+    const hourlyNow = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
+    const hourTimes = /** @type {string[]} */ (hourlyNow?.time ?? []);
+    const hi = hourTimes.length ? nearestHourIndex(hourTimes) : 0;
+    const precipChance =
+      hourlyNow && Array.isArray(hourlyNow.precipitation_probability)
+        ? /** @type {number[]} */ (hourlyNow.precipitation_probability)[hi]
+        : null;
+    const hourVis =
+      hourlyNow && Array.isArray(hourlyNow.visibility)
+        ? /** @type {number[]} */ (hourlyNow.visibility)[hi]
+        : null;
+    const hourDew =
+      hourlyNow && Array.isArray(hourlyNow.dewpoint_2m)
+        ? /** @type {number[]} */ (hourlyNow.dewpoint_2m)[hi]
+        : null;
+
+    const todayHi = /** @type {number[]} */ (daily?.temperature_2m_max ?? [])[0];
+    const todayLo = /** @type {number[]} */ (daily?.temperature_2m_min ?? [])[0];
+    const sunrise = sunrises[0] ?? null;
+    const sunset = sunsets[0] ?? null;
+    const golden = goldenHourWindows(sunrise, sunset);
+
+    const alerts = /** @type {Record<string, unknown>[]} */ (data.alerts ?? []);
+    const alertText = alertsPlain(alerts);
+    const hasAlerts = alerts.length > 0;
+
+    const aq = airQualityPlain(
+      /** @type {Record<string, unknown> | null} */ (data.airnow ?? null),
+      /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null),
+      /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null),
+    );
+
+    const aviation = /** @type {Record<string, unknown> | null} */ (data.aviation ?? null);
+    const flightCat =
+      aviation?.flight_category != null
+        ? `${aviation.flight_category}${aviation.icao ? ` at ${aviation.icao}` : ''}`
+        : null;
+
     const windDir = windDirLabel(/** @type {number | null} */ (current.wind_dir_deg ?? null));
     const wind =
       current.wind_speed_mph != null
-        ? `${Math.round(Number(current.wind_speed_mph))} mph${current.wind_gust_mph != null ? ` (gust ${Math.round(Number(current.wind_gust_mph))})` : ''}${windDir ? ` · ${windDir}` : ''}`
+        ? `${Math.round(Number(current.wind_speed_mph))} mph${current.wind_gust_mph != null ? ` (gusts ${Math.round(Number(current.wind_gust_mph))} mph)` : ''}${windDir ? ` from the ${windDir}` : ''}`
         : windDir;
     const code = /** @type {number | null} */ (current.weather_code ?? null);
     const precipIn =
-      current.precip_in != null ? `${Number(current.precip_in).toFixed(2)} in` : null;
+      current.precip_in != null ? `${Number(current.precip_in).toFixed(2)} in this hour` : null;
+
     summarySection.innerHTML = `
       <h2 id="summary-heading">Current conditions</h2>
+      <p class="summary-alert ${hasAlerts ? 'summary-alert--active' : 'summary-alert--clear'}" role="status">
+        ${hasAlerts ? `<strong>Alerts:</strong> ${escapeHtml(alertText)}` : '<strong>Alerts:</strong> None active for this area.'}
+      </p>
       <div class="summary-grid">
         <div class="summary-primary">
           ${weatherIconHtml(code, { isDay: nowIsDay, size: 72, className: 'weather-icon weather-icon--lg', alt: String(current.condition ?? wmoLabel(code)) })}
@@ -423,12 +562,22 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false) {
         </div>
         <dl class="summary-details">
           ${detailItem('Feels like', current.feels_like_f != null ? `${Math.round(Number(current.feels_like_f))}°F` : null)}
+          ${detailItem('Today’s range', todayHi != null && todayLo != null ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F` : null)}
+          ${detailItem('Chance of precip', precipChance != null ? `${precipChance}% this hour` : null)}
+          ${detailItem('Precipitation', precipIn)}
           ${detailItem('Humidity', current.humidity != null ? `${current.humidity}%` : null)}
+          ${detailItem('Dewpoint', hourDew != null ? `${Math.round(hourDew)}°F` : null)}
           ${detailItem('Wind', wind)}
-          ${detailItem('Precip (hour)', precipIn)}
-          ${detailItem('Pressure', current.pressure_mb != null ? `${Math.round(Number(current.pressure_mb))} mb` : null)}
+          ${detailItem('Visibility', hourVis != null ? fmtVisibility(hourVis) : null)}
           ${detailItem('Cloud cover', current.cloud_cover != null ? `${current.cloud_cover}%` : null)}
-          ${detailItem('UV index', current.uv_index != null ? String(current.uv_index) : null)}
+          ${detailItem('Pressure', current.pressure_mb != null ? `${Math.round(Number(current.pressure_mb))} mb` : null)}
+          ${detailItem('UV index', uvPlain(/** @type {number | null} */ (current.uv_index ?? null)))}
+          ${detailItem('Air quality', aq)}
+          ${detailItem('Sunrise', sunrise ? fmtClock(sunrise) : null)}
+          ${detailItem('Sunset', sunset ? fmtClock(sunset) : null)}
+          ${detailItem('Morning golden hour', golden.morning)}
+          ${detailItem('Evening golden hour', golden.evening)}
+          ${detailItem('Aviation', flightCat)}
         </dl>
       </div>
       ${data.updatedAt ? `<p class="updated-at">Location data updated ${fmtDateTime(String(data.updatedAt))}</p>` : ''}
