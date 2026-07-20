@@ -1,0 +1,109 @@
+{
+  "generatedAt": "2026-07-20T22:49:16.964Z",
+  "kp": {
+    "value": 0.33,
+    "observed": "2026-07-20T22:46:00",
+    "source": "planetary"
+  },
+  "boulder_kp": {
+    "value": 1.6,
+    "observed": "2026-07-20T22:42:00"
+  },
+  "sfi": {
+    "value": 137,
+    "observed": "2026-07-20T20:00:00",
+    "ninety_day_mean": 132
+  },
+  "scales": {
+    "R": {
+      "scale": 0,
+      "text": "none"
+    },
+    "S": {
+      "scale": 0,
+      "text": "none"
+    },
+    "G": {
+      "scale": 0,
+      "text": "none"
+    },
+    "observed": "2026-07-20T22:48:00Z",
+    "forecast": [
+      {
+        "date": "2026-07-20",
+        "R": {
+          "scale": null,
+          "text": null
+        },
+        "S": {
+          "scale": null,
+          "text": null
+        },
+        "G": {
+          "scale": 0,
+          "text": "none"
+        }
+      },
+      {
+        "date": "2026-07-21",
+        "R": {
+          "scale": null,
+          "text": null
+        },
+        "S": {
+          "scale": null,
+          "text": null
+        },
+        "G": {
+          "scale": 0,
+          "text": "none"
+        }
+      },
+      {
+        "date": "2026-07-22",
+        "R": {
+          "scale": null,
+          "text": null
+        },
+        "S": {
+          "scale": null,
+          "text": null
+        },
+        "G": {
+          "scale": 1,
+          "text": "minor"
+        }
+      }
+    ]
+  },
+  "xray": null,
+  "aurora_co": {
+    "chance": "unlikely",
+    "detail": "Kp 0.3 — aurora unlikely at Colorado latitudes (estimate)."
+  },
+  "hf": {
+    "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
+    "day": {
+      "80m": "fair",
+      "40m": "good",
+      "20m": "excellent",
+      "15m": "excellent",
+      "10m": "good",
+      "6m": "good"
+    },
+    "night": {
+      "80m": "excellent",
+      "40m": "excellent",
+      "20m": "good",
+      "15m": "fair",
+      "10m": "fair",
+      "6m": "fair"
+    }
+  },
+  "links": {
+    "swpc": "https://www.swpc.noaa.gov/",
+    "scales": "https://www.swpc.noaa.gov/noaa-scales-explanation",
+    "drap": "https://www.swpc.noaa.gov/products/d-region-absorption-predictions-d-rap",
+    "prop": "https://prop.kc2g.com/"
+  }
+}

@@ -1,45 +1,100 @@
 {
-  "generatedAt": "2026-07-20T19:36:25.225Z",
-  "version": "1.1.0",
+  "generatedAt": "2026-07-20T22:49:16.964Z",
+  "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "ok",
-      "fetchedAt": "2026-07-20T19:33:21.097Z"
+      "status": "partial",
+      "fetchedAt": "2026-07-20T22:47:34.401Z",
+      "error": "HTTP 429 for https://api.open-meteo.com/v1/forecast?latitude=39.7392,39.7294,39.7047,40.015,40.1672,40.5853,40.3978,40.4233,39.8367,39.8028,39.868,39.5792,39.5483,39.5186,39.3722,39.6133,39.6478,39.9205,39.8855,39.9853&longitude=-104.9903,-104.8319,-105.0814,-105.2705,-105.1019,-105.0844,-105.0749,-104.7091,-105.0372,-105.0875,-104.9719,-104.8769,-104.9739,-104.7614,-104.8561,-105.0166,-104.9878,-105.0867,-104.9819,-104.8205&current=temperature_2m,relative_humidity_2m,apparent_temperature,weathe"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-07-20T19:34:29.918Z"
+      "fetchedAt": "2026-07-20T22:48:43.904Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-20T19:34:30.796Z"
+      "fetchedAt": "2026-07-20T22:48:45.688Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-20T19:34:30.944Z"
+      "fetchedAt": "2026-07-20T22:48:45.859Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-20T19:34:31.453Z"
+      "fetchedAt": "2026-07-20T22:48:47.079Z"
     },
     {
       "id": "purpleair",
-      "status": "ok",
-      "fetchedAt": "2026-07-20T19:34:31.761Z"
+      "status": "skipped",
+      "fetchedAt": "2026-07-20T22:48:47.080Z",
+      "error": "PURPLEAIR_API_KEY not set"
     },
     {
       "id": "airnow",
+      "status": "skipped",
+      "fetchedAt": "2026-07-20T22:48:47.080Z",
+      "error": "AIRNOW_API_KEY not set"
+    },
+    {
+      "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-07-20T19:36:25.225Z"
+      "fetchedAt": "2026-07-20T22:48:47.904Z"
+    },
+    {
+      "id": "snotel",
+      "status": "ok",
+      "fetchedAt": "2026-07-20T22:49:02.570Z"
+    },
+    {
+      "id": "cdot",
+      "status": "ok",
+      "fetchedAt": "2026-07-20T22:49:03.512Z"
+    },
+    {
+      "id": "cwop",
+      "status": "partial",
+      "fetchedAt": "2026-07-20T22:49:15.033Z"
+    },
+    {
+      "id": "synoptic",
+      "status": "skipped",
+      "fetchedAt": "2026-07-20T22:49:15.033Z",
+      "error": "SYNOPTIC_API_TOKEN not set"
+    },
+    {
+      "id": "hms",
+      "status": "ok",
+      "fetchedAt": "2026-07-20T22:49:15.361Z"
+    },
+    {
+      "id": "spc_firewx",
+      "status": "ok",
+      "fetchedAt": "2026-07-20T22:49:16.401Z"
+    },
+    {
+      "id": "nifc_fires",
+      "status": "ok",
+      "fetchedAt": "2026-07-20T22:49:16.705Z"
+    },
+    {
+      "id": "burn_restrictions",
+      "status": "ok",
+      "fetchedAt": "2026-07-20T22:49:16.854Z"
+    },
+    {
+      "id": "space_weather",
+      "status": "partial",
+      "fetchedAt": "2026-07-20T22:49:16.964Z",
+      "error": "xray: Unexpected non-whitespace character after JSON at position 163497 (line 1 column 163498)"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 249,
+  "apiCalls": 120,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
