@@ -407,21 +407,6 @@ async function renderLocationView(slug) {
       <a class="btn btn-secondary" href="#/" data-nav-home>← All locations</a>
     </p>
     <div id="dashboard-root"></div>
-    <section class="map-section" aria-labelledby="map-heading">
-      <h2 id="map-heading">Local map &amp; radar</h2>
-      <p class="map-lead">Centered on this location. RainViewer radar is on by default; alert polygons load when available.</p>
-      <div class="map-controls">
-        <label class="checkbox-label">
-          <input type="checkbox" id="radar-toggle" />
-          RainViewer radar
-        </label>
-        <label for="radar-opacity" class="opacity-label">
-          Opacity
-          <input type="range" id="radar-opacity" min="10" max="90" value="55" />
-        </label>
-      </div>
-      <div id="map-container" class="map-container"></div>
-    </section>
   `;
 
   const dashRoot = document.getElementById('dashboard-root');
@@ -440,21 +425,22 @@ async function renderLocationView(slug) {
     isFavorite(slug),
   );
 
-  initStateMap(
-    /** @type {HTMLElement} */ (document.getElementById('map-container')),
-    locations,
-    slug,
-    (s) => navigateTo(s),
-    {
-      loadAlerts: true,
-      alertsUrl: `${DATA_BASE}/alerts.geojson`,
-      onAlertsError: (msg) => {
-        announce(`Alert map unavailable: ${msg}`);
-      },
-    },
+  const mapContainer = /** @type {HTMLElement | null} */ (document.getElementById('map-container'));
+  const mapControls = /** @type {HTMLElement | null} */ (
+    document.querySelector('#map-slot .map-controls')
   );
+  if (!mapContainer || !mapControls) return;
+
+  initStateMap(mapContainer, locations, slug, (s) => navigateTo(s), {
+    loadAlerts: true,
+    alertsUrl: `${DATA_BASE}/alerts.geojson`,
+    fixedView: true,
+    onAlertsError: (msg) => {
+      announce(`Alert map unavailable: ${msg}`);
+    },
+  });
   bindRadarControls(
-    /** @type {HTMLElement} */ (document.querySelector('.map-section .map-controls')),
+    mapControls,
     async (enabled, opacity) => {
       const ok = await setRadarOverlay(enabled, opacity);
       if (enabled && !ok) {

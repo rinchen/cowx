@@ -8,8 +8,10 @@ let radarLayer = null;
 let alertsLayer = null;
 
 const CO_CENTER = [39.0, -105.5];
+/** RainViewer free tiles only support zoom 0–7. */
+const RAINVIEWER_MAX_ZOOM = 7;
 const CO_ZOOM = 7;
-const LOCALITY_ZOOM = 10;
+const LOCALITY_ZOOM = 7;
 
 const SEVERITY_COLORS = {
   Extreme: '#7f1d1d',
@@ -33,7 +35,7 @@ function severityColor(severity) {
  * @param {IndexEntry[]} locations
  * @param {string | null} activeSlug
  * @param {(slug: string) => void} onSelect
- * @param {{ loadAlerts?: boolean, alertsUrl?: string, onAlertsError?: (msg: string) => void }} [options]
+ * @param {{ loadAlerts?: boolean, alertsUrl?: string, onAlertsError?: (msg: string) => void, fixedView?: boolean }} [options]
  */
 export function initStateMap(container, locations, activeSlug, onSelect, options = {}) {
   if (typeof L === 'undefined') {
@@ -50,7 +52,7 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
 
   container.innerHTML = '';
   const mapEl = document.createElement('div');
-  mapEl.className = 'leaflet-map';
+  mapEl.className = activeSlug ? 'leaflet-map leaflet-map--locality' : 'leaflet-map';
   mapEl.id = 'state-map';
   mapEl.setAttribute('role', 'application');
   mapEl.setAttribute(
@@ -60,18 +62,27 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
   container.appendChild(mapEl);
 
   const active = activeSlug ? locations.find((l) => l.slug === activeSlug) : null;
+  const fixedView = Boolean(options.fixedView ?? activeSlug);
 
   stateMap = L.map(mapEl, {
     center: active ? [active.lat, active.lon] : CO_CENTER,
     zoom: active ? LOCALITY_ZOOM : CO_ZOOM,
+    maxZoom: RAINVIEWER_MAX_ZOOM,
+    minZoom: 5,
     scrollWheelZoom: false,
+    doubleClickZoom: !fixedView,
+    boxZoom: !fixedView,
+    keyboard: !fixedView,
+    dragging: !fixedView,
+    zoomControl: !fixedView,
+    touchZoom: !fixedView,
   });
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
-    maxZoom: 19,
+    maxZoom: RAINVIEWER_MAX_ZOOM,
   }).addTo(stateMap);
 
   const bounds = [];
@@ -93,7 +104,7 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
   if (active) {
     stateMap.setView([active.lat, active.lon], LOCALITY_ZOOM);
   } else if (bounds.length) {
-    stateMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+    stateMap.fitBounds(bounds, { padding: [40, 40], maxZoom: RAINVIEWER_MAX_ZOOM });
   }
 
   setTimeout(() => stateMap?.invalidateSize(), 100);
@@ -183,6 +194,8 @@ export async function setRadarOverlay(enabled, opacity = 0.5) {
 
     radarLayer = L.tileLayer(url, {
       opacity,
+      maxZoom: RAINVIEWER_MAX_ZOOM,
+      maxNativeZoom: RAINVIEWER_MAX_ZOOM,
       attribution: '&copy; <a href="https://www.rainviewer.com/">RainViewer</a>',
     });
     radarLayer.addTo(stateMap);

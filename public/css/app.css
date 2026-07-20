@@ -555,122 +555,71 @@ main {
   padding: 1rem;
 }
 
-.hour-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.hour-row {
-  border: 1px solid var(--color-border);
-  border-radius: calc(var(--radius) - 2px);
-  background: var(--color-bg);
-}
-
-.hour-summary {
-  display: grid;
-  grid-template-columns: minmax(5.5rem, 7rem) minmax(7rem, 1.4fr) 3.5rem minmax(4.5rem, 6rem) minmax(4.5rem, 6rem) auto;
-  gap: 0.35rem 0.75rem;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-  list-style: none;
-  font-size: 0.875rem;
-}
-
-.hour-summary::-webkit-details-marker {
-  display: none;
-}
-
-.hour-more {
-  justify-self: end;
-  color: var(--color-accent);
-  font-weight: 600;
-  font-size: 0.75rem;
-}
-
-.hour-body {
-  padding: 0 0.75rem 0.75rem;
-  border-top: 1px solid var(--color-border);
-}
-
-.hour-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
-  gap: 0.65rem;
-  margin: 0.75rem 0 0;
-}
-
-.hour-detail-grid dt {
-  margin: 0;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
-}
-
-.hour-detail-grid dd {
-  margin: 0.1rem 0 0;
-  font-weight: 600;
-}
-
-@media (max-width: 720px) {
-  .hour-summary {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .hour-more {
-    grid-column: 1 / -1;
-    justify-self: start;
-  }
-}
-
-.imagery-section {
-  margin: 0 0 1.25rem;
-}
-
-.imagery-section h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1.125rem;
-}
-
-.imagery-lead {
-  margin: 0 0 0.875rem;
-  color: var(--color-text-muted);
-  font-size: 0.9375rem;
-}
-
-.imagery-grid {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-}
-
-.imagery-card {
+.forecast-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 1rem 1.125rem;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
   box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }
 
-.imagery-card h3 {
-  margin: 0;
-  font-size: 1rem;
+.forecast-card h2 {
+  margin: 0 0 0.875rem;
+  font-size: 1.125rem;
 }
 
-.imagery-card p {
-  margin: 0;
-  flex: 1;
-  font-size: 0.875rem;
+.map-slot {
+  margin-bottom: 1rem;
+}
+
+.data-table--forecast tbody tr:nth-child(even) {
+  background: var(--color-surface-2);
+}
+
+.data-table--forecast tbody tr:nth-child(odd) .sticky-col {
+  background: var(--color-surface);
+}
+
+.data-table--forecast tbody tr:nth-child(even) .sticky-col {
+  background: var(--color-surface-2);
+}
+
+.data-table--forecast .sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  box-shadow: 1px 0 0 var(--color-border);
+}
+
+.data-table--forecast thead .sticky-col {
+  background: var(--color-bg);
+  z-index: 2;
+}
+
+.leaflet-map--locality {
+  height: 380px;
+}
+
+@media (min-width: 640px) {
+  .leaflet-map--locality {
+    height: 440px;
+  }
+}
+
+.alert-item--compact {
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--color-bg);
+  padding: 0.65rem 0.85rem;
+}
+
+.alert-headline {
+  display: block;
+  margin: 0.35rem 0 0;
+  font-weight: 500;
   color: var(--color-text-muted);
-}
-
-.imagery-card .btn {
-  align-self: flex-start;
+  font-size: 0.875rem;
 }
 
 .alert-list--detailed {
