@@ -200,7 +200,7 @@ export function renderIntel(root, data, options = {}) {
       <div class="meteogram-stack">
         <div class="meteogram-row">
           <span class="meteogram-row__label">Temp °F</span>
-          ${meteogramHtml(temps, { color: '#7dd3fc', label: 'Temperature trend Fahrenheit', fill: true }) || '<p class="empty-state">No temperature series</p>'}
+          ${meteogramHtml(temps, { color: '#0369a1', label: 'Temperature trend Fahrenheit', fill: true }) || '<p class="empty-state">No temperature series</p>'}
         </div>
         <div class="meteogram-row">
           <span class="meteogram-row__label">Pressure inHg${dip.dip ? ' · front dip' : ''}</span>
@@ -208,7 +208,7 @@ export function renderIntel(root, data, options = {}) {
             meteogramHtml(
               pressureIn.filter((v) => Number.isFinite(v)),
               {
-                color: dip.dip ? '#fbbf24' : '#a5b4fc',
+                color: dip.dip ? '#a16207' : '#4338ca',
                 label: dip.dip
                   ? `Pressure trend with rapid dip of ${dip.delta.toFixed(2)} inches`
                   : 'Barometric pressure trend inches of mercury',
@@ -222,9 +222,9 @@ export function renderIntel(root, data, options = {}) {
           <span class="meteogram-row__label">Wind / gust mph</span>
           ${
             meteogramHtml(winds, {
-              color: '#86efac',
+              color: '#166534',
               secondary: gusts,
-              secondaryColor: '#fb923c',
+              secondaryColor: '#c2410c',
               label: 'Wind speed and gusts miles per hour',
               fill: false,
             }) || '<p class="empty-state">No wind series</p>'
@@ -232,7 +232,7 @@ export function renderIntel(root, data, options = {}) {
         </div>
         <div class="meteogram-row">
           <span class="meteogram-row__label">Precip chance</span>
-          ${miniBarChartHtml(probs, { width: 220, height: 36, color: '#38bdf8' }) || '<p class="empty-state">No precip probability</p>'}
+          ${miniBarChartHtml(probs, { width: 220, height: 36, color: '#0284c7' }) || '<p class="empty-state">No precip probability</p>'}
         </div>
       </div>
     </section>

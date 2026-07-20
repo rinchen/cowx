@@ -1346,42 +1346,14 @@ main {
   color: var(--color-text-muted);
 }
 
-/* —— Locality workspace (Option D) —— */
+/* —— Locality workspace (Option D) — light glass only —— */
 :root {
-  --glass-bg: rgb(15 23 42 / 72%);
-  --glass-bg-strong: rgb(15 23 42 / 88%);
-  --glass-border: rgb(148 163 184 / 28%);
-  --glass-text: #f1f5f9;
-  --glass-muted: #cbd5e1;
-  --glass-accent: #7dd3fc;
-}
-
-body.workspace-active {
-  background: linear-gradient(160deg, #0f172a 0%, #1e293b 42%, #0f172a 100%);
-  color: var(--glass-text);
-}
-
-body.workspace-active .site-header {
-  background: rgb(15 23 42 / 85%);
-  border-bottom-color: var(--glass-border);
-  color: var(--glass-text);
-}
-
-body.workspace-active .site-logo,
-body.workspace-active .site-nav a {
-  color: var(--glass-text);
-}
-
-body.workspace-active .site-logo span,
-body.workspace-active .site-nav-github {
-  color: var(--glass-muted);
-}
-
-body.workspace-active .site-footer,
-body.workspace-active .site-notice {
-  color: var(--glass-muted);
-  background: transparent;
-  border-color: var(--glass-border);
+  --glass-bg: rgb(255 255 255 / 82%);
+  --glass-bg-strong: rgb(255 255 255 / 94%);
+  --glass-border: rgb(197 214 227 / 90%);
+  --glass-text: #1a2b3c;
+  --glass-muted: #4a5f73;
+  --glass-accent: #0369a1;
 }
 
 body.workspace-active #main-content {
@@ -1405,7 +1377,7 @@ body.workspace-active #main-content {
   -webkit-backdrop-filter: blur(12px);
   color: var(--glass-text);
   padding: 1rem 1.1rem;
-  box-shadow: 0 8px 32px rgb(0 0 0 / 25%);
+  box-shadow: 0 1px 3px rgb(26 43 60 / 8%), 0 4px 16px rgb(26 43 60 / 6%);
 }
 
 .glass-panel__title {
@@ -1522,21 +1494,21 @@ body.workspace-active #main-content {
 }
 
 .bottom-line--hazard {
-  color: #fecaca;
+  color: #991b1b;
 }
 
 .bottom-line--wind,
 .bottom-line--fire {
-  color: #fde68a;
+  color: #92400e;
 }
 
 .bottom-line--precip,
 .bottom-line--temp {
-  color: #bae6fd;
+  color: #075985;
 }
 
 .bottom-line--aq {
-  color: #f0abfc;
+  color: #7e22ce;
 }
 
 .intel-now {
@@ -1595,25 +1567,25 @@ body.workspace-active #main-content {
 }
 
 .aqi-ring--good {
-  color: #4ade80;
+  color: #166534;
 }
 .aqi-ring--moderate {
-  color: #facc15;
+  color: #a16207;
 }
 .aqi-ring--usg {
-  color: #fb923c;
+  color: #c2410c;
 }
 .aqi-ring--unhealthy {
-  color: #f87171;
+  color: #b91c1c;
 }
 .aqi-ring--very {
-  color: #c084fc;
+  color: #7e22ce;
 }
 .aqi-ring--hazardous {
-  color: #fb7185;
+  color: #9f1239;
 }
 .aqi-ring--na {
-  color: #94a3b8;
+  color: #4a5f73;
 }
 
 .meteogram-stack {
@@ -1678,7 +1650,7 @@ body.workspace-active #main-content {
   border-radius: 8px;
   border: 1px solid var(--glass-border);
   margin: 0.5rem 0;
-  background: #0f172a;
+  background: var(--color-surface-2);
 }
 
 .rf-badge {
@@ -1701,13 +1673,13 @@ body.workspace-active #main-content {
 }
 
 .rf-badge--ducting {
-  border-color: #86efac;
-  background: rgb(22 101 52 / 25%);
+  border-color: #166534;
+  background: rgb(22 163 74 / 12%);
 }
 
 .rf-badge--poor {
-  border-color: #fca5a5;
-  background: rgb(127 29 29 / 25%);
+  border-color: #b91c1c;
+  background: rgb(185 28 28 / 10%);
 }
 
 .rf-badge--nominal {
@@ -1726,41 +1698,6 @@ body.workspace-active #main-content {
 
 .workspace__deep {
   padding: 1rem 1.1rem 1.5rem;
-}
-
-body.workspace-active .workspace__deep .forecast-card,
-body.workspace-active .workspace__deep .dash-section,
-body.workspace-active .workspace__deep .sources-panel {
-  background: rgb(15 23 42 / 45%);
-  border-color: var(--glass-border);
-  color: var(--glass-text);
-}
-
-body.workspace-active .workspace__deep h2,
-body.workspace-active .workspace__deep .dash-section-title,
-body.workspace-active .workspace__deep th,
-body.workspace-active .workspace__deep td,
-body.workspace-active .workspace__deep .table-hint {
-  color: var(--glass-text);
-}
-
-body.workspace-active .workspace__deep .table-hint,
-body.workspace-active .workspace__deep .empty-state {
-  color: var(--glass-muted);
-}
-
-body.workspace-active .workspace__deep a {
-  color: var(--glass-accent);
-}
-
-body.workspace-active .btn-secondary {
-  background: rgb(30 41 59 / 80%);
-  border-color: var(--glass-border);
-  color: var(--glass-text);
-}
-
-body.workspace-active .btn-favorite {
-  color: #fde68a;
 }
 
 @media (max-width: 959px) {
