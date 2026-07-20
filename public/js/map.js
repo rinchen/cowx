@@ -85,26 +85,29 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
     maxZoom: RAINVIEWER_MAX_ZOOM,
   }).addTo(stateMap);
 
-  const bounds = [];
-  locations.forEach((loc) => {
-    const isActive = loc.slug === activeSlug;
-    const marker = L.circleMarker([loc.lat, loc.lon], {
-      radius: isActive ? 11 : 6,
-      color: isActive ? '#0c4a6e' : '#0369a1',
-      fillColor: isActive ? '#0284c7' : '#38bdf8',
-      fillOpacity: isActive ? 0.95 : 0.7,
-      weight: isActive ? 3 : 2,
-    }).addTo(stateMap);
+  if (!activeSlug) {
+    const bounds = [];
+    locations.forEach((loc) => {
+      const marker = L.circleMarker([loc.lat, loc.lon], {
+        radius: 6,
+        color: '#0369a1',
+        fillColor: '#38bdf8',
+        fillOpacity: 0.7,
+        weight: 2,
+      }).addTo(stateMap);
 
-    marker.bindPopup(`<strong>${loc.name}</strong>${loc.county ? `<br>${loc.county} County` : ''}`);
-    marker.on('click', () => onSelect(loc.slug));
-    bounds.push([loc.lat, loc.lon]);
-  });
+      marker.bindPopup(
+        `<strong>${loc.name}</strong>${loc.county ? `<br>${loc.county} County` : ''}`,
+      );
+      marker.on('click', () => onSelect(loc.slug));
+      bounds.push([loc.lat, loc.lon]);
+    });
 
-  if (active) {
+    if (bounds.length) {
+      stateMap.fitBounds(bounds, { padding: [40, 40], maxZoom: RAINVIEWER_MAX_ZOOM });
+    }
+  } else if (active) {
     stateMap.setView([active.lat, active.lon], LOCALITY_ZOOM);
-  } else if (bounds.length) {
-    stateMap.fitBounds(bounds, { padding: [40, 40], maxZoom: RAINVIEWER_MAX_ZOOM });
   }
 
   setTimeout(() => stateMap?.invalidateSize(), 100);
