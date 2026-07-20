@@ -345,23 +345,13 @@ main {
 }
 
 /* Dashboard */
-.breadcrumb {
-  display: flex;
-  flex-wrap: wrap;
+.location-nav {
+  margin: 0 0 1rem;
+}
+
+.location-nav .btn {
+  display: inline-flex;
   align-items: center;
-  gap: 0.35rem 0.5rem;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-  color: var(--color-text-muted);
-}
-
-.breadcrumb a {
-  font-weight: 500;
-}
-
-.breadcrumb-change {
-  margin-left: auto;
-  font-weight: 600;
 }
 
 .btn-link {

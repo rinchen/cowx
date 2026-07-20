@@ -123,9 +123,35 @@ function parseRoute() {
 function navigateTo(slug) {
   if (slug) {
     window.location.hash = `#/l/${slug}`;
-  } else {
-    window.location.hash = '#/';
+    return;
   }
+  goHome();
+}
+
+/**
+ * Always land on the find-location page (even if hash is already `#/`).
+ */
+function goHome() {
+  if (parseRoute() == null) {
+    void handleRoute();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+  window.location.hash = '#/';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/**
+ * Logo / Home / Change location — preventDefault so navigation is explicit.
+ */
+function bindHomeNavigation() {
+  document.addEventListener('click', (event) => {
+    const target = /** @type {HTMLElement | null} */ (event.target);
+    const link = target?.closest?.('[data-nav-home]');
+    if (!link) return;
+    event.preventDefault();
+    goHome();
+  });
 }
 
 /**
@@ -349,7 +375,7 @@ async function renderLocationView(slug) {
       <section class="error-card">
         <h1>Location not found</h1>
         <p>No site named “${slug}” in the index.</p>
-        <a class="btn btn-primary" href="#/">Back to home</a>
+        <a class="btn btn-primary" href="#/" data-nav-home>Back to home</a>
       </section>
     `;
     announce('Location not found');
@@ -368,7 +394,7 @@ async function renderLocationView(slug) {
       <section class="error-card">
         <h1>Data unavailable</h1>
         <p>Could not load weather data for ${indexEntry.name}.</p>
-        <a class="btn btn-primary" href="#/">Try another location</a>
+        <a class="btn btn-primary" href="#/" data-nav-home>Try another location</a>
       </section>
     `;
     showError(`Failed to load weather data for ${indexEntry.name}.`);
@@ -377,12 +403,9 @@ async function renderLocationView(slug) {
   }
 
   els.main.innerHTML = `
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="#/">Home</a>
-      <span aria-hidden="true">/</span>
-      <span aria-current="page">${indexEntry.name}</span>
-      <a class="breadcrumb-change" href="#/">Change location</a>
-    </nav>
+    <p class="location-nav">
+      <a class="btn btn-secondary" href="#/" data-nav-home>← All locations</a>
+    </p>
     <div id="dashboard-root"></div>
     <section class="map-section" aria-labelledby="map-heading">
       <h2 id="map-heading">Statewide map</h2>
@@ -455,6 +478,7 @@ async function init() {
   els.updatedFooter = document.getElementById('data-updated');
 
   await loadCoreData();
+  bindHomeNavigation();
   window.addEventListener('hashchange', () => handleRoute());
   await handleRoute();
 }
