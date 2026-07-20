@@ -235,6 +235,7 @@ Include a detailed body for non-trivial changes: **what** changed and **why**. F
 - Locations must be in Colorado (including passes, peaks, parks, and CDOT-relevant sites).
 - Client geo resolves to the **nearest catalog point in Colorado**; out-of-state visitors see nearest CO site plus search.
 - Do not add national/global primary views or non-CO location catalogs.
+- To fork this project for another state, follow [ADAPT.md](ADAPT.md).
 
 ---
 

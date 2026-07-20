@@ -62,6 +62,7 @@ See [how-it-works.html](public/how-it-works.html) for details.
 
 ## Documentation
 
+- [ADAPT.md](ADAPT.md) — fork this site for another US state (catalog, adapters, branding)
 - [AGENTS.md](AGENTS.md) — contributor and agent guide (adapters, locations, CI, a11y)
 - [How it works](public/how-it-works.html) — architecture, update cadence, failure modes
 - [Credits](public/credits.html) — data sources and attribution
