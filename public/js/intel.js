@@ -59,6 +59,7 @@ function distanceLabel(km, fromYou) {
  *     pws?: Record<string, unknown> | null,
  *     current?: Record<string, unknown> | null,
  *   } | null,
+ *   spaceWeather?: Record<string, unknown> | null,
  * }} [options]
  * @returns {{ headline: string }}
  */
@@ -66,7 +67,8 @@ export function renderIntel(root, data, options = {}) {
   const current = /** @type {Record<string, unknown> | null} */ (data.current ?? null);
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
-  const { headline, priority } = synthesizeBottomLine(data);
+  const spaceWeather = options.spaceWeather ?? null;
+  const { headline, priority } = synthesizeBottomLine(data, { spaceWeather });
   const aq = pickAqi(data);
   const cat = aqiCategory(aq.aqi);
   const pin = options.pin ?? null;
@@ -225,6 +227,47 @@ export function renderIntel(root, data, options = {}) {
         : rf
           ? 'Nominal'
           : null;
+
+  const sw = spaceWeather;
+  const swScales = /** @type {Record<string, unknown> | null} */ (sw?.scales ?? null);
+  const swKp = /** @type {Record<string, unknown> | null} */ (sw?.kp ?? null);
+  const swBoulder = /** @type {Record<string, unknown> | null} */ (sw?.boulder_kp ?? null);
+  const swSfi = /** @type {Record<string, unknown> | null} */ (sw?.sfi ?? null);
+  const swAurora = /** @type {Record<string, unknown> | null} */ (sw?.aurora_co ?? null);
+  const swHf = /** @type {Record<string, unknown> | null} */ (sw?.hf ?? null);
+  const swDay = /** @type {Record<string, string> | null} */ (swHf?.day ?? null);
+  const swNight = /** @type {Record<string, string> | null} */ (swHf?.night ?? null);
+
+  /**
+   * @param {string} letter
+   * @param {unknown} block
+   */
+  function scaleChip(letter, block) {
+    const b = /** @type {Record<string, unknown> | null} */ (
+      block && typeof block === 'object' ? block : null
+    );
+    const scale = b?.scale != null && Number.isFinite(Number(b.scale)) ? Number(b.scale) : null;
+    const text = b?.text != null ? String(b.text) : scale == null ? 'n/a' : '';
+    const label = scale != null ? `${letter}${scale}` : letter;
+    const detail = text && text !== 'none' ? ` ${text}` : scale === 0 ? ' none' : '';
+    const sev =
+      scale == null
+        ? 'unknown'
+        : scale >= 4
+          ? 'extreme'
+          : scale >= 3
+            ? 'strong'
+            : scale >= 1
+              ? 'minor'
+              : 'none';
+    return `<span class="sw-scale sw-scale--${sev}" title="${escapeHtml(letter)} scale${detail}"><span class="sw-scale__code">${escapeHtml(label)}</span><span class="sw-scale__text">${escapeHtml(detail.trim() || 'none')}</span></span>`;
+  }
+
+  const hfSummaryBits = [];
+  if (swDay?.['20m']) hfSummaryBits.push(`20m day: ${swDay['20m']}`);
+  if (swNight?.['40m']) hfSummaryBits.push(`40m night: ${swNight['40m']}`);
+  if (swDay?.['10m']) hfSummaryBits.push(`10m day: ${swDay['10m']}`);
+  const showHamPanel = Boolean(rfLabel || sw);
 
   const pressureDisplay =
     current?.surface_pressure_mb != null ? current.surface_pressure_mb : current?.pressure_mb;
@@ -620,13 +663,46 @@ export function renderIntel(root, data, options = {}) {
     }
 
     ${
-      rfLabel || (data.cwop && !pwsPrimary)
+      showHamPanel
         ? `<section class="glass-panel" aria-labelledby="rf-heading">
-            <h2 id="rf-heading" class="glass-panel__title">Field ops / RF</h2>
+            <h2 id="rf-heading" class="glass-panel__title">Ham radio / RF</h2>
+            ${
+              swScales
+                ? `<div class="sw-scales" role="group" aria-label="NOAA space weather scales">
+                    ${scaleChip('R', swScales.R)}
+                    ${scaleChip('S', swScales.S)}
+                    ${scaleChip('G', swScales.G)}
+                  </div>`
+                : ''
+            }
+            ${
+              swSfi || swKp
+                ? `<dl class="metric-list metric-list--compact">
+                    ${swSfi?.value != null ? `<dt>SFI</dt><dd>${Math.round(Number(swSfi.value))}${swSfi.ninety_day_mean != null ? ` <span class="intel-muted">(90d ${Math.round(Number(swSfi.ninety_day_mean))})</span>` : ''}</dd>` : ''}
+                    ${swKp?.value != null ? `<dt>Kp</dt><dd>${Number(swKp.value).toFixed(1)}${swBoulder?.value != null ? ` <span class="intel-muted">· Boulder ${Number(swBoulder.value).toFixed(1)}</span>` : ''}</dd>` : ''}
+                  </dl>`
+                : ''
+            }
+            ${
+              swAurora
+                ? `<p class="sw-aurora sw-aurora--${escapeHtml(String(swAurora.chance ?? 'unlikely'))}"><span class="sw-aurora__label">Aurora (CO): ${escapeHtml(String(swAurora.chance ?? 'unlikely'))}</span>
+                    <span class="sw-aurora__detail">${escapeHtml(String(swAurora.detail ?? ''))}</span></p>`
+                : ''
+            }
+            ${
+              hfSummaryBits.length
+                ? `<p class="sw-hf-summary"><span class="sw-hf-summary__label">HF (estimate)</span> ${escapeHtml(hfSummaryBits.join(' · '))}</p>`
+                : ''
+            }
             ${
               rfLabel
-                ? `<p class="rf-badge ${rfClass}"><span class="rf-badge__status">VHF/UHF: ${escapeHtml(rfLabel)}</span>
+                ? `<p class="rf-badge ${rfClass}"><span class="rf-badge__status">VHF/UHF ducting: ${escapeHtml(rfLabel)}</span>
                     <span class="rf-badge__detail">${escapeHtml(String(rf?.detail ?? 'Model-derived estimate'))}</span></p>`
+                : ''
+            }
+            ${
+              sw
+                ? `<button type="button" class="btn btn-link intel-jump" data-jump-to="ham-heading">Full ham &amp; space weather</button>`
                 : ''
             }
           </section>`
@@ -674,6 +750,7 @@ export function renderIntel(root, data, options = {}) {
         <li><button type="button" class="intel-jump" data-jump-to="metar-heading">Aviation</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="aqi-heading">Air quality detail</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="smoke-heading">Fire weather &amp; restrictions</button></li>
+        <li><button type="button" class="intel-jump" data-jump-to="ham-heading">Ham radio &amp; space weather</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="links-heading">External tools</button></li>
       </ul>
     </nav>

@@ -1,0 +1,32 @@
+[
+  {
+    "time_tag": "2026-07-20T22:20:00",
+    "kp_index": 1,
+    "estimated_kp": 1.0,
+    "kp": "1Z"
+  },
+  {
+    "time_tag": "2026-07-20T22:21:00",
+    "kp_index": 1,
+    "estimated_kp": 1.0,
+    "kp": "1Z"
+  },
+  {
+    "time_tag": "2026-07-20T22:22:00",
+    "kp_index": 1,
+    "estimated_kp": 0.67,
+    "kp": "1M"
+  },
+  {
+    "time_tag": "2026-07-20T22:23:00",
+    "kp_index": 0,
+    "estimated_kp": 0.33,
+    "kp": "0P"
+  },
+  {
+    "time_tag": "2026-07-20T22:24:00",
+    "kp_index": 0,
+    "estimated_kp": 0.33,
+    "kp": "0P"
+  }
+]

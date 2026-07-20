@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cowx.local/schemas/space-weather.schema.json",
+  "title": "COWX space weather snapshot",
+  "description": "Statewide NOAA SWPC planetary snapshot written to public/data/space-weather.json (not per-location).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["generatedAt"],
+  "properties": {
+    "generatedAt": { "type": "string" },
+    "carriedForward": { "type": "boolean" },
+    "kp": {
+      "type": ["object", "null"],
+      "properties": {
+        "value": { "type": "number" },
+        "observed": { "type": ["string", "null"] },
+        "source": { "type": "string" }
+      }
+    },
+    "boulder_kp": {
+      "type": ["object", "null"],
+      "properties": {
+        "value": { "type": "number" },
+        "observed": { "type": ["string", "null"] }
+      }
+    },
+    "sfi": {
+      "type": ["object", "null"],
+      "properties": {
+        "value": { "type": "number" },
+        "observed": { "type": ["string", "null"] },
+        "ninety_day_mean": { "type": ["number", "null"] }
+      }
+    },
+    "scales": {
+      "type": ["object", "null"],
+      "properties": {
+        "R": {
+          "type": "object",
+          "properties": {
+            "scale": { "type": ["number", "null"] },
+            "text": { "type": ["string", "null"] }
+          }
+        },
+        "S": {
+          "type": "object",
+          "properties": {
+            "scale": { "type": ["number", "null"] },
+            "text": { "type": ["string", "null"] }
+          }
+        },
+        "G": {
+          "type": "object",
+          "properties": {
+            "scale": { "type": ["number", "null"] },
+            "text": { "type": ["string", "null"] }
+          }
+        },
+        "observed": { "type": ["string", "null"] },
+        "forecast": { "type": "array" }
+      }
+    },
+    "xray": {
+      "type": ["object", "null"],
+      "properties": {
+        "class": { "type": ["string", "null"] },
+        "flux": { "type": ["number", "null"] },
+        "observed": { "type": ["string", "null"] }
+      }
+    },
+    "aurora_co": {
+      "type": ["object", "null"],
+      "properties": {
+        "chance": { "type": "string", "enum": ["unlikely", "possible", "likely"] },
+        "detail": { "type": "string" }
+      }
+    },
+    "hf": {
+      "type": ["object", "null"],
+      "properties": {
+        "disclaimer": { "type": "string" },
+        "day": { "type": "object", "additionalProperties": { "type": "string" } },
+        "night": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

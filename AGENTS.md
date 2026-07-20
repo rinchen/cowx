@@ -39,6 +39,7 @@ cowx/   # repo directory (brand: COWX)
 │       ├── cwop.geojson
 │       ├── hms-smoke.geojson
 │       ├── spc-firewx.geojson
+│       ├── space-weather.json # NOAA SWPC planetary snapshot (ham / HF)
 │       └── locations/{slug}.json   # Full per-location payload
 ├── tests/                    # Node test runner (`pnpm test`) — fixtures only, no live APIs
 │   └── fixtures/             # Recorded API responses for adapter/unit tests
@@ -56,6 +57,7 @@ cowx/   # repo directory (brand: COWX)
 | `public/data/meta.json`                     | `generatedAt`, `version`, `sources[]`, `apiCalls`, `forecastStaleCount`  |
 | `public/data/index.json`                    | Client lookup: slug, name, lat, lon, summary fields                      |
 | `public/data/locations/{slug}.json`         | Full drill-down weather/AQ payload for one location                      |
+| `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)              |
 | `schemas/*.schema.json`                     | Reference contracts for locations/payloads/meta (not yet enforced in CI) |
 
 **Language:** The public UI is English-only. There is no i18n catalog or translation check script.
@@ -183,25 +185,26 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):
 
-| Source                       | Calls / run (approx @ ~340 locs) | Auth                 |
-| ---------------------------- | -------------------------------- | -------------------- |
-| Open-Meteo Forecast          | ~34+ (chunk 20 + NBM per chunk)  | None                 |
-| Open-Meteo Air Quality       | ~9 (chunk 40)                    | None                 |
-| NWS alerts + AFD/HWO         | ~8–12 selective                  | User-Agent header    |
-| CoAgMET                      | 1–2                              | None                 |
-| Aviation Weather METAR/TAF   | 1–3 batched                      | None                 |
-| USGS NWIS                    | 1                                | None                 |
-| SNOTEL                       | 1–2                              | None                 |
-| CDOT cameras + RWIS + alerts | 4                                | None                 |
-| CWOP / APRS (aprs.me grid)   | ~35–40                           | None                 |
-| Synoptic latest              | 0–1 (only if token set)          | `SYNOPTIC_API_TOKEN` |
-| NOAA HMS smoke               | 1–3 (zip download)               | None                 |
-| SPC fire weather (Day 1–2)   | 4 (Wind/RH + DryT GeoJSON)       | None                 |
-| NIFC WFIGS nearby fires      | 1 (CO incidents)                 | None                 |
-| COEM burn restrictions       | 1 (HTML status + curated links)  | None                 |
-| PurpleAir                    | 1–2 (only if key set)            | `PURPLEAIR_API_KEY`  |
-| AirNow                       | many grid points when keyed      | `AIRNOW_API_KEY`     |
-| Catalog `webcam_links`       | 0 (copied into payloads)         | None                 |
+| Source                       | Calls / run (approx @ ~340 locs)       | Auth                 |
+| ---------------------------- | -------------------------------------- | -------------------- |
+| Open-Meteo Forecast          | ~34+ (chunk 20 + NBM per chunk)        | None                 |
+| Open-Meteo Air Quality       | ~9 (chunk 40)                          | None                 |
+| NWS alerts + AFD/HWO         | ~8–12 selective                        | User-Agent header    |
+| CoAgMET                      | 1–2                                    | None                 |
+| Aviation Weather METAR/TAF   | 1–3 batched                            | None                 |
+| USGS NWIS                    | 1                                      | None                 |
+| SNOTEL                       | 1–2                                    | None                 |
+| CDOT cameras + RWIS + alerts | 4                                      | None                 |
+| CWOP / APRS (aprs.me grid)   | ~35–40                                 | None                 |
+| Synoptic latest              | 0–1 (only if token set)                | `SYNOPTIC_API_TOKEN` |
+| NOAA HMS smoke               | 1–3 (zip download)                     | None                 |
+| SPC fire weather (Day 1–2)   | 4 (Wind/RH + DryT GeoJSON)             | None                 |
+| NIFC WFIGS nearby fires      | 1 (CO incidents)                       | None                 |
+| COEM burn restrictions       | 1 (HTML status + curated links)        | None                 |
+| NOAA SWPC space weather      | ~5 (scales, Kp, Boulder K, SFI, X-ray) | None                 |
+| PurpleAir                    | 1–2 (only if key set)                  | `PURPLEAIR_API_KEY`  |
+| AirNow                       | many grid points when keyed            | `AIRNOW_API_KEY`     |
+| Catalog `webcam_links`       | 0 (copied into payloads)               | None                 |
 
 Partial adapter failure is acceptable; total failure (zero locations written or all critical adapters down) should fail the workflow so notifications fire.
 
@@ -209,9 +212,9 @@ Partial adapter failure is acceptable; total failure (zero locations written or 
 
 ## Audience data coverage (not UI filters)
 
-Citizen, pilot, farmer, and firefighter needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, road alerts, etc.). The public dashboard shows **all** available sections for every location — there is no persona filter bar.
+Citizen, pilot, farmer, firefighter, and ham radio operator needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, road alerts, NOAA SWPC space weather / HF cues, etc.). The public dashboard shows **all** available sections for every location — there is no persona filter bar.
 
-Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, optional pin “At your location” current strip, 24h meteograms, CDOT cameras/RWIS/road alerts, local webcam **new-tab links**, nearby PWS, fire weather (SPC outlooks, HMS smoke, nearby NIFC incidents, burn-restriction links), RF ducting) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links.
+Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, optional pin “At your location” current strip, 24h meteograms, CDOT cameras/RWIS/road alerts, local webcam **new-tab links**, nearby PWS, fire weather (SPC outlooks, HMS smoke, nearby NIFC incidents, burn-restriction links), ham radio / RF (SWPC scales, SFI/Kp, HF band estimates, VHF ducting)) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links. Planetary space weather is written once to `public/data/space-weather.json` (not duplicated per location).
 
 **Hyperlocal pin (client, no API keys):** Locate (high-accuracy GPS), IP “Go to”, or Colorado street-address Set pin (`public/js/geocode.js` → Nominatim, CO-bounded, submit-only) stores a session-only pin (`sessionStorage` `cowx:hyperlocalPin`). Always force-refresh the workspace after setting a pin even if the catalog slug is unchanged. The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip (fallback status if that fails). Searching a city clears the pin. Do not add client API **keys**; keep address geocode user-triggered and Colorado-bounded.
 

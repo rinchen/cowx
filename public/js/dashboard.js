@@ -1297,7 +1297,7 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
  * Hourly/daily tables + collapsible detail sections (no summary header or map).
  * @param {HTMLElement} root
  * @param {Record<string, unknown>} data
- * @param {{ sources?: unknown[], includeMapSlot?: boolean }} [options]
+ * @param {{ sources?: unknown[], includeMapSlot?: boolean, spaceWeather?: Record<string, unknown> | null }} [options]
  */
 export function renderDeepForecast(root, data, options = {}) {
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
@@ -1316,6 +1316,7 @@ export function renderDeepForecast(root, data, options = {}) {
     elevationFt,
     links,
     includeMapSlot: options.includeMapSlot === true,
+    spaceWeather: options.spaceWeather ?? null,
   });
 }
 
@@ -1329,10 +1330,11 @@ export function renderDeepForecast(root, data, options = {}) {
  *   elevationFt: number | null,
  *   links: Record<string, string | null>,
  *   includeMapSlot?: boolean,
+ *   spaceWeather?: Record<string, unknown> | null,
  * }} ctx
  */
 function appendDeepForecast(root, data, ctx) {
-  const { sunrises, sunsets, elevationFt, links, sources: metaSources } = ctx;
+  const { sunrises, sunsets, elevationFt, links, sources: metaSources, spaceWeather = null } = ctx;
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
 
@@ -2135,6 +2137,222 @@ function appendDeepForecast(root, data, ctx) {
       );
       p.innerHTML = linkBits.join(' ');
       wrap.appendChild(p);
+      return wrap;
+    },
+    { open: false },
+  );
+
+  renderCollapsibleSection(
+    sections,
+    'ham-heading',
+    'Ham radio & space weather',
+    () => {
+      const sw = spaceWeather;
+      const rf = /** @type {Record<string, unknown> | null} */ (data.rf_comms ?? null);
+      const pws = /** @type {Record<string, unknown> | null} */ (data.pws ?? null);
+      const pwsLinks = /** @type {Record<string, unknown>} */ (pws?.links ?? {});
+      const wrap = document.createDocumentFragment();
+
+      if (!sw && !rf) {
+        renderEmpty(
+          wrap,
+          'Space weather unavailable',
+          'SWPC snapshot did not load for this run. VHF ducting appears when the forecast model includes an 850 mb profile.',
+        );
+        return wrap;
+      }
+
+      const lead = document.createElement('p');
+      lead.className = 'table-hint';
+      lead.textContent =
+        'Planetary space weather from NOAA SWPC plus model-derived VHF/UHF ducting. HF band ratings are a simple SFI/Kp heuristic — not a live MUF product.';
+      wrap.appendChild(lead);
+
+      if (sw?.carriedForward) {
+        const stale = document.createElement('p');
+        stale.className = 'stale-banner';
+        stale.setAttribute('role', 'status');
+        stale.textContent =
+          'Showing last successful space-weather snapshot — SWPC pull failed this run.';
+        wrap.appendChild(stale);
+      }
+
+      const scales = /** @type {Record<string, unknown> | null} */ (sw?.scales ?? null);
+      if (scales) {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'NOAA scales (R / S / G)';
+        wrap.appendChild(h);
+        const chips = document.createElement('div');
+        chips.className = 'sw-scales';
+        chips.setAttribute('role', 'group');
+        chips.setAttribute('aria-label', 'NOAA space weather scales');
+        for (const letter of ['R', 'S', 'G']) {
+          const block = /** @type {Record<string, unknown> | null} */ (
+            scales[letter] && typeof scales[letter] === 'object' ? scales[letter] : null
+          );
+          const scale =
+            block?.scale != null && Number.isFinite(Number(block.scale))
+              ? Number(block.scale)
+              : null;
+          const text = block?.text != null ? String(block.text) : '';
+          const sev =
+            scale == null
+              ? 'unknown'
+              : scale >= 4
+                ? 'extreme'
+                : scale >= 3
+                  ? 'strong'
+                  : scale >= 1
+                    ? 'minor'
+                    : 'none';
+          const span = document.createElement('span');
+          span.className = `sw-scale sw-scale--${sev}`;
+          span.innerHTML = `<span class="sw-scale__code">${escapeHtml(letter)}${scale != null ? scale : ''}</span><span class="sw-scale__text">${escapeHtml(text || (scale === 0 ? 'none' : 'n/a'))}</span>`;
+          chips.appendChild(span);
+        }
+        wrap.appendChild(chips);
+
+        const forecast = /** @type {Record<string, unknown>[]} */ (scales.forecast ?? []);
+        if (forecast.length) {
+          const ul = document.createElement('ul');
+          ul.className = 'alert-list';
+          for (const day of forecast) {
+            const li = document.createElement('li');
+            const g = /** @type {Record<string, unknown>} */ (day.G ?? {});
+            const r = /** @type {Record<string, unknown>} */ (day.R ?? {});
+            const s = /** @type {Record<string, unknown>} */ (day.S ?? {});
+            const bits = [
+              day.date ? String(day.date) : 'Forecast day',
+              g.scale != null ? `G${g.scale}` : null,
+              r.scale != null ? `R${r.scale}` : null,
+              s.scale != null ? `S${s.scale}` : null,
+            ].filter(Boolean);
+            li.textContent = bits.join(' · ');
+            ul.appendChild(li);
+          }
+          wrap.appendChild(ul);
+        }
+      }
+
+      {
+        const dl = document.createElement('dl');
+        dl.className = 'metric-list';
+        const kp = /** @type {Record<string, unknown> | null} */ (sw?.kp ?? null);
+        const boulder = /** @type {Record<string, unknown> | null} */ (sw?.boulder_kp ?? null);
+        const sfi = /** @type {Record<string, unknown> | null} */ (sw?.sfi ?? null);
+        const xray = /** @type {Record<string, unknown> | null} */ (sw?.xray ?? null);
+        const aurora = /** @type {Record<string, unknown> | null} */ (sw?.aurora_co ?? null);
+        const rows = [
+          ['Solar flux (SFI)', sfi?.value != null ? String(Math.round(Number(sfi.value))) : null],
+          [
+            '90-day mean SFI',
+            sfi?.ninety_day_mean != null ? String(Math.round(Number(sfi.ninety_day_mean))) : null,
+          ],
+          ['Planetary Kp', kp?.value != null ? Number(kp.value).toFixed(1) : null],
+          ['Boulder K', boulder?.value != null ? Number(boulder.value).toFixed(1) : null],
+          ['X-ray class', xray?.class != null ? String(xray.class) : null],
+          [
+            'Aurora (Colorado)',
+            aurora
+              ? `${String(aurora.chance ?? '')}${aurora.detail ? ` — ${String(aurora.detail)}` : ''}`
+              : null,
+          ],
+        ].filter(([, v]) => v != null && v !== '');
+        if (rows.length) {
+          const h = document.createElement('h3');
+          h.className = 'dash-subheading';
+          h.textContent = 'Solar & geomagnetic';
+          wrap.appendChild(h);
+          dl.innerHTML = rows
+            .map(([k, v]) => `<dt>${escapeHtml(String(k))}</dt><dd>${escapeHtml(String(v))}</dd>`)
+            .join('');
+          wrap.appendChild(dl);
+        }
+      }
+
+      const hf = /** @type {Record<string, unknown> | null} */ (sw?.hf ?? null);
+      if (hf?.day && hf?.night) {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'HF band conditions (estimate)';
+        wrap.appendChild(h);
+        if (hf.disclaimer) {
+          const disc = document.createElement('p');
+          disc.className = 'table-hint';
+          disc.textContent = String(hf.disclaimer);
+          wrap.appendChild(disc);
+        }
+        const day = /** @type {Record<string, string>} */ (hf.day);
+        const night = /** @type {Record<string, string>} */ (hf.night);
+        const bands = ['80m', '40m', '20m', '15m', '10m', '6m'];
+        const table = document.createElement('table');
+        table.className = 'data-table hf-band-table';
+        table.innerHTML = `
+          <caption class="sr-only">HF band day and night condition estimates</caption>
+          <thead><tr><th scope="col">Band</th><th scope="col">Day</th><th scope="col">Night</th></tr></thead>
+          <tbody>
+            ${bands
+              .map(
+                (b) =>
+                  `<tr><th scope="row">${escapeHtml(b)}</th><td><span class="hf-rating hf-rating--${escapeHtml(String(day[b] ?? 'poor'))}">${escapeHtml(String(day[b] ?? '—'))}</span></td><td><span class="hf-rating hf-rating--${escapeHtml(String(night[b] ?? 'poor'))}">${escapeHtml(String(night[b] ?? '—'))}</span></td></tr>`,
+              )
+              .join('')}
+          </tbody>`;
+        wrap.appendChild(table);
+      }
+
+      if (rf) {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'VHF/UHF tropospheric ducting';
+        wrap.appendChild(h);
+        const status =
+          rf.status === 'ducting_likely'
+            ? 'Ducting likely'
+            : rf.status === 'poor'
+              ? 'Poor'
+              : 'Nominal';
+        const p = document.createElement('p');
+        p.className = `rf-badge ${
+          rf.status === 'ducting_likely'
+            ? 'rf-badge--ducting'
+            : rf.status === 'poor'
+              ? 'rf-badge--poor'
+              : 'rf-badge--nominal'
+        }`;
+        p.innerHTML = `<span class="rf-badge__status">${escapeHtml(status)}</span><span class="rf-badge__detail">${escapeHtml(String(rf.detail ?? 'Model-derived estimate'))}</span>`;
+        wrap.appendChild(p);
+      }
+
+      {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'Official & prop tools';
+        wrap.appendChild(h);
+        const swLinks = /** @type {Record<string, string>} */ (sw?.links ?? {});
+        const linkBits = [];
+        if (swLinks.swpc)
+          linkBits.push(sourceLink(swLinks.swpc, 'NOAA SWPC', 'btn btn-secondary btn-sm'));
+        if (swLinks.scales)
+          linkBits.push(
+            sourceLink(swLinks.scales, 'NOAA Scales explained', 'btn btn-secondary btn-sm'),
+          );
+        if (swLinks.drap)
+          linkBits.push(sourceLink(swLinks.drap, 'D-RAP absorption', 'btn btn-secondary btn-sm'));
+        if (swLinks.prop)
+          linkBits.push(sourceLink(swLinks.prop, 'KC2G propagation', 'btn btn-secondary btn-sm'));
+        if (pwsLinks.aprs && safeHttpsUrl(String(pwsLinks.aprs))) {
+          linkBits.push(
+            sourceLink(String(pwsLinks.aprs), 'Nearest PWS on aprs.fi', 'btn btn-secondary btn-sm'),
+          );
+        }
+        const p = document.createElement('p');
+        p.className = 'section-cta';
+        p.innerHTML = linkBits.join(' ') || 'No offsite links available.';
+        wrap.appendChild(p);
+      }
+
       return wrap;
     },
     { open: false },

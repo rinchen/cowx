@@ -1567,6 +1567,10 @@ body.workspace-active #main-content {
   color: #991b1b;
 }
 
+.bottom-line--space {
+  color: #1e3a8a;
+}
+
 .bottom-line--wind,
 .bottom-line--fire {
   color: #92400e;
@@ -2082,6 +2086,123 @@ body.workspace-active #main-content {
 
 .rf-badge--nominal {
   border-color: var(--glass-border);
+}
+
+.sw-scales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.65rem;
+}
+
+.sw-scale {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 3.25rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+.sw-scale__code {
+  font-weight: 700;
+}
+
+.sw-scale__text {
+  color: var(--glass-muted);
+  text-transform: lowercase;
+}
+
+.sw-scale--none {
+  border-color: var(--glass-border);
+}
+
+.sw-scale--minor {
+  border-color: #a16207;
+  background: rgb(202 138 4 / 12%);
+}
+
+.sw-scale--strong {
+  border-color: #c2410c;
+  background: rgb(234 88 12 / 12%);
+}
+
+.sw-scale--extreme {
+  border-color: #b91c1c;
+  background: rgb(185 28 28 / 14%);
+}
+
+.sw-scale--unknown {
+  border-style: dashed;
+}
+
+.sw-aurora {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.sw-aurora__label {
+  font-weight: 600;
+}
+
+.sw-aurora__detail {
+  color: var(--glass-muted);
+  font-size: 0.85rem;
+}
+
+.sw-aurora--possible {
+  border-color: #a16207;
+  background: rgb(202 138 4 / 10%);
+}
+
+.sw-aurora--likely {
+  border-color: #1d4ed8;
+  background: rgb(37 99 235 / 12%);
+}
+
+.sw-hf-summary {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.sw-hf-summary__label {
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+.hf-band-table {
+  width: 100%;
+  margin: 0.5rem 0 1rem;
+}
+
+.hf-rating {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.hf-rating--poor {
+  color: #991b1b;
+}
+
+.hf-rating--fair {
+  color: #92400e;
+}
+
+.hf-rating--good {
+  color: #166534;
+}
+
+.hf-rating--excellent {
+  color: #14532d;
 }
 
 .metric-list--compact {

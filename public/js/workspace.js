@@ -10,6 +10,28 @@ import { renderIntel } from './intel.js';
 import { bindRadarLoopControls, destroyMap, initStateMap, setAqiLayer } from './map.js';
 
 /**
+ * Load statewide space-weather snapshot (planetary; shared for all locations).
+ * Failure point: file missing or network error.
+ * Fallback: null — ham panels hide gracefully.
+ * @param {string} dataBase
+ * @returns {Promise<Record<string, unknown> | null>}
+ */
+async function loadSpaceWeather(dataBase) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12_000);
+  try {
+    const res = await fetch(`${dataBase}/space-weather.json`, { signal: controller.signal });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json && typeof json === 'object' ? /** @type {Record<string, unknown>} */ (json) : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * @param {HTMLElement} root
  * @param {Record<string, unknown>} data
  * @param {{
@@ -30,16 +52,19 @@ export async function renderWorkspace(root, data, options) {
 
   const pin = options.pin ?? getHyperlocalPin();
   const catalogDistKm = pinDistanceKm(pin, data);
+  const dataBase = options.dataBase ?? 'data';
 
-  let hyperlocal = null;
-  if (pin) {
-    try {
-      hyperlocal = await buildHyperlocalOverlay(pin, { dataBase: options.dataBase ?? 'data' });
-    } catch (err) {
-      console.warn('hyperlocal overlay failed', err);
-      options.onAnnounce?.('Could not refine cameras for your pin; showing catalog nearest.');
-    }
-  }
+  const [hyperlocalResult, spaceWeather] = await Promise.all([
+    pin
+      ? buildHyperlocalOverlay(pin, { dataBase }).catch((err) => {
+          console.warn('hyperlocal overlay failed', err);
+          options.onAnnounce?.('Could not refine cameras for your pin; showing catalog nearest.');
+          return null;
+        })
+      : Promise.resolve(null),
+    loadSpaceWeather(dataBase),
+  ]);
+  const hyperlocal = hyperlocalResult;
 
   const pinSourceLabel =
     pin?.source === 'gps' ? 'GPS' : pin?.source === 'address' ? 'address' : 'network';
@@ -131,11 +156,13 @@ export async function renderWorkspace(root, data, options) {
     onJump: jumpToSection,
     pin,
     hyperlocal,
+    spaceWeather,
   });
 
   renderDeepForecast(deepRoot, data, {
     sources: options.sources ?? [],
     includeMapSlot: false,
+    spaceWeather,
   });
 
   const favBtn = /** @type {HTMLButtonElement | null} */ (root.querySelector('#btn-favorite'));

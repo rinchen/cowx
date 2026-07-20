@@ -301,6 +301,7 @@ function updateFooterTimestamp() {
     spc_firewx: 'SPC fire weather',
     nifc_fires: 'NIFC fires',
     burn_restrictions: 'Burn restrictions',
+    space_weather: 'SWPC space weather',
   };
   const names = sourceIds
     .map((id) => sourceLabels[/** @type {keyof typeof sourceLabels} */ (id)] ?? id)

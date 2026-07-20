@@ -27,6 +27,7 @@ import { fetchHms } from './adapters/hms.js';
 import { fetchSpcFireWx } from './adapters/spc-firewx.js';
 import { fetchNifcFires } from './adapters/nifc-fires.js';
 import { fetchBurnRestrictions } from './adapters/burn-restrictions.js';
+import { fetchSpaceWeather } from './adapters/space-weather.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
@@ -131,6 +132,11 @@ export async function runFetch() {
     'burn_restrictions',
     () => fetchBurnRestrictions(locations),
     () => '',
+  );
+  const spaceWeather = await runAdapter(
+    'space_weather',
+    () => fetchSpaceWeather(),
+    (r) => (r.snapshot ? '(snapshot)' : ''),
   );
 
   const updatedAt = new Date().toISOString();
@@ -297,6 +303,33 @@ export async function runFetch() {
     JSON.stringify(spcFireWx.fireWxGeoJson ?? { type: 'FeatureCollection', features: [] }),
     'utf8',
   );
+
+  let spaceWeatherSnapshot = spaceWeather.snapshot ?? null;
+  if (!spaceWeatherSnapshot) {
+    try {
+      const priorSw = JSON.parse(await readFile(path.join(DATA_DIR, 'space-weather.json'), 'utf8'));
+      if (priorSw && typeof priorSw === 'object') {
+        spaceWeatherSnapshot = { ...priorSw, carriedForward: true };
+        const swMeta = sources.find((s) => s.id === 'space_weather');
+        if (swMeta) {
+          swMeta.status = 'partial';
+          swMeta.error = sanitizeErrorMessage(
+            [swMeta.error, 'carried forward prior space-weather.json'].filter(Boolean).join('; '),
+          );
+        }
+      }
+    } catch {
+      /* no prior snapshot */
+    }
+  }
+  if (spaceWeatherSnapshot) {
+    if (!spaceWeatherSnapshot.generatedAt) spaceWeatherSnapshot.generatedAt = updatedAt;
+    await writeFile(
+      path.join(DATA_DIR, 'space-weather.json'),
+      `${JSON.stringify(spaceWeatherSnapshot, null, 2)}\n`,
+      'utf8',
+    );
+  }
 
   try {
     await copyFile(ZIPS_SRC, ZIPS_DST);

@@ -96,10 +96,44 @@ function tempDrop(temps, fromIdx) {
 }
 
 /**
+ * Strong NOAA Scales for bottom-line (G≥3, R≥3, or S≥2).
+ * @param {Record<string, unknown> | null | undefined} spaceWeather
+ * @returns {{ headline: string, priority: string } | null}
+ */
+function strongSpaceWeather(spaceWeather) {
+  if (!spaceWeather || typeof spaceWeather !== 'object') return null;
+  const scales = /** @type {Record<string, unknown> | null} */ (spaceWeather.scales ?? null);
+  if (!scales) return null;
+  const g = num(/** @type {Record<string, unknown>} */ (scales.G ?? {}).scale);
+  const r = num(/** @type {Record<string, unknown>} */ (scales.R ?? {}).scale);
+  const s = num(/** @type {Record<string, unknown>} */ (scales.S ?? {}).scale);
+  if (g != null && g >= 3) {
+    return {
+      headline: `Geomagnetic storm G${g} — HF may be degraded; aurora possible at Colorado latitudes`,
+      priority: 'space',
+    };
+  }
+  if (r != null && r >= 3) {
+    return {
+      headline: `Radio blackout R${r} — HF absorption likely on the sunlit side of Earth`,
+      priority: 'space',
+    };
+  }
+  if (s != null && s >= 2) {
+    return {
+      headline: `Solar radiation storm S${s} — elevated proton event; polar HF paths may be affected`,
+      priority: 'space',
+    };
+  }
+  return null;
+}
+
+/**
  * @param {Record<string, unknown>} data — location payload
+ * @param {{ spaceWeather?: Record<string, unknown> | null }} [options]
  * @returns {{ headline: string, priority: string }}
  */
-export function synthesizeBottomLine(data) {
+export function synthesizeBottomLine(data, options = {}) {
   const current = /** @type {Record<string, unknown> | null} */ (data.current ?? null);
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   const alerts = /** @type {Record<string, unknown>[]} */ (data.alerts ?? []);
@@ -132,6 +166,10 @@ export function synthesizeBottomLine(data) {
     }
     return { headline: bits.filter(Boolean).join(': '), priority: 'hazard' };
   }
+
+  // 1a. Strong space weather (G≥3, R≥3, S≥2) — after NWS, before fire/roads
+  const swLine = strongSpaceWeather(options.spaceWeather ?? null);
+  if (swLine) return swLine;
 
   // 1b. SPC Critical/Extreme fire weather (before roads — meteorological hazard)
   const fw = /** @type {Record<string, unknown> | null} */ (data.fire_weather ?? null);
