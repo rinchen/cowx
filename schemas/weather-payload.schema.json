@@ -37,6 +37,9 @@
         "wind_dir_deg": { "type": ["number", "null"] },
         "wind_gust_mph": { "type": ["number", "null"] },
         "precip_in": { "type": ["number", "null"] },
+        "precip_today_in": { "type": ["number", "null"] },
+        "dewpoint_f": { "type": ["number", "null"] },
+        "visibility_m": { "type": ["number", "null"] },
         "uv_index": { "type": ["number", "null"] },
         "thunderstorm_probability": { "type": ["number", "null"] }
       }
@@ -280,6 +283,52 @@
     "aviation": { "type": ["object", "null"] },
     "purpleair": { "type": ["object", "null"] },
     "airnow": { "type": ["object", "null"] },
-    "links": { "type": "object" }
+    "astronomy": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "date": { "type": "string" },
+        "sunrise": { "type": ["string", "null"] },
+        "sunset": { "type": ["string", "null"] },
+        "civil_twilight": { "type": "object" },
+        "nautical_twilight": { "type": "object" },
+        "astronomical_twilight": { "type": "object" },
+        "day_length_s": { "type": ["number", "null"] },
+        "visible_light_s": { "type": ["number", "null"] },
+        "moon": { "type": ["object", "null"] },
+        "next_phases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "date": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "nws_forecast": { "type": ["string", "null"] },
+        "pws": { "type": ["string", "null"] },
+        "pollen": { "type": ["string", "null"] },
+        "pollen_zip": { "type": ["string", "null"] },
+        "pollen_city": { "type": ["string", "null"] },
+        "nab_links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "url": { "type": "string" }
+            }
+          }
+        },
+        "webcam_links": { "type": "array" }
+      }
+    }
   }
 }

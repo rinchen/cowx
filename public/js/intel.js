@@ -48,6 +48,33 @@ function distanceLabel(km, fromYou) {
 }
 
 /**
+ * @param {unknown} iso
+ * @returns {string}
+ */
+function fmtIntelClock(iso) {
+  if (!iso) return '—';
+  try {
+    return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(
+      new Date(String(iso)),
+    );
+  } catch {
+    return String(iso);
+  }
+}
+
+/**
+ * @param {number | null | undefined} seconds
+ * @returns {string | null}
+ */
+function fmtDuration(seconds) {
+  if (seconds == null || !Number.isFinite(Number(seconds))) return null;
+  const s = Math.max(0, Math.round(Number(seconds)));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return `${h} h ${String(m).padStart(2, '0')} m`;
+}
+
+/**
  * @param {HTMLElement} root
  * @param {Record<string, unknown>} data
  * @param {{
@@ -117,9 +144,17 @@ export function renderIntel(root, data, options = {}) {
       ? /** @type {number[]} */ (hourly.precipitation_probability)[hi]
       : null;
   const hourDew =
-    hourly && Array.isArray(hourly.dewpoint_2m)
-      ? /** @type {number[]} */ (hourly.dewpoint_2m)[hi]
-      : null;
+    current?.dewpoint_f != null
+      ? Number(current.dewpoint_f)
+      : hourly && Array.isArray(hourly.dewpoint_2m)
+        ? /** @type {number[]} */ (hourly.dewpoint_2m)[hi]
+        : null;
+  const hourVis =
+    current?.visibility_m != null
+      ? Number(current.visibility_m)
+      : hourly && Array.isArray(hourly.visibility)
+        ? /** @type {number[]} */ (hourly.visibility)[hi]
+        : null;
   const aviation = /** @type {Record<string, unknown> | null} */ (data.aviation ?? null);
   const flightCat =
     aviation?.flight_category != null
@@ -192,10 +227,6 @@ export function renderIntel(root, data, options = {}) {
       : {};
   const webcamLinks = /** @type {{ name?: string, url?: string }[]} */ (links.webcam_links ?? []);
 
-  const hourVis =
-    hourly && Array.isArray(hourly.visibility)
-      ? /** @type {number[]} */ (hourly.visibility)[hi]
-      : null;
   const hourUv =
     current?.uv_index != null
       ? Number(current.uv_index)
@@ -357,6 +388,18 @@ export function renderIntel(root, data, options = {}) {
           'hourly-heading',
         )}
         ${metricRow(
+          'Rainfall today',
+          current?.precip_today_in != null
+            ? `${Number(current.precip_today_in).toFixed(2)} in`
+            : null,
+          'hourly-heading',
+        )}
+        ${metricRow(
+          'Cloud cover',
+          current?.cloud_cover != null ? `${current.cloud_cover}%` : null,
+          'hourly-heading',
+        )}
+        ${metricRow(
           'Pressure',
           pressureDisplay != null ? `${Math.round(Number(pressureDisplay))} mb` : null,
           'hourly-heading',
@@ -372,6 +415,11 @@ export function renderIntel(root, data, options = {}) {
             ? `${(Number(hourVis) / 1609.34).toFixed(1)} mi`
             : null,
           'hourly-heading',
+        )}
+        ${metricRow(
+          'Snow depth',
+          snotel?.snow_depth_in != null ? `${snotel.snow_depth_in} in (SNOTEL)` : null,
+          snotel?.snow_depth_in != null ? 'snowpack-heading' : null,
         )}
         ${metricRow(
           'Thunderstorm',
@@ -672,6 +720,61 @@ export function renderIntel(root, data, options = {}) {
         : ''
     }
 
+    ${(() => {
+      const astro = /** @type {Record<string, unknown> | null} */ (data.astronomy ?? null);
+      const moon = /** @type {Record<string, unknown> | null} */ (astro?.moon ?? null);
+      if (!astro) return '';
+      const civil = /** @type {Record<string, unknown>} */ (astro.civil_twilight ?? {});
+      const dayLen = fmtDuration(/** @type {number | null} */ (astro.day_length_s ?? null));
+      return `<section class="glass-panel" aria-labelledby="astro-intel-heading">
+            <h2 id="astro-intel-heading" class="glass-panel__title">Astronomy</h2>
+            <dl class="metric-list metric-list--compact">
+              <dt>Sunrise</dt><dd>${escapeHtml(fmtIntelClock(astro.sunrise))}</dd>
+              <dt>Sunset</dt><dd>${escapeHtml(fmtIntelClock(astro.sunset))}</dd>
+              ${dayLen ? `<dt>Length of day</dt><dd>${escapeHtml(dayLen)}</dd>` : ''}
+              <dt>Civil twilight</dt><dd>${escapeHtml(fmtIntelClock(civil.begin))} – ${escapeHtml(fmtIntelClock(civil.end))}</dd>
+              ${
+                moon
+                  ? `<dt>Moon</dt><dd>${escapeHtml(String(moon.phase_label ?? '—'))}${moon.illumination_pct != null ? ` · ${Math.round(Number(moon.illumination_pct))}% lit` : ''}</dd>
+                     <dt>Moonrise</dt><dd>${escapeHtml(fmtIntelClock(moon.rise))}</dd>
+                     <dt>Moonset</dt><dd>${escapeHtml(fmtIntelClock(moon.set))}</dd>`
+                  : ''
+              }
+            </dl>
+            <button type="button" class="btn btn-link intel-jump" data-jump-to="astronomy-heading">Full astronomy</button>
+          </section>`;
+    })()}
+
+    ${(() => {
+      const pollenUrl = safeHttpsUrl(String(links.pollen ?? ''));
+      const nabLinks = /** @type {{ name?: string, url?: string }[]} */ (links.nab_links ?? []);
+      const zip = links.pollen_zip != null ? String(links.pollen_zip) : null;
+      const city = links.pollen_city != null ? String(links.pollen_city) : null;
+      if (!pollenUrl && !nabLinks.length && aq.aqi == null && hourUv == null) return '';
+      const pollenLabel = zip
+        ? `Pollen.com forecast (ZIP ${zip}${city ? `, ${city}` : ''})`
+        : 'Pollen.com forecast';
+      return `<section class="glass-panel" aria-labelledby="health-intel-heading">
+            <h2 id="health-intel-heading" class="glass-panel__title">Health &amp; pollen</h2>
+            <p class="intel-muted">AQI and UV are on-site. Live US pollen counts are not free to redistribute — open offsite forecasts.</p>
+            <ul class="intel-link-list">
+              ${
+                pollenUrl
+                  ? `<li><a href="${escapeHtml(pollenUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(pollenLabel)} <span class="sr-only">(opens in new tab)</span></a></li>`
+                  : ''
+              }
+              ${nabLinks
+                .map((l) => {
+                  const u = safeHttpsUrl(String(l.url ?? ''));
+                  if (!u || !l.name) return '';
+                  return `<li><a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer">${escapeHtml(String(l.name))} <span class="sr-only">(opens in new tab)</span></a></li>`;
+                })
+                .join('')}
+            </ul>
+            <button type="button" class="btn btn-link intel-jump" data-jump-to="health-heading">Air quality &amp; health details</button>
+          </section>`;
+    })()}
+
     ${
       coag
         ? `<section class="glass-panel" aria-labelledby="soil-heading">
@@ -712,6 +815,8 @@ export function renderIntel(root, data, options = {}) {
         <li><button type="button" class="intel-jump" data-jump-to="roads-heading">Roads &amp; passes</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="metar-heading">Aviation</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="aqi-heading">Air quality detail</button></li>
+        <li><button type="button" class="intel-jump" data-jump-to="health-heading">Health &amp; pollen</button></li>
+        <li><button type="button" class="intel-jump" data-jump-to="astronomy-heading">Astronomy</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="smoke-heading">Fire weather &amp; restrictions</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="ham-heading">Ham radio &amp; space weather</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="links-heading">External tools</button></li>

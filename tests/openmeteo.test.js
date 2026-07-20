@@ -6,6 +6,7 @@ import {
   mapResult,
   mergeThunderstormProbability,
   nearestThunderstormPct,
+  precipTodayInches,
   wmoLabel,
 } from '../scripts/fetch/adapters/openmeteo.js';
 
@@ -84,13 +85,15 @@ describe('mapResult wind fields', () => {
           wind_gusts_10m: 12,
           precipitation: 0,
           uv_index: 3,
+          dewpoint_2m: 42,
+          visibility: 16093,
         },
         hourly: {
           time: ['2026-07-20T12:00'],
           temperature_2m: [70],
           apparent_temperature: [68],
           precipitation_probability: [10],
-          precipitation: [0],
+          precipitation: [0.05],
           rain: [0],
           showers: [0],
           snowfall: [0.1],
@@ -143,6 +146,8 @@ describe('mapResult wind fields', () => {
 
     assert.equal(mapped.current.surface_pressure_mb, 820);
     assert.equal(mapped.current.is_day, 1);
+    assert.equal(mapped.current.dewpoint_f, 42);
+    assert.equal(mapped.current.visibility_m, 16093);
     assert.deepEqual(mapped.hourly.snowfall, [0.1]);
     assert.deepEqual(mapped.hourly.cape, [800]);
     assert.deepEqual(mapped.hourly.freezing_level_height, [3500]);
@@ -150,6 +155,17 @@ describe('mapResult wind fields', () => {
     assert.deepEqual(mapped.daily.snowfall_sum, [0.5]);
     assert.deepEqual(mapped.daily.et0_fao_evapotranspiration, [0.25]);
     assert.deepEqual(mapped.daily.daylight_duration, [50400]);
+  });
+
+  it('sums precip_today from hourly through current Denver hour', () => {
+    // 2026-07-20T20:30Z = 14:30 MDT → include hours ≤ 14
+    const nowMs = new Date('2026-07-20T20:30:00Z').getTime();
+    const sum = precipTodayInches(
+      ['2026-07-20T06:00', '2026-07-20T12:00', '2026-07-20T18:00', '2026-07-21T06:00'],
+      [0.1, 0.2, 0.05, 0.9],
+      nowMs,
+    );
+    assert.equal(sum, 0.3);
   });
 });
 

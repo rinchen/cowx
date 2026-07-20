@@ -88,6 +88,10 @@ Optional fields used by adapters (add when known):
 
 PurpleAir and AirNow resolve by nearest sensor/grid point (no per-location sensor ids in the catalog).
 
+**Pollen / allergy (Colorado-wide):** There is no free redistributable US pollen API in the fetch budget. At merge time every catalog location gets `links.pollen` from the nearest ZIP in `co-zips.json` (Pollen.com offsite) plus statewide AAAAI NAB reference links. No live pollen grains are fetched or stored.
+
+**Astronomy:** Sun/moon/twilight times are computed locally per location lat/lon (`scripts/lib/astronomy.js`) and written into each payload as `astronomy` — no network call.
+
 **Webcam link example:**
 
 ```json
@@ -214,7 +218,7 @@ Partial adapter failure is acceptable; total failure (zero locations written or 
 
 Citizen, pilot, farmer, firefighter, and ham radio operator needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, road alerts, NOAA SWPC space weather / HF cues, etc.). The public dashboard shows **all** available sections for every location — there is no persona filter bar.
 
-Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, optional pin “At your location” current strip, 24h meteograms, CDOT cameras/RWIS/road alerts, local webcam **new-tab links**, nearby PWS, fire weather (SPC outlooks, HMS smoke, nearby NIFC incidents, burn-restriction links), ham radio / RF (SWPC scales, SFI/Kp, HF band estimates, VHF ducting)) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links. Planetary space weather is written once to `public/data/space-weather.json` (not duplicated per location).
+Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, optional pin “At your location” current strip, 24h meteograms, CDOT cameras/RWIS/road alerts, local webcam **new-tab links**, nearby PWS, health/pollen **offsite links** (nearest ZIP Pollen.com + NAB), astronomy (computed sun/moon/twilight), fire weather (SPC outlooks, HMS smoke, nearby NIFC incidents, burn-restriction links), ham radio / RF (SWPC scales, SFI/Kp, HF band estimates, VHF ducting)) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links. Planetary space weather is written once to `public/data/space-weather.json` (not duplicated per location).
 
 **Hyperlocal pin (client, no API keys):** Locate (high-accuracy GPS), IP “Go to”, or Colorado street-address Set pin (`public/js/geocode.js` → Nominatim, CO-bounded, submit-only) stores a browser-persistent pin (`localStorage` `cowx:hyperlocalPin`; migrates any legacy `sessionStorage` value). Survives refresh and new tabs; cleared when the user searches a catalog city or clears site data. Always force-refresh the workspace after setting a pin even if the catalog slug is unchanged. The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip (fallback status if that fails). Searching a city clears the pin. Do not add client API **keys**; keep address geocode user-triggered and Colorado-bounded.
 
@@ -274,7 +278,7 @@ Include a detailed body for non-trivial changes: **what** changed and **why**. F
 
 ## Failure notifications
 
-When `update-weather.yml` fails, a notify job POSTs a summary to `NOTIFY_WEBHOOK_URL` (if set) and opens/updates a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
+When `update-weather.yml` fails, a notify job POSTs a summary to `NOTIFY_WEBHOOK_URL` (if set). It does **not** open a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
 
 ---
 

@@ -37,7 +37,7 @@ The site is deployed from the `public/` directory on pushes to `main` (see `.git
 
 **Live site:** https://rinchen.github.io/cowx/
 
-Weather data is refreshed on a **45-minute** schedule via `.github/workflows/update-weather.yml` (`*/45 * * * *` plus `workflow_dispatch`). Failures notify via `NOTIFY_WEBHOOK_URL` and a GitHub Issue. Committed JSON in `public/data/` is what visitors see between runs.
+Weather data is refreshed on a **45-minute** schedule via `.github/workflows/update-weather.yml` (`*/45 * * * *` plus `workflow_dispatch`). Failures notify via `NOTIFY_WEBHOOK_URL` when set (no GitHub Issue). Committed JSON in `public/data/` is what visitors see between runs.
 
 ## GitHub Actions secrets
 

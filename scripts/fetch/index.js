@@ -11,6 +11,8 @@ import { fileURLToPath } from 'node:url';
 
 import { sanitizeErrorMessage } from '../lib/http.js';
 import { runAdapterSafely } from '../lib/adapter-runner.js';
+import { buildAstronomy } from '../lib/astronomy.js';
+import { buildPollenHealthLinks } from '../lib/pollen-links.js';
 import { fetchOpenMeteo } from './adapters/openmeteo.js';
 import { fetchOpenMeteoAq } from './adapters/openmeteo-aq.js';
 import { alertsForLocation, fetchNws } from './adapters/nws.js';
@@ -143,6 +145,16 @@ export async function runFetch() {
   const index = [];
   let staleCount = 0;
 
+  /** @type {{ zip: string, lat: number, lon: number, city?: string }[]} */
+  let zipPoints = [];
+  try {
+    zipPoints = JSON.parse(await readFile(ZIPS_SRC, 'utf8'));
+  } catch (err) {
+    console.warn(
+      `fetch: could not load co-zips.json for pollen links — ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+
   for (const loc of locations) {
     const om = openmeteo.bySlug.get(loc.slug);
     const prior = om ? null : await readPrior(loc.slug);
@@ -150,6 +162,14 @@ export async function runFetch() {
     let hourly = om?.hourly ?? null;
     let daily = om?.daily ?? null;
     let forecastStale = false;
+    let astronomy = om?.astronomy ?? null;
+    if (!astronomy) {
+      try {
+        astronomy = buildAstronomy(loc.lat, loc.lon);
+      } catch {
+        astronomy = prior?.astronomy ?? null;
+      }
+    }
 
     if (!current && prior?.current) {
       current = prior.current;
@@ -158,6 +178,8 @@ export async function runFetch() {
       forecastStale = true;
       staleCount += 1;
     }
+
+    const pollenHealth = buildPollenHealthLinks(loc, zipPoints);
 
     const countyKey = String(loc.county ?? '').toLowerCase();
     const alerts = alertsForLocation(
@@ -200,6 +222,7 @@ export async function runFetch() {
       current,
       hourly,
       daily,
+      astronomy,
       alerts,
       afd,
       hwo,
@@ -225,6 +248,10 @@ export async function runFetch() {
         pws: loc.pws_id
           ? `https://www.wunderground.com/dashboard/pws/${encodeURIComponent(loc.pws_id)}`
           : null,
+        pollen: pollenHealth.pollen,
+        pollen_zip: pollenHealth.pollen_zip,
+        pollen_city: pollenHealth.pollen_city,
+        nab_links: pollenHealth.nab_links,
         purpleair_map: 'https://map.purpleair.com/',
         airnow: 'https://www.airnow.gov/',
         coagmet: ag?.url ?? 'https://coagmet.colostate.edu/',

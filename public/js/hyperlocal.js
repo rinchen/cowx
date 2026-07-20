@@ -112,6 +112,7 @@ export function mapOpenMeteoCurrent(raw) {
     temp_f: c.temperature_2m != null ? Number(c.temperature_2m) : null,
     feels_like_f: c.apparent_temperature != null ? Number(c.apparent_temperature) : null,
     humidity: c.relative_humidity_2m != null ? Number(c.relative_humidity_2m) : null,
+    dewpoint_f: c.dewpoint_2m != null ? Number(c.dewpoint_2m) : null,
     weather_code: Number.isFinite(code) ? code : null,
     condition: Number.isFinite(code) ? wmoLabel(code) : null,
     wind_speed_mph: c.wind_speed_10m != null ? Number(c.wind_speed_10m) : null,
@@ -119,6 +120,9 @@ export function mapOpenMeteoCurrent(raw) {
     wind_gust_mph: c.wind_gusts_10m != null ? Number(c.wind_gusts_10m) : null,
     uv_index: c.uv_index != null ? Number(c.uv_index) : null,
     is_day: c.is_day != null ? Number(c.is_day) : null,
+    visibility_m: c.visibility != null ? Number(c.visibility) : null,
+    cloud_cover: c.cloud_cover != null ? Number(c.cloud_cover) : null,
+    pressure_mb: c.pressure_msl != null ? Number(c.pressure_msl) : null,
     time: c.time != null ? String(c.time) : null,
   };
 }
@@ -133,7 +137,7 @@ export async function fetchPinCurrent(pin) {
     `https://api.open-meteo.com/v1/forecast` +
     `?latitude=${encodeURIComponent(String(pin.lat))}` +
     `&longitude=${encodeURIComponent(String(pin.lon))}` +
-    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day` +
+    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,is_day,dewpoint_2m,visibility,cloud_cover,pressure_msl` +
     `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FDenver`;
 
   const controller = new AbortController();

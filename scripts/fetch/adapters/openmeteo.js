@@ -5,6 +5,7 @@
  * NBM thunderstorm % is a second call; if it fails, forecast still publishes without lightning series.
  */
 
+import { buildAstronomy } from '../../lib/astronomy.js';
 import { fetchJson } from '../../lib/http.js';
 import { estimateRfComms } from '../../lib/rf-comms.js';
 import { wmoLabel } from '../../lib/wmo.js';
@@ -31,7 +32,7 @@ function buildUrl(chunk) {
   const lons = chunk.map((l) => l.lon).join(',');
   return (
     `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
-    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pressure_msl,surface_pressure,is_day,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,uv_index` +
+    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pressure_msl,surface_pressure,is_day,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,uv_index,dewpoint_2m,visibility` +
     `&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,wind_speed_80m,wind_direction_80m,relative_humidity_2m,dewpoint_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,uv_index,soil_temperature_6cm,soil_moisture_3_to_9cm,cape,shortwave_radiation,freezing_level_height,is_day,pressure_msl,temperature_850hPa` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,precipitation_probability_max,precipitation_hours,snowfall_sum,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,uv_index_max,sunrise,sunset,sunshine_duration,daylight_duration,shortwave_radiation_sum,et0_fao_evapotranspiration` +
     `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FDenver&forecast_days=10&forecast_hours=48`
@@ -127,16 +128,83 @@ export function nearestThunderstormPct(times, pct, nowMs = Date.now()) {
 }
 
 /**
+ * Sum hourly precipitation from America/Denver local midnight through the nearest hour ≤ now.
+ * @param {string[]} times
+ * @param {(number | null | undefined)[]} precip
+ * @param {number} [nowMs]
+ * @returns {number | null}
+ */
+export function precipTodayInches(times, precip, nowMs = Date.now()) {
+  if (!Array.isArray(times) || !Array.isArray(precip) || times.length === 0) return null;
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Denver',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const parts = fmt.formatToParts(new Date(nowMs));
+  /** @type {Record<string, string>} */
+  const map = {};
+  for (const p of parts) {
+    if (p.type !== 'literal') map[p.type] = p.value;
+  }
+  const today = `${map.year}-${map.month}-${map.day}`;
+  const hourKey = fmtHourKey(nowMs);
+  let sum = 0;
+  let any = false;
+  for (let i = 0; i < times.length; i += 1) {
+    const t = String(times[i]);
+    if (!t.startsWith(today)) continue;
+    // Local ISO without offset from Open-Meteo (America/Denver)
+    if (t.slice(0, 13) > hourKey) continue;
+    const v = precip[i];
+    if (v == null || Number.isNaN(Number(v))) continue;
+    sum += Number(v);
+    any = true;
+  }
+  return any ? Math.round(sum * 1000) / 1000 : null;
+}
+
+/**
+ * @param {number} nowMs
+ * @returns {string} YYYY-MM-DDTHH in Denver
+ */
+function fmtHourKey(nowMs) {
+  const f = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Denver',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hourCycle: 'h23',
+  });
+  const parts = f.formatToParts(new Date(nowMs));
+  /** @type {Record<string, string>} */
+  const map = {};
+  for (const p of parts) {
+    if (p.type !== 'literal') map[p.type] = p.value;
+  }
+  return `${map.year}-${map.month}-${map.day}T${map.hour}`;
+}
+
+/**
  * @param {any} r
  * @param {string} condition
  */
 export function mapResult(r, condition) {
   const cur = r.current;
+  const hourlyTimes = r.hourly?.time ? sliceHourly(r.hourly.time) : [];
+  const hourlyPrecip = r.hourly?.precipitation ? sliceHourly(r.hourly.precipitation) : [];
+  const precipToday = precipTodayInches(
+    /** @type {string[]} */ (hourlyTimes),
+    /** @type {(number | null)[]} */ (hourlyPrecip),
+  );
   return {
     current: {
       temp_f: cur.temperature_2m,
       feels_like_f: cur.apparent_temperature,
       humidity: cur.relative_humidity_2m,
+      dewpoint_f: cur.dewpoint_2m ?? null,
       weather_code: cur.weather_code,
       condition,
       cloud_cover: cur.cloud_cover,
@@ -147,6 +215,8 @@ export function mapResult(r, condition) {
       wind_dir_deg: cur.wind_direction_10m,
       wind_gust_mph: cur.wind_gusts_10m,
       precip_in: cur.precipitation,
+      precip_today_in: precipToday,
+      visibility_m: cur.visibility ?? null,
       uv_index: cur.uv_index ?? null,
       thunderstorm_probability: null,
     },
@@ -263,6 +333,17 @@ export function attachRfComms(payload, elevationFt) {
 }
 
 /**
+ * Attach computed astronomy for the location. Mutates payload.
+ * @param {ReturnType<typeof mapResult> & { astronomy?: unknown }} payload
+ * @param {number} lat
+ * @param {number} lon
+ * @param {Date} [now]
+ */
+export function attachAstronomy(payload, lat, lon, now = new Date()) {
+  payload.astronomy = buildAstronomy(lat, lon, now);
+}
+
+/**
  * @param {import('../../lib/types.js').Location[]} chunk
  * @param {Map<string, object>} bySlug
  * @param {string[]} errors
@@ -316,6 +397,7 @@ export async function fetchOpenMeteo(locations) {
         if (!r?.current) continue;
         const mapped = mapResult(r, wmoLabel(r.current.weather_code));
         attachRfComms(mapped, loc.elevation_ft);
+        attachAstronomy(mapped, loc.lat, loc.lon);
         bySlug.set(loc.slug, mapped);
       }
       calls += await fetchAndMergeNbm(chunk, bySlug, errors);
@@ -348,6 +430,7 @@ export async function fetchOpenMeteo(locations) {
           if (!r?.current) continue;
           const mapped = mapResult(r, wmoLabel(r.current.weather_code));
           attachRfComms(mapped, loc.elevation_ft);
+          attachAstronomy(mapped, loc.lat, loc.lon);
           bySlug.set(loc.slug, mapped);
         }
         calls += await fetchAndMergeNbm(chunk, bySlug, errors);

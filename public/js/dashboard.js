@@ -1123,13 +1123,17 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
         ? /** @type {number[]} */ (hourlyNow.precipitation_probability)[hi]
         : null;
     const hourVis =
-      hourlyNow && Array.isArray(hourlyNow.visibility)
-        ? /** @type {number[]} */ (hourlyNow.visibility)[hi]
-        : null;
+      current.visibility_m != null
+        ? Number(current.visibility_m)
+        : hourlyNow && Array.isArray(hourlyNow.visibility)
+          ? /** @type {number[]} */ (hourlyNow.visibility)[hi]
+          : null;
     const hourDew =
-      hourlyNow && Array.isArray(hourlyNow.dewpoint_2m)
-        ? /** @type {number[]} */ (hourlyNow.dewpoint_2m)[hi]
-        : null;
+      current.dewpoint_f != null
+        ? Number(current.dewpoint_f)
+        : hourlyNow && Array.isArray(hourlyNow.dewpoint_2m)
+          ? /** @type {number[]} */ (hourlyNow.dewpoint_2m)[hi]
+          : null;
 
     const todayHi = /** @type {number[]} */ (daily?.temperature_2m_max ?? [])[0];
     const todayLo = /** @type {number[]} */ (daily?.temperature_2m_min ?? [])[0];
@@ -1256,7 +1260,22 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
             'hourly-heading',
           )}
           ${detailItem('Precipitation', precipIn, 'hourly-heading')}
+          ${detailItem(
+            'Rainfall today',
+            current.precip_today_in != null
+              ? `${Number(current.precip_today_in).toFixed(2)} in`
+              : null,
+            'hourly-heading',
+          )}
           ${detailItem('Snowfall', snowLine, snowLine ? 'hourly-heading' : null)}
+          ${detailItem(
+            'Snow depth',
+            (() => {
+              const sn = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
+              return sn?.snow_depth_in != null ? `${sn.snow_depth_in} in (nearest SNOTEL)` : null;
+            })(),
+            'snowpack-heading',
+          )}
           ${detailItem('Humidity', current.humidity != null ? `${current.humidity}%` : null, 'hourly-heading')}
           ${detailItem('Dewpoint', hourDew != null ? `${Math.round(hourDew)}°F` : null, 'hourly-heading')}
           ${detailItemHtml('Wind', windHtml, 'hourly-heading')}
@@ -1265,7 +1284,13 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
           ${detailItem('Freezing level', fmtFreezingLevelFt(hourFreeze), hourFreeze != null ? 'hourly-heading' : null)}
           ${detailItem('Visibility', hourVis != null ? fmtVisibility(hourVis) : null, 'hourly-heading')}
           ${detailItem('Cloud cover', current.cloud_cover != null ? `${current.cloud_cover}%` : null, 'hourly-heading')}
-          ${detailItem('Pressure', pressureMb != null ? `${Math.round(Number(pressureMb))} mb` : null, 'sources-heading')}
+          ${detailItem(
+            'Pressure',
+            pressureMb != null
+              ? `${Math.round(Number(pressureMb))} mb (${(Number(pressureMb) * 0.02953).toFixed(2)} inHg)`
+              : null,
+            'sources-heading',
+          )}
           ${detailItemHtml(
             'UV index',
             (() => {
@@ -1855,6 +1880,158 @@ function appendDeepForecast(root, data, ctx) {
 
   renderCollapsibleSection(
     sections,
+    'health-heading',
+    'Health & pollen',
+    () => {
+      const wrap = document.createDocumentFragment();
+      const intro = document.createElement('p');
+      intro.className = 'section-note';
+      intro.textContent =
+        'UV and air quality are shown on-site. Colorado-wide live pollen indexes are not available from a free redistributable API — use the offsite links below for ZIP pollen forecasts and NAB station maps.';
+      wrap.appendChild(intro);
+
+      const cur = /** @type {Record<string, unknown> | null} */ (data.current ?? null);
+      const an = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
+      const pa = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
+      const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
+      const aqLine = airQualityPlain(an, pa, omaq);
+      const uv = /** @type {number | null} */ (cur?.uv_index ?? null);
+      const dl = document.createElement('dl');
+      dl.className = 'metric-list';
+      const uvPlainText = uvPlain(uv);
+      dl.innerHTML = [
+        uvPlainText
+          ? `<dt>UV index</dt><dd>${escapeHtml(uvPlainText)}${uv != null ? uvBarHtml(Number(uv)) : ''}</dd>`
+          : '',
+        aqLine ? `<dt>Air quality</dt><dd>${escapeHtml(aqLine)}</dd>` : '',
+      ]
+        .filter(Boolean)
+        .join('');
+      if (dl.innerHTML) wrap.appendChild(dl);
+
+      const pollenUrl = safeHttpsUrl(String(links.pollen ?? ''));
+      const zip = links.pollen_zip != null ? String(links.pollen_zip) : null;
+      const city = links.pollen_city != null ? String(links.pollen_city) : null;
+      const nabLinks = /** @type {{ name?: string, url?: string }[]} */ (
+        /** @type {unknown} */ (links.nab_links) ?? []
+      );
+      const ul = document.createElement('ul');
+      ul.className = 'link-list';
+      if (pollenUrl) {
+        const li = document.createElement('li');
+        const label = zip
+          ? `Pollen.com forecast (ZIP ${zip}${city ? `, ${city}` : ''})`
+          : 'Pollen.com forecast';
+        li.innerHTML = `${sourceLink(pollenUrl, label, 'btn btn-secondary btn-sm')} <span class="sr-only">(opens in new tab)</span>`;
+        ul.appendChild(li);
+      }
+      if (Array.isArray(nabLinks)) {
+        for (const nab of nabLinks) {
+          const u = safeHttpsUrl(String(nab?.url ?? ''));
+          if (!u || !nab?.name) continue;
+          const li = document.createElement('li');
+          li.innerHTML = `${sourceLink(u, String(nab.name), 'btn btn-secondary btn-sm')} <span class="sr-only">(opens in new tab)</span>`;
+          ul.appendChild(li);
+        }
+      }
+      if (ul.childNodes.length) {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'Offsite pollen & allergy';
+        wrap.appendChild(h);
+        wrap.appendChild(ul);
+      } else if (!dl.innerHTML) {
+        renderEmpty(wrap, 'No health links', 'Pollen ZIP lookup unavailable for this location.');
+      }
+      return wrap;
+    },
+    { open: false },
+  );
+
+  renderCollapsibleSection(
+    sections,
+    'astronomy-heading',
+    'Astronomy',
+    () => {
+      const astro = /** @type {Record<string, unknown> | null} */ (data.astronomy ?? null);
+      if (!astro) {
+        const frag = document.createDocumentFragment();
+        renderEmpty(
+          frag,
+          'Astronomy unavailable',
+          'Sun and moon times were not computed for this location.',
+        );
+        return frag;
+      }
+      const wrap = document.createDocumentFragment();
+      const moon = /** @type {Record<string, unknown> | null} */ (astro.moon ?? null);
+      const civil = /** @type {Record<string, unknown>} */ (astro.civil_twilight ?? {});
+      const nautical = /** @type {Record<string, unknown>} */ (astro.nautical_twilight ?? {});
+      const astronomical = /** @type {Record<string, unknown>} */ (
+        astro.astronomical_twilight ?? {}
+      );
+      /**
+       * @param {number | null | undefined} seconds
+       */
+      function fmtLen(seconds) {
+        if (seconds == null || !Number.isFinite(Number(seconds))) return null;
+        const s = Math.max(0, Math.round(Number(seconds)));
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        return `${h} h ${String(m).padStart(2, '0')} m`;
+      }
+      const dl = document.createElement('dl');
+      dl.className = 'metric-list';
+      const dayLen = fmtLen(/** @type {number | null} */ (astro.day_length_s ?? null));
+      const visLen = fmtLen(/** @type {number | null} */ (astro.visible_light_s ?? null));
+      dl.innerHTML = [
+        astro.date
+          ? `<dt>Date</dt><dd>${escapeHtml(String(astro.date))} (America/Denver)</dd>`
+          : '',
+        `<dt>Sunrise</dt><dd>${escapeHtml(fmtClock(astro.sunrise))}</dd>`,
+        `<dt>Sunset</dt><dd>${escapeHtml(fmtClock(astro.sunset))}</dd>`,
+        dayLen ? `<dt>Length of day</dt><dd>${escapeHtml(dayLen)}</dd>` : '',
+        visLen ? `<dt>Visible light</dt><dd>${escapeHtml(visLen)}</dd>` : '',
+        `<dt>Civil twilight</dt><dd>${escapeHtml(fmtClock(civil.begin))} – ${escapeHtml(fmtClock(civil.end))}</dd>`,
+        `<dt>Nautical twilight</dt><dd>${escapeHtml(fmtClock(nautical.begin))} – ${escapeHtml(fmtClock(nautical.end))}</dd>`,
+        `<dt>Astronomical twilight</dt><dd>${escapeHtml(fmtClock(astronomical.begin))} – ${escapeHtml(fmtClock(astronomical.end))}</dd>`,
+        moon
+          ? `<dt>Moon phase</dt><dd>${escapeHtml(String(moon.phase_label ?? '—'))}${
+              moon.illumination_pct != null
+                ? ` · ${Math.round(Number(moon.illumination_pct))}% illuminated`
+                : ''
+            }</dd>
+             <dt>Moonrise</dt><dd>${escapeHtml(fmtClock(moon.rise))}</dd>
+             <dt>Moonset</dt><dd>${escapeHtml(fmtClock(moon.set))}</dd>`
+          : '',
+      ]
+        .filter(Boolean)
+        .join('');
+      wrap.appendChild(dl);
+
+      const phases = /** @type {{ name?: string, date?: string }[]} */ (astro.next_phases ?? []);
+      if (phases.length) {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'Upcoming moon phases';
+        wrap.appendChild(h);
+        const ul = document.createElement('ul');
+        ul.className = 'plain-list';
+        for (const p of phases) {
+          if (!p?.name || !p?.date) continue;
+          const li = document.createElement('li');
+          li.textContent = `${p.name} — ${p.date}`;
+          ul.appendChild(li);
+        }
+        wrap.appendChild(ul);
+      }
+      return wrap;
+    },
+    { open: false },
+  );
+
+  renderCollapsibleSection(
+    sections,
     'smoke-heading',
     'Fire weather & restrictions',
     () => {
@@ -2411,6 +2588,7 @@ function appendDeepForecast(root, data, ctx) {
         ['CSU CIRA GOES satellite', imgUrls.ciraSlider],
         ['RainViewer full map', links.rainviewer || imgUrls.rainviewer],
         ['Personal weather station (WU)', links.pws],
+        ['Pollen.com (nearest ZIP)', links.pollen],
         ['PurpleAir map', links.purpleair_map],
         ['AirNow', links.airnow],
         ['CoAgMET', links.coagmet],

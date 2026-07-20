@@ -1760,6 +1760,29 @@ body.workspace-active #main-content {
   font-size: 0.8125rem;
 }
 
+.intel-link-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+}
+
+.intel-link-list a {
+  color: var(--glass-link, inherit);
+}
+
+.plain-list {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.9375rem;
+}
+
+.section-note {
+  margin: 0 0 0.75rem;
+  color: var(--muted, var(--glass-muted));
+  font-size: 0.9375rem;
+  max-width: 42rem;
+}
+
 .glass-panel--quiet {
   padding: 0.45rem 0.8rem;
 }

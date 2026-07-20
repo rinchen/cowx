@@ -113,8 +113,9 @@
         forecast and air quality, NWS alerts/AFD/HWO, CoAgMET, Aviation Weather METAR/TAF, USGS
         gauges, SNOTEL, CDOT cameras/RWIS/road alerts, CWOP/APRS (and optional Synoptic)
         neighborhood PWS, NOAA HMS smoke, SPC fire weather outlooks, NIFC nearby wildfire locations,
-        Colorado burn-restriction status/links, and optional PurpleAir and AirNow). Each source can
-        succeed or fail on its own. Results are merged into:
+        Colorado burn-restriction status/links, and optional PurpleAir and AirNow). Each location
+        payload also gets locally computed astronomy and nearest-ZIP pollen offsite links (no pollen
+        API key). Each source can succeed or fail on its own. Results are merged into:
       </p>
       <ul>
         <li><code>index.json</code> — slim list for search and the map</li>
@@ -144,12 +145,15 @@
         Each location opens a dual-pane <strong>workspace</strong>: a glass intel column with a
         plain-English bottom-line headline, now conditions, AQI badge, 24-hour meteograms, CDOT
         cameras/RWIS/road alerts when nearby (re-ranked from your saved pin when Locate or an
-        address pin was used), local city webcam links (new tab), nearby PWS, fire weather (SPC Day
-        1–2 outlooks, HMS smoke, nearby wildfires, burn-restriction status and verify links), and
-        ham radio context (NOAA SWPC R/S/G scales, SFI/Kp, Colorado aurora chance, heuristic HF band
-        cues, and model-derived VHF/UHF ducting) — beside an animated RainViewer radar loop with
-        playback controls. An optional <strong>At your location</strong> strip shows pin-exact
-        current conditions from a single Open-Meteo call (or a status note if that call fails). Use
+        address pin was used), local city webcam links (new tab), nearby PWS, health and pollen
+        offsite links (nearest ZIP Pollen.com forecast plus AAAAI NAB map — live pollen indexes are
+        not redistributed here), astronomy (computed sunrise/sunset, twilight, moon phase), fire
+        weather (SPC Day 1–2 outlooks, HMS smoke, nearby wildfires, burn-restriction status and
+        verify links), and ham radio context (NOAA SWPC R/S/G scales, SFI/Kp, Colorado aurora
+        chance, heuristic HF band cues, and model-derived VHF/UHF ducting) — beside an animated
+        RainViewer radar loop with playback controls. An optional
+        <strong>At your location</strong> strip shows pin-exact current conditions from a single
+        Open-Meteo call (or a status note if that call fails). Use
         <strong>Refine location</strong> on a locality page to set a new pin. Below that, expandable
         48-hour hourly and 10-day daily tables keep full forecast depth (wind compass, NBM
         thunderstorm probability via Open-Meteo, and related metrics). A
@@ -165,8 +169,8 @@
       <h2>Failure notifications</h2>
       <p>
         When the scheduled update workflow fails, GitHub Actions can post to a Discord webhook
-        configured as the repository secret <code>NOTIFY_WEBHOOK_URL</code>, and open or update a
-        GitHub Issue with a link to the failed run. Secret values are never committed to the
+        configured as the repository secret <code>NOTIFY_WEBHOOK_URL</code> with a link to the
+        failed run. It does not open a GitHub Issue. Secret values are never committed to the
         repository.
       </p>
 
