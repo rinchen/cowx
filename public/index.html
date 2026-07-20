@@ -39,6 +39,10 @@
         <strong>COWX</strong>
         <span>Colorado Weather</span>
       </a>
+      <p class="site-header-tip">
+        <a href="how-it-works.html#ad-blockers">Turn off ad block</a>
+        <span class="site-header-tip__detail"> for location</span>
+      </p>
       <nav class="site-nav" aria-label="Site">
         <ul>
           <li><a href="#/" data-nav-home>Home</a></li>
@@ -71,17 +75,21 @@
       </nav>
     </header>
 
-    <p class="site-notice">
-      Ad blockers may incorrectly block location detection and other features. Disable them on this
-      site for the best experience.
-      <a href="how-it-works.html#privacy">Privacy details</a>
-    </p>
-
     <div id="error-banner" class="error-banner" role="alert" hidden></div>
 
     <div id="status-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
     <main id="main-content" tabindex="-1"></main>
+
+    <button
+      type="button"
+      class="back-to-top"
+      id="back-to-top"
+      hidden
+      aria-label="Back to top of page"
+    >
+      Top
+    </button>
 
     <footer class="site-footer">
       <p id="data-updated">Loading data freshness…</p>

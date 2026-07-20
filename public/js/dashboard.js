@@ -864,9 +864,20 @@ function buildHourlyTable(hourly, sunrises, sunsets, opts = {}) {
  */
 function buildDailyTable(daily) {
   const times = /** @type {string[]} */ (daily.time ?? []);
+  const showFeels =
+    seriesHasValues(daily.apparent_temperature_max) ||
+    seriesHasValues(daily.apparent_temperature_min);
   const showTstorm = seriesHasValues(daily.thunderstorm_probability_max);
   const showSnow = seriesHasValues(daily.snowfall_sum);
   const showPrecipHours = seriesHasValues(daily.precipitation_hours);
+  const showRh =
+    seriesHasValues(daily.relative_humidity_2m_max) ||
+    seriesHasValues(daily.relative_humidity_2m_min);
+  const showDew = seriesHasValues(daily.dewpoint_2m_max) || seriesHasValues(daily.dewpoint_2m_min);
+  const showCloud = seriesHasValues(daily.cloud_cover_mean);
+  const showCape = seriesHasAbove(daily.cape_max, 100);
+  const showVis = seriesHasValues(daily.visibility_min);
+  const showSunshine = seriesHasValues(daily.sunshine_duration);
   const showDaylight = seriesHasValues(daily.daylight_duration);
   const showEt0 = seriesHasValues(daily.et0_fao_evapotranspiration);
 
@@ -876,14 +887,20 @@ function buildDailyTable(daily) {
     { key: 'cond', label: 'Cond.' },
     { key: 'high', label: 'High' },
     { key: 'low', label: 'Low' },
-    { key: 'precipPct', label: 'Precip %' },
-    { key: 'precipIn', label: 'Precip in' },
   ];
+  if (showFeels) cols.push({ key: 'feels', label: 'Feels' });
+  cols.push({ key: 'precipPct', label: 'Precip %' }, { key: 'precipIn', label: 'Precip in' });
   if (showSnow) cols.push({ key: 'snow', label: 'Snow', optional: true });
   if (showPrecipHours) cols.push({ key: 'precipHours', label: 'Precip hrs', optional: true });
   cols.push({ key: 'wind', label: 'Wind' }, { key: 'gust', label: 'Gust' });
   if (showTstorm) cols.push({ key: 'tstorm', label: 'Tstorm %' });
+  if (showCape) cols.push({ key: 'cape', label: 'CAPE', optional: true });
+  if (showRh) cols.push({ key: 'rh', label: 'RH' });
+  if (showDew) cols.push({ key: 'dew', label: 'Dew' });
+  if (showCloud) cols.push({ key: 'cloud', label: 'Cloud' });
   cols.push({ key: 'uv', label: 'UV' });
+  if (showVis) cols.push({ key: 'vis', label: 'Vis' });
+  if (showSunshine) cols.push({ key: 'sunshine', label: 'Sunshine', optional: true });
   if (showDaylight) cols.push({ key: 'daylight', label: 'Daylight', optional: true });
   if (showEt0) cols.push({ key: 'et0', label: 'ET₀', optional: true });
   cols.push({ key: 'sunrise', label: 'Sunrise' }, { key: 'sunset', label: 'Sunset' });
@@ -911,6 +928,8 @@ function buildDailyTable(daily) {
     const tr = document.createElement('tr');
     const hi = /** @type {number[]} */ (daily.temperature_2m_max ?? [])[i];
     const lo = /** @type {number[]} */ (daily.temperature_2m_min ?? [])[i];
+    const feelsHi = /** @type {number[]} */ (daily.apparent_temperature_max ?? [])[i];
+    const feelsLo = /** @type {number[]} */ (daily.apparent_temperature_min ?? [])[i];
     const precipPct = /** @type {number[]} */ (daily.precipitation_probability_max ?? [])[i];
     const precipSum = /** @type {number[]} */ (daily.precipitation_sum ?? [])[i];
     const snow = /** @type {number[]} */ (daily.snowfall_sum ?? [])[i];
@@ -919,18 +938,51 @@ function buildDailyTable(daily) {
     const windDir = /** @type {number[]} */ (daily.wind_direction_10m_dominant ?? [])[i];
     const gustMax = /** @type {number[]} */ (daily.wind_gusts_10m_max ?? [])[i];
     const tstormMax = /** @type {number[]} */ (daily.thunderstorm_probability_max ?? [])[i];
+    const capeMax = /** @type {number[]} */ (daily.cape_max ?? [])[i];
+    const rhMax = /** @type {number[]} */ (daily.relative_humidity_2m_max ?? [])[i];
+    const rhMin = /** @type {number[]} */ (daily.relative_humidity_2m_min ?? [])[i];
+    const dewMax = /** @type {number[]} */ (daily.dewpoint_2m_max ?? [])[i];
+    const dewMin = /** @type {number[]} */ (daily.dewpoint_2m_min ?? [])[i];
+    const cloudMean = /** @type {number[]} */ (daily.cloud_cover_mean ?? [])[i];
     const uvMax = /** @type {number[]} */ (daily.uv_index_max ?? [])[i];
+    const visMin = /** @type {number[]} */ (daily.visibility_min ?? [])[i];
+    const sunshine = /** @type {number[]} */ (daily.sunshine_duration ?? [])[i];
     const daylight = /** @type {number[]} */ (daily.daylight_duration ?? [])[i];
     const et0 = /** @type {number[]} */ (daily.et0_fao_evapotranspiration ?? [])[i];
     const code = /** @type {number[]} */ (daily.weather_code ?? [])[i];
     const rise = /** @type {string[]} */ (daily.sunrise ?? [])[i];
     const set = /** @type {string[]} */ (daily.sunset ?? [])[i];
+    const feelsLabel =
+      feelsHi != null && feelsLo != null
+        ? `${Math.round(feelsHi)}° / ${Math.round(feelsLo)}°`
+        : feelsHi != null
+          ? `${Math.round(feelsHi)}°F`
+          : feelsLo != null
+            ? `${Math.round(feelsLo)}°F`
+            : '—';
+    const rhLabel =
+      rhMax != null && rhMin != null
+        ? `${Math.round(rhMax)}–${Math.round(rhMin)}%`
+        : rhMax != null
+          ? `${Math.round(rhMax)}%`
+          : rhMin != null
+            ? `${Math.round(rhMin)}%`
+            : '—';
+    const dewLabel =
+      dewMax != null && dewMin != null
+        ? `${Math.round(dewMax)}° / ${Math.round(dewMin)}°`
+        : dewMax != null
+          ? `${Math.round(dewMax)}°F`
+          : dewMin != null
+            ? `${Math.round(dewMin)}°F`
+            : '—';
     /** @type {Record<string, string>} */
     const cellByKey = {
       day: `<td class="sticky-col col-day" data-col="day">${fmtDate(times[i])}</td>`,
       cond: `<td class="cond-cell col-cond" data-col="cond">${weatherIconHtml(code, { isDay: true, size: 28, className: 'weather-icon weather-icon--sm', alt: wmoLabel(code) })} <span>${escapeHtml(wmoLabel(code))}</span></td>`,
       high: `<td class="col-high" data-col="high">${hi != null ? `${Math.round(hi)}°F` : '—'}</td>`,
       low: `<td class="col-low" data-col="low">${lo != null ? `${Math.round(lo)}°F` : '—'}</td>`,
+      feels: `<td class="col-feels" data-col="feels">${feelsLabel}</td>`,
       precipPct: `<td class="col-precipPct" data-col="precipPct">${precipPct != null ? `${precipPct}%` : '—'}</td>`,
       precipIn: `<td class="col-precipIn" data-col="precipIn">${precipSum != null ? `${Number(precipSum).toFixed(2)}` : '—'}</td>`,
       snow: `<td class="col-snow" data-col="snow">${snow != null ? Number(snow).toFixed(2) : '—'}</td>`,
@@ -938,7 +990,13 @@ function buildDailyTable(daily) {
       wind: `<td class="wind-td col-wind" data-col="wind">${windCellHtml(windDir, windMax, { size: 24 })}</td>`,
       gust: `<td class="col-gust" data-col="gust">${gustMax != null ? `${Math.round(gustMax)} mph` : '—'}</td>`,
       tstorm: `<td class="col-tstorm" data-col="tstorm">${tstormMax != null ? `${Math.round(Number(tstormMax))}%` : '—'}</td>`,
+      cape: `<td class="col-cape" data-col="cape">${capeMax != null ? `${Math.round(Number(capeMax))}` : '—'}</td>`,
+      rh: `<td class="col-rh" data-col="rh">${rhLabel}</td>`,
+      dew: `<td class="col-dew" data-col="dew">${dewLabel}</td>`,
+      cloud: `<td class="col-cloud" data-col="cloud">${cloudMean != null ? `${Math.round(Number(cloudMean))}%` : '—'}</td>`,
       uv: `<td class="col-uv" data-col="uv">${uvMax != null ? String(uvMax) : '—'}</td>`,
+      vis: `<td class="col-vis" data-col="vis">${fmtVisibility(visMin)}</td>`,
+      sunshine: `<td class="col-sunshine" data-col="sunshine">${fmtDurationSeconds(sunshine) ?? '—'}</td>`,
       daylight: `<td class="col-daylight" data-col="daylight">${fmtDurationSeconds(daylight) ?? '—'}</td>`,
       et0: `<td class="col-et0" data-col="et0">${et0 != null ? Number(et0).toFixed(2) : '—'}</td>`,
       sunrise: `<td class="col-sunrise" data-col="sunrise">${fmtClock(rise)}</td>`,
@@ -1770,12 +1828,23 @@ function appendDeepForecast(root, data, ctx) {
   renderCollapsibleSection(
     sections,
     'aqi-heading',
-    'Air quality',
+    'Air quality & pollen',
     () => {
       const an = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
       const pa = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
       const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
-      if (!an && !pa && !omaq) {
+      const pollenUrl = safeHttpsUrl(String(links.pollen ?? ''));
+      const zip = links.pollen_zip != null ? String(links.pollen_zip) : null;
+      const city = links.pollen_city != null ? String(links.pollen_city) : null;
+      const nabLinks = /** @type {{ name?: string, url?: string }[]} */ (
+        /** @type {unknown} */ (links.nab_links) ?? []
+      );
+      const hasPollen =
+        Boolean(pollenUrl) ||
+        (Array.isArray(nabLinks) &&
+          nabLinks.some((n) => n?.name && safeHttpsUrl(String(n?.url ?? ''))));
+
+      if (!an && !pa && !omaq && !hasPollen) {
         const frag = document.createDocumentFragment();
         renderEmpty(
           frag,
@@ -1785,77 +1854,113 @@ function appendDeepForecast(root, data, ctx) {
         return frag;
       }
       const wrap = document.createDocumentFragment();
-      const dl = document.createElement('dl');
-      dl.className = 'metric-list';
-      const parts = [];
-      if (an) {
-        parts.push(
-          `<dt>AirNow AQI</dt><dd>${an.aqi ?? '—'} ${an.category ? `(${escapeHtml(String(an.category))})` : ''}${an.aqi != null ? aqiBarHtml(Number(an.aqi)) : ''}</dd>`,
-        );
-        parts.push(
-          `<dt>Dominant parameter</dt><dd>${an.parameter ? escapeHtml(String(an.parameter)) : '—'}</dd>`,
-        );
-        if (an.reporting_area) {
-          parts.push(`<dt>Reporting area</dt><dd>${escapeHtml(String(an.reporting_area))}</dd>`);
-        }
-        if (an.distance_km != null) {
-          parts.push(`<dt>AirNow distance</dt><dd>${an.distance_km} km</dd>`);
-        }
-        if (an.observed) {
+      if (an || pa || omaq) {
+        const dl = document.createElement('dl');
+        dl.className = 'metric-list';
+        const parts = [];
+        if (an) {
           parts.push(
-            `<dt>AirNow observed</dt><dd>${escapeHtml(fmtDateTime(String(an.observed)))}</dd>`,
+            `<dt>AirNow AQI</dt><dd>${an.aqi ?? '—'} ${an.category ? `(${escapeHtml(String(an.category))})` : ''}${an.aqi != null ? aqiBarHtml(Number(an.aqi)) : ''}</dd>`,
           );
-        }
-        const byParam = /** @type {Record<string, Record<string, unknown>> | null} */ (
-          an.by_parameter ?? null
-        );
-        if (byParam && typeof byParam === 'object') {
-          for (const [param, row] of Object.entries(byParam)) {
-            if (!row || typeof row !== 'object') continue;
+          parts.push(
+            `<dt>Dominant parameter</dt><dd>${an.parameter ? escapeHtml(String(an.parameter)) : '—'}</dd>`,
+          );
+          if (an.reporting_area) {
+            parts.push(`<dt>Reporting area</dt><dd>${escapeHtml(String(an.reporting_area))}</dd>`);
+          }
+          if (an.distance_km != null) {
+            parts.push(`<dt>AirNow distance</dt><dd>${an.distance_km} km</dd>`);
+          }
+          if (an.observed) {
             parts.push(
-              `<dt>${escapeHtml(param)}</dt><dd>AQI ${row.aqi ?? '—'}${row.category ? ` (${escapeHtml(String(row.category))})` : ''}</dd>`,
+              `<dt>AirNow observed</dt><dd>${escapeHtml(fmtDateTime(String(an.observed)))}</dd>`,
+            );
+          }
+          const byParam = /** @type {Record<string, Record<string, unknown>> | null} */ (
+            an.by_parameter ?? null
+          );
+          if (byParam && typeof byParam === 'object') {
+            for (const [param, row] of Object.entries(byParam)) {
+              if (!row || typeof row !== 'object') continue;
+              parts.push(
+                `<dt>${escapeHtml(param)}</dt><dd>AQI ${row.aqi ?? '—'}${row.category ? ` (${escapeHtml(String(row.category))})` : ''}</dd>`,
+              );
+            }
+          }
+        }
+        if (pa) {
+          parts.push(
+            `<dt>PurpleAir</dt><dd>${pa.name ? escapeHtml(String(pa.name)) : '—'}${pa.distance_km != null ? ` (${pa.distance_km} km)` : ''}</dd>`,
+          );
+          parts.push(
+            `<dt>PurpleAir PM2.5</dt><dd>${pa.pm25 != null ? `${pa.pm25} µg/m³` : '—'}</dd>`,
+          );
+          parts.push(`<dt>PurpleAir AQI (est.)</dt><dd>${pa.aqi_pm25 ?? '—'}</dd>`);
+          if (pa.humidity != null)
+            parts.push(`<dt>PurpleAir humidity</dt><dd>${pa.humidity}%</dd>`);
+          if (pa.temperature_f != null) {
+            parts.push(`<dt>PurpleAir temp</dt><dd>${pa.temperature_f}°F</dd>`);
+          }
+        }
+        if (omaq) {
+          parts.push(
+            `<dt>Model PM2.5</dt><dd>${omaq.pm25 != null ? `${omaq.pm25} µg/m³` : '—'}</dd>`,
+          );
+          if (omaq.pm10 != null) {
+            parts.push(`<dt>Model PM10</dt><dd>${omaq.pm10} µg/m³</dd>`);
+          }
+          parts.push(
+            `<dt>Model US AQI</dt><dd>${omaq.us_aqi != null ? String(omaq.us_aqi) : '—'}${omaq.us_aqi != null ? aqiBarHtml(Number(omaq.us_aqi)) : ''}</dd>`,
+          );
+          parts.push(
+            `<dt>Model European AQI</dt><dd>${omaq.european_aqi != null ? String(omaq.european_aqi) : '—'}</dd>`,
+          );
+          if (omaq.o3 != null) parts.push(`<dt>Ozone</dt><dd>${omaq.o3} µg/m³</dd>`);
+          if (omaq.no2 != null) parts.push(`<dt>NO₂</dt><dd>${omaq.no2} µg/m³</dd>`);
+          if (omaq.so2 != null) parts.push(`<dt>SO₂</dt><dd>${omaq.so2} µg/m³</dd>`);
+          if (omaq.co != null) parts.push(`<dt>CO</dt><dd>${omaq.co} µg/m³</dd>`);
+          if (omaq.time) {
+            parts.push(
+              `<dt>Model AQ time</dt><dd>${escapeHtml(fmtDateTime(String(omaq.time)))}</dd>`,
             );
           }
         }
+        dl.innerHTML = parts.join('');
+        wrap.appendChild(dl);
       }
-      if (pa) {
-        parts.push(
-          `<dt>PurpleAir</dt><dd>${pa.name ? escapeHtml(String(pa.name)) : '—'}${pa.distance_km != null ? ` (${pa.distance_km} km)` : ''}</dd>`,
-        );
-        parts.push(
-          `<dt>PurpleAir PM2.5</dt><dd>${pa.pm25 != null ? `${pa.pm25} µg/m³` : '—'}</dd>`,
-        );
-        parts.push(`<dt>PurpleAir AQI (est.)</dt><dd>${pa.aqi_pm25 ?? '—'}</dd>`);
-        if (pa.humidity != null) parts.push(`<dt>PurpleAir humidity</dt><dd>${pa.humidity}%</dd>`);
-        if (pa.temperature_f != null) {
-          parts.push(`<dt>PurpleAir temp</dt><dd>${pa.temperature_f}°F</dd>`);
+
+      const pollenUl = document.createElement('ul');
+      pollenUl.className = 'link-list';
+      if (pollenUrl) {
+        const li = document.createElement('li');
+        const label = zip
+          ? `Pollen.com forecast (ZIP ${zip}${city ? `, ${city}` : ''})`
+          : 'Pollen.com forecast';
+        li.innerHTML = `${sourceLink(pollenUrl, label, 'btn btn-secondary btn-sm')} <span class="sr-only">(opens in new tab)</span>`;
+        pollenUl.appendChild(li);
+      }
+      if (Array.isArray(nabLinks)) {
+        for (const nab of nabLinks) {
+          const u = safeHttpsUrl(String(nab?.url ?? ''));
+          if (!u || !nab?.name) continue;
+          const li = document.createElement('li');
+          li.innerHTML = `${sourceLink(u, String(nab.name), 'btn btn-secondary btn-sm')} <span class="sr-only">(opens in new tab)</span>`;
+          pollenUl.appendChild(li);
         }
       }
-      if (omaq) {
-        parts.push(
-          `<dt>Model PM2.5</dt><dd>${omaq.pm25 != null ? `${omaq.pm25} µg/m³` : '—'}</dd>`,
-        );
-        if (omaq.pm10 != null) {
-          parts.push(`<dt>Model PM10</dt><dd>${omaq.pm10} µg/m³</dd>`);
-        }
-        parts.push(
-          `<dt>Model US AQI</dt><dd>${omaq.us_aqi != null ? String(omaq.us_aqi) : '—'}${omaq.us_aqi != null ? aqiBarHtml(Number(omaq.us_aqi)) : ''}</dd>`,
-        );
-        parts.push(
-          `<dt>Model European AQI</dt><dd>${omaq.european_aqi != null ? String(omaq.european_aqi) : '—'}</dd>`,
-        );
-        if (omaq.o3 != null) parts.push(`<dt>Ozone</dt><dd>${omaq.o3} µg/m³</dd>`);
-        if (omaq.no2 != null) parts.push(`<dt>NO₂</dt><dd>${omaq.no2} µg/m³</dd>`);
-        if (omaq.so2 != null) parts.push(`<dt>SO₂</dt><dd>${omaq.so2} µg/m³</dd>`);
-        if (omaq.co != null) parts.push(`<dt>CO</dt><dd>${omaq.co} µg/m³</dd>`);
-        if (omaq.time) {
-          parts.push(
-            `<dt>Model AQ time</dt><dd>${escapeHtml(fmtDateTime(String(omaq.time)))}</dd>`,
-          );
-        }
+      if (pollenUl.childNodes.length) {
+        const note = document.createElement('p');
+        note.className = 'section-note';
+        note.textContent =
+          'Live US pollen indexes are not available from a free redistributable API — use the offsite links below.';
+        wrap.appendChild(note);
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'Offsite pollen & allergy';
+        wrap.appendChild(h);
+        wrap.appendChild(pollenUl);
       }
-      dl.innerHTML = parts.join('');
-      wrap.appendChild(dl);
+
       const ctas = document.createElement('p');
       ctas.className = 'section-cta';
       ctas.innerHTML = [
@@ -1873,76 +1978,6 @@ function appendDeepForecast(root, data, ctx) {
         .filter(Boolean)
         .join(' ');
       if (ctas.innerHTML) wrap.appendChild(ctas);
-      return wrap;
-    },
-    { open: false },
-  );
-
-  renderCollapsibleSection(
-    sections,
-    'health-heading',
-    'Health & pollen',
-    () => {
-      const wrap = document.createDocumentFragment();
-      const intro = document.createElement('p');
-      intro.className = 'section-note';
-      intro.textContent =
-        'UV and air quality are shown on-site. Colorado-wide live pollen indexes are not available from a free redistributable API — use the offsite links below for ZIP pollen forecasts and NAB station maps.';
-      wrap.appendChild(intro);
-
-      const cur = /** @type {Record<string, unknown> | null} */ (data.current ?? null);
-      const an = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
-      const pa = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
-      const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
-      const aqLine = airQualityPlain(an, pa, omaq);
-      const uv = /** @type {number | null} */ (cur?.uv_index ?? null);
-      const dl = document.createElement('dl');
-      dl.className = 'metric-list';
-      const uvPlainText = uvPlain(uv);
-      dl.innerHTML = [
-        uvPlainText
-          ? `<dt>UV index</dt><dd>${escapeHtml(uvPlainText)}${uv != null ? uvBarHtml(Number(uv)) : ''}</dd>`
-          : '',
-        aqLine ? `<dt>Air quality</dt><dd>${escapeHtml(aqLine)}</dd>` : '',
-      ]
-        .filter(Boolean)
-        .join('');
-      if (dl.innerHTML) wrap.appendChild(dl);
-
-      const pollenUrl = safeHttpsUrl(String(links.pollen ?? ''));
-      const zip = links.pollen_zip != null ? String(links.pollen_zip) : null;
-      const city = links.pollen_city != null ? String(links.pollen_city) : null;
-      const nabLinks = /** @type {{ name?: string, url?: string }[]} */ (
-        /** @type {unknown} */ (links.nab_links) ?? []
-      );
-      const ul = document.createElement('ul');
-      ul.className = 'link-list';
-      if (pollenUrl) {
-        const li = document.createElement('li');
-        const label = zip
-          ? `Pollen.com forecast (ZIP ${zip}${city ? `, ${city}` : ''})`
-          : 'Pollen.com forecast';
-        li.innerHTML = `${sourceLink(pollenUrl, label, 'btn btn-secondary btn-sm')} <span class="sr-only">(opens in new tab)</span>`;
-        ul.appendChild(li);
-      }
-      if (Array.isArray(nabLinks)) {
-        for (const nab of nabLinks) {
-          const u = safeHttpsUrl(String(nab?.url ?? ''));
-          if (!u || !nab?.name) continue;
-          const li = document.createElement('li');
-          li.innerHTML = `${sourceLink(u, String(nab.name), 'btn btn-secondary btn-sm')} <span class="sr-only">(opens in new tab)</span>`;
-          ul.appendChild(li);
-        }
-      }
-      if (ul.childNodes.length) {
-        const h = document.createElement('h3');
-        h.className = 'dash-subheading';
-        h.textContent = 'Offsite pollen & allergy';
-        wrap.appendChild(h);
-        wrap.appendChild(ul);
-      } else if (!dl.innerHTML) {
-        renderEmpty(wrap, 'No health links', 'Pollen ZIP lookup unavailable for this location.');
-      }
       return wrap;
     },
     { open: false },

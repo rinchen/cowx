@@ -33,6 +33,10 @@
         <strong>COWX</strong>
         <span>Colorado Weather</span>
       </a>
+      <p class="site-header-tip">
+        <a href="how-it-works.html#ad-blockers">Turn off ad block</a>
+        <span class="site-header-tip__detail"> for location</span>
+      </p>
       <nav class="site-nav" aria-label="Site">
         <ul>
           <li><a href="index.html">Home</a></li>
@@ -174,6 +178,27 @@
         repository.
       </p>
 
+      <h2 id="ad-blockers">Ad blockers</h2>
+      <p>
+        <strong>Please disable your ad blocker on this site</strong> (or allowlist
+        <code>cowx</code> / this domain). COWX has no ads and no trackers, but many blockers still
+        intercept geolocation and map-related requests.
+      </p>
+      <ul>
+        <li>
+          Network “Go to” location uses a third-party IP lookup in the browser. Blockers often treat
+          that as tracking and break nearest-city detection.
+        </li>
+        <li>
+          Street-address Set pin and some map/tile loads can also fail or look blank when scripts or
+          domains are filtered.
+        </li>
+        <li>
+          GPS Locate and typed city/ZIP search usually still work with a blocker on — use those if
+          you keep the blocker enabled.
+        </li>
+      </ul>
+
       <h2 id="privacy">Privacy</h2>
       <ul>
         <li>No accounts and no COWX backend database.</li>
@@ -188,8 +213,7 @@
         <li>No third-party analytics by default.</li>
         <li>
           Optional network location uses a third-party IP geolocation request in the browser (no
-          tracking cookies). Some ad blockers incorrectly block that call and break region
-          detection.
+          tracking cookies). See <a href="#ad-blockers">Ad blockers</a> if that step fails.
         </li>
         <li>
           Street-address Set pin sends the query once to OpenStreetMap Nominatim (OSM data under

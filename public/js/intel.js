@@ -95,7 +95,7 @@ export function renderIntel(root, data, options = {}) {
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
   const spaceWeather = options.spaceWeather ?? null;
-  const { headline, priority } = synthesizeBottomLine(data, { spaceWeather });
+  const { headline, priority, jumpTo } = synthesizeBottomLine(data, { spaceWeather });
   const aq = pickAqi(data);
   const cat = aqiCategory(aq.aqi);
   const pin = options.pin ?? null;
@@ -322,7 +322,11 @@ export function renderIntel(root, data, options = {}) {
   root.innerHTML = `
     <section class="glass-panel glass-panel--headline" aria-labelledby="bottom-line-heading">
       <h2 id="bottom-line-heading" class="sr-only">Bottom line</h2>
-      <p class="bottom-line bottom-line--${escapeHtml(priority)}" role="status">${escapeHtml(headline)}</p>
+      ${
+        jumpTo
+          ? `<button type="button" class="bottom-line bottom-line--${escapeHtml(priority)} bottom-line--jump" data-jump-to="${escapeHtml(jumpTo)}" aria-label="${escapeHtml(headline)}. Open related details.">${escapeHtml(headline)}</button>`
+          : `<p class="bottom-line bottom-line--${escapeHtml(priority)}" role="status">${escapeHtml(headline)}</p>`
+      }
     </section>
 
     <section class="glass-panel glass-panel--now${usingPinNow ? ' glass-panel--pin-now' : ''}" aria-labelledby="intel-now-heading">
@@ -428,6 +432,83 @@ export function renderIntel(root, data, options = {}) {
         )}
         ${metricRow('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
       </div>
+      ${(() => {
+        const day1 = /** @type {Record<string, unknown> | null} */ (fireWeather?.day1 ?? null);
+        const day2 = /** @type {Record<string, unknown> | null} */ (fireWeather?.day2 ?? null);
+        const windRh = String(day1?.windRh ?? 'none');
+        const windRh2 = String(day2?.windRh ?? 'none');
+        const spcActive =
+          /^(elevated|critical|extreme)$/.test(windRh) ||
+          /^(elevated|critical|extreme)$/.test(windRh2);
+        const smokeActive = Boolean(hms && hms.density && hms.density !== 'none');
+        const incidents = /** @type {Record<string, unknown>[]} */ (nearbyFires?.incidents ?? []);
+        const firesActive = incidents.length > 0;
+        const banActive = fireRestrictions?.status === 'restriction_reported';
+        if (!spcActive && !smokeActive && !firesActive && !banActive) return '';
+
+        const bits = [];
+        if (spcActive) {
+          const label = windRh !== 'none' ? windRh : windRh2;
+          bits.push(
+            `SPC Day ${windRh !== 'none' ? '1' : '2'} Wind/RH: <strong>${escapeHtml(label)}</strong>`,
+          );
+        }
+        if (smokeActive) {
+          bits.push(
+            `HMS smoke: <strong>${escapeHtml(String(hms?.density))}</strong>${hms?.observed ? ` · ${escapeHtml(String(hms.observed))}` : ''}`,
+          );
+        }
+        if (firesActive) {
+          const nearest = incidents[0];
+          bits.push(
+            `Nearby fire: <strong>${escapeHtml(String(nearest?.name ?? 'Incident'))}</strong>${
+              nearest?.distance_km != null ? ` (${Number(nearest.distance_km).toFixed(1)} km)` : ''
+            }`,
+          );
+        }
+        if (banActive) {
+          bits.push(
+            `Burn restriction: <strong>${escapeHtml(String(fireRestrictions?.county ?? data.county ?? 'county'))}</strong>`,
+          );
+        }
+
+        return `<div class="intel-now-extras">
+            <h3 class="intel-now-extras__title">Fire weather</h3>
+            <p class="intel-now-extras__body">${bits.join('<br />')}</p>
+            <button type="button" class="btn btn-link intel-jump" data-jump-to="smoke-heading">Fire weather &amp; restrictions detail</button>
+          </div>`;
+      })()}
+      ${(() => {
+        const pollenUrl = safeHttpsUrl(String(links.pollen ?? ''));
+        const nabLinks = /** @type {{ name?: string, url?: string }[]} */ (links.nab_links ?? []);
+        const zip = links.pollen_zip != null ? String(links.pollen_zip) : null;
+        const city = links.pollen_city != null ? String(links.pollen_city) : null;
+        const nabItems = nabLinks
+          .map((l) => {
+            const u = safeHttpsUrl(String(l.url ?? ''));
+            if (!u || !l.name) return '';
+            return `<li><a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer">${escapeHtml(String(l.name))} <span class="sr-only">(opens in new tab)</span></a></li>`;
+          })
+          .filter(Boolean)
+          .join('');
+        if (!pollenUrl && !nabItems) return '';
+        const pollenLabel = zip
+          ? `Pollen.com (ZIP ${zip}${city ? `, ${city}` : ''})`
+          : 'Pollen.com forecast';
+        return `<div class="intel-now-extras">
+            <h3 class="intel-now-extras__title">Health &amp; pollen</h3>
+            <p class="intel-muted intel-now-extras__note">Live US pollen counts are not free to redistribute — open offsite forecasts. AQI and UV are shown above.</p>
+            <ul class="intel-link-list">
+              ${
+                pollenUrl
+                  ? `<li><a href="${escapeHtml(pollenUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(pollenLabel)} <span class="sr-only">(opens in new tab)</span></a></li>`
+                  : ''
+              }
+              ${nabItems}
+            </ul>
+            <button type="button" class="btn btn-link intel-jump" data-jump-to="aqi-heading">Air quality &amp; pollen detail</button>
+          </div>`;
+      })()}
     </section>
 
     <section class="glass-panel" aria-labelledby="meteogram-heading">
@@ -604,53 +685,6 @@ export function renderIntel(root, data, options = {}) {
           </section>`;
     })()}
 
-    ${(() => {
-      const day1 = /** @type {Record<string, unknown> | null} */ (fireWeather?.day1 ?? null);
-      const day2 = /** @type {Record<string, unknown> | null} */ (fireWeather?.day2 ?? null);
-      const windRh = String(day1?.windRh ?? 'none');
-      const windRh2 = String(day2?.windRh ?? 'none');
-      const spcActive =
-        /^(elevated|critical|extreme)$/.test(windRh) ||
-        /^(elevated|critical|extreme)$/.test(windRh2);
-      const smokeActive = Boolean(hms && hms.density && hms.density !== 'none');
-      const incidents = /** @type {Record<string, unknown>[]} */ (nearbyFires?.incidents ?? []);
-      const firesActive = incidents.length > 0;
-      const banActive = fireRestrictions?.status === 'restriction_reported';
-      if (!spcActive && !smokeActive && !firesActive && !banActive) return '';
-
-      const bits = [];
-      if (spcActive) {
-        const label = windRh !== 'none' ? windRh : windRh2;
-        bits.push(
-          `SPC Day ${windRh !== 'none' ? '1' : '2'} Wind/RH: <strong>${escapeHtml(label)}</strong>`,
-        );
-      }
-      if (smokeActive) {
-        bits.push(
-          `HMS smoke: <strong>${escapeHtml(String(hms?.density))}</strong>${hms?.observed ? ` · ${escapeHtml(String(hms.observed))}` : ''}`,
-        );
-      }
-      if (firesActive) {
-        const nearest = incidents[0];
-        bits.push(
-          `Nearby fire: <strong>${escapeHtml(String(nearest?.name ?? 'Incident'))}</strong>${
-            nearest?.distance_km != null ? ` (${Number(nearest.distance_km).toFixed(1)} km)` : ''
-          }`,
-        );
-      }
-      if (banActive) {
-        bits.push(
-          `Burn restriction reported for <strong>${escapeHtml(String(fireRestrictions?.county ?? data.county ?? 'county'))}</strong>`,
-        );
-      }
-
-      return `<section class="glass-panel" aria-labelledby="smoke-intel-heading">
-            <h2 id="smoke-intel-heading" class="glass-panel__title">Fire weather</h2>
-            <p>${bits.join('<br />')}</p>
-            <button type="button" class="btn btn-link intel-jump" data-jump-to="smoke-heading">Fire weather &amp; restrictions detail</button>
-          </section>`;
-    })()}
-
     ${
       pwsPrimary || cwop
         ? `<section class="glass-panel" aria-labelledby="pws-heading">
@@ -745,36 +779,6 @@ export function renderIntel(root, data, options = {}) {
           </section>`;
     })()}
 
-    ${(() => {
-      const pollenUrl = safeHttpsUrl(String(links.pollen ?? ''));
-      const nabLinks = /** @type {{ name?: string, url?: string }[]} */ (links.nab_links ?? []);
-      const zip = links.pollen_zip != null ? String(links.pollen_zip) : null;
-      const city = links.pollen_city != null ? String(links.pollen_city) : null;
-      if (!pollenUrl && !nabLinks.length && aq.aqi == null && hourUv == null) return '';
-      const pollenLabel = zip
-        ? `Pollen.com forecast (ZIP ${zip}${city ? `, ${city}` : ''})`
-        : 'Pollen.com forecast';
-      return `<section class="glass-panel" aria-labelledby="health-intel-heading">
-            <h2 id="health-intel-heading" class="glass-panel__title">Health &amp; pollen</h2>
-            <p class="intel-muted">AQI and UV are on-site. Live US pollen counts are not free to redistribute — open offsite forecasts.</p>
-            <ul class="intel-link-list">
-              ${
-                pollenUrl
-                  ? `<li><a href="${escapeHtml(pollenUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(pollenLabel)} <span class="sr-only">(opens in new tab)</span></a></li>`
-                  : ''
-              }
-              ${nabLinks
-                .map((l) => {
-                  const u = safeHttpsUrl(String(l.url ?? ''));
-                  if (!u || !l.name) return '';
-                  return `<li><a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer">${escapeHtml(String(l.name))} <span class="sr-only">(opens in new tab)</span></a></li>`;
-                })
-                .join('')}
-            </ul>
-            <button type="button" class="btn btn-link intel-jump" data-jump-to="health-heading">Air quality &amp; health details</button>
-          </section>`;
-    })()}
-
     ${
       coag
         ? `<section class="glass-panel" aria-labelledby="soil-heading">
@@ -814,8 +818,7 @@ export function renderIntel(root, data, options = {}) {
         <li><button type="button" class="intel-jump" data-jump-to="alerts-heading">Alerts &amp; discussion</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="roads-heading">Roads &amp; passes</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="metar-heading">Aviation</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="aqi-heading">Air quality detail</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="health-heading">Health &amp; pollen</button></li>
+        <li><button type="button" class="intel-jump" data-jump-to="aqi-heading">Air quality &amp; pollen</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="astronomy-heading">Astronomy</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="smoke-heading">Fire weather &amp; restrictions</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="ham-heading">Ham radio &amp; space weather</button></li>

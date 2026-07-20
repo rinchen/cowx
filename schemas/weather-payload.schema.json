@@ -80,7 +80,14 @@
         "shortwave_radiation_sum": { "type": "array" },
         "et0_fao_evapotranspiration": { "type": "array" },
         "apparent_temperature_max": { "type": "array" },
-        "apparent_temperature_min": { "type": "array" }
+        "apparent_temperature_min": { "type": "array" },
+        "relative_humidity_2m_max": { "type": "array" },
+        "relative_humidity_2m_min": { "type": "array" },
+        "dewpoint_2m_max": { "type": "array" },
+        "dewpoint_2m_min": { "type": "array" },
+        "cloud_cover_mean": { "type": "array" },
+        "visibility_min": { "type": "array" },
+        "cape_max": { "type": "array" }
       }
     },
     "openmeteo_aq": {

@@ -139,6 +139,13 @@ describe('mapResult wind fields', () => {
           daylight_duration: [50400],
           shortwave_radiation_sum: [20],
           et0_fao_evapotranspiration: [0.25],
+          relative_humidity_2m_max: [55],
+          relative_humidity_2m_min: [20],
+          dewpoint_2m_max: [48],
+          dewpoint_2m_min: [35],
+          cloud_cover_mean: [40],
+          visibility_min: [12000],
+          cape_max: [900],
         },
       },
       'Clear',
@@ -155,6 +162,11 @@ describe('mapResult wind fields', () => {
     assert.deepEqual(mapped.daily.snowfall_sum, [0.5]);
     assert.deepEqual(mapped.daily.et0_fao_evapotranspiration, [0.25]);
     assert.deepEqual(mapped.daily.daylight_duration, [50400]);
+    assert.deepEqual(mapped.daily.relative_humidity_2m_max, [55]);
+    assert.deepEqual(mapped.daily.dewpoint_2m_min, [35]);
+    assert.deepEqual(mapped.daily.cloud_cover_mean, [40]);
+    assert.deepEqual(mapped.daily.visibility_min, [12000]);
+    assert.deepEqual(mapped.daily.cape_max, [900]);
   });
 
   it('sums precip_today from hourly through current Denver hour', () => {
@@ -260,6 +272,65 @@ describe('thunderstorm merge helpers', () => {
       payload.current.thunderstorm_probability === 6 ||
         payload.current.thunderstorm_probability === 18,
     );
+  });
+
+  it('uses full NBM series for daily thunderstorm maxima beyond 48h slice', () => {
+    const payload = mapResult(
+      {
+        current: {
+          temperature_2m: 70,
+          apparent_temperature: 68,
+          relative_humidity_2m: 40,
+          weather_code: 0,
+          cloud_cover: 10,
+          pressure_msl: 1010,
+          wind_speed_10m: 8,
+          wind_direction_10m: 45,
+          wind_gusts_10m: 12,
+          precipitation: 0,
+          uv_index: 3,
+        },
+        hourly: {
+          time: ['2026-07-20T12:00'],
+          temperature_2m: [70],
+          apparent_temperature: [68],
+          precipitation_probability: [10],
+          precipitation: [0],
+          weather_code: [0],
+          wind_speed_10m: [8],
+          wind_direction_10m: [45],
+          wind_gusts_10m: [12],
+          relative_humidity_2m: [40],
+          dewpoint_2m: [40],
+          cloud_cover: [10],
+          visibility: [16000],
+          uv_index: [3],
+        },
+        daily: {
+          time: ['2026-07-20', '2026-07-22'],
+          weather_code: [2, 3],
+          temperature_2m_max: [80, 78],
+          temperature_2m_min: [55, 54],
+          precipitation_sum: [0, 0],
+          precipitation_probability_max: [20, 30],
+          wind_speed_10m_max: [15, 12],
+          wind_gusts_10m_max: [22, 18],
+          wind_direction_10m_dominant: [60, 90],
+          uv_index_max: [8, 7],
+          sunrise: ['2026-07-20T05:45', '2026-07-22T05:47'],
+          sunset: ['2026-07-20T20:20', '2026-07-22T20:18'],
+        },
+      },
+      'Clear',
+    );
+
+    mergeThunderstormProbability(payload, {
+      time: ['2026-07-20T12:00', '2026-07-22T15:00'],
+      thunderstorm_probability: [12, 55],
+    });
+
+    assert.deepEqual(payload.hourly.thunderstorm_probability, [12]);
+    assert.deepEqual(payload.daily.thunderstorm_probability_max, [12, 55]);
   });
 
   it('leaves wind intact when NBM hourly is missing', () => {

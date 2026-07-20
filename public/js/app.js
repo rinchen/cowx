@@ -696,6 +696,45 @@ async function renderLocationView(slug, opts = {}) {
 }
 
 /**
+ * Fixed "Top" control after the user scrolls down the page.
+ * Failure point: missing button node — no-op.
+ */
+function bindBackToTop() {
+  const btn = document.getElementById('back-to-top');
+  if (!(btn instanceof HTMLButtonElement)) return;
+
+  const threshold = 480;
+  /** @type {number | null} */
+  let ticking = null;
+
+  const sync = () => {
+    ticking = null;
+    const show = window.scrollY > threshold;
+    btn.classList.toggle('is-visible', show);
+    btn.hidden = !show;
+  };
+
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (ticking != null) return;
+      ticking = window.requestAnimationFrame(sync);
+    },
+    { passive: true },
+  );
+
+  btn.addEventListener('click', () => {
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    document.getElementById('main-content')?.focus?.({ preventScroll: true });
+  });
+
+  sync();
+}
+
+/**
  * Route handler.
  * `#/`, `#/search`, and `#/refine` show the find-location page (no auto-redirect).
  * @param {{ bustCache?: boolean }} [opts]
@@ -719,6 +758,7 @@ async function init() {
   els.main = document.getElementById('main-content');
   els.updatedFooter = document.getElementById('data-updated');
 
+  bindBackToTop();
   await loadCoreData();
   bindHomeNavigation();
   window.addEventListener('hashchange', () => {

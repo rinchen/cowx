@@ -1,14 +1,15 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { synthesizeBottomLine } from '../public/js/bottom-line.js';
+import { bottomLineJumpTarget, synthesizeBottomLine } from '../public/js/bottom-line.js';
 
 describe('synthesizeBottomLine', () => {
   it('prioritizes severe NWS warnings', () => {
-    const { headline, priority } = synthesizeBottomLine({
+    const { headline, priority, jumpTo } = synthesizeBottomLine({
       current: { humidity: 12, wind_gust_mph: 40, temp_f: 90, condition: 'Clear' },
       alerts: [{ event: 'Red Flag Warning', severity: 'Severe', headline: 'Red Flag Warning' }],
     });
     assert.equal(priority, 'hazard');
+    assert.equal(jumpTo, 'alerts-heading');
     assert.match(headline, /Red Flag/i);
     assert.match(headline, /12%/);
   });
@@ -107,7 +108,7 @@ describe('synthesizeBottomLine', () => {
   });
 
   it('flags county burn restriction reported', () => {
-    const { headline, priority } = synthesizeBottomLine({
+    const { headline, priority, jumpTo } = synthesizeBottomLine({
       county: 'Jefferson',
       current: { wind_speed_mph: 5, condition: 'Clear', humidity: 40, temp_f: 70 },
       alerts: [],
@@ -115,18 +116,30 @@ describe('synthesizeBottomLine', () => {
       fire_restrictions: { status: 'restriction_reported', county: 'Jefferson' },
     });
     assert.equal(priority, 'fire');
+    assert.equal(jumpTo, 'smoke-heading');
     assert.match(headline, /Jefferson/i);
     assert.match(headline, /restriction/i);
   });
 
   it('falls back to nominal pleasant summary', () => {
-    const { headline, priority } = synthesizeBottomLine({
+    const { headline, priority, jumpTo } = synthesizeBottomLine({
       current: { wind_speed_mph: 4, condition: 'Clear', humidity: 35, temp_f: 72 },
       alerts: [],
       hourly: { time: [] },
     });
     assert.equal(priority, 'nominal');
+    assert.equal(jumpTo, null);
     assert.match(headline, /Clear/);
     assert.match(headline, /ideal outdoor/i);
+  });
+});
+
+describe('bottomLineJumpTarget', () => {
+  it('maps priorities to deep sections', () => {
+    assert.equal(bottomLineJumpTarget('hazard'), 'alerts-heading');
+    assert.equal(bottomLineJumpTarget('fire'), 'smoke-heading');
+    assert.equal(bottomLineJumpTarget('travel'), 'roads-heading');
+    assert.equal(bottomLineJumpTarget('aq'), 'aqi-heading');
+    assert.equal(bottomLineJumpTarget('nominal'), null);
   });
 });
