@@ -34,7 +34,11 @@ export function toggleFavorite(slug) {
   } else {
     set.add(slug);
   }
-  localStorage.setItem(KEY_FAVORITES, JSON.stringify([...set]));
+  try {
+    localStorage.setItem(KEY_FAVORITES, JSON.stringify([...set]));
+  } catch {
+    /* quota or private mode — non-fatal */
+  }
   return set.has(slug);
 }
 

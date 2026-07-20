@@ -1,3 +1,4 @@
+import { escapeHtml, safeHttpsUrl } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
 import { miniBarChartHtml, sparklineHtml } from './sparkline.js';
@@ -195,17 +196,6 @@ function fmtClock(iso) {
   } catch {
     return String(iso);
   }
-}
-
-/**
- * @param {string} s
- */
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }
 
 /**
@@ -619,8 +609,9 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
  * @param {string} [className]
  */
 function sourceLink(href, label, className = 'btn btn-secondary btn-sm') {
-  if (!href) return '';
-  return `<a class="${className}" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+  const safe = safeHttpsUrl(href);
+  if (!safe) return '';
+  return `<a class="${className}" href="${escapeHtml(safe)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
 }
 
 /**

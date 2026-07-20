@@ -59,7 +59,7 @@ jobs:
           payload=$(jq -n \
             --arg content "COWX weather fetch failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             '{content: $content}')
-          curl -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_WEBHOOK_URL"
+          curl --max-time 15 -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_WEBHOOK_URL"
 
       - uses: actions/github-script@v7
         with:

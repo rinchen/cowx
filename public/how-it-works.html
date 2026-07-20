@@ -91,17 +91,24 @@
 
       <h2>Data pipeline</h2>
       <p>
-        The <code>pnpm fetch</code> orchestrator calls independent adapters (Open-Meteo, NWS,
-        CoAgMET, Aviation Weather, optional PurpleAir and AirNow). Each source can succeed or fail
-        on its own. Results are merged into:
+        The <code>pnpm fetch</code> orchestrator calls independent adapters (Open-Meteo forecast and
+        air quality, NWS alerts/AFD/HWO, CoAgMET, Aviation Weather METAR/TAF, USGS gauges, SNOTEL,
+        CDOT cameras/RWIS, CWOP/APRS, and optional PurpleAir and AirNow). Each source can succeed or
+        fail on its own. Results are merged into:
       </p>
       <ul>
         <li><code>index.json</code> — slim list for search and the map</li>
         <li><code>locations/{slug}.json</code> — full drill-down payload</li>
         <li><code>alerts.geojson</code> — warning polygons when geometry is available</li>
         <li>
-          <code>meta.json</code> — build time and per-source status (<code>ok</code> /
-          <code>partial</code> / <code>error</code> / <code>skipped</code>)
+          <code>cdot-cameras.geojson</code> / <code>cwop.geojson</code> — roadway and APRS layers
+        </li>
+        <li><code>co-zips.json</code> — ZIP search table</li>
+        <li>
+          <code>meta.json</code> — build time, API call count, and per-source status (<code
+            >ok</code
+          >
+          / <code>partial</code> / <code>error</code> / <code>skipped</code>)
         </li>
         <li><code>co-zips.json</code> — ZIP centroids for search</li>
       </ul>

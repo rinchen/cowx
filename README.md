@@ -19,7 +19,7 @@ npx serve public
 
 Open the URL printed by `serve` (typically `http://localhost:3000`). The app loads data from `public/data/`.
 
-Without running `fetch`, only stub or committed snapshot data in `public/data/` is available.
+Without running `fetch`, only committed snapshot data in `public/data/` is available.
 
 ## Scripts
 
@@ -37,7 +37,7 @@ The site is deployed from the `public/` directory on pushes to `main` (see `.git
 
 **Live site:** https://rinchen.github.io/cowx/
 
-Weather data is refreshed on a **45-minute** schedule via GitHub Actions (when the update workflow is enabled). Committed JSON in `public/data/` is what visitors see between runs.
+Weather data is refreshed on a **45-minute** schedule via `.github/workflows/update-weather.yml` (`*/45 * * * *` plus `workflow_dispatch`). Failures notify via `NOTIFY_WEBHOOK_URL` and a GitHub Issue. Committed JSON in `public/data/` is what visitors see between runs.
 
 ## GitHub Actions secrets
 

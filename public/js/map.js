@@ -1,6 +1,11 @@
 /** @typedef {{ slug: string; name: string; lat: number; lon: number; county?: string }} IndexEntry */
 
+import { aqiMarkerColor } from './aqi.js';
+import { escapeHtml, safeHttpsUrl } from './dom.js';
 import { RadarLoopController, RAINVIEWER_MAX_ZOOM } from './radar-loop.js';
+
+/** Generation token so async loads no-op after destroyMap(). */
+let mapGeneration = 0;
 
 /** @type {import('leaflet').Map | null} */
 let stateMap = null;
@@ -50,6 +55,7 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
   }
 
   destroyMap();
+  const generation = ++mapGeneration;
 
   container.innerHTML = '';
   const mapEl = document.createElement('div');
@@ -100,10 +106,13 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
 
       // No Leaflet popups — selection navigates via onSelect.
       marker.on('click', () => onSelect(loc.slug));
-      marker.bindTooltip(`${loc.name}${loc.county ? ` · ${loc.county} County` : ''}`, {
-        direction: 'top',
-        opacity: 0.9,
-      });
+      marker.bindTooltip(
+        `${escapeHtml(loc.name)}${loc.county ? ` · ${escapeHtml(loc.county)} County` : ''}`,
+        {
+          direction: 'top',
+          opacity: 0.9,
+        },
+      );
       bounds.push([loc.lat, loc.lon]);
     });
 
@@ -119,14 +128,20 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
       weight: 2,
     })
       .addTo(stateMap)
-      .bindTooltip(active.name, { permanent: false });
+      .bindTooltip(escapeHtml(active.name), { permanent: false });
     stateMap.setView([active.lat, active.lon], LOCALITY_ZOOM);
   }
 
-  setTimeout(() => stateMap?.invalidateSize(), 100);
+  setTimeout(() => {
+    if (generation === mapGeneration) stateMap?.invalidateSize();
+  }, 100);
 
   if (options.loadAlerts) {
-    void loadAlertPolygons(options.alertsUrl ?? 'data/alerts.geojson', options.onAlertsError);
+    void loadAlertPolygons(
+      options.alertsUrl ?? 'data/alerts.geojson',
+      options.onAlertsError,
+      generation,
+    );
   }
 }
 
@@ -134,8 +149,9 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
  * Draw NWS alert polygons. Failures leave the basemap usable.
  * @param {string} url
  * @param {(msg: string) => void} [onError]
+ * @param {number} [expectedGeneration]
  */
-export async function loadAlertPolygons(url, onError) {
+export async function loadAlertPolygons(url, onError, expectedGeneration = mapGeneration) {
   if (!stateMap || typeof L === 'undefined') return;
 
   if (alertsLayer) {
@@ -144,9 +160,10 @@ export async function loadAlertPolygons(url, onError) {
   }
 
   try {
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url, { timeoutMs: 12_000 });
     if (!response.ok) throw new Error(`Alerts geojson HTTP ${response.status}`);
     const geojson = await response.json();
+    if (expectedGeneration !== mapGeneration || !stateMap) return;
     if (!geojson?.features?.length) return;
 
     alertsLayer = L.geoJSON(geojson, {
@@ -161,38 +178,42 @@ export async function loadAlertPolygons(url, onError) {
       },
       onEachFeature(feature, layer) {
         const p = feature.properties ?? {};
-        const title = p.event ?? 'Alert';
-        const sev = p.severity ? ` (${p.severity})` : '';
-        const area = p.areaDesc ? `<br>${p.areaDesc}` : '';
-        const ends = p.ends ? `<br>Until ${p.ends}` : '';
-        const link = p.url
-          ? `<br><a href="${p.url}" target="_blank" rel="noopener noreferrer">NWS alert details</a>`
+        const title = escapeHtml(p.event ?? 'Alert');
+        const sev = p.severity ? ` (${escapeHtml(p.severity)})` : '';
+        const area = p.areaDesc ? `<br>${escapeHtml(p.areaDesc)}` : '';
+        const ends = p.ends ? `<br>Until ${escapeHtml(p.ends)}` : '';
+        const safeUrl = safeHttpsUrl(p.url);
+        const link = safeUrl
+          ? `<br><a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">NWS alert details</a>`
           : '';
         layer.bindTooltip(`<strong>${title}${sev}</strong>${area}${ends}${link}`, {
           sticky: true,
         });
       },
     });
+    if (expectedGeneration !== mapGeneration || !stateMap) return;
     alertsLayer.addTo(stateMap);
   } catch (err) {
+    if (expectedGeneration !== mapGeneration) return;
     const msg = err instanceof Error ? err.message : String(err);
     onError?.(msg);
   }
 }
 
 /**
- * AQI color for US AQI scale (light-mode readable fills).
- * @param {number | null | undefined} aqi
+ * @param {string} url
+ * @param {{ timeoutMs?: number }} [opts]
+ * @returns {Promise<Response>}
  */
-function aqiMarkerColor(aqi) {
-  const n = Number(aqi);
-  if (!Number.isFinite(n)) return { stroke: '#64748b', fill: '#94a3b8' };
-  if (n <= 50) return { stroke: '#166534', fill: '#4ade80' };
-  if (n <= 100) return { stroke: '#a16207', fill: '#facc15' };
-  if (n <= 150) return { stroke: '#c2410c', fill: '#fb923c' };
-  if (n <= 200) return { stroke: '#b91c1c', fill: '#f87171' };
-  if (n <= 300) return { stroke: '#7e22ce', fill: '#c084fc' };
-  return { stroke: '#9f1239', fill: '#fb7185' };
+async function fetchWithTimeout(url, opts = {}) {
+  const timeoutMs = opts.timeoutMs ?? 12_000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
@@ -227,7 +248,7 @@ export function setAqiLayer(enabled, locations, activeSlug = null) {
       fillOpacity: 0.85,
       weight: loc.slug === activeSlug ? 2.5 : 1.5,
     });
-    marker.bindTooltip(`${loc.name}: AQI ${Math.round(aqi)}`, { direction: 'top' });
+    marker.bindTooltip(`${escapeHtml(loc.name)}: AQI ${Math.round(aqi)}`, { direction: 'top' });
     aqiLayer.addLayer(marker);
   }
   aqiLayer.addTo(stateMap);
@@ -439,6 +460,7 @@ export async function bindRadarLoopControls(controlsEl, options = {}) {
 }
 
 export function destroyMap() {
+  mapGeneration += 1;
   if (radarLoop) {
     radarLoop.destroy();
     radarLoop = null;

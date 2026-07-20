@@ -6,6 +6,7 @@ import {
   setLastLocation,
   toggleFavorite,
 } from './favorites.js';
+import { escapeHtml } from './dom.js';
 import { getFavoriteLocations, searchLocations } from './search.js';
 import { renderWorkspace } from './workspace.js';
 import { destroyMap } from './map.js';
@@ -65,16 +66,24 @@ function showError(message) {
 
 /**
  * @param {string} path
- * @param {{ bustCache?: boolean }} [opts]
+ * @param {{ bustCache?: boolean, timeoutMs?: number }} [opts]
  * @returns {Promise<unknown>}
  */
 async function fetchJson(path, opts = {}) {
   const bust = opts.bustCache ? `?_=${Date.now()}` : '';
-  const response = await fetch(`${DATA_BASE}/${path}${bust}`, {
-    cache: opts.bustCache ? 'no-store' : 'default',
-  });
-  if (!response.ok) throw new Error(`Failed to load ${path} (${response.status})`);
-  return response.json();
+  const timeoutMs = opts.timeoutMs ?? 12_000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${DATA_BASE}/${path}${bust}`, {
+      cache: opts.bustCache ? 'no-store' : 'default',
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`Failed to load ${path} (${response.status})`);
+    return response.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
@@ -307,7 +316,7 @@ async function renderResolveView() {
       <div class="resolve-actions">
         ${
           preferredLoc
-            ? `<button type="button" class="btn btn-primary" id="btn-continue" data-slug="${preferredLoc.slug}">Continue to ${preferredLoc.name}</button>`
+            ? `<button type="button" class="btn btn-primary" id="btn-continue" data-slug="${escapeHtml(preferredLoc.slug)}">Continue to ${escapeHtml(preferredLoc.name)}</button>`
             : ''
         }
         <button type="button" class="btn ${preferredLoc ? 'btn-secondary' : 'btn-primary'}" id="btn-locate">Locate me</button>
@@ -452,6 +461,30 @@ function renderFavoritesList(listEl) {
 }
 
 /**
+ * Render an error card using textContent (avoids DOM XSS from route/catalog strings).
+ * @param {string} title
+ * @param {string} message
+ * @param {string} linkLabel
+ */
+function renderErrorCard(title, message, linkLabel) {
+  if (!els.main) return;
+  els.main.replaceChildren();
+  const section = document.createElement('section');
+  section.className = 'error-card';
+  const h1 = document.createElement('h1');
+  h1.textContent = title;
+  const p = document.createElement('p');
+  p.textContent = message;
+  const a = document.createElement('a');
+  a.className = 'btn btn-primary';
+  a.href = '#/';
+  a.dataset.navHome = '';
+  a.textContent = linkLabel;
+  section.append(h1, p, a);
+  els.main.appendChild(section);
+}
+
+/**
  * @param {string} slug
  * @param {{ bustCache?: boolean }} [opts]
  */
@@ -461,13 +494,7 @@ async function renderLocationView(slug, opts = {}) {
   const indexEntry = findLocation(slug);
   if (!indexEntry) {
     document.body.classList.remove('workspace-active');
-    els.main.innerHTML = `
-      <section class="error-card">
-        <h1>Location not found</h1>
-        <p>No site named “${slug}” in the index.</p>
-        <a class="btn btn-primary" href="#/" data-nav-home>Back to home</a>
-      </section>
-    `;
+    renderErrorCard('Location not found', `No site named “${slug}” in the index.`, 'Back to home');
     announce('Location not found');
     return;
   }
@@ -481,13 +508,11 @@ async function renderLocationView(slug, opts = {}) {
     payload = await fetchJson(`locations/${slug}.json`, { bustCache: Boolean(opts.bustCache) });
   } catch {
     document.body.classList.remove('workspace-active');
-    els.main.innerHTML = `
-      <section class="error-card">
-        <h1>Data unavailable</h1>
-        <p>Could not load weather data for ${indexEntry.name}.</p>
-        <a class="btn btn-primary" href="#/" data-nav-home>Try another location</a>
-      </section>
-    `;
+    renderErrorCard(
+      'Data unavailable',
+      `Could not load weather data for ${indexEntry.name}.`,
+      'Try another location',
+    );
     showError(`Failed to load weather data for ${indexEntry.name}.`);
     announce('Weather data failed to load', 'assertive');
     return;
@@ -499,21 +524,37 @@ async function renderLocationView(slug, opts = {}) {
 
   document.body.classList.add('workspace-active');
 
-  const { headline } = renderWorkspace(wsRoot, /** @type {Record<string, unknown>} */ (payload), {
-    locations,
-    starred: isFavorite(slug),
-    onFavoriteToggle: (s) => {
-      const starred = toggleFavorite(s);
-      renderFavoritesList(null);
-      return starred;
-    },
-    sources: Array.isArray(meta?.sources) ? /** @type {unknown[]} */ (meta.sources) : [],
-    onAnnounce: announce,
-    dataBase: DATA_BASE,
-  });
+  try {
+    const { headline } = await renderWorkspace(
+      wsRoot,
+      /** @type {Record<string, unknown>} */ (payload),
+      {
+        locations,
+        starred: isFavorite(slug),
+        onFavoriteToggle: (s) => {
+          const starred = toggleFavorite(s);
+          renderFavoritesList(null);
+          return starred;
+        },
+        sources: Array.isArray(meta?.sources) ? /** @type {unknown[]} */ (meta.sources) : [],
+        onAnnounce: announce,
+        dataBase: DATA_BASE,
+      },
+    );
 
-  announce(`Showing weather for ${indexEntry.name}. ${headline}`);
-  document.title = `${indexEntry.name} — COWX`;
+    announce(`Showing weather for ${indexEntry.name}. ${headline}`);
+    document.title = `${indexEntry.name} — COWX`;
+  } catch (err) {
+    console.error(err);
+    document.body.classList.remove('workspace-active');
+    renderErrorCard(
+      'Data unavailable',
+      `Could not render weather for ${indexEntry.name}.`,
+      'Try another location',
+    );
+    showError(`Failed to render weather for ${indexEntry.name}.`);
+    announce('Weather view failed to load', 'assertive');
+  }
 }
 
 /**
@@ -542,9 +583,18 @@ async function init() {
 
   await loadCoreData();
   bindHomeNavigation();
-  window.addEventListener('hashchange', () => handleRoute());
+  window.addEventListener('hashchange', () => {
+    void handleRoute().catch((err) => {
+      console.error(err);
+      showError('Navigation failed. Try refreshing the page.');
+      announce('Navigation failed', 'assertive');
+    });
+  });
   await handleRoute();
   startDataRefreshWatcher();
 }
 
-init();
+void init().catch((err) => {
+  console.error(err);
+  showError('Could not start COWX. Try refreshing the page.');
+});

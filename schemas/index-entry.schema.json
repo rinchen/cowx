@@ -26,10 +26,37 @@
       "minimum": -180,
       "maximum": 180
     },
-    "elevationFt": {
-      "type": "number"
+    "region": {
+      "type": "string"
     },
     "county": {
+      "type": "string"
+    },
+    "elevation_ft": {
+      "type": "number"
+    },
+    "temp_f": {
+      "type": ["number", "null"]
+    },
+    "condition": {
+      "type": ["string", "null"]
+    },
+    "humidity": {
+      "type": ["number", "null"]
+    },
+    "wind_speed_mph": {
+      "type": ["number", "null"]
+    },
+    "aqi": {
+      "type": ["number", "null"]
+    },
+    "nws_alert": {
+      "type": "boolean"
+    },
+    "forecast_stale": {
+      "type": "boolean"
+    },
+    "updated_at": {
       "type": "string"
     }
   }

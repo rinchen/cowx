@@ -43,15 +43,22 @@ Replace every entry with sites in your state. Each object needs at least:
 
 | Field          | Notes                                                          |
 | -------------- | -------------------------------------------------------------- |
-| `id` / `slug`  | Stable kebab-case, unique (`denver`, `pueblo`)                 |
+| `slug`         | Stable kebab-case, unique (`denver`, `pueblo`)                 |
 | `name`         | Display name                                                   |
-| `lat`, `lon`   | WGS84                                                          |
+| `lat`, `lon`   | WGS84 (must fall in your target state bbox in the validator)   |
 | `region`       | Must match `schemas/location.schema.json` enums (update those) |
 | `county`       | County name                                                    |
 | `wfo`          | NWS office id (e.g. `BOU`) — update schema enum                |
 | `elevation_ft` | Elevation                                                      |
 
-Useful optional fields: `icao`, `purpleAirId` / related ids, `airNowSiteId`, `pws_id`, ag-station ids.
+Useful optional fields: `icao`, `pws_id`, `coagmet_id`. PurpleAir and AirNow resolve by nearest
+sensor/grid (no per-location sensor ids).
+
+Also update state filters in adapters that hardcode Colorado:
+
+- `scripts/fetch/adapters/usgs.js` (`stateCd=CO`)
+- `scripts/fetch/adapters/snotel.js` (`stateCode === 'CO'`)
+- CDOT / CWOP adapters (Colorado-centric sources — replace or remove for other states)
 
 Rename the file if you want (e.g. `montana-locations.json`), then update paths in:
 

@@ -7,51 +7,20 @@
 
 import { fetchJson } from '../../lib/http.js';
 import { estimateRfComms } from '../../lib/rf-comms.js';
+import { wmoLabel } from '../../lib/wmo.js';
+
+export { wmoLabel };
 
 const CHUNK = 20;
 const CHUNK_DELAY_MS = 10_000;
 const RETRY_BACKOFF_MS = 65_000;
 const RETRY_CHUNK = 15;
 
-const WMO = {
-  0: 'Clear',
-  1: 'Mostly Clear',
-  2: 'Partly Cloudy',
-  3: 'Overcast',
-  45: 'Fog',
-  48: 'Depositing Rime Fog',
-  51: 'Light Drizzle',
-  53: 'Drizzle',
-  55: 'Dense Drizzle',
-  61: 'Slight Rain',
-  63: 'Rain',
-  65: 'Heavy Rain',
-  71: 'Slight Snow',
-  73: 'Snow',
-  75: 'Heavy Snow',
-  80: 'Rain Showers',
-  81: 'Rain Showers',
-  82: 'Violent Rain Showers',
-  85: 'Snow Showers',
-  86: 'Heavy Snow Showers',
-  95: 'Thunderstorm',
-  96: 'Thunderstorm with Hail',
-  99: 'Thunderstorm with Hail',
-};
-
 /**
  * @param {number} ms
  */
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * @param {number} code
- * @returns {string}
- */
-export function wmoLabel(code) {
-  return WMO[code] ?? `Code ${code}`;
 }
 
 /**

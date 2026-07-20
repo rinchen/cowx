@@ -9,6 +9,8 @@ import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { sanitizeErrorMessage } from '../lib/http.js';
+import { runAdapterSafely } from '../lib/adapter-runner.js';
 import { fetchOpenMeteo } from './adapters/openmeteo.js';
 import { fetchOpenMeteoAq } from './adapters/openmeteo-aq.js';
 import { alertsForLocation, fetchNws } from './adapters/nws.js';
@@ -54,65 +56,52 @@ export async function runFetch() {
 
   await mkdir(path.join(DATA_DIR, 'locations'), { recursive: true });
 
+  /** @type {{ id: string, status: string, fetchedAt: string, error?: string }[]} */
   const sources = [];
   let totalCalls = 0;
 
   console.log(`fetch: ${locations.length} locations`);
 
-  const openmeteo = await fetchOpenMeteo(locations);
-  sources.push(sourceMeta('openmeteo', openmeteo));
-  totalCalls += openmeteo.calls ?? 0;
-  console.log(`  openmeteo: ${openmeteo.status} (${openmeteo.bySlug.size} locs)`);
+  /**
+   * Isolate adapter failures so one throw cannot abort the rest of the job.
+   * @template T
+   * @param {string} id
+   * @param {() => Promise<T>} fn
+   * @param {(r: T) => string} [detail]
+   * @returns {Promise<T & { status: string, bySlug: Map<string, unknown>, calls?: number, error?: string }>}
+   */
+  async function runAdapter(id, fn, detail) {
+    const result = /** @type {any} */ (await runAdapterSafely(/** @type {any} */ (fn)));
+    sources.push(sourceMeta(id, result));
+    totalCalls += result.calls ?? 0;
+    const extra = detail ? detail(result) : `(${result.bySlug.size} locs)`;
+    console.log(`  ${id}: ${result.status}${extra ? ` ${extra}` : ''}`);
+    return result;
+  }
 
-  const openmeteoAq = await fetchOpenMeteoAq(locations);
-  sources.push(sourceMeta('openmeteo_aq', openmeteoAq));
-  totalCalls += openmeteoAq.calls ?? 0;
-  console.log(`  openmeteo_aq: ${openmeteoAq.status} (${openmeteoAq.bySlug.size} locs)`);
-
-  const nws = await fetchNws();
-  sources.push(sourceMeta('nws', nws));
-  totalCalls += nws.calls ?? 0;
-  console.log(`  nws: ${nws.status}`);
-
-  const coagmet = await fetchCoagmet(locations);
-  sources.push(sourceMeta('coagmet', coagmet));
-  totalCalls += coagmet.calls ?? 0;
-  console.log(`  coagmet: ${coagmet.status} (${coagmet.bySlug.size} locs)`);
-
-  const aviation = await fetchAviation(locations);
-  sources.push(sourceMeta('aviation', aviation));
-  totalCalls += aviation.calls ?? 0;
-  console.log(`  aviation: ${aviation.status} (${aviation.bySlug.size} locs)`);
-
-  const purpleair = await fetchPurpleAir(locations);
-  sources.push(sourceMeta('purpleair', purpleair));
-  totalCalls += purpleair.calls ?? 0;
-  console.log(`  purpleair: ${purpleair.status} (${purpleair.bySlug.size} locs)`);
-
-  const airnow = await fetchAirNow(locations);
-  sources.push(sourceMeta('airnow', airnow));
-  totalCalls += airnow.calls ?? 0;
-  console.log(`  airnow: ${airnow.status} (${airnow.bySlug.size} locs)`);
-
-  const usgs = await fetchUsgs(locations);
-  sources.push(sourceMeta('usgs', usgs));
-  totalCalls += usgs.calls ?? 0;
-  console.log(`  usgs: ${usgs.status} (${usgs.bySlug.size} locs)`);
-
-  const snotel = await fetchSnotel(locations);
-  sources.push(sourceMeta('snotel', snotel));
-  totalCalls += snotel.calls ?? 0;
-  console.log(`  snotel: ${snotel.status} (${snotel.bySlug.size} locs)`);
-
-  const cdot = await fetchCdot(locations);
-  sources.push(sourceMeta('cdot', cdot));
-  totalCalls += cdot.calls ?? 0;
-  console.log(`  cdot: ${cdot.status}`);
-
-  const cwop = await fetchCwop(locations);
-  sources.push(sourceMeta('cwop', cwop));
-  totalCalls += cwop.calls ?? 0;
-  console.log(`  cwop: ${cwop.status}`);
+  const openmeteo = await runAdapter('openmeteo', () => fetchOpenMeteo(locations));
+  const openmeteoAq = await runAdapter('openmeteo_aq', () => fetchOpenMeteoAq(locations));
+  const nws = await runAdapter(
+    'nws',
+    () => fetchNws(),
+    () => '',
+  );
+  const coagmet = await runAdapter('coagmet', () => fetchCoagmet(locations));
+  const aviation = await runAdapter('aviation', () => fetchAviation(locations));
+  const purpleair = await runAdapter('purpleair', () => fetchPurpleAir(locations));
+  const airnow = await runAdapter('airnow', () => fetchAirNow(locations));
+  const usgs = await runAdapter('usgs', () => fetchUsgs(locations));
+  const snotel = await runAdapter('snotel', () => fetchSnotel(locations));
+  const cdot = await runAdapter(
+    'cdot',
+    () => fetchCdot(locations),
+    () => '',
+  );
+  const cwop = await runAdapter(
+    'cwop',
+    () => fetchCwop(locations),
+    () => '',
+  );
 
   const updatedAt = new Date().toISOString();
   const index = [];
@@ -289,7 +278,7 @@ function sourceMeta(id, result) {
     id,
     status: result.status,
     fetchedAt: new Date().toISOString(),
-    ...(result.error ? { error: String(result.error).slice(0, 500) } : {}),
+    ...(result.error ? { error: sanitizeErrorMessage(result.error).slice(0, 500) } : {}),
   };
 }
 

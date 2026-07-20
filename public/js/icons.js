@@ -7,6 +7,10 @@
  * Resolved via import.meta.url so paths work with or without a trailing slash on /cowx.
  */
 
+import { wmoLabel } from './wmo.js';
+
+export { wmoLabel };
+
 /** Base URL for vendored icons (…/img/meteocons/), always correct from this module. */
 const METEOCONS_BASE = new URL('../img/meteocons/', import.meta.url);
 
@@ -31,40 +35,6 @@ export function wmoToMeteoconSlug(code, isDay = true) {
   if (c === 95) return 'thunderstorms';
   if (c === 96 || c === 99) return day ? 'thunderstorms-day-rain' : 'thunderstorms-rain';
   return 'not-available';
-}
-
-/**
- * @param {number | null | undefined} code
- * @returns {string}
- */
-export function wmoLabel(code) {
-  const map = {
-    0: 'Clear',
-    1: 'Mostly Clear',
-    2: 'Partly Cloudy',
-    3: 'Overcast',
-    45: 'Fog',
-    48: 'Rime Fog',
-    51: 'Light Drizzle',
-    53: 'Drizzle',
-    55: 'Dense Drizzle',
-    61: 'Slight Rain',
-    63: 'Rain',
-    65: 'Heavy Rain',
-    71: 'Slight Snow',
-    73: 'Snow',
-    75: 'Heavy Snow',
-    80: 'Rain Showers',
-    81: 'Rain Showers',
-    82: 'Violent Rain Showers',
-    85: 'Snow Showers',
-    86: 'Heavy Snow Showers',
-    95: 'Thunderstorm',
-    96: 'Thunderstorm with Hail',
-    99: 'Thunderstorm with Hail',
-  };
-  if (code == null) return '—';
-  return map[code] ?? `Code ${code}`;
 }
 
 /**

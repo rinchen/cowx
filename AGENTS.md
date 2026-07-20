@@ -13,43 +13,49 @@ cowx/   # repo directory (brand: COWX)
 ├── AGENTS.md                 # This file
 ├── README.md                 # Human quick start
 ├── package.json              # pnpm scripts (fetch, test, lint, validate:locations)
-├── schemas/                  # JSON Schema for locations, payloads, meta, index
+├── schemas/                  # JSON Schema for locations, payloads, meta, index (reference contracts)
 ├── scripts/
 │   ├── fetch/
 │   │   ├── index.js          # Fetch orchestrator — runs adapters, writes public/data/
 │   │   └── adapters/         # One module per upstream source (add new adapters here)
 │   ├── locations/
-│   │   └── colorado-locations.json   # Curated Colorado location catalog (source of truth)
-│   ├── lib/                  # Shared utilities (slugify, geo/haversine, etc.)
-│   └── validate-locations.js # Validates colorado-locations.json structure
+│   │   ├── colorado-locations.json   # Curated Colorado location catalog (source of truth)
+│   │   └── co-zips.json              # ZIP → nearest catalog point (copied to public/data/)
+│   ├── lib/                  # Shared utilities (http, geo, slugify, rf-comms, wmo, etc.)
+│   └── validate-locations.js # Validates colorado-locations.json (unique slug, CO bbox)
 ├── public/                   # Static site root (GitHub Pages)
 │   ├── index.html            # Geo-first app shell
 │   ├── how-it-works.html     # Architecture & privacy (user-facing)
 │   ├── credits.html          # Data provider attribution
-│   ├── css/app.css           # Shared styles (when present)
-│   ├── js/                   # Client modules
+│   ├── css/app.css           # Shared styles
+│   ├── js/                   # Client modules (workspace, intel, dashboard, map, …)
 │   └── data/                 # Generated JSON — committed after fetch runs
 │       ├── index.json        # Slim location index for search/geo
-│       ├── meta.json         # Build time + per-source status
-│       ├── alerts.geojson    # NWS alert polygons (drawn on locality maps)
+│       ├── meta.json         # Build time + per-source status + apiCalls
+│       ├── co-zips.json      # ZIP lookup table
+│       ├── alerts.geojson    # NWS alert polygons
+│       ├── cdot-cameras.geojson
+│       ├── cwop.geojson
 │       └── locations/{slug}.json   # Full per-location payload
 ├── tests/                    # Node test runner (`pnpm test`) — fixtures only, no live APIs
 │   └── fixtures/             # Recorded API responses for adapter/unit tests
 └── .github/workflows/
     ├── pr.yml                # Lint, test, validate locations on pull requests
     ├── pages.yml             # Deploy public/ to GitHub Pages on push to main
-    └── update.yml            # Scheduled fetch every 45 minutes (when implemented)
+    └── update-weather.yml    # Scheduled fetch every 45 minutes + failure notify
 ```
 
 ### Key artifacts
 
-| Path                                        | Purpose                                                                           |
-| ------------------------------------------- | --------------------------------------------------------------------------------- |
-| `scripts/locations/colorado-locations.json` | Input catalog for fetch; validated by `pnpm validate:locations`                   |
-| `public/data/meta.json`                     | `generatedAt`, `version`, `sources[]` with `ok` / `partial` / `error` / `skipped` |
-| `public/data/index.json`                    | Client lookup: slug, name, lat, lon, summary fields                               |
-| `public/data/locations/{slug}.json`         | Full drill-down weather/AQ payload for one location                               |
-| `schemas/*.schema.json`                     | Contract for locations, payloads, meta — validate outputs in CI                   |
+| Path                                        | Purpose                                                                  |
+| ------------------------------------------- | ------------------------------------------------------------------------ |
+| `scripts/locations/colorado-locations.json` | Input catalog for fetch; validated by `pnpm validate:locations`          |
+| `public/data/meta.json`                     | `generatedAt`, `version`, `sources[]`, `apiCalls`, `forecastStaleCount`  |
+| `public/data/index.json`                    | Client lookup: slug, name, lat, lon, summary fields                      |
+| `public/data/locations/{slug}.json`         | Full drill-down weather/AQ payload for one location                      |
+| `schemas/*.schema.json`                     | Reference contracts for locations/payloads/meta (not yet enforced in CI) |
+
+**Language:** The public UI is English-only. There is no i18n catalog or translation check script.
 
 ---
 
@@ -57,22 +63,24 @@ cowx/   # repo directory (brand: COWX)
 
 Edit `scripts/locations/colorado-locations.json` (JSON array). Each entry must include:
 
-| Field  | Type   | Notes                                                                 |
-| ------ | ------ | --------------------------------------------------------------------- |
-| `id`   | string | Stable internal id (often same as slug)                               |
-| `name` | string | Display name                                                          |
-| `slug` | string | Lowercase kebab-case, unique, URL-safe (`^[a-z0-9]+(?:-[a-z0-9]+)*$`) |
-| `lat`  | number | WGS84 latitude (-90 … 90)                                             |
-| `lon`  | number | WGS84 longitude (-180 … 180)                                          |
+| Field          | Type   | Notes                                                                 |
+| -------------- | ------ | --------------------------------------------------------------------- |
+| `slug`         | string | Lowercase kebab-case, unique, URL-safe (`^[a-z0-9]+(?:-[a-z0-9]+)*$`) |
+| `name`         | string | Display name                                                          |
+| `lat`          | number | WGS84 latitude (must fall in Colorado bounds)                         |
+| `lon`          | number | WGS84 longitude (must fall in Colorado bounds)                        |
+| `region`       | string | Display region (e.g. Front Range)                                     |
+| `county`       | string | County name                                                           |
+| `wfo`          | string | NWS office (`BOU`, `PUB`, `GJT`)                                      |
+| `elevation_ft` | number | Elevation in feet                                                     |
 
 Optional fields used by adapters (add when known):
 
-- `elevationFt`, `county`, `region`
-- `wfo` — NWS office (`BOU`, `PUB`, `GJT`)
 - `icao` — nearest airport for aviation METAR/TAF
-- `purpleAirId` — PurpleAir sensor id for inline PM readings
-- `airNowSiteId` — AirNow monitoring site
-- `coagmetId`, `pwsId` — ag / personal weather station crosswalks
+- `coagmet_id` — CoAgMET station crosswalk
+- `pws_id` — personal weather station id (Wunderground link)
+
+PurpleAir and AirNow resolve by nearest sensor/grid point (no per-location sensor ids in the catalog).
 
 **Steps:**
 
@@ -80,7 +88,7 @@ Optional fields used by adapters (add when known):
 2. Ensure `slug` is unique across the file.
 3. Run `pnpm validate:locations`.
 4. Run `pnpm fetch` (or wait for the scheduled Action) so `public/data/` includes the new site.
-5. If the frontend uses ZIP search, update `public/data/co-zips.json` when that file exists.
+5. For ZIP search, update `scripts/locations/co-zips.json` (copied to `public/data/co-zips.json` on fetch).
 
 Use `scripts/lib/slugify.js` to derive slugs from names when needed.
 
@@ -88,49 +96,42 @@ Use `scripts/lib/slugify.js` to derive slugs from names when needed.
 
 ## Adding a fetch adapter
 
-Adapters live in `scripts/fetch/adapters/`. Each adapter is an ES module that exports a small interface consumed by `scripts/fetch/index.js`.
+Adapters live in `scripts/fetch/adapters/`. Each adapter is an ES module exporting a named `fetch*` function consumed by `scripts/fetch/index.js`. Merge into per-location payloads happens **inline in the orchestrator** (there is no per-adapter `merge` export).
 
-### Adapter interface
+### Adapter pattern
 
 ```js
-/** @typedef {{ locations: import('../../schemas/location.schema.json')[], env: NodeJS.ProcessEnv }} FetchContext */
-
-export const name = 'openmeteo'; // stable source id → meta.json sources[].id
-
 /**
- * Fetch raw data for all catalog locations (or a batch).
- * @param {FetchContext} ctx
- * @returns {Promise<{ status: 'ok'|'partial'|'error'|'skipped', records?: Record<string, unknown>, error?: string }>}
+ * @param {import('../lib/types.js').Location[]} locations
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {Promise<{
+ *   status: 'ok'|'partial'|'error'|'skipped',
+ *   bySlug: Map<string, unknown>,
+ *   calls?: number,
+ *   error?: string,
+ * }>}
  */
-export async function fetch(ctx) {
-  // Call upstream API with timeouts; never throw uncaught — return status + error
-}
-
-/**
- * Merge this source's records into a per-location weather payload.
- * @param {Record<string, unknown>} locationPayload — mutable payload for one slug
- * @param {Record<string, unknown>} sourceRecords — output from fetch() for this slug
- */
-export function merge(locationPayload, sourceRecords) {
-  // Set fields + locationPayload.sources[name] = { status, updatedAt }
+export async function fetchExample(locations, env = process.env) {
+  // Call upstream API with timeouts via scripts/lib/http.js
+  // Prefer returning status + error over throwing (orchestrator also wraps each adapter in try/catch)
 }
 ```
 
 **Orchestrator responsibilities** (`scripts/fetch/index.js`):
 
 1. Load `colorado-locations.json`.
-2. Run each adapter; collect per-source status for `meta.json`.
-3. Merge adapter output into per-slug payloads.
-4. Write `public/data/index.json`, `public/data/locations/{slug}.json`, `public/data/meta.json`.
-5. Validate against `schemas/` where validation is wired.
+2. Run each adapter via `runAdapterSafely` (unexpected throws become `status: 'error'`); collect per-source status for `meta.json`.
+3. Merge adapter `bySlug` maps into per-slug payloads (inline).
+4. Write `public/data/index.json`, `locations/{slug}.json`, `meta.json`, `alerts.geojson`, `cdot-cameras.geojson`, `cwop.geojson`, and copy `co-zips.json`.
+5. Schemas under `schemas/` are reference contracts — CI currently runs lint/test/`validate:locations` only.
 
 **Resilience rules:**
 
 - Wrap each adapter in try/catch; one failure must not abort unrelated sources.
 - If a secret is missing, return `{ status: 'skipped' }` — do not fail the whole job.
-- Use timeouts on all network I/O.
+- Use timeouts on all network I/O (`scripts/lib/http.js`).
 - Set `User-Agent` on NWS (`api.weather.gov`) requests per their policy.
-- Record errors in `meta.sources[].error` (no secrets in logs).
+- Record errors in `meta.sources[].error` with secrets redacted (`sanitizeErrorMessage` / `sanitizeUrlForError`).
 
 **Optional secrets** (read from `process.env` / GitHub Actions secrets — names only, never commit values):
 
@@ -163,19 +164,21 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 - **Runs per day:** ~32 scheduled fetches.
 - **Design goal:** Stay within free-tier limits; do not poll faster than 45 minutes.
 
-Approximate call budget per run (target — record counts in `meta.json` when implemented):
+Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):
 
-| Source                     | Calls / run (target)       | Auth                |
-| -------------------------- | -------------------------- | ------------------- |
-| Open-Meteo Forecast        | 4–8 (chunk ≤100 locations) | None                |
-| Open-Meteo Air Quality     | 1–2 batched                | None                |
-| NWS alerts + AFD + grid    | ~8–12 selective            | User-Agent header   |
-| CoAgMET `latest.json`      | 1                          | None                |
-| Aviation Weather METAR/TAF | 1–3 batched                | None                |
-| CDOT cameras + RWIS        | 2                          | None                |
-| CWOP / APRS (aprs.me grid) | ~15–20                     | None                |
-| PurpleAir                  | 1–2 (only if key set)      | `PURPLEAIR_API_KEY` |
-| AirNow                     | 1–2 (only if key set)      | `AIRNOW_API_KEY`    |
+| Source                     | Calls / run (approx @ ~340 locs) | Auth                |
+| -------------------------- | -------------------------------- | ------------------- |
+| Open-Meteo Forecast        | ~34+ (chunk 20 + NBM per chunk)  | None                |
+| Open-Meteo Air Quality     | ~9 (chunk 40)                    | None                |
+| NWS alerts + AFD/HWO       | ~8–12 selective                  | User-Agent header   |
+| CoAgMET                    | 1–2                              | None                |
+| Aviation Weather METAR/TAF | 1–3 batched                      | None                |
+| USGS NWIS                  | 1                                | None                |
+| SNOTEL                     | 1–2                              | None                |
+| CDOT cameras + RWIS        | 2                                | None                |
+| CWOP / APRS (aprs.me grid) | ~15–20                           | None                |
+| PurpleAir                  | 1–2 (only if key set)            | `PURPLEAIR_API_KEY` |
+| AirNow                     | many grid points when keyed      | `AIRNOW_API_KEY`    |
 
 Partial adapter failure is acceptable; total failure (zero locations written or all critical adapters down) should fail the workflow so notifications fire.
 
@@ -243,7 +246,7 @@ Include a detailed body for non-trivial changes: **what** changed and **why**. F
 
 ## Failure notifications
 
-When the update workflow fails, a separate notify job (when implemented) POSTs a summary to the webhook named `NOTIFY_WEBHOOK_URL` and opens/updates a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
+When `update-weather.yml` fails, a notify job POSTs a summary to `NOTIFY_WEBHOOK_URL` (if set) and opens/updates a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
 
 ---
 

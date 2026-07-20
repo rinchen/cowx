@@ -3,34 +3,9 @@
  */
 
 import { renderDeepForecast } from './dashboard.js';
+import { escapeHtml, jumpToSection } from './dom.js';
 import { renderIntel } from './intel.js';
 import { bindRadarLoopControls, destroyMap, initStateMap, setAqiLayer } from './map.js';
-
-/**
- * @param {unknown} s
- * @returns {string}
- */
-function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-/**
- * @param {string} id
- */
-function jumpToSection(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  if (el instanceof HTMLElement) {
-    const details = el.closest('details');
-    if (details && !details.open) details.open = true;
-    el.focus?.({ preventScroll: true });
-  }
-}
 
 /**
  * @param {HTMLElement} root
@@ -43,9 +18,9 @@ function jumpToSection(id) {
  *   onAnnounce?: (msg: string) => void,
  *   dataBase?: string,
  * }} options
- * @returns {{ headline: string, destroy: () => void }}
+ * @returns {Promise<{ headline: string, destroy: () => void }>}
  */
-export function renderWorkspace(root, data, options) {
+export async function renderWorkspace(root, data, options) {
   const slug = String(data.slug ?? '');
   const name = String(data.name ?? slug);
   destroyMap();
@@ -142,7 +117,7 @@ export function renderWorkspace(root, data, options) {
     onAlertsError: (msg) => options.onAnnounce?.(`Alert map unavailable: ${msg}`),
   });
 
-  const radarOk = bindRadarLoopControls(radarControls, {
+  const radarOk = await bindRadarLoopControls(radarControls, {
     defaultOn: true,
     onStatus: (msg) => {
       const status = root.querySelector('#radar-status');

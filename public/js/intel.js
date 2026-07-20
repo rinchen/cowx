@@ -3,8 +3,9 @@
  */
 
 import { synthesizeBottomLine } from './bottom-line.js';
+import { aqiCategory, pickAqi } from './aqi.js';
+import { escapeHtml, safeHttpsUrl } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
-import { estimateRfComms } from './rf-comms.js';
 import {
   bindMeteogramScrubber,
   detectPressureDip,
@@ -16,64 +17,7 @@ import {
 } from './sparkline.js';
 import { windCompassHtml, windDirLabel } from './wind.js';
 
-/**
- * @param {unknown} s
- * @returns {string}
- */
-function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-/**
- * @param {number | null} aqi
- * @returns {{ label: string, className: string }}
- */
-export function aqiCategory(aqi) {
-  if (aqi == null || !Number.isFinite(aqi))
-    return { label: 'Unavailable', className: 'aqi-ring--na' };
-  if (aqi <= 50) return { label: 'Good', className: 'aqi-ring--good' };
-  if (aqi <= 100) return { label: 'Moderate', className: 'aqi-ring--moderate' };
-  if (aqi <= 150) return { label: 'Unhealthy for sensitive groups', className: 'aqi-ring--usg' };
-  if (aqi <= 200) return { label: 'Unhealthy', className: 'aqi-ring--unhealthy' };
-  if (aqi <= 300) return { label: 'Very unhealthy', className: 'aqi-ring--very' };
-  return { label: 'Hazardous', className: 'aqi-ring--hazardous' };
-}
-
-/**
- * @param {Record<string, unknown>} data
- * @returns {{ aqi: number | null, pm25: number | null, source: string }}
- */
-function pickAqi(data) {
-  const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
-  const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
-  const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
-  if (airnow?.aqi != null) {
-    return {
-      aqi: Number(airnow.aqi),
-      pm25: null,
-      source: 'AirNow',
-    };
-  }
-  if (purpleair?.aqi_pm25 != null) {
-    return {
-      aqi: Number(purpleair.aqi_pm25),
-      pm25: purpleair.pm25 != null ? Number(purpleair.pm25) : null,
-      source: 'PurpleAir',
-    };
-  }
-  if (omaq?.us_aqi != null) {
-    return {
-      aqi: Number(omaq.us_aqi),
-      pm25: omaq.pm25 != null ? Number(omaq.pm25) : null,
-      source: 'Open-Meteo',
-    };
-  }
-  return { aqi: null, pm25: null, source: '' };
-}
+export { aqiCategory };
 
 /**
  * @param {string[]} times
@@ -201,15 +145,6 @@ export function renderIntel(root, data, options = {}) {
   const coag = /** @type {Record<string, unknown> | null} */ (data.coagmet ?? null);
 
   let rf = /** @type {Record<string, unknown> | null} */ (data.rf_comms ?? null);
-  if (!rf && current && hourly) {
-    const series = /** @type {number[]} */ (hourly.temperature_850hPa ?? []);
-    const t850 = series.length ? series[hi] : null;
-    rf = estimateRfComms(
-      current,
-      t850,
-      data.elevation_ft != null ? Number(data.elevation_ft) : null,
-    );
-  }
 
   const rfClass =
     rf?.status === 'ducting_likely'
@@ -403,17 +338,19 @@ export function renderIntel(root, data, options = {}) {
       }
     </section>
 
-    ${
-      cam?.imageUrl || cam?.pageUrl
-        ? `<section class="glass-panel" aria-labelledby="cam-heading" id="cdot-camera-panel">
+    ${(() => {
+      const imageUrl = safeHttpsUrl(cam?.imageUrl);
+      const pageUrl = safeHttpsUrl(cam?.pageUrl);
+      if (imageUrl || pageUrl) {
+        return `<section class="glass-panel" aria-labelledby="cam-heading" id="cdot-camera-panel">
             <h2 id="cam-heading" class="glass-panel__title">CDOT camera</h2>
             <p class="intel-muted">${escapeHtml(String(cam.name ?? 'Nearby camera'))}${cam.distance_km != null ? ` · ${cam.distance_km} km` : ''}</p>
             ${
-              cam.imageUrl
-                ? `<img class="cdot-cam" src="${escapeHtml(String(cam.imageUrl))}?t=${Date.now()}" alt="CDOT traffic camera: ${escapeHtml(String(cam.name ?? 'Colorado roadway'))}" loading="lazy" decoding="async" data-cdot-cam />`
+              imageUrl
+                ? `<img class="cdot-cam" src="${escapeHtml(imageUrl)}?t=${Date.now()}" alt="CDOT traffic camera: ${escapeHtml(String(cam.name ?? 'Colorado roadway'))}" loading="lazy" decoding="async" data-cdot-cam />`
                 : ''
             }
-            ${cam.pageUrl ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(cam.pageUrl))}" target="_blank" rel="noopener noreferrer">Open on COtrip</a></p>` : ''}
+            ${pageUrl ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer">Open on COtrip</a></p>` : ''}
             ${
               rwis
                 ? `<dl class="metric-list metric-list--compact">
@@ -424,9 +361,10 @@ export function renderIntel(root, data, options = {}) {
                   </dl>`
                 : ''
             }
-          </section>`
-        : rwis
-          ? `<section class="glass-panel" aria-labelledby="rwis-heading">
+          </section>`;
+      }
+      if (rwis) {
+        return `<section class="glass-panel" aria-labelledby="rwis-heading">
               <h2 id="rwis-heading" class="glass-panel__title">CDOT RWIS</h2>
               <dl class="metric-list metric-list--compact">
                 <dt>Station</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${rwis.distance_km != null ? ` (${rwis.distance_km} km)` : ''}</dd>
@@ -434,9 +372,10 @@ export function renderIntel(root, data, options = {}) {
                 ${rwis.surface_temp_f != null ? `<dt>Pavement</dt><dd>${Math.round(Number(rwis.surface_temp_f))}°F</dd>` : ''}
                 ${rwis.surface_status ? `<dt>Surface</dt><dd>${escapeHtml(String(rwis.surface_status))}</dd>` : ''}
               </dl>
-            </section>`
-          : ''
-    }
+            </section>`;
+      }
+      return '';
+    })()}
 
     ${
       rfLabel || cwop
