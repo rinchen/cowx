@@ -817,6 +817,43 @@ main {
   vertical-align: middle;
 }
 
+.wind-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  vertical-align: middle;
+}
+
+.wind-cell__speed {
+  white-space: nowrap;
+}
+
+.wind-compass {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.wind-compass__svg {
+  display: block;
+}
+
+.wind-compass__ring {
+  stroke: var(--color-border);
+}
+
+.wind-compass__n {
+  fill: var(--color-text-muted);
+}
+
+.wind-compass__arrow {
+  fill: var(--color-accent);
+}
+
+.wind-td {
+  white-space: nowrap;
+}
+
 .stale-banner {
   margin: 0 0 1rem;
   padding: 0.75rem 1rem;

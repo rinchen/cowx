@@ -1,5 +1,6 @@
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
+import { windCellHtml, windCompassHtml, windDirLabel } from './wind.js';
 
 /**
  * @param {unknown} value
@@ -73,35 +74,6 @@ function escapeHtml(s) {
 }
 
 /**
- * @param {number | null | undefined} deg
- * @returns {string | null}
- */
-function windDirLabel(deg) {
-  if (deg == null || Number.isNaN(Number(deg))) return null;
-  const dirs = [
-    'N',
-    'NNE',
-    'NE',
-    'ENE',
-    'E',
-    'ESE',
-    'SE',
-    'SSE',
-    'S',
-    'SSW',
-    'SW',
-    'WSW',
-    'W',
-    'WNW',
-    'NW',
-    'NNW',
-  ];
-  const normalized = ((Number(deg) % 360) + 360) % 360;
-  const i = Math.round(normalized / 22.5) % 16;
-  return `${dirs[i]} (${Math.round(Number(deg))}°)`;
-}
-
-/**
  * @param {number | null | undefined} meters
  */
 function fmtVisibility(meters) {
@@ -136,6 +108,18 @@ function detailItem(label, value, source) {
   if (value == null || value === '') return '';
   const src = source ? ` <span class="detail-source">${escapeHtml(source)}</span>` : '';
   return `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}${src}</dd></div>`;
+}
+
+/**
+ * Like detailItem but allows trusted HTML in the value (e.g. wind compass SVG).
+ * @param {string} label
+ * @param {string | null | undefined} html
+ * @param {string | null | undefined} [source]
+ */
+function detailItemHtml(label, html, source) {
+  if (html == null || html === '') return '';
+  const src = source ? ` <span class="detail-source">${escapeHtml(source)}</span>` : '';
+  return `<div><dt>${escapeHtml(label)}</dt><dd>${html}${src}</dd></div>`;
 }
 
 /**
@@ -398,8 +382,10 @@ function buildHourlyTable(hourly, sunrises, sunsets) {
   const showFeels = seriesHasValues(hourly.apparent_temperature);
   const showPrecipPct = seriesHasValues(hourly.precipitation_probability);
   const showPrecipIn = seriesHasValues(hourly.precipitation);
-  const showWind = seriesHasValues(hourly.wind_speed_10m);
+  const showWind =
+    seriesHasValues(hourly.wind_speed_10m) || seriesHasValues(hourly.wind_direction_10m);
   const showGust = seriesHasValues(hourly.wind_gusts_10m);
+  const showTstorm = seriesHasValues(hourly.thunderstorm_probability);
   const showRh = seriesHasValues(hourly.relative_humidity_2m);
   const showDew = seriesHasValues(hourly.dewpoint_2m);
   const showCloud = seriesHasValues(hourly.cloud_cover);
@@ -412,6 +398,7 @@ function buildHourlyTable(hourly, sunrises, sunsets) {
   if (showPrecipIn) headers.push('Precip in');
   if (showWind) headers.push('Wind');
   if (showGust) headers.push('Gust');
+  if (showTstorm) headers.push('Tstorm %');
   if (showRh) headers.push('RH');
   if (showDew) headers.push('Dew');
   if (showCloud) headers.push('Cloud');
@@ -434,7 +421,9 @@ function buildHourlyTable(hourly, sunrises, sunsets) {
     const precipPct = /** @type {number[]} */ (hourly.precipitation_probability ?? [])[i];
     const precipIn = /** @type {number[]} */ (hourly.precipitation ?? [])[i];
     const wind = /** @type {number[]} */ (hourly.wind_speed_10m ?? [])[i];
+    const windDir = /** @type {number[]} */ (hourly.wind_direction_10m ?? [])[i];
     const gust = /** @type {number[]} */ (hourly.wind_gusts_10m ?? [])[i];
+    const tstorm = /** @type {number[]} */ (hourly.thunderstorm_probability ?? [])[i];
     const rh = /** @type {number[]} */ (hourly.relative_humidity_2m ?? [])[i];
     const dew = /** @type {number[]} */ (hourly.dewpoint_2m ?? [])[i];
     const cloud = /** @type {number[]} */ (hourly.cloud_cover ?? [])[i];
@@ -451,8 +440,11 @@ function buildHourlyTable(hourly, sunrises, sunsets) {
     if (showPrecipIn) {
       cells.push(`<td>${precipIn != null ? Number(precipIn).toFixed(2) : '—'}</td>`);
     }
-    if (showWind) cells.push(`<td>${wind != null ? `${Math.round(wind)} mph` : '—'}</td>`);
+    if (showWind)
+      cells.push(`<td class="wind-td">${windCellHtml(windDir, wind, { size: 24 })}</td>`);
     if (showGust) cells.push(`<td>${gust != null ? `${Math.round(gust)} mph` : '—'}</td>`);
+    if (showTstorm)
+      cells.push(`<td>${tstorm != null ? `${Math.round(Number(tstorm))}%` : '—'}</td>`);
     if (showRh) cells.push(`<td>${rh != null ? `${rh}%` : '—'}</td>`);
     if (showDew) cells.push(`<td>${dew != null ? `${Math.round(dew)}°F` : '—'}</td>`);
     if (showCloud) cells.push(`<td>${cloud != null ? `${cloud}%` : '—'}</td>`);
@@ -473,10 +465,12 @@ function buildHourlyTable(hourly, sunrises, sunsets) {
  */
 function buildDailyTable(daily) {
   const times = /** @type {string[]} */ (daily.time ?? []);
+  const showTstorm = seriesHasValues(daily.thunderstorm_probability_max);
   const wrap = document.createElement('div');
   wrap.className = 'table-scroll';
   const table = document.createElement('table');
   table.className = 'data-table data-table--dense data-table--forecast';
+  const tstormTh = showTstorm ? '<th scope="col">Tstorm %</th>' : '';
   table.innerHTML = `
     <caption class="sr-only">10-day daily forecast</caption>
     <thead>
@@ -489,6 +483,7 @@ function buildDailyTable(daily) {
         <th scope="col">Precip in</th>
         <th scope="col">Wind</th>
         <th scope="col">Gust</th>
+        ${tstormTh}
         <th scope="col">UV</th>
         <th scope="col">Sunrise</th>
         <th scope="col">Sunset</th>
@@ -503,11 +498,16 @@ function buildDailyTable(daily) {
     const precipPct = /** @type {number[]} */ (daily.precipitation_probability_max ?? [])[i];
     const precipSum = /** @type {number[]} */ (daily.precipitation_sum ?? [])[i];
     const windMax = /** @type {number[]} */ (daily.wind_speed_10m_max ?? [])[i];
+    const windDir = /** @type {number[]} */ (daily.wind_direction_10m_dominant ?? [])[i];
     const gustMax = /** @type {number[]} */ (daily.wind_gusts_10m_max ?? [])[i];
+    const tstormMax = /** @type {number[]} */ (daily.thunderstorm_probability_max ?? [])[i];
     const uvMax = /** @type {number[]} */ (daily.uv_index_max ?? [])[i];
     const code = /** @type {number[]} */ (daily.weather_code ?? [])[i];
     const rise = /** @type {string[]} */ (daily.sunrise ?? [])[i];
     const set = /** @type {string[]} */ (daily.sunset ?? [])[i];
+    const tstormTd = showTstorm
+      ? `<td>${tstormMax != null ? `${Math.round(Number(tstormMax))}%` : '—'}</td>`
+      : '';
     tr.innerHTML = `
       <td class="sticky-col">${fmtDate(times[i])}</td>
       <td class="cond-cell">${weatherIconHtml(code, { isDay: true, size: 28, className: 'weather-icon weather-icon--sm', alt: wmoLabel(code) })} <span>${escapeHtml(wmoLabel(code))}</span></td>
@@ -515,8 +515,9 @@ function buildDailyTable(daily) {
       <td>${lo != null ? `${Math.round(lo)}°F` : '—'}</td>
       <td>${precipPct != null ? `${precipPct}%` : '—'}</td>
       <td>${precipSum != null ? `${Number(precipSum).toFixed(2)}` : '—'}</td>
-      <td>${windMax != null ? `${Math.round(windMax)} mph` : '—'}</td>
+      <td class="wind-td">${windCellHtml(windDir, windMax, { size: 24 })}</td>
       <td>${gustMax != null ? `${Math.round(gustMax)} mph` : '—'}</td>
+      ${tstormTd}
       <td>${uvMax != null ? String(uvMax) : '—'}</td>
       <td>${fmtClock(rise)}</td>
       <td>${fmtClock(set)}</td>
@@ -734,11 +735,38 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
         ? `${aviation.flight_category}${aviation.icao ? ` at ${aviation.icao}` : ''}`
         : null;
 
-    const windDir = windDirLabel(/** @type {number | null} */ (current.wind_dir_deg ?? null));
-    const wind =
-      current.wind_speed_mph != null
-        ? `${Math.round(Number(current.wind_speed_mph))} mph${current.wind_gust_mph != null ? ` (gusts ${Math.round(Number(current.wind_gust_mph))} mph)` : ''}${windDir ? ` from the ${windDir}` : ''}`
-        : windDir;
+    const windDeg = /** @type {number | null} */ (current.wind_dir_deg ?? null);
+    const windDir = windDirLabel(windDeg);
+    const windSpeedBits = [];
+    if (current.wind_speed_mph != null) {
+      windSpeedBits.push(`${Math.round(Number(current.wind_speed_mph))} mph`);
+    }
+    if (current.wind_gust_mph != null) {
+      windSpeedBits.push(`gusts ${Math.round(Number(current.wind_gust_mph))} mph`);
+    }
+    if (windDir) windSpeedBits.push(`from ${windDir}`);
+    const windHtmlParts = [];
+    const compass = windCompassHtml(windDeg, { size: 32 });
+    if (compass) windHtmlParts.push(compass);
+    if (windSpeedBits.length) {
+      windHtmlParts.push(
+        `<span class="wind-cell__speed">${escapeHtml(windSpeedBits.join(' · '))}</span>`,
+      );
+    }
+    const windHtml = windHtmlParts.length
+      ? `<span class="wind-cell">${windHtmlParts.join('')}</span>`
+      : null;
+
+    const tstormNow =
+      current.thunderstorm_probability != null
+        ? `${Math.round(Number(current.thunderstorm_probability))}%`
+        : hourlyNow && Array.isArray(hourlyNow.thunderstorm_probability)
+          ? (() => {
+              const v = /** @type {number[]} */ (hourlyNow.thunderstorm_probability)[hi];
+              return v != null ? `${Math.round(Number(v))}%` : null;
+            })()
+          : null;
+
     const code = /** @type {number | null} */ (current.weather_code ?? null);
     const precipIn =
       current.precip_in != null ? `${Number(current.precip_in).toFixed(2)} in this hour` : null;
@@ -763,7 +791,8 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
           ${detailItem('Precipitation', precipIn, omSrc)}
           ${detailItem('Humidity', current.humidity != null ? `${current.humidity}%` : null, omSrc)}
           ${detailItem('Dewpoint', hourDew != null ? `${Math.round(hourDew)}°F` : null, omSrc)}
-          ${detailItem('Wind', wind, omSrc)}
+          ${detailItemHtml('Wind', windHtml, omSrc)}
+          ${detailItem('Thunderstorm', tstormNow, omSrc)}
           ${detailItem('Visibility', hourVis != null ? fmtVisibility(hourVis) : null, omSrc)}
           ${detailItem('Cloud cover', current.cloud_cover != null ? `${current.cloud_cover}%` : null, omSrc)}
           ${detailItem('Pressure', current.pressure_mb != null ? `${Math.round(Number(current.pressure_mb))} mb` : null, omSrc)}
