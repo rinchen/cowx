@@ -41,16 +41,19 @@ export async function renderWorkspace(root, data, options) {
     }
   }
 
+  const pinSourceLabel =
+    pin?.source === 'gps' ? 'GPS' : pin?.source === 'address' ? 'address' : 'network';
   const pinNote = pin
     ? `<p class="hyperlocal-banner" role="status">
-        Showing <strong>${escapeHtml(name)}</strong> forecast
-        ${catalogDistKm != null ? `· catalog center ${catalogDistKm} km from you` : ''}
-        · cameras &amp; nearby PWS refined for your ${pin.source === 'gps' ? 'GPS' : 'network'} pin
+        <strong>Refined for your ${escapeHtml(pinSourceLabel)} pin</strong>
+        ${catalogDistKm != null ? ` · ${catalogDistKm} km from ${escapeHtml(name)} catalog center` : ''}
         ${
           pin.accuracy_m != null && pin.accuracy_m < 5000
-            ? `(±${Math.round(pin.accuracy_m)} m)`
+            ? ` · ±${Math.round(pin.accuracy_m)} m accuracy`
             : ''
         }.
+        Cameras, road alerts, and nearby PWS are ranked from your coordinates.
+        ${pin.label ? `<span class="hyperlocal-banner__label">${escapeHtml(pin.label)}</span>` : ''}
       </p>`
     : '';
 
@@ -71,6 +74,7 @@ export async function renderWorkspace(root, data, options) {
           <button type="button" class="btn-favorite" id="btn-favorite" aria-pressed="${options.starred}" aria-label="${options.starred ? 'Remove from favorites' : 'Add to favorites'}">
             <span aria-hidden="true">${options.starred ? '★' : '☆'}</span>
           </button>
+          <a class="btn btn-secondary btn-sm" href="#/refine">Refine location</a>
           <a class="btn btn-secondary btn-sm" href="#/" data-nav-home>All locations</a>
         </div>
       </header>

@@ -6,6 +6,7 @@ import {
   resolveIpGeolocation,
   setHyperlocalPin,
 } from './geo.js';
+import { geocodeColoradoAddress } from './geocode.js';
 import {
   getFavorites,
   getPreferredSlug,
@@ -227,6 +228,21 @@ function navigateTo(slug) {
 }
 
 /**
+ * Open a catalog location after setting a hyperlocal pin.
+ * Always re-renders even when the hash/slug is unchanged (Locate same city).
+ * @param {string} slug
+ */
+async function openLocationWithPin(slug) {
+  setLastLocation(slug);
+  const target = `#/l/${slug}`;
+  if (window.location.hash === target) {
+    await renderLocationView(slug);
+    return;
+  }
+  window.location.hash = target;
+}
+
+/**
  * Always land on the find-location page (even if hash is already `#/`).
  */
 function goHome() {
@@ -319,11 +335,12 @@ async function renderResolveView() {
 
   const preferred = getPreferredSlug();
   const preferredLoc = preferred ? findLocation(preferred) : null;
+  const hash = window.location.hash;
 
   els.main.innerHTML = `
     <section class="resolve-card resolve-card--compact" aria-labelledby="resolve-heading">
       <h1 id="resolve-heading">Find your Colorado weather</h1>
-      <p class="lead">Search, locate yourself, or continue where you left off.</p>
+      <p class="lead">Search a city, enter a street address for a house-level pin, or locate yourself.</p>
       <div class="resolve-actions">
         ${
           preferredLoc
@@ -333,6 +350,25 @@ async function renderResolveView() {
         <button type="button" class="btn ${preferredLoc ? 'btn-secondary' : 'btn-primary'}" id="btn-locate">Locate me</button>
       </div>
       <p class="resolve-status" id="resolve-status" aria-live="polite"></p>
+      <form class="address-pin-form" id="address-pin-form" novalidate>
+        <label for="address-pin-input">Street address or place in Colorado</label>
+        <div class="address-pin-form__row">
+          <input
+            type="search"
+            id="address-pin-input"
+            name="address"
+            placeholder="e.g. 1600 Broadway, Denver"
+            autocomplete="street-address"
+            enterkeyhint="search"
+            maxlength="200"
+          />
+          <button type="submit" class="btn btn-secondary" id="btn-address-pin">Set pin</button>
+        </div>
+        <p class="resolve-hint">
+          Sets a session pin for nearby cameras and “At your location” conditions.
+          Address is sent once to OpenStreetMap Nominatim (not stored by COWX).
+        </p>
+      </form>
       <div class="search-inline" id="search-panel">
         <label class="sr-only" for="location-search">City, county, or ZIP</label>
         <input
@@ -354,6 +390,7 @@ async function renderResolveView() {
 
   renderFavoritesList(document.getElementById('favorites-list'));
   bindSearch(document.getElementById('search-panel'));
+  bindAddressPinForm(document.getElementById('address-pin-form'));
 
   const statusEl = document.getElementById('resolve-status');
 
@@ -377,7 +414,6 @@ async function renderResolveView() {
       });
       const nearest = findNearestLocation(coords.lat, coords.lon, locations);
       if (nearest) {
-        setLastLocation(nearest.slug);
         const acc =
           coords.accuracy_m != null && coords.accuracy_m < 5000
             ? ` (±${Math.round(coords.accuracy_m)} m)`
@@ -385,7 +421,10 @@ async function renderResolveView() {
         announce(
           `Located near ${nearest.name}${acc}. Refining cameras and conditions for your pin.`,
         );
-        navigateTo(nearest.slug);
+        if (statusEl) {
+          statusEl.textContent = `Pin set near ${nearest.name}${acc}. Loading refined view…`;
+        }
+        await openLocationWithPin(nearest.slug);
         return;
       }
     }
@@ -393,11 +432,74 @@ async function renderResolveView() {
     await suggestFromIp(statusEl);
   });
 
-  if (window.location.hash === '#/search') {
+  if (hash === '#/refine') {
+    document.getElementById('address-pin-input')?.focus();
+  } else if (hash === '#/search') {
     document.getElementById('location-search')?.focus();
   } else {
     await suggestFromIp(statusEl);
   }
+}
+
+/**
+ * @param {HTMLElement | null} form
+ */
+function bindAddressPinForm(form) {
+  if (!form || !(form instanceof HTMLFormElement)) return;
+  const input = /** @type {HTMLInputElement | null} */ (form.querySelector('#address-pin-input'));
+  const statusEl = document.getElementById('resolve-status');
+  let inFlight = false;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (inFlight || !input) return;
+    const q = input.value.trim();
+    if (q.length < 3) {
+      if (statusEl) statusEl.textContent = 'Enter a fuller Colorado street address or place name.';
+      announce('Enter a fuller address');
+      return;
+    }
+    inFlight = true;
+    const submitBtn = /** @type {HTMLButtonElement | null} */ (
+      form.querySelector('#btn-address-pin')
+    );
+    if (submitBtn) submitBtn.disabled = true;
+    if (statusEl) statusEl.textContent = 'Looking up address in Colorado…';
+    announce('Looking up address');
+    try {
+      const hit = await geocodeColoradoAddress(q);
+      if (!hit) {
+        if (statusEl) {
+          statusEl.textContent =
+            'No Colorado match found. Try a fuller address, or search by city/ZIP below.';
+        }
+        announce('No Colorado address match', 'assertive');
+        return;
+      }
+      setHyperlocalPin({
+        lat: hit.lat,
+        lon: hit.lon,
+        accuracy_m: null,
+        at: new Date().toISOString(),
+        source: 'address',
+        label: hit.label,
+      });
+      const nearest = findNearestLocation(hit.lat, hit.lon, locations);
+      if (!nearest) {
+        if (statusEl) statusEl.textContent = 'Address found, but no catalog site nearby.';
+        announce('Address found but no catalog site', 'assertive');
+        return;
+      }
+      if (statusEl) {
+        statusEl.textContent = `Pin set near ${nearest.name}. Loading refined view…`;
+      }
+      announce(`Pin set near ${nearest.name}. Refining cameras and conditions.`);
+      await openLocationWithPin(nearest.slug);
+    } finally {
+      inFlight = false;
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
 }
 
 /**
@@ -426,8 +528,7 @@ async function suggestFromIp(statusEl) {
             at: new Date().toISOString(),
             source: 'ip',
           });
-          setLastLocation(nearest.slug);
-          navigateTo(nearest.slug);
+          void openLocationWithPin(nearest.slug);
         });
         statusEl.append(text, go);
       }
@@ -592,7 +693,7 @@ async function renderLocationView(slug, opts = {}) {
 
 /**
  * Route handler.
- * `#/` and `#/search` always show the main find-location page (no auto-redirect).
+ * `#/`, `#/search`, and `#/refine` show the find-location page (no auto-redirect).
  * @param {{ bustCache?: boolean }} [opts]
  */
 async function handleRoute(opts = {}) {

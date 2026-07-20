@@ -82,10 +82,16 @@
         </li>
         <li>You can search by city/county name or Colorado ZIP code.</li>
         <li>
+          You can enter a <strong>Colorado street address or place</strong> and tap Set pin. The
+          address string is sent once to OpenStreetMap Nominatim (Colorado-bounded); COWX stores
+          only session lat/lon, not the address text.
+        </li>
+        <li>
           The Locate button uses high-accuracy browser Geolocation (permission required). We open
           the nearest catalog city page for the full forecast, and keep a
           <strong>session-only pin</strong> of your coordinates to refine nearby cameras, road
-          alerts, and PWS from statewide inventories already on the site.
+          alerts, and PWS from statewide inventories already on the site. Locating always refreshes
+          the workspace even if you are already on that city.
         </li>
         <li>
           If needed, a coarse IP-based location is requested from a public geolocation API in your
@@ -135,14 +141,16 @@
       <p>
         Each location opens a dual-pane <strong>workspace</strong>: a glass intel column with a
         plain-English bottom-line headline, now conditions, AQI badge, 24-hour meteograms, CDOT
-        cameras/RWIS/road alerts when nearby (re-ranked from your session pin when Locate was used),
-        local city webcam links (new tab), nearby PWS, HMS smoke density, and model-derived VHF/UHF
-        ducting cues — beside an animated RainViewer radar loop with playback controls. An optional
-        <strong>At your location</strong> strip shows pin-exact current conditions from a single
-        Open-Meteo call. Below that, expandable 48-hour hourly and 10-day daily tables keep full
-        forecast depth (wind compass, NBM thunderstorm probability via Open-Meteo, and related
-        metrics). A <strong>Live data sources</strong> panel lists fetch/observation times and links
-        to each provider.
+        cameras/RWIS/road alerts when nearby (re-ranked from your session pin when Locate or an
+        address pin was used), local city webcam links (new tab), nearby PWS, HMS smoke density, and
+        model-derived VHF/UHF ducting cues — beside an animated RainViewer radar loop with playback
+        controls. An optional <strong>At your location</strong> strip shows pin-exact current
+        conditions from a single Open-Meteo call (or a status note if that call fails). Use
+        <strong>Refine location</strong> on a locality page to set a new pin. Below that, expandable
+        48-hour hourly and 10-day daily tables keep full forecast depth (wind compass, NBM
+        thunderstorm probability via Open-Meteo, and related metrics). A
+        <strong>Live data sources</strong> panel lists fetch/observation times and links to each
+        provider.
       </p>
       <p>
         NWS alert polygons draw on the locality map. Links to NOAA radar, CSU CIRA satellite, and
@@ -163,9 +171,9 @@
         <li>No accounts and no COWX backend database.</li>
         <li>
           Favorites use <code>localStorage</code> keys <code>cowx:favorites</code> and
-          <code>cowx:lastLocation</code> only. A hyperlocal GPS/IP pin uses
+          <code>cowx:lastLocation</code> only. A hyperlocal GPS/IP/address pin uses
           <code>sessionStorage</code> key <code>cowx:hyperlocalPin</code> for the current tab only
-          (cleared when you pick a city from search).
+          (cleared when you pick a city from search). Address text is not stored.
         </li>
         <li>No third-party analytics by default.</li>
         <li>
@@ -174,9 +182,10 @@
           detection.
         </li>
         <li>
-          With Locate (or IP “Go to”), coordinates leave the browser only for the optional
-          Open-Meteo current-conditions request and for IP geolocation itself — there is no COWX
-          backend that stores your pin.
+          Street-address Set pin sends the query once to OpenStreetMap Nominatim (OSM data under
+          ODbL). With Locate, IP “Go to”, or an address pin, coordinates may also leave the browser
+          for the optional Open-Meteo current-conditions request — there is no COWX backend that
+          stores your pin.
         </li>
         <li>
           API keys for PurpleAir/AirNow are used only in GitHub Actions at build time — never in the

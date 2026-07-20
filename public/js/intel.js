@@ -227,14 +227,16 @@ export function renderIntel(root, data, options = {}) {
   const pinCode = /** @type {number | null} */ (pinCurrent?.weather_code ?? null);
   const pinIsDay =
     pinCurrent?.is_day === 0 || pinCurrent?.is_day === 1 ? pinCurrent.is_day === 1 : isDay;
+  const pinSourceLabel =
+    pin?.source === 'gps' ? 'GPS' : pin?.source === 'address' ? 'address' : 'network';
   const pinStrip =
-    pinCurrent?.temp_f != null
+    pin && pinCurrent?.temp_f != null
       ? `<section class="glass-panel glass-panel--pin-now" aria-labelledby="pin-now-heading">
           <h2 id="pin-now-heading" class="glass-panel__title">At your location</h2>
           <p class="intel-muted" id="pin-now-desc">
-            Current conditions at your ${pin?.source === 'gps' ? 'GPS' : 'network'} pin
+            Current conditions at your ${escapeHtml(pinSourceLabel)} pin
             ${
-              pin?.accuracy_m != null && pin.accuracy_m < 5000
+              pin.accuracy_m != null && pin.accuracy_m < 5000
                 ? `(±${Math.round(pin.accuracy_m)} m accuracy)`
                 : ''
             } — catalog Now below uses the nearest city point.
@@ -264,7 +266,15 @@ export function renderIntel(root, data, options = {}) {
             }
           </div>
         </section>`
-      : '';
+      : pin
+        ? `<section class="glass-panel glass-panel--pin-now" aria-labelledby="pin-now-heading" role="status">
+            <h2 id="pin-now-heading" class="glass-panel__title">At your location</h2>
+            <p class="intel-muted">
+              Pin set (${escapeHtml(pinSourceLabel)}) — cameras and nearby PWS are refined for your coordinates.
+              Live temperature at the pin is temporarily unavailable; catalog Now below still works.
+            </p>
+          </section>`
+        : '';
 
   root.innerHTML = `
     <section class="glass-panel glass-panel--headline" aria-labelledby="bottom-line-heading">
@@ -276,7 +286,7 @@ export function renderIntel(root, data, options = {}) {
 
     <section class="glass-panel" aria-labelledby="intel-now-heading">
       <div class="intel-now-head">
-        <h2 id="intel-now-heading" class="glass-panel__title">${pinStrip ? 'Now (catalog)' : 'Now'}</h2>
+        <h2 id="intel-now-heading" class="glass-panel__title">${pin ? 'Now (catalog)' : 'Now'}</h2>
         <button type="button" class="aqi-ring ${cat.className}" data-jump-to="aqi-heading" aria-label="Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}. Open air quality details.">
           <span class="aqi-ring__value">${aq.aqi != null ? Math.round(aq.aqi) : '—'}</span>
           <span class="aqi-ring__label">AQI</span>

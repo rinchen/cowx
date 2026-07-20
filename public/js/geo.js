@@ -1,6 +1,6 @@
 /** @typedef {{ slug: string; name: string; lat: number; lon: number; county?: string; elevationFt?: number }} IndexEntry */
 
-/** @typedef {{ lat: number; lon: number; accuracy_m: number | null; at: string; source: 'gps' | 'ip' }} HyperlocalPin */
+/** @typedef {{ lat: number; lon: number; accuracy_m: number | null; at: string; source: 'gps' | 'ip' | 'address'; label?: string }} HyperlocalPin */
 
 const EARTH_RADIUS_KM = 6371;
 const IP_GEO_TIMEOUT_MS = 5000;
@@ -90,6 +90,10 @@ export function getHyperlocalPin() {
     const lat = Number(parsed.lat);
     const lon = Number(parsed.lon);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    /** @type {HyperlocalPin['source']} */
+    let source = 'gps';
+    if (parsed.source === 'ip') source = 'ip';
+    else if (parsed.source === 'address') source = 'address';
     return {
       lat,
       lon,
@@ -98,7 +102,9 @@ export function getHyperlocalPin() {
           ? Number(parsed.accuracy_m)
           : null,
       at: typeof parsed.at === 'string' ? parsed.at : new Date().toISOString(),
-      source: parsed.source === 'ip' ? 'ip' : 'gps',
+      source,
+      label:
+        typeof parsed.label === 'string' && parsed.label.trim() ? parsed.label.trim() : undefined,
     };
   } catch {
     return null;
