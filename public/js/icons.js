@@ -1,7 +1,11 @@
 /**
- * Meteocons (cdn.meteocons.com) helpers — WMO / Open-Meteo weather codes → icon slugs.
+ * Meteocons helpers — WMO / Open-Meteo weather codes → icon slugs.
  * @see https://meteocons.com/
+ * CDN: jsDelivr hosts @meteocons/svg (cdn.meteocons.com/latest is 404).
  */
+
+const METEOCONS_SVG = 'https://cdn.jsdelivr.net/npm/@meteocons/svg@0.1.0/fill';
+const METEOCONS_STATIC = 'https://cdn.jsdelivr.net/npm/@meteocons/svg-static@0.1.0/fill';
 
 /**
  * @param {number | null | undefined} code
@@ -15,7 +19,7 @@ export function wmoToMeteoconSlug(code, isDay = true) {
   if (c === 0) return day ? 'clear-day' : 'clear-night';
   if (c === 1) return day ? 'clear-day' : 'clear-night';
   if (c === 2) return day ? 'partly-cloudy-day' : 'partly-cloudy-night';
-  if (c === 3) return 'overcast';
+  if (c === 3) return day ? 'overcast-day' : 'overcast-night';
   if (c === 45 || c === 48) return 'fog';
   if (c >= 51 && c <= 57) return 'drizzle';
   if (c >= 61 && c <= 67) return 'rain';
@@ -24,7 +28,7 @@ export function wmoToMeteoconSlug(code, isDay = true) {
   if (c >= 85 && c <= 86) return 'snow';
   if (c === 95) return 'thunderstorms';
   if (c === 96 || c === 99) return 'thunderstorms-rain';
-  return day ? 'not-available' : 'not-available';
+  return 'not-available';
 }
 
 /**
@@ -83,8 +87,8 @@ export function weatherIconHtml(code, opts = {}) {
   const slug = wmoToMeteoconSlug(code, isDay);
   const alt = opts.alt ?? wmoLabel(code);
   const className = opts.className ?? 'weather-icon';
-  const kind = prefersReducedMotion() ? 'svg-static' : 'svg';
-  const src = `https://cdn.meteocons.com/latest/${kind}/fill/${slug}.svg`;
+  const base = prefersReducedMotion() ? METEOCONS_STATIC : METEOCONS_SVG;
+  const src = `${base}/${slug}.svg`;
   return `<img class="${className}" src="${src}" width="${size}" height="${size}" alt="${escapeAttr(alt)}" loading="lazy" decoding="async" />`;
 }
 

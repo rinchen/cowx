@@ -161,22 +161,30 @@ function formatTimestamp(iso) {
 
 /**
  * Render geo resolve view at root hash.
+ * Stays on this page unless the user explicitly picks a location.
  */
 async function renderResolveView() {
   if (!els.main) return;
   destroyMap();
 
+  const preferred = getPreferredSlug();
+  const preferredLoc = preferred ? findLocation(preferred) : null;
+
   els.main.innerHTML = `
     <section class="resolve-card" aria-labelledby="resolve-heading">
       <h1 id="resolve-heading">Find your Colorado weather</h1>
-      <p class="lead">We use your last visit, device location, or IP region to pick the nearest site.</p>
+      <p class="lead">Search, locate yourself, or continue where you left off.</p>
       <div class="resolve-actions">
-        <button type="button" class="btn btn-primary" id="btn-locate">Locate me</button>
-        <a class="btn btn-secondary" href="#/search">Search instead</a>
+        ${
+          preferredLoc
+            ? `<button type="button" class="btn btn-primary" id="btn-continue" data-slug="${preferredLoc.slug}">Continue to ${preferredLoc.name}</button>`
+            : ''
+        }
+        <button type="button" class="btn ${preferredLoc ? 'btn-secondary' : 'btn-primary'}" id="btn-locate">Locate me</button>
       </div>
       <p class="resolve-status" id="resolve-status" aria-live="polite"></p>
     </section>
-    <section class="search-panel" id="search-panel" hidden aria-labelledby="search-heading">
+    <section class="search-panel" id="search-panel" aria-labelledby="search-heading">
       <h2 id="search-heading">Search locations</h2>
       <label for="location-search">City, county, or ZIP</label>
       <input type="search" id="location-search" name="q" autocomplete="off" enterkeyhint="search" />
@@ -216,7 +224,12 @@ async function renderResolveView() {
   );
 
   const statusEl = document.getElementById('resolve-status');
-  const searchPanel = document.getElementById('search-panel');
+
+  document.getElementById('btn-continue')?.addEventListener('click', () => {
+    const slug = /** @type {HTMLButtonElement} */ (document.getElementById('btn-continue')).dataset
+      .slug;
+    if (slug) navigateTo(slug);
+  });
 
   document.getElementById('btn-locate')?.addEventListener('click', async () => {
     if (statusEl) statusEl.textContent = 'Requesting device location…';
@@ -232,37 +245,45 @@ async function renderResolveView() {
       }
     }
     if (statusEl) statusEl.textContent = 'Device location unavailable. Trying IP geolocation…';
-    await tryIpResolve(statusEl, searchPanel);
+    await suggestFromIp(statusEl);
   });
 
   if (window.location.hash === '#/search') {
-    searchPanel?.removeAttribute('hidden');
     document.getElementById('location-search')?.focus();
   } else {
-    await tryIpResolve(statusEl, searchPanel);
+    await suggestFromIp(statusEl);
   }
 }
 
 /**
+ * Suggest a nearby site from IP without leaving the main page.
  * @param {HTMLElement | null} statusEl
- * @param {HTMLElement | null} searchPanel
  */
-async function tryIpResolve(statusEl, searchPanel) {
+async function suggestFromIp(statusEl) {
   if (statusEl) statusEl.textContent = 'Detecting region from network…';
   announce('Detecting region');
   const ip = await resolveIpGeolocation();
   if (ip) {
     const nearest = findNearestLocation(ip.lat, ip.lon, locations);
     if (nearest) {
-      setLastLocation(nearest.slug);
-      if (statusEl) statusEl.textContent = `Near ${nearest.name} based on network location.`;
-      announce(`Showing weather near ${nearest.name}`);
-      navigateTo(nearest.slug);
+      if (statusEl) {
+        statusEl.innerHTML = '';
+        const text = document.createTextNode(`Near ${nearest.name} based on network location. `);
+        const go = document.createElement('button');
+        go.type = 'button';
+        go.className = 'btn btn-link';
+        go.textContent = `Go to ${nearest.name}`;
+        go.addEventListener('click', () => {
+          setLastLocation(nearest.slug);
+          navigateTo(nearest.slug);
+        });
+        statusEl.append(text, go);
+      }
+      announce(`Near ${nearest.name}. Choose Go to open that forecast.`);
       return;
     }
   }
-  if (statusEl) statusEl.textContent = 'Could not detect your area automatically.';
-  searchPanel?.removeAttribute('hidden');
+  if (statusEl) statusEl.textContent = 'Could not detect your area automatically. Search below.';
   announce('Search for your city or ZIP code');
 }
 
@@ -357,9 +378,10 @@ async function renderLocationView(slug) {
 
   els.main.innerHTML = `
     <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="#/">Colorado</a>
+      <a href="#/">Home</a>
       <span aria-hidden="true">/</span>
       <span aria-current="page">${indexEntry.name}</span>
+      <a class="breadcrumb-change" href="#/">Change location</a>
     </nav>
     <div id="dashboard-root"></div>
     <section class="map-section" aria-labelledby="map-heading">
@@ -411,6 +433,7 @@ async function renderLocationView(slug) {
 
 /**
  * Route handler.
+ * `#/` and `#/search` always show the main find-location page (no auto-redirect).
  */
 async function handleRoute() {
   showError(null);
@@ -422,12 +445,6 @@ async function handleRoute() {
   }
 
   document.title = 'COWX — Colorado Weather';
-  const preferred = getPreferredSlug();
-  if (preferred && findLocation(preferred)) {
-    navigateTo(preferred);
-    return;
-  }
-
   await renderResolveView();
 }
 

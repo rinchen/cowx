@@ -117,10 +117,19 @@ summary:focus-visible {
 
 .site-logo {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.5rem;
   text-decoration: none;
   color: var(--color-text);
+}
+
+.site-logo-flag {
+  width: 1.35rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 12%);
+  object-fit: cover;
 }
 
 .site-logo strong {
@@ -337,6 +346,10 @@ main {
 
 /* Dashboard */
 .breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
   font-size: 0.875rem;
   margin-bottom: 1rem;
   color: var(--color-text-muted);
@@ -344,6 +357,27 @@ main {
 
 .breadcrumb a {
   font-weight: 500;
+}
+
+.breadcrumb-change {
+  margin-left: auto;
+  font-weight: 600;
+}
+
+.btn-link {
+  display: inline;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.btn-link:hover {
+  color: var(--color-accent-hover);
 }
 
 .dashboard-header {
