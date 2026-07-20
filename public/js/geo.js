@@ -2,10 +2,7 @@
 
 const EARTH_RADIUS_KM = 6371;
 const IP_GEO_TIMEOUT_MS = 5000;
-const IP_GEO_ENDPOINTS = [
-  'https://geo.kamero.ai/api/geo',
-  'https://api.codetabs.com/v1/geolocation/json',
-];
+const IP_GEO_ENDPOINTS = ['https://ipwho.is/', 'https://get.geojs.io/v1/ip/geo.json'];
 
 /**
  * Haversine distance in kilometers between two WGS84 points.
@@ -54,6 +51,7 @@ export function findNearestLocation(lat, lon, locations) {
 
 /**
  * Normalize IP geolocation API responses to { lat, lon }.
+ * Rejects missing coords (avoids Number(null) → 0) and explicit API failures.
  * @param {unknown} data
  * @returns {{ lat: number; lon: number } | null}
  */
@@ -61,8 +59,14 @@ function parseIpGeoResponse(data) {
   if (!data || typeof data !== 'object') return null;
   const record = /** @type {Record<string, unknown>} */ (data);
 
-  const lat = Number(record.latitude ?? record.lat);
-  const lon = Number(record.longitude ?? record.lon ?? record.lng);
+  if (record.success === false) return null;
+
+  const rawLat = record.latitude ?? record.lat;
+  const rawLon = record.longitude ?? record.lon ?? record.lng;
+  if (rawLat == null || rawLon == null) return null;
+
+  const lat = Number(rawLat);
+  const lon = Number(rawLon);
 
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   return { lat, lon };
