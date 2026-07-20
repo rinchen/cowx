@@ -2,17 +2,10 @@
  * Open-Meteo Air Quality — PM2.5 / European AQI style fields.
  */
 
-import { fetchJson } from '../../lib/http.js';
+import { fetchJson, sleep } from '../../lib/http.js';
 
 const CHUNK = 40;
 const DELAY_MS = 8000;
-
-/**
- * @param {number} ms
- */
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /**
  * @param {import('../../lib/types.js').Location[]} locations

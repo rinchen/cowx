@@ -10,10 +10,15 @@ import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fetchWithTimeout } from '../../lib/http.js';
+import { CO_BBOX } from '../../lib/colorado.js';
+import { pointInRing } from '../../lib/geometry.js';
+
+export { pointInRing };
 
 const execFileAsync = promisify(execFile);
 
-const CO_BBOX = { west: -109.2, south: 36.9, east: -102.0, north: 41.1 };
+/** Reject oversized HMS shapefile zips (zip-bomb / runner disk guard). */
+export const MAX_HMS_ZIP_BYTES = 50 * 1024 * 1024;
 
 /**
  * @param {Date} day
@@ -51,26 +56,6 @@ export function normalizeDensity(raw) {
   if (s.includes('medium') || s === 'm' || s === '2') return 'medium';
   if (s.includes('light') || s === 'l' || s === '1') return 'light';
   return 'none';
-}
-
-/**
- * Point-in-polygon (ray casting). Ring is [[lon,lat],...].
- * @param {number} lon
- * @param {number} lat
- * @param {number[][]} ring
- */
-export function pointInRing(lon, lat, ring) {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const xi = ring[i][0];
-    const yi = ring[i][1];
-    const xj = ring[j][0];
-    const yj = ring[j][1];
-    const intersect =
-      yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi + 0.0) + xi;
-    if (intersect) inside = !inside;
-  }
-  return inside;
 }
 
 /**
@@ -285,7 +270,24 @@ export async function fetchHms(locations) {
           errors.push(`${ymd(day)}: HTTP ${res.status}`);
           continue;
         }
+        const contentLength = res.headers.get('content-length');
+        if (contentLength != null) {
+          const declared = Number(contentLength);
+          if (Number.isFinite(declared) && declared > MAX_HMS_ZIP_BYTES) {
+            errors.push(
+              `${ymd(day)}: zip Content-Length ${declared} exceeds ${MAX_HMS_ZIP_BYTES} byte limit`,
+            );
+            continue;
+          }
+        }
         zipBuf = Buffer.from(await res.arrayBuffer());
+        if (zipBuf.length > MAX_HMS_ZIP_BYTES) {
+          errors.push(
+            `${ymd(day)}: zip body ${zipBuf.length} exceeds ${MAX_HMS_ZIP_BYTES} byte limit`,
+          );
+          zipBuf = null;
+          continue;
+        }
         if (zipBuf.length < 100) {
           errors.push(`${ymd(day)}: empty zip`);
           zipBuf = null;

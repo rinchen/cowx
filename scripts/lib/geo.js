@@ -71,6 +71,15 @@ export function nearestPoints(target, candidates, limit = 3) {
 }
 
 /**
+ * Round distance to one decimal place (km).
+ * @param {number} d
+ * @returns {number}
+ */
+export function roundKm(d) {
+  return Math.round(d * 10) / 10;
+}
+
+/**
  * Assign nearest candidate within maxKm to each location.
  * @template T
  * @param {{ slug: string, lat: number, lon: number }[]} locations

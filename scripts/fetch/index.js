@@ -39,6 +39,36 @@ const ZIPS_SRC = path.join(ROOT, 'scripts/locations/co-zips.json');
 const ZIPS_DST = path.join(DATA_DIR, 'co-zips.json');
 
 /**
+ * Keep only webcam_links that pass the same https:// rule as validate-locations.
+ * Invalid entries are dropped (not written into payloads).
+ * @param {unknown} links
+ * @returns {{ name: string, url: string, kind?: string }[]}
+ */
+export function sanitizeWebcamLinks(links) {
+  if (!Array.isArray(links)) return [];
+  /** @type {{ name: string, url: string, kind?: string }[]} */
+  const out = [];
+  for (const link of links) {
+    if (!link || typeof link !== 'object') continue;
+    const name = /** @type {{ name?: unknown }} */ (link).name;
+    const url = /** @type {{ url?: unknown }} */ (link).url;
+    if (typeof name !== 'string' || !name.trim()) continue;
+    if (typeof url !== 'string' || !/^https:\/\//.test(url)) continue;
+    try {
+      if (new URL(url).protocol !== 'https:') continue;
+    } catch {
+      continue;
+    }
+    /** @type {{ name: string, url: string, kind?: string }} */
+    const entry = { name: name.trim(), url };
+    const kind = /** @type {{ kind?: unknown }} */ (link).kind;
+    if (typeof kind === 'string' && kind) entry.kind = kind;
+    out.push(entry);
+  }
+  return out;
+}
+
+/**
  * @param {string} slug
  * @returns {Promise<object | null>}
  */
@@ -205,7 +235,7 @@ export async function runFetch() {
     const fireWeather = spcFireWx.bySlug.get(loc.slug) ?? null;
     const nearbyFires = nifcFires.bySlug.get(loc.slug) ?? null;
     const fireRestrictions = burnRestrictions.bySlug.get(loc.slug) ?? null;
-    const webcamLinks = Array.isArray(loc.webcam_links) ? loc.webcam_links : [];
+    const webcamLinks = sanitizeWebcamLinks(loc.webcam_links);
 
     const payload = {
       slug: loc.slug,

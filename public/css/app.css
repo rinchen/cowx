@@ -541,22 +541,6 @@ main {
   color: var(--color-accent-hover);
 }
 
-.dashboard-header {
-  margin-bottom: 1rem;
-}
-
-.dashboard-title-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.dashboard-header h1 {
-  margin: 0;
-  font-size: 2rem;
-  letter-spacing: -0.02em;
-}
-
 .location-meta {
   display: flex;
   flex-wrap: wrap;

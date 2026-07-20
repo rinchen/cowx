@@ -8,6 +8,7 @@
  */
 
 import { wmoLabel } from './wmo.js';
+import { escapeHtml } from './dom.js';
 
 export { wmoLabel };
 
@@ -58,10 +59,10 @@ export function weatherIconHtml(code, opts = {}) {
   const size = opts.size ?? 48;
   const slug = wmoToMeteoconSlug(code, isDay);
   const alt = opts.alt ?? wmoLabel(code);
-  const className = opts.className ?? 'weather-icon';
+  const className = String(opts.className ?? 'weather-icon').replace(/[^a-zA-Z0-9_\-\s]/g, '');
   const format = prefersReducedMotion() ? 'svg-static' : 'svg';
   const src = new URL(`${format}/fill/${slug}.svg`, METEOCONS_BASE).href;
-  return `<img class="${className}" src="${src}" width="${size}" height="${size}" alt="${escapeAttr(alt)}" loading="lazy" decoding="async" />`;
+  return `<img class="${escapeHtml(className)}" src="${src}" width="${size}" height="${size}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" />`;
 }
 
 /**
@@ -95,11 +96,4 @@ export function isDaytime(isoTime, sunrises, sunsets) {
   } catch {
     return true;
   }
-}
-
-/**
- * @param {string} s
- */
-function escapeAttr(s) {
-  return String(s).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
 }

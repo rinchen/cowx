@@ -13,6 +13,8 @@ export const CO_BBOX = {
 };
 
 const GEOCODE_TIMEOUT_MS = 12_000;
+/** Cap query length before hitting Nominatim (UI maxlength should match). */
+export const GEOCODE_MAX_QUERY_LENGTH = 200;
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 
 /**
@@ -61,7 +63,7 @@ export function pickColoradoNominatimResult(raw) {
  */
 export async function geocodeColoradoAddress(query) {
   const q = String(query ?? '').trim();
-  if (q.length < 3) return null;
+  if (q.length < 3 || q.length > GEOCODE_MAX_QUERY_LENGTH) return null;
 
   const params = new URLSearchParams({
     q,

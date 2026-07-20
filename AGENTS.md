@@ -51,14 +51,14 @@ cowx/   # repo directory (brand: COWX)
 
 ### Key artifacts
 
-| Path                                        | Purpose                                                                  |
-| ------------------------------------------- | ------------------------------------------------------------------------ |
-| `scripts/locations/colorado-locations.json` | Input catalog for fetch; validated by `pnpm validate:locations`          |
-| `public/data/meta.json`                     | `generatedAt`, `version`, `sources[]`, `apiCalls`, `forecastStaleCount`  |
-| `public/data/index.json`                    | Client lookup: slug, name, lat, lon, summary fields                      |
-| `public/data/locations/{slug}.json`         | Full drill-down weather/AQ payload for one location                      |
-| `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)              |
-| `schemas/*.schema.json`                     | Reference contracts for locations/payloads/meta (not yet enforced in CI) |
+| Path                                        | Purpose                                                                                                                     |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/locations/colorado-locations.json` | Input catalog for fetch; validated by `pnpm validate:locations`                                                             |
+| `public/data/meta.json`                     | `generatedAt`, `version`, `sources[]`, `apiCalls`, `forecastStaleCount`, `locationCount`, `openmeteoCoverage`               |
+| `public/data/index.json`                    | Client lookup: slug, name, lat, lon, summary fields                                                                         |
+| `public/data/locations/{slug}.json`         | Full drill-down weather/AQ payload for one location                                                                         |
+| `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)                                                                 |
+| `schemas/*.schema.json`                     | Reference contracts (locations, locations-array, weather-payload, meta, index-entry, space-weather); not yet enforced in CI |
 
 **Language:** The public UI is English-only. There is no i18n catalog or translation check script.
 
@@ -68,16 +68,16 @@ cowx/   # repo directory (brand: COWX)
 
 Edit `scripts/locations/colorado-locations.json` (JSON array). Each entry must include:
 
-| Field          | Type   | Notes                                                                 |
-| -------------- | ------ | --------------------------------------------------------------------- |
-| `slug`         | string | Lowercase kebab-case, unique, URL-safe (`^[a-z0-9]+(?:-[a-z0-9]+)*$`) |
-| `name`         | string | Display name                                                          |
-| `lat`          | number | WGS84 latitude (must fall in Colorado bounds)                         |
-| `lon`          | number | WGS84 longitude (must fall in Colorado bounds)                        |
-| `region`       | string | Display region (e.g. Front Range)                                     |
-| `county`       | string | County name                                                           |
-| `wfo`          | string | NWS office (`BOU`, `PUB`, `GJT`)                                      |
-| `elevation_ft` | number | Elevation in feet                                                     |
+| Field          | Type   | Notes                                                                                                            |
+| -------------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| `slug`         | string | Lowercase kebab-case, unique, URL-safe (`^[a-z0-9]+(?:-[a-z0-9]+)*$`)                                            |
+| `name`         | string | Display name                                                                                                     |
+| `lat`          | number | WGS84 latitude (must fall in Colorado bounds)                                                                    |
+| `lon`          | number | WGS84 longitude (must fall in Colorado bounds)                                                                   |
+| `region`       | string | Kebab-case region enum (`front-range`, `mountains`, `western-slope`, `eastern-plains`, `southwest`, `northwest`) |
+| `county`       | string | County name                                                                                                      |
+| `wfo`          | string | NWS office (`BOU`, `PUB`, `GJT`)                                                                                 |
+| `elevation_ft` | number | Elevation in feet                                                                                                |
 
 Optional fields used by adapters (add when known):
 
@@ -109,8 +109,10 @@ PurpleAir and AirNow resolve by nearest sensor/grid point (no per-location senso
 1. Add the object to the array (Colorado locations only).
 2. Ensure `slug` is unique across the file.
 3. Run `pnpm validate:locations`.
-4. Run `pnpm fetch:data` (or wait for the scheduled Action) so `public/data/` includes the new site.
+4. Run `pnpm run fetch:data` (or wait for the scheduled Action) so `public/data/` includes the new site. Prefer `pnpm run fetch:data` — bare `pnpm fetch` is a pnpm builtin, not this project's script.
 5. For ZIP search, update `scripts/locations/co-zips.json` (copied to `public/data/co-zips.json` on fetch).
+
+**Removing a location:** Deleting an entry from the catalog does **not** remove the orphan `public/data/locations/{slug}.json` (or its index row until the next successful fetch rewrite). Delete stale slug files under `public/data/locations/` manually (or wipe and re-fetch) when pruning the catalog.
 
 Use `scripts/lib/slugify.js` to derive slugs from names when needed.
 
@@ -124,7 +126,7 @@ Adapters live in `scripts/fetch/adapters/`. Each adapter is an ES module exporti
 
 ```js
 /**
- * @param {import('../lib/types.js').Location[]} locations
+ * @param {import('../../lib/types.js').Location[]} locations
  * @param {NodeJS.ProcessEnv} [env]
  * @returns {Promise<{
  *   status: 'ok'|'partial'|'error'|'skipped',
@@ -144,7 +146,7 @@ export async function fetchExample(locations, env = process.env) {
 1. Load `colorado-locations.json`.
 2. Run each adapter via `runAdapterSafely` (unexpected throws become `status: 'error'`); collect per-source status for `meta.json`.
 3. Merge adapter `bySlug` maps into per-slug payloads (inline).
-4. Write `public/data/index.json`, `locations/{slug}.json`, `meta.json`, `alerts.geojson`, `cdot-cameras.geojson`, `cwop.geojson`, `hms-smoke.geojson`, `spc-firewx.geojson`, and copy `co-zips.json`.
+4. Write `public/data/index.json`, `locations/{slug}.json`, `meta.json`, `alerts.geojson`, `cdot-cameras.geojson`, `cdot-alerts.geojson`, `cwop.geojson`, `hms-smoke.geojson`, `spc-firewx.geojson`, `space-weather.json`, and copy `co-zips.json`.
 5. Schemas under `schemas/` are reference contracts — CI currently runs lint/test/`validate:locations` only.
 
 **Resilience rules:**
@@ -157,12 +159,13 @@ export async function fetchExample(locations, env = process.env) {
 
 **Optional secrets** (read from `process.env` / GitHub Actions secrets — names only, never commit values):
 
-| Env var             | Adapter                       |
-| ------------------- | ----------------------------- |
-| `PURPLEAIR_API_KEY` | PurpleAir inline sensor data  |
-| `AIRNOW_API_KEY`    | EPA AirNow AQI / observations |
+| Env var              | Adapter                              |
+| -------------------- | ------------------------------------ |
+| `PURPLEAIR_API_KEY`  | PurpleAir inline sensor data         |
+| `AIRNOW_API_KEY`     | EPA AirNow AQI / observations        |
+| `SYNOPTIC_API_TOKEN` | Synoptic/MesoWest denser PWS/mesonet |
 
-If unset, PurpleAir and AirNow adapters should skip gracefully and the UI falls back to offsite links.
+If unset, PurpleAir, AirNow, and Synoptic adapters should skip gracefully; the UI falls back to offsite links or other PWS sources.
 
 ---
 
@@ -216,7 +219,7 @@ Partial adapter failure is acceptable; total failure (zero locations written or 
 
 ## Audience data coverage (not UI filters)
 
-Citizen, pilot, farmer, firefighter, and ham radio operator needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, road alerts, NOAA SWPC space weather / HF cues, etc.). The public dashboard shows **all** available sections for every location — there is no persona filter bar.
+Citizen, pilot, farmer, firefighter, and ham radio operator needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, road alerts, NOAA SWPC space weather / HF cues, etc.). The public workspace shows **all** available sections for every location — there is no persona filter bar.
 
 Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, optional pin “At your location” current strip, 24h meteograms, CDOT cameras/RWIS/road alerts, local webcam **new-tab links**, nearby PWS, health/pollen **offsite links** (nearest ZIP Pollen.com + NAB), astronomy (computed sun/moon/twilight), fire weather (SPC outlooks, HMS smoke, nearby NIFC incidents, burn-restriction links), ham radio / RF (SWPC scales, SFI/Kp, HF band estimates, VHF ducting)) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links. Planetary space weather is written once to `public/data/space-weather.json` (not duplicated per location).
 
@@ -235,7 +238,7 @@ All UI changes in `public/` must meet **WCAG 2.2 Level AA**:
 - **Understandable:** Labels on form controls; clear error/empty states; consistent navigation.
 - **Robust:** Semantic HTML; ARIA only when native elements are insufficient; live regions for dynamic weather updates where appropriate.
 
-Before merging frontend work: run axe/pa11y smoke tests when wired in CI; manually tab through geo resolve, search, favorites, and location dashboard.
+Before merging frontend work: manually tab through geo resolve, search, favorites, and the location workspace. Automated axe/pa11y smoke tests are aspirational (not wired in CI yet).
 
 Map layers must have a non-map alternative (list/table) for keyboard and screen-reader users.
 
@@ -287,10 +290,10 @@ When `update-weather.yml` fails, a notify job POSTs a summary to `NOTIFY_WEBHOOK
 ```bash
 pnpm install
 pnpm validate:locations
-pnpm fetch:data     # writes public/data/ (requires network for live fetch)
+pnpm run fetch:data   # writes public/data/ (requires network). Prefer `pnpm run` — bare `pnpm fetch` is a pnpm builtin.
 pnpm test
 pnpm lint
-npx serve public    # local preview
+npx serve public      # local preview
 ```
 
 Use Node **20+** (see `.nvmrc`).

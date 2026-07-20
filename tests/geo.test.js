@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { haversineKm, nearestPoint } from '../scripts/lib/geo.js';
+import {
+  assignNearestWithin,
+  haversineKm,
+  nearestPoint,
+  nearestPoints,
+  roundKm,
+} from '../scripts/lib/geo.js';
 
 describe('haversineKm', () => {
   it('returns ~0 for identical points', () => {
@@ -34,5 +40,34 @@ describe('nearestPoint', () => {
 
   it('returns null for empty candidates', () => {
     assert.equal(nearestPoint(target, []), null);
+  });
+});
+
+describe('nearestPoints / assignNearestWithin / roundKm', () => {
+  const locations = [
+    { slug: 'denver', lat: 39.7392, lon: -104.9903 },
+    { slug: 'boulder', lat: 40.015, lon: -105.2705 },
+  ];
+  const candidates = [
+    { id: 'a', lat: 39.74, lon: -104.99 },
+    { id: 'b', lat: 40.02, lon: -105.27 },
+    { id: 'far', lat: 38.0, lon: -102.0 },
+  ];
+
+  it('returns sorted nearestPoints capped by limit', () => {
+    const hits = nearestPoints(locations[0], candidates, 2);
+    assert.equal(hits.length, 2);
+    assert.equal(hits[0].point.id, 'a');
+    assert.ok(hits[0].distanceKm <= hits[1].distanceKm);
+  });
+
+  it('assignNearestWithin respects maxKm and mapFn', () => {
+    const bySlug = assignNearestWithin(locations, candidates, 5, (nearest) => ({
+      id: nearest.point.id,
+      distance_km: roundKm(nearest.distanceKm),
+    }));
+    assert.equal(bySlug.get('denver')?.id, 'a');
+    assert.equal(bySlug.get('boulder')?.id, 'b');
+    assert.equal(roundKm(1.26), 1.3);
   });
 });

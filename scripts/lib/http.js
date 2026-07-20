@@ -34,14 +34,22 @@ export function sanitizeUrlForError(url) {
 
 /**
  * Redact secret-bearing substrings from an arbitrary error message.
+ * Covers query-like secret params plus Bearer / Authorization header values
+ * that sometimes appear in upstream error bodies.
  * @param {unknown} message
  * @returns {string}
  */
 export function sanitizeErrorMessage(message) {
-  return String(message ?? '').replace(
+  let s = String(message ?? '');
+  s = s.replace(
     /([?&](?:api[_-]?key|access[_-]?token|token|key|auth|password|secret)=)[^&\s]*/gi,
     '$1[redacted]',
   );
+  // Authorization: Bearer <token> | Authorization=<token>
+  s = s.replace(/(Authorization\s*[:=]\s*)(?:Bearer\s+)?[^\s,;"']+/gi, '$1[redacted]');
+  // Standalone Bearer tokens (JSON bodies, WWW-Authenticate echoes, etc.)
+  s = s.replace(/(Bearer\s+)[A-Za-z0-9._\-+=/]+/gi, '$1[redacted]');
+  return s;
 }
 
 /**
@@ -70,9 +78,18 @@ export async function fetchJson(url, options = {}) {
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     const safeUrl = sanitizeUrlForError(url);
-    throw new Error(`HTTP ${res.status} for ${safeUrl}: ${body.slice(0, 200)}`);
+    const snippet = sanitizeErrorMessage(body.slice(0, 200));
+    throw new Error(`HTTP ${res.status} for ${safeUrl}: ${snippet}`);
   }
   return res.json();
 }
 
 export const NWS_USER_AGENT = 'COWX/1.0 (https://github.com/rinchen/cowx; colorado-weather)';
+
+/**
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
+export function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

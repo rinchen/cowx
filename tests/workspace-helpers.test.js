@@ -11,7 +11,7 @@ import {
   meteogramTimeAxisHtml,
   sparklineHtml,
 } from '../public/js/sparkline.js';
-import { selectRadarFrames, radarTileUrl } from '../public/js/radar-loop.js';
+import { selectRadarFrames, radarTileUrl, safeRadarPath } from '../public/js/radar-loop.js';
 import { estimateRfComms } from '../scripts/lib/rf-comms.js';
 import { parseCameras, parseRwisGeoJson } from '../scripts/fetch/adapters/cdot.js';
 import { parseNearbyStations } from '../scripts/fetch/adapters/cwop.js';
@@ -94,6 +94,8 @@ describe('radar-loop helpers', () => {
     assert.equal(frames.length, 4);
     assert.equal(frames[0].path, '/a');
     assert.match(radarTileUrl('/a'), /tilecache\.rainviewer\.com\/a\/256/);
+    assert.equal(safeRadarPath('https://evil.example/x'), null);
+    assert.equal(radarTileUrl('//evil.example/x'), null);
   });
 });
 

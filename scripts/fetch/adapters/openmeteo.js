@@ -6,7 +6,7 @@
  */
 
 import { buildAstronomy } from '../../lib/astronomy.js';
-import { fetchJson } from '../../lib/http.js';
+import { fetchJson, sleep } from '../../lib/http.js';
 import { estimateRfComms } from '../../lib/rf-comms.js';
 import { wmoLabel } from '../../lib/wmo.js';
 
@@ -16,13 +16,6 @@ const CHUNK = 20;
 const CHUNK_DELAY_MS = 10_000;
 const RETRY_BACKOFF_MS = 65_000;
 const RETRY_CHUNK = 15;
-
-/**
- * @param {number} ms
- */
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /**
  * @param {import('../../lib/types.js').Location[]} chunk

@@ -120,6 +120,8 @@ Most sources are national APIs keyed by lat/lon. These are Colorado-hardcoded to
 | [`scripts/fetch/adapters/spc-firewx.js`](scripts/fetch/adapters/spc-firewx.js)               | National SPC fire weather — keep; adjust CO bbox clip if desired                                                         |
 | [`scripts/fetch/adapters/nifc-fires.js`](scripts/fetch/adapters/nifc-fires.js)               | Filter `POOState='US-CO'` → your state code                                                                              |
 | [`scripts/fetch/adapters/burn-restrictions.js`](scripts/fetch/adapters/burn-restrictions.js) | Colorado COEM/DFPC links — replace with your state’s restriction aggregator or curated county links                      |
+| [`scripts/fetch/adapters/space-weather.js`](scripts/fetch/adapters/space-weather.js)         | NOAA SWPC planetary snapshot → `space-weather.json`; keep (national). Adjust aurora/HF copy if state-specific            |
+| [`scripts/lib/hf-conditions.js`](scripts/lib/hf-conditions.js)                               | HF band estimate helpers used by space-weather merge / UI — keep or retune heuristics for your latitude                  |
 | [`scripts/lib/http.js`](scripts/lib/http.js)                                                 | NWS `User-Agent` string — use your project name + contact URL/email                                                      |
 
 National / keep with new coords: Open-Meteo forecast & AQ, AirNow (with key), RainViewer, NWS point links.
@@ -140,16 +142,17 @@ Wipe stale Colorado payloads under `public/data/locations/` if old slugs remain.
 
 Sweep “COWX”, “Colorado”, and the flag:
 
-| Area                | Files                                                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Titles / meta / nav | `public/index.html`, `how-it-works.html`, `credits.html`                                                                  |
-| UI copy             | `public/js/app.js` (“Find your Colorado weather”, “Colorado overview”, document title)                                    |
-| Map overview        | `public/js/map.js` — `CO_CENTER`, `CO_ZOOM` (and aria labels)                                                             |
-| Imagery defaults    | `public/js/imagery.js` — default map center for CIRA/NWS deep links                                                       |
-| Snapshot copy       | `public/js/dashboard.js` — “Colorado snapshot…”, CoAgMET labels if removed                                                |
-| Favicon / logo      | `public/favicon.svg`, `public/img/colorado-flag.svg` (replace + update `src`)                                             |
-| localStorage        | `public/js/favorites.js` + `public/js/geo.js` — `cowx:favorites`, `cowx:lastLocation`, `cowx:hyperlocalPin` → your prefix |
-| package / schemas   | `package.json` name & description; schema `$id` / titles if desired                                                       |
+| Area                | Files                                                                                                                                                      |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Titles / meta / nav | `public/index.html`, `how-it-works.html`, `credits.html`                                                                                                   |
+| UI shell / routing  | `public/js/app.js` (“Find your Colorado weather”, document title `COWX — Colorado Weather`)                                                                |
+| Workspace / intel   | `public/js/workspace.js`, `intel.js`, `hyperlocal.js`, `bottom-line.js`, `radar-loop.js`, `geocode.js` — brand strings, pin copy, Colorado-bounded geocode |
+| Map overview        | `public/js/map.js` — `CO_CENTER`, `CO_ZOOM` (and aria labels)                                                                                              |
+| Imagery defaults    | `public/js/imagery.js` — default map center for CIRA/NWS deep links                                                                                        |
+| Snapshot copy       | `public/js/dashboard.js` — “Colorado snapshot…”, CoAgMET labels if removed                                                                                 |
+| Favicon / logo      | `public/favicon.svg`, `public/img/colorado-flag.svg` (replace + update `src`)                                                                              |
+| localStorage        | `public/js/favorites.js` + `public/js/geo.js` — `cowx:favorites`, `cowx:lastLocation`, `cowx:hyperlocalPin` → your prefix                                  |
+| package / schemas   | `package.json` name & description; schema `$id` / titles if desired                                                                                        |
 
 Deploy URL and GitHub links in HTML should point at **your** repo / Pages site.
 
@@ -170,10 +173,12 @@ Keep this file (`ADAPT.md`) and adjust examples to your brand once stable.
 
 ## 8. What you can leave alone
 
-- Client routing (`#/`, `#/l/{slug}`), favorites UX, forecast tables
+- Client routing (`#/`, `#/search`, `#/refine`, `#/l/{slug}`), favorites UX, forecast tables
 - Generic haversine helpers (`scripts/lib/geo.js`, `public/js/geo.js`)
 - Pages / PR workflows (paths), unless you rename scripts
 - RainViewer / Leaflet map plumbing (re-center only)
+
+Hash routes: `#/` home/resolve, `#/search` find-location (no auto-redirect), `#/refine` pin refine flow, `#/l/{slug}` locality workspace.
 
 ---
 

@@ -47,6 +47,9 @@
     "wind_speed_mph": {
       "type": ["number", "null"]
     },
+    "uv_index": {
+      "type": ["number", "null"]
+    },
     "aqi": {
       "type": ["number", "null"]
     },

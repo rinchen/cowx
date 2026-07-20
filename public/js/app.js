@@ -6,7 +6,7 @@ import {
   resolveIpGeolocation,
   setHyperlocalPin,
 } from './geo.js';
-import { geocodeColoradoAddress } from './geocode.js';
+import { geocodeColoradoAddress, isInColorado } from './geocode.js';
 import {
   getFavorites,
   getPreferredSlug,
@@ -37,6 +37,8 @@ let knownDataVersion = null;
 /** @type {ReturnType<typeof setInterval> | null} */
 let dataPollTimer = null;
 let refreshInFlight = false;
+/** Bumps on each route change so stale async renders no-op. */
+let routeGeneration = 0;
 
 const els = {
   status: /** @type {HTMLElement | null} */ (null),
@@ -44,6 +46,18 @@ const els = {
   main: /** @type {HTMLElement | null} */ (null),
   updatedFooter: /** @type {HTMLElement | null} */ (null),
 };
+
+/**
+ * Fire-and-forget async work without unhandled rejections.
+ * @param {Promise<unknown>} promise
+ */
+function safeVoid(promise) {
+  void promise.catch((err) => {
+    console.error(err);
+    showError('Something went wrong. Try refreshing the page.');
+    announce('An error occurred', 'assertive');
+  });
+}
 
 /**
  * @param {string} message
@@ -180,6 +194,10 @@ async function refreshIfDataUpdated() {
     await loadCoreData({ bustCache: true });
     await handleRoute({ bustCache: true });
     announce('Weather data updated.');
+  } catch (err) {
+    console.error(err);
+    showError('Could not refresh weather data. Try again later.');
+    announce('Data refresh failed', 'assertive');
   } finally {
     refreshInFlight = false;
   }
@@ -195,12 +213,12 @@ function startDataRefreshWatcher() {
   }
 
   dataPollTimer = setInterval(() => {
-    void refreshIfDataUpdated();
+    safeVoid(refreshIfDataUpdated());
   }, DATA_POLL_MS);
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      void refreshIfDataUpdated();
+      safeVoid(refreshIfDataUpdated());
     }
   });
 }
@@ -247,7 +265,7 @@ async function openLocationWithPin(slug) {
  */
 function goHome() {
   if (parseRoute() == null) {
-    void handleRoute();
+    safeVoid(handleRoute());
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
@@ -397,6 +415,7 @@ async function renderResolveView() {
   bindAddressPinForm(document.getElementById('address-pin-form'));
 
   const statusEl = document.getElementById('resolve-status');
+  let locateInFlight = false;
 
   document.getElementById('btn-continue')?.addEventListener('click', () => {
     const slug = /** @type {HTMLButtonElement} */ (document.getElementById('btn-continue')).dataset
@@ -404,36 +423,50 @@ async function renderResolveView() {
     if (slug) navigateTo(slug);
   });
 
-  document.getElementById('btn-locate')?.addEventListener('click', async () => {
-    if (statusEl) statusEl.textContent = 'Requesting precise device location…';
-    announce('Requesting precise device location');
-    const coords = await resolveBrowserGeolocation({ highAccuracy: true });
-    if (coords) {
-      setHyperlocalPin({
-        lat: coords.lat,
-        lon: coords.lon,
-        accuracy_m: coords.accuracy_m,
-        at: new Date().toISOString(),
-        source: 'gps',
-      });
-      const nearest = findNearestLocation(coords.lat, coords.lon, locations);
-      if (nearest) {
-        const acc =
-          coords.accuracy_m != null && coords.accuracy_m < 5000
-            ? ` (±${Math.round(coords.accuracy_m)} m)`
-            : '';
-        announce(
-          `Located near ${nearest.name}${acc}. Refining cameras and conditions for your pin.`,
-        );
-        if (statusEl) {
-          statusEl.textContent = `Pin set near ${nearest.name}${acc}. Loading refined view…`;
+  document.getElementById('btn-locate')?.addEventListener('click', () => {
+    if (locateInFlight) return;
+    locateInFlight = true;
+    safeVoid(
+      (async () => {
+        if (statusEl) statusEl.textContent = 'Requesting precise device location…';
+        announce('Requesting precise device location');
+        const coords = await resolveBrowserGeolocation({ highAccuracy: true });
+        if (coords && isInColorado(coords.lat, coords.lon)) {
+          setHyperlocalPin({
+            lat: coords.lat,
+            lon: coords.lon,
+            accuracy_m: coords.accuracy_m,
+            at: new Date().toISOString(),
+            source: 'gps',
+          });
+          const nearest = findNearestLocation(coords.lat, coords.lon, locations);
+          if (nearest) {
+            const acc =
+              coords.accuracy_m != null && coords.accuracy_m < 5000
+                ? ` (±${Math.round(coords.accuracy_m)} m)`
+                : '';
+            announce(
+              `Located near ${nearest.name}${acc}. Refining cameras and conditions for your pin.`,
+            );
+            if (statusEl) {
+              statusEl.textContent = `Pin set near ${nearest.name}${acc}. Loading refined view…`;
+            }
+            await openLocationWithPin(nearest.slug);
+            return;
+          }
+        } else if (coords && !isInColorado(coords.lat, coords.lon)) {
+          if (statusEl) {
+            statusEl.textContent =
+              'Location is outside Colorado. Trying IP geolocation, or search below.';
+          }
+          announce('Location outside Colorado', 'assertive');
         }
-        await openLocationWithPin(nearest.slug);
-        return;
-      }
-    }
-    if (statusEl) statusEl.textContent = 'Device location unavailable. Trying IP geolocation…';
-    await suggestFromIp(statusEl);
+        if (statusEl) statusEl.textContent = 'Device location unavailable. Trying IP geolocation…';
+        await suggestFromIp(statusEl);
+      })().finally(() => {
+        locateInFlight = false;
+      }),
+    );
   });
 
   if (hash === '#/refine') {
@@ -441,7 +474,7 @@ async function renderResolveView() {
   } else if (hash === '#/search') {
     document.getElementById('location-search')?.focus();
   } else {
-    await suggestFromIp(statusEl);
+    safeVoid(suggestFromIp(statusEl));
   }
 }
 
@@ -454,13 +487,18 @@ function bindAddressPinForm(form) {
   const statusEl = document.getElementById('resolve-status');
   let inFlight = false;
 
-  form.addEventListener('submit', async (event) => {
+  form.addEventListener('submit', (event) => {
     event.preventDefault();
     if (inFlight || !input) return;
     const q = input.value.trim();
     if (q.length < 3) {
       if (statusEl) statusEl.textContent = 'Enter a fuller Colorado street address or place name.';
       announce('Enter a fuller address');
+      return;
+    }
+    if (q.length > 200) {
+      if (statusEl) statusEl.textContent = 'Address is too long. Try a shorter Colorado address.';
+      announce('Address too long', 'assertive');
       return;
     }
     inFlight = true;
@@ -470,39 +508,43 @@ function bindAddressPinForm(form) {
     if (submitBtn) submitBtn.disabled = true;
     if (statusEl) statusEl.textContent = 'Looking up address in Colorado…';
     announce('Looking up address');
-    try {
-      const hit = await geocodeColoradoAddress(q);
-      if (!hit) {
-        if (statusEl) {
-          statusEl.textContent =
-            'No Colorado match found. Try a fuller address, or search by city/ZIP below.';
+    safeVoid(
+      (async () => {
+        try {
+          const hit = await geocodeColoradoAddress(q);
+          if (!hit) {
+            if (statusEl) {
+              statusEl.textContent =
+                'No Colorado match found. Try a fuller address, or search by city/ZIP below.';
+            }
+            announce('No Colorado address match', 'assertive');
+            return;
+          }
+          setHyperlocalPin({
+            lat: hit.lat,
+            lon: hit.lon,
+            accuracy_m: null,
+            at: new Date().toISOString(),
+            source: 'address',
+            label: hit.label,
+          });
+          const nearest = findNearestLocation(hit.lat, hit.lon, locations);
+          if (!nearest) {
+            if (statusEl) statusEl.textContent = 'Address found, but no catalog site nearby.';
+            announce('Address found but no catalog site', 'assertive');
+            return;
+          }
+          if (statusEl) {
+            statusEl.textContent = `Pin set near ${nearest.name}. Loading refined view…`;
+          }
+          announce(`Pin set near ${nearest.name}. Refining cameras and conditions.`);
+          await openLocationWithPin(nearest.slug);
+        } finally {
+          inFlight = false;
+          if (submitBtn) submitBtn.disabled = false;
         }
-        announce('No Colorado address match', 'assertive');
-        return;
-      }
-      setHyperlocalPin({
-        lat: hit.lat,
-        lon: hit.lon,
-        accuracy_m: null,
-        at: new Date().toISOString(),
-        source: 'address',
-        label: hit.label,
-      });
-      const nearest = findNearestLocation(hit.lat, hit.lon, locations);
-      if (!nearest) {
-        if (statusEl) statusEl.textContent = 'Address found, but no catalog site nearby.';
-        announce('Address found but no catalog site', 'assertive');
-        return;
-      }
-      if (statusEl) {
-        statusEl.textContent = `Pin set near ${nearest.name}. Loading refined view…`;
-      }
-      announce(`Pin set near ${nearest.name}. Refining cameras and conditions.`);
-      await openLocationWithPin(nearest.slug);
-    } finally {
-      inFlight = false;
-      if (submitBtn) submitBtn.disabled = false;
-    }
+      })(),
+    );
   });
 }
 
@@ -525,14 +567,16 @@ async function suggestFromIp(statusEl) {
         go.className = 'btn btn-link';
         go.textContent = `Go to ${nearest.name}`;
         go.addEventListener('click', () => {
-          setHyperlocalPin({
-            lat: ip.lat,
-            lon: ip.lon,
-            accuracy_m: null,
-            at: new Date().toISOString(),
-            source: 'ip',
-          });
-          void openLocationWithPin(nearest.slug);
+          if (isInColorado(ip.lat, ip.lon)) {
+            setHyperlocalPin({
+              lat: ip.lat,
+              lon: ip.lon,
+              accuracy_m: null,
+              at: new Date().toISOString(),
+              source: 'ip',
+            });
+          }
+          safeVoid(openLocationWithPin(nearest.slug));
         });
         statusEl.append(text, go);
       }
@@ -625,11 +669,12 @@ function renderErrorCard(title, message, linkLabel) {
  * @param {string} slug
  * @param {{ bustCache?: boolean }} [opts]
  */
-async function renderLocationView(slug, opts = {}) {
+async function renderLocationView(slug, opts = {}, generation = ++routeGeneration) {
   if (!els.main) return;
 
   const indexEntry = findLocation(slug);
   if (!indexEntry) {
+    if (generation !== routeGeneration) return;
     document.body.classList.remove('workspace-active');
     renderErrorCard('Location not found', `No site named “${slug}” in the index.`, 'Back to home');
     announce('Location not found');
@@ -644,6 +689,7 @@ async function renderLocationView(slug, opts = {}) {
   try {
     payload = await fetchJson(`locations/${slug}.json`, { bustCache: Boolean(opts.bustCache) });
   } catch {
+    if (generation !== routeGeneration) return;
     document.body.classList.remove('workspace-active');
     renderErrorCard(
       'Data unavailable',
@@ -654,6 +700,8 @@ async function renderLocationView(slug, opts = {}) {
     announce('Weather data failed to load', 'assertive');
     return;
   }
+
+  if (generation !== routeGeneration) return;
 
   els.main.innerHTML = `<div id="workspace-root"></div>`;
   const wsRoot = document.getElementById('workspace-root');
@@ -680,9 +728,11 @@ async function renderLocationView(slug, opts = {}) {
       },
     );
 
+    if (generation !== routeGeneration) return;
     announce(`Showing weather for ${indexEntry.name}. ${headline}`);
     document.title = `${indexEntry.name} — COWX`;
   } catch (err) {
+    if (generation !== routeGeneration) return;
     console.error(err);
     document.body.classList.remove('workspace-active');
     renderErrorCard(
@@ -740,14 +790,16 @@ function bindBackToTop() {
  * @param {{ bustCache?: boolean }} [opts]
  */
 async function handleRoute(opts = {}) {
+  const generation = ++routeGeneration;
   showError(null);
   const slug = parseRoute();
 
   if (slug) {
-    await renderLocationView(slug, opts);
+    await renderLocationView(slug, opts, generation);
     return;
   }
 
+  if (generation !== routeGeneration) return;
   document.title = 'COWX — Colorado Weather';
   await renderResolveView();
 }
@@ -762,11 +814,7 @@ async function init() {
   await loadCoreData();
   bindHomeNavigation();
   window.addEventListener('hashchange', () => {
-    void handleRoute().catch((err) => {
-      console.error(err);
-      showError('Navigation failed. Try refreshing the page.');
-      announce('Navigation failed', 'assertive');
-    });
+    safeVoid(handleRoute());
   });
   await handleRoute();
   startDataRefreshWatcher();

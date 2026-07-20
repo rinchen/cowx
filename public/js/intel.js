@@ -332,7 +332,7 @@ export function renderIntel(root, data, options = {}) {
     <section class="glass-panel glass-panel--now${usingPinNow ? ' glass-panel--pin-now' : ''}" aria-labelledby="intel-now-heading">
       <div class="intel-now-head">
         <h2 id="intel-now-heading" class="glass-panel__title">${usingPinNow ? 'At your location' : 'Now'}</h2>
-        <button type="button" class="aqi-ring ${cat.className}" data-jump-to="aqi-heading" aria-label="Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}. Open air quality details.">
+        <button type="button" class="aqi-ring ${cat.className}" data-jump-to="aqi-heading" aria-label="${escapeHtml(`Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}. Open air quality details.`)}">
           <span class="aqi-ring__value">${aq.aqi != null ? Math.round(aq.aqi) : '—'}</span>
           <span class="aqi-ring__label">AQI</span>
           <span class="aqi-ring__cat">${escapeHtml(cat.label)}</span>
@@ -342,7 +342,7 @@ export function renderIntel(root, data, options = {}) {
       <div class="intel-now">
         ${
           current?.temp_f != null
-            ? `<button type="button" class="intel-now-hero" data-jump-to="hourly-heading" aria-label="Current conditions ${Math.round(Number(current.temp_f))} degrees Fahrenheit, ${String(current.condition ?? wmoLabel(code))}. Open hourly forecast.">
+            ? `<button type="button" class="intel-now-hero" data-jump-to="hourly-heading" aria-label="${escapeHtml(`Current conditions ${Math.round(Number(current.temp_f))} degrees Fahrenheit, ${String(current.condition ?? wmoLabel(code))}. Open hourly forecast.`)}">
                 ${weatherIconHtml(code, { isDay, size: 40, className: 'weather-icon', alt: '' })}
                 <span class="intel-now-hero__text">
                   <span class="intel-temp">${Math.round(Number(current.temp_f))}°F</span>
@@ -353,7 +353,7 @@ export function renderIntel(root, data, options = {}) {
         }
         ${
           current?.wind_speed_mph != null
-            ? `<button type="button" class="intel-now-wind" data-jump-to="hourly-heading" aria-label="Wind ${Math.round(Number(current.wind_speed_mph))} miles per hour${windMetaParts.length ? `, ${windMetaParts.join(', ')}` : ''}. Open hourly forecast.">
+            ? `<button type="button" class="intel-now-wind" data-jump-to="hourly-heading" aria-label="${escapeHtml(`Wind ${Math.round(Number(current.wind_speed_mph))} miles per hour${windMetaParts.length ? `, ${windMetaParts.join(', ')}` : ''}. Open hourly forecast.`)}">
                 ${compass || ''}
                 <span class="intel-now-wind__text">
                   <span class="intel-now-wind__speed">${Math.round(Number(current.wind_speed_mph))} mph</span>
@@ -699,8 +699,8 @@ export function renderIntel(root, data, options = {}) {
             ${
               pwsLinks.aprs && safeHttpsUrl(String(pwsLinks.aprs))
                 ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(String(pwsLinks.aprs))))}" target="_blank" rel="noopener noreferrer" aria-label="Open station on aprs.fi (opens in new tab)">aprs.fi</a></p>`
-                : links.pws
-                  ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(links.pws) || links.pws))}" target="_blank" rel="noopener noreferrer" aria-label="Weather Underground PWS (opens in new tab)">Weather Underground</a></p>`
+                : safeHttpsUrl(links.pws)
+                  ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(links.pws)))}" target="_blank" rel="noopener noreferrer" aria-label="Weather Underground PWS (opens in new tab)">Weather Underground</a></p>`
                   : ''
             }
           </section>`

@@ -5,9 +5,8 @@
  */
 
 import { fetchJson } from '../../lib/http.js';
-import { pointInGeometry } from './nws.js';
-
-const CO_BBOX = { west: -109.2, south: 36.9, east: -102.0, north: 41.1 };
+import { CO_BBOX } from '../../lib/colorado.js';
+import { pointInGeometry } from '../../lib/geometry.js';
 
 const SOURCE_URL = 'https://www.spc.noaa.gov/products/fire_wx/overview.html';
 

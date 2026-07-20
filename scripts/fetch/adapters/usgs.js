@@ -8,22 +8,13 @@
  */
 
 import { fetchJson } from '../../lib/http.js';
-import { nearestPoint } from '../../lib/geo.js';
+import { assignNearestWithin, roundKm } from '../../lib/geo.js';
+import { toFiniteNumber } from '../../lib/parse.js';
 
 const IV_URL =
   'https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST';
 
 const MAX_DISTANCE_KM = 30;
-
-/**
- * @param {unknown} v
- * @returns {number | null}
- */
-function num(v) {
-  if (v == null || v === '') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
 /**
  * °C → °F when value looks like Celsius (USGS 00010 is typically °C).
@@ -60,13 +51,13 @@ export function parseNwisIv(data) {
   for (const ts of series) {
     const siteCode = ts?.sourceInfo?.siteCode?.[0]?.value;
     if (!siteCode) continue;
-    const lat = num(ts?.sourceInfo?.geoLocation?.geogLocation?.latitude);
-    const lon = num(ts?.sourceInfo?.geoLocation?.geogLocation?.longitude);
+    const lat = toFiniteNumber(ts?.sourceInfo?.geoLocation?.geogLocation?.latitude);
+    const lon = toFiniteNumber(ts?.sourceInfo?.geoLocation?.geogLocation?.longitude);
     if (lat == null || lon == null) continue;
 
     const param = String(ts?.variable?.variableCode?.[0]?.value ?? '');
     const rawVal = ts?.values?.[0]?.value?.[0];
-    const value = num(rawVal?.value);
+    const value = toFiniteNumber(rawVal?.value);
     const observed = rawVal?.dateTime ? String(rawVal.dateTime) : null;
     const name = String(ts?.sourceInfo?.siteName ?? siteCode);
 
@@ -108,26 +99,19 @@ export function assignNearestGauges(locations, gaugesBySite) {
   const stations = [...gaugesBySite.values()].filter(
     (g) => Number.isFinite(g.lat) && Number.isFinite(g.lon),
   );
-  /** @type {Map<string, object>} */
-  const bySlug = new Map();
-
-  for (const loc of locations) {
-    const nearest = nearestPoint({ lat: loc.lat, lon: loc.lon }, stations);
-    if (!nearest || nearest.distanceKm > MAX_DISTANCE_KM) continue;
+  return assignNearestWithin(locations, stations, MAX_DISTANCE_KM, (nearest) => {
     const g = nearest.point;
-    bySlug.set(loc.slug, {
+    return {
       station_id: g.station_id,
       station_name: g.station_name,
-      distance_km: Math.round(nearest.distanceKm * 10) / 10,
+      distance_km: roundKm(nearest.distanceKm),
       discharge_cfs: g.discharge_cfs,
       gauge_height_ft: g.gauge_height_ft,
       water_temp_f: g.water_temp_f,
       observed: g.observed,
       url: `https://waterdata.usgs.gov/nwis/uv?site_no=${encodeURIComponent(String(g.station_id))}`,
-    });
-  }
-
-  return bySlug;
+    };
+  });
 }
 
 /**

@@ -1,3 +1,5 @@
+import { isInColorado } from './geocode.js';
+
 /** @typedef {{ slug: string; name: string; lat: number; lon: number; county?: string; elevationFt?: number }} IndexEntry */
 
 /** @typedef {{ lat: number; lon: number; accuracy_m: number | null; at: string; source: 'gps' | 'ip' | 'address'; label?: string }} HyperlocalPin */
@@ -73,6 +75,7 @@ export function pinDistanceKm(pin, loc) {
  * @param {HyperlocalPin} pin
  */
 export function setHyperlocalPin(pin) {
+  if (!pin || !isInColorado(pin.lat, pin.lon)) return;
   try {
     const raw = JSON.stringify(pin);
     localStorage.setItem(PIN_STORAGE_KEY, raw);
@@ -109,7 +112,10 @@ export function getHyperlocalPin() {
     if (!parsed || typeof parsed !== 'object') return null;
     const lat = Number(parsed.lat);
     const lon = Number(parsed.lon);
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    if (!isInColorado(lat, lon)) {
+      clearHyperlocalPin();
+      return null;
+    }
     /** @type {HyperlocalPin['source']} */
     let source = 'gps';
     if (parsed.source === 'ip') source = 'ip';

@@ -5,23 +5,13 @@
  */
 
 import { fetchJson } from '../../lib/http.js';
-import { nearestPoint } from '../../lib/geo.js';
+import { CO_BBOX, isInColorado } from '../../lib/colorado.js';
+import { nearestPoint, roundKm } from '../../lib/geo.js';
+import { toFiniteNumber } from '../../lib/parse.js';
 
 const LATEST_URL = 'https://api.synopticdata.com/v2/stations/latest';
-/** Rough Colorado bbox */
-const CO_BBOX = { west: -109.2, south: 36.9, east: -102.0, north: 41.1 };
 const MAX_DISTANCE_KM = 60;
 const WITHIN_MINUTES = 120;
-
-/**
- * @param {unknown} v
- * @returns {number | null}
- */
-function num(v) {
-  if (v == null || v === '') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
 /**
  * Map Synoptic latest JSON → station list.
@@ -32,12 +22,10 @@ export function parseSynopticLatest(raw) {
   const out = [];
   for (const s of stations) {
     if (!s || typeof s !== 'object') continue;
-    const lat = num(s.LATITUDE);
-    const lon = num(s.LONGITUDE);
+    const lat = toFiniteNumber(s.LATITUDE);
+    const lon = toFiniteNumber(s.LONGITUDE);
     if (lat == null || lon == null) continue;
-    if (lat < CO_BBOX.south || lat > CO_BBOX.north || lon < CO_BBOX.west || lon > CO_BBOX.east) {
-      continue;
-    }
+    if (!isInColorado(lat, lon)) continue;
     const obs = s.OBSERVATIONS ?? {};
     const air = obs.air_temp_value_1;
     const rh = obs.relative_humidity_value_1;
@@ -55,12 +43,12 @@ export function parseSynopticLatest(raw) {
       network: String(s.SHORTNAME ?? s.MNET_ID ?? 'Synoptic'),
       lat,
       lon,
-      temp_f: num(air?.value),
-      humidity: num(rh?.value),
-      wind_speed_mph: num(wind?.value),
-      wind_gust_mph: num(gust?.value),
-      wind_dir_deg: num(dir?.value),
-      pressure_mb: num(press?.value),
+      temp_f: toFiniteNumber(air?.value),
+      humidity: toFiniteNumber(rh?.value),
+      wind_speed_mph: toFiniteNumber(wind?.value),
+      wind_gust_mph: toFiniteNumber(gust?.value),
+      wind_dir_deg: toFiniteNumber(dir?.value),
+      pressure_mb: toFiniteNumber(press?.value),
       observed: air?.date_time
         ? String(air.date_time)
         : s.OBSERVATION_TIME
@@ -197,7 +185,7 @@ export async function fetchSynoptic(locations, env = process.env, existingPwsByS
       }
       matched += 1;
       const p = /** @type {ReturnType<typeof parseSynopticLatest>[0]} */ (hit.point);
-      const syn = { ...p, distance_km: Math.round(hit.distanceKm * 10) / 10 };
+      const syn = { ...p, distance_km: roundKm(hit.distanceKm) };
       bySlug.set(loc.slug, mergeSynopticIntoPws(existing, syn));
     }
 

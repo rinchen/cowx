@@ -2,7 +2,7 @@
 
 import { aqiMarkerColor } from './aqi.js';
 import { escapeHtml, safeHttpsUrl } from './dom.js';
-import { RadarLoopController, RAINVIEWER_MAX_ZOOM } from './radar-loop.js';
+import { RadarLoopController, RAINVIEWER_MAX_ZOOM, radarTileUrl } from './radar-loop.js';
 
 /** Generation token so async loads no-op after destroyMap(). */
 let mapGeneration = 0;
@@ -272,7 +272,14 @@ export async function setCwopLayer(enabled, url = 'data/cwop.geojson') {
   if (!enabled) return false;
 
   try {
-    const response = await fetch(url);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12_000);
+    let response;
+    try {
+      response = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!response.ok) throw new Error(`CWOP geojson HTTP ${response.status}`);
     const geojson = await response.json();
     if (!geojson?.features?.length) return false;
@@ -289,7 +296,7 @@ export async function setCwopLayer(enabled, url = 'data/cwop.geojson') {
       },
       onEachFeature(feature, layer) {
         const p = feature.properties ?? {};
-        const bits = [p.callsign || 'CWOP'];
+        const bits = [escapeHtml(String(p.callsign || 'CWOP'))];
         if (p.temp_f != null) bits.push(`${Math.round(Number(p.temp_f))}°F`);
         if (p.wind_speed_mph != null) bits.push(`${Math.round(Number(p.wind_speed_mph))} mph`);
         layer.bindTooltip(bits.join(' · '));
@@ -325,13 +332,21 @@ export async function setRadarOverlay(enabled, opacity = 0.5) {
   }
 
   try {
-    const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12_000);
+    let response;
+    try {
+      response = await fetch('https://api.rainviewer.com/public/weather-maps.json', {
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!response.ok) throw new Error('RainViewer API unavailable');
     const data = await response.json();
     const path = data?.radar?.past?.slice(-1)?.[0]?.path;
-    if (!path) throw new Error('No radar frames');
-
-    const url = `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/2/1_1.png`;
+    const url = path ? radarTileUrl(path) : null;
+    if (!url) throw new Error('No radar frames');
 
     if (radarLayer) {
       stateMap.removeLayer(radarLayer);
@@ -382,6 +397,7 @@ export function bindRadarControls(controlsEl, onChange, options = {}) {
  */
 export async function bindRadarLoopControls(controlsEl, options = {}) {
   if (!stateMap || typeof L === 'undefined') return false;
+  const expectedGeneration = mapGeneration;
 
   if (radarLoop) {
     radarLoop.destroy();
@@ -407,6 +423,7 @@ export async function bindRadarLoopControls(controlsEl, options = {}) {
   });
 
   radarLoop.onFrame((idx, frame) => {
+    if (expectedGeneration !== mapGeneration) return;
     if (scrub) {
       scrub.max = String(Math.max(0, radarLoop.frames.length - 1));
       scrub.value = String(idx);
@@ -427,7 +444,8 @@ export async function bindRadarLoopControls(controlsEl, options = {}) {
     }
   });
 
-  const ok = await radarLoop.load();
+  const ok = await radarLoop.load({ timeoutMs: 12_000 });
+  if (expectedGeneration !== mapGeneration) return false;
   if (!ok) {
     options.onStatus?.('RainViewer radar could not load; map basemap is still available.');
     controlsEl.hidden = true;

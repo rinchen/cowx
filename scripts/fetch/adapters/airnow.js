@@ -4,18 +4,11 @@
  * Fallback: skipped/error/partial.
  */
 
-import { fetchJson } from '../../lib/http.js';
-import { nearestPoint } from '../../lib/geo.js';
+import { fetchJson, sleep } from '../../lib/http.js';
+import { nearestPoint, roundKm } from '../../lib/geo.js';
 
 const GRID = 0.2;
 const DELAY_MS = 350;
-
-/**
- * @param {number} ms
- */
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /**
  * @param {number} n
@@ -110,7 +103,7 @@ export async function fetchAirNow(locations, env = process.env) {
     if (!n || n.distanceKm > 80) continue;
     bySlug.set(loc.slug, {
       ...n.point.payload,
-      distance_km: Math.round(n.distanceKm * 10) / 10,
+      distance_km: roundKm(n.distanceKm),
     });
   }
 

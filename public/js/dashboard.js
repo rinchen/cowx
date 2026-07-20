@@ -1,8 +1,7 @@
 import { escapeHtml, safeHttpsUrl, safeExternalUrl } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
-import { miniBarChartHtml, sparklineHtml } from './sparkline.js';
-import { windCellHtml, windCompassHtml, windDirLabel } from './wind.js';
+import { windCellHtml } from './wind.js';
 
 const COL_PREF_KEY = 'cowx:tableColumns';
 
@@ -104,17 +103,6 @@ function aqiBarHtml(aqi) {
   const n = Math.max(0, Math.min(500, Number(aqi)));
   const pct = (n / 500) * 100;
   return `<div class="aqi-bar" role="img" aria-label="AQI ${Math.round(n)} on a 0 to 500 scale"><span class="aqi-bar__marker" style="left:${pct}%"></span></div>`;
-}
-
-/**
- * UV gradient bar with marker (0–11+).
- * @param {number} uv
- * @returns {string}
- */
-function uvBarHtml(uv) {
-  const n = Math.max(0, Number(uv));
-  const pct = Math.min(100, (n / 11) * 100);
-  return `<div class="uv-bar" role="img" aria-label="UV index ${n} on a 0 to 11 plus scale"><span class="uv-bar__marker" style="left:${pct}%"></span></div>`;
 }
 
 /**
@@ -243,20 +231,6 @@ function fmtFreezingLevelFt(meters) {
 }
 
 /**
- * @param {number | null | undefined} cape
- * @returns {string | null}
- */
-function capePlain(cape) {
-  if (cape == null || Number.isNaN(Number(cape))) return null;
-  const n = Math.round(Number(cape));
-  let level = 'Low';
-  if (n >= 3500) level = 'Extreme';
-  else if (n >= 2500) level = 'High';
-  else if (n >= 1000) level = 'Moderate';
-  return `${n} J/kg (${level})`;
-}
-
-/**
  * Format Open-Meteo duration seconds as "Xh Ym".
  * @param {number | null | undefined} seconds
  * @returns {string | null}
@@ -270,24 +244,6 @@ function fmtDurationSeconds(seconds) {
 }
 
 /**
- * Daylight remaining until today's sunset.
- * @param {string | null | undefined} sunsetIso
- * @param {number} [nowMs]
- * @returns {string | null}
- */
-function daylightRemaining(sunsetIso, nowMs = Date.now()) {
-  if (!sunsetIso) return null;
-  try {
-    const end = new Date(sunsetIso).getTime();
-    const rem = end - nowMs;
-    if (rem <= 0) return 'Sunset passed';
-    return `${fmtDurationSeconds(rem / 1000)} left`;
-  } catch {
-    return null;
-  }
-}
-
-/**
  * Compact L/M/H cloud layer percentages.
  * @param {number | null | undefined} low
  * @param {number | null | undefined} mid
@@ -297,56 +253,6 @@ function daylightRemaining(sunsetIso, nowMs = Date.now()) {
 function cloudLayersHtml(low, mid, high) {
   const fmt = (v) => (v != null && !Number.isNaN(Number(v)) ? `${Math.round(Number(v))}` : '—');
   return `<span class="cloud-layers" title="Low / Mid / High cloud cover %">${fmt(low)}/${fmt(mid)}/${fmt(high)}</span>`;
-}
-
-/**
- * Current-conditions jump target. Prefer in-page section ids; absolute URLs go offsite.
- * Hash routing owns `location.hash`, so in-page jumps use data-jump-to + click handler.
- * @param {string} label
- * @param {string} valueHtml — trusted HTML for the value line (already escaped text or SVG)
- * @param {string | null | undefined} [href] — section id (`hourly-heading`) or https URL
- */
-function detailItemLinked(label, valueHtml, href) {
-  if (valueHtml == null || valueHtml === '') return '';
-  if (!href) {
-    return `<div><dt>${escapeHtml(label)}</dt><dd>${valueHtml}</dd></div>`;
-  }
-  const external = /^https?:\/\//i.test(href);
-  if (external) {
-    return `<div class="summary-detail">
-      <a class="detail-jump" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">
-        <span class="detail-jump__label">${escapeHtml(label)}</span>
-        <span class="detail-jump__value">${valueHtml}</span>
-      </a>
-    </div>`;
-  }
-  return `<div class="summary-detail">
-    <a class="detail-jump" href="#${escapeHtml(href)}" data-jump-to="${escapeHtml(href)}">
-      <span class="detail-jump__label">${escapeHtml(label)}</span>
-      <span class="detail-jump__value">${valueHtml}</span>
-    </a>
-  </div>`;
-}
-
-/**
- * @param {string} label
- * @param {string | null | undefined} value
- * @param {string | null | undefined} [href]
- */
-function detailItem(label, value, href) {
-  if (value == null || value === '') return '';
-  return detailItemLinked(label, escapeHtml(value), href);
-}
-
-/**
- * Like detailItem but allows trusted HTML in the value (e.g. wind compass SVG).
- * @param {string} label
- * @param {string | null | undefined} html
- * @param {string | null | undefined} [href]
- */
-function detailItemHtml(label, html, href) {
-  if (html == null || html === '') return '';
-  return detailItemLinked(label, html, href);
 }
 
 /**
@@ -618,8 +524,8 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
           <strong>${escapeHtml(r.title)}</strong>
           <span class="sources-body">${escapeHtml(r.body)}</span>
           ${
-            r.href
-              ? `<a href="${escapeHtml(r.href)}" target="_blank" rel="noopener noreferrer">Open source</a>`
+            r.href && (safeHttpsUrl(r.href) || safeExternalUrl(r.href))
+              ? `<a href="${escapeHtml(safeHttpsUrl(r.href) || safeExternalUrl(r.href))}" target="_blank" rel="noopener noreferrer">Open source</a>`
               : ''
           }
         </li>`,
@@ -1009,408 +915,6 @@ function buildDailyTable(daily) {
   wrap.appendChild(table);
   attachColumnToggles(wrap, cols);
   return wrap;
-}
-
-/**
- * @param {string[]} times
- * @returns {number}
- */
-function nearestHourIndex(times) {
-  const now = Date.now();
-  let best = 0;
-  let bestDiff = Infinity;
-  times.forEach((t, i) => {
-    const diff = Math.abs(new Date(t).getTime() - now);
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      best = i;
-    }
-  });
-  return best;
-}
-
-/**
- * Approximate golden hour windows: first hour after sunrise, last hour before sunset.
- * @param {string | null | undefined} sunriseIso
- * @param {string | null | undefined} sunsetIso
- * @returns {{ morning: string | null, evening: string | null }}
- */
-function goldenHourWindows(sunriseIso, sunsetIso) {
-  if (!sunriseIso || !sunsetIso) return { morning: null, evening: null };
-  try {
-    const rise = new Date(sunriseIso);
-    const set = new Date(sunsetIso);
-    const morningEnd = new Date(rise.getTime() + 60 * 60_000);
-    const eveningStart = new Date(set.getTime() - 60 * 60_000);
-    return {
-      morning: `${fmtClock(rise.toISOString())}–${fmtClock(morningEnd.toISOString())}`,
-      evening: `${fmtClock(eveningStart.toISOString())}–${fmtClock(set.toISOString())}`,
-    };
-  } catch {
-    return { morning: null, evening: null };
-  }
-}
-
-/**
- * @param {Record<string, unknown> | null} airnow
- * @param {Record<string, unknown> | null} purpleair
- * @param {Record<string, unknown> | null} omaq
- * @returns {string | null}
- */
-function airQualityPlain(airnow, purpleair, omaq) {
-  if (airnow?.aqi != null) {
-    const cat = airnow.category ? String(airnow.category) : '';
-    const param = airnow.parameter ? String(airnow.parameter) : '';
-    const area = airnow.reporting_area ? String(airnow.reporting_area) : '';
-    const parts = [`AQI ${airnow.aqi}`];
-    if (cat) parts.unshift(cat);
-    if (param) parts.push(`(${param})`);
-    let line = parts.join(' ');
-    if (area) line += ` near ${area}`;
-    return line;
-  }
-  if (purpleair?.aqi_pm25 != null) {
-    return `About AQI ${purpleair.aqi_pm25} from a nearby PurpleAir sensor${purpleair.pm25 != null ? ` (PM2.5 ${purpleair.pm25} µg/m³)` : ''}`;
-  }
-  if (omaq?.us_aqi != null) {
-    return `Model US AQI ${omaq.us_aqi}${omaq.pm25 != null ? ` · PM2.5 ${omaq.pm25} µg/m³` : ''}`;
-  }
-  return null;
-}
-
-/**
- * @param {Record<string, unknown>[]} alerts
- * @returns {string}
- */
-function alertsPlain(alerts) {
-  if (!alerts.length) return 'No active weather alerts';
-  return alerts
-    .map((a) => {
-      const event = String(a.event ?? a.headline ?? 'Alert');
-      const sev = a.severity ? ` (${a.severity})` : '';
-      return `${event}${sev}`;
-    })
-    .join('; ');
-}
-
-/**
- * @param {number | null | undefined} uv
- * @returns {string | null}
- */
-function uvPlain(uv) {
-  if (uv == null || Number.isNaN(Number(uv))) return null;
-  const n = Number(uv);
-  let level = 'Low';
-  if (n >= 11) level = 'Extreme';
-  else if (n >= 8) level = 'Very high';
-  else if (n >= 6) level = 'High';
-  else if (n >= 3) level = 'Moderate';
-  return `${n} (${level})`;
-}
-
-/**
- * @param {HTMLElement} root
- * @param {Record<string, unknown>} data
- * @param {(slug: string) => boolean} onFavoriteToggle
- * @param {boolean} [starred]
- * @param {{ sources?: unknown[] }} [options]
- */
-export function renderDashboard(root, data, onFavoriteToggle, starred = false, options = {}) {
-  root.innerHTML = '';
-  const metaSources = Array.isArray(options.sources) ? options.sources : [];
-  const slug = String(data.slug ?? '');
-  const current = /** @type {Record<string, unknown> | null} */ (data.current ?? null);
-  const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
-  const links = /** @type {Record<string, string | null>} */ (data.links ?? {});
-  const sunrises = /** @type {string[]} */ (daily?.sunrise ?? []);
-  const sunsets = /** @type {string[]} */ (daily?.sunset ?? []);
-  const elevationFt =
-    data.elevation_ft != null && !Number.isNaN(Number(data.elevation_ft))
-      ? Number(data.elevation_ft)
-      : null;
-  const currentIsDay =
-    current?.is_day === 0 || current?.is_day === 1
-      ? current.is_day === 1
-      : isDaytime(new Date().toISOString(), sunrises, sunsets);
-  const nowIsDay = currentIsDay;
-
-  const header = document.createElement('header');
-  header.className = 'dashboard-header';
-  header.innerHTML = `
-    <div class="dashboard-title-row">
-      <h1 id="location-name">${escapeHtml(String(data.name ?? slug))}</h1>
-      <button type="button" class="btn-favorite" id="btn-favorite" aria-pressed="${starred}" aria-label="${starred ? 'Remove from favorites' : 'Add to favorites'}">
-        <span aria-hidden="true">${starred ? '★' : '☆'}</span>
-      </button>
-    </div>
-    <p class="location-meta">
-      ${data.county ? `<span>${escapeHtml(String(data.county))} County</span>` : ''}
-      ${data.elevation_ft != null ? `<span>${Number(data.elevation_ft).toLocaleString()} ft</span>` : ''}
-      ${data.region ? `<span>${escapeHtml(String(data.region))}</span>` : ''}
-      ${data.wfo ? `<span>NWS ${escapeHtml(String(data.wfo))}</span>` : ''}
-      ${data.lat != null && data.lon != null ? `<span>${Number(data.lat).toFixed(2)}, ${Number(data.lon).toFixed(2)}</span>` : ''}
-    </p>
-  `;
-  root.appendChild(header);
-
-  if (data.forecastStale) {
-    const banner = document.createElement('p');
-    banner.className = 'stale-banner';
-    banner.setAttribute('role', 'status');
-    banner.textContent = 'Showing last successful forecast — a newer model pull was rate-limited.';
-    root.appendChild(banner);
-  }
-
-  const summarySection = document.createElement('section');
-  summarySection.className = 'summary-card';
-  summarySection.setAttribute('aria-labelledby', 'summary-heading');
-
-  if (!current || current.temp_f == null) {
-    summarySection.innerHTML = `
-      <h2 id="summary-heading">Current conditions</h2>
-      <p class="empty-state"><strong>Forecast temporarily unavailable.</strong>
-        Source may be rate-limited or stale. Other live sections below may still have data.</p>
-      ${data.updatedAt ? `<p class="updated-at">Location data updated ${fmtDateTime(String(data.updatedAt))}</p>` : ''}
-    `;
-  } else {
-    const hourlyNow = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
-    const hourTimes = /** @type {string[]} */ (hourlyNow?.time ?? []);
-    const hi = hourTimes.length ? nearestHourIndex(hourTimes) : 0;
-    const precipChance =
-      hourlyNow && Array.isArray(hourlyNow.precipitation_probability)
-        ? /** @type {number[]} */ (hourlyNow.precipitation_probability)[hi]
-        : null;
-    const hourVis =
-      current.visibility_m != null
-        ? Number(current.visibility_m)
-        : hourlyNow && Array.isArray(hourlyNow.visibility)
-          ? /** @type {number[]} */ (hourlyNow.visibility)[hi]
-          : null;
-    const hourDew =
-      current.dewpoint_f != null
-        ? Number(current.dewpoint_f)
-        : hourlyNow && Array.isArray(hourlyNow.dewpoint_2m)
-          ? /** @type {number[]} */ (hourlyNow.dewpoint_2m)[hi]
-          : null;
-
-    const todayHi = /** @type {number[]} */ (daily?.temperature_2m_max ?? [])[0];
-    const todayLo = /** @type {number[]} */ (daily?.temperature_2m_min ?? [])[0];
-    const sunrise = sunrises[0] ?? null;
-    const sunset = sunsets[0] ?? null;
-    const golden = goldenHourWindows(sunrise, sunset);
-
-    const alerts = /** @type {Record<string, unknown>[]} */ (data.alerts ?? []);
-    const alertText = alertsPlain(alerts);
-    const hasAlerts = alerts.length > 0;
-
-    const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
-    const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
-    const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
-    const aq = airQualityPlain(airnow, purpleair, omaq);
-
-    const aviation = /** @type {Record<string, unknown> | null} */ (data.aviation ?? null);
-    const flightCat =
-      aviation?.flight_category != null
-        ? `${aviation.flight_category}${aviation.icao ? ` at ${aviation.icao}` : ''}`
-        : null;
-
-    const windDeg = /** @type {number | null} */ (current.wind_dir_deg ?? null);
-    const windDir = windDirLabel(windDeg);
-    const windSpeedBits = [];
-    if (current.wind_speed_mph != null) {
-      windSpeedBits.push(`${Math.round(Number(current.wind_speed_mph))} mph`);
-    }
-    if (current.wind_gust_mph != null) {
-      windSpeedBits.push(`gusts ${Math.round(Number(current.wind_gust_mph))} mph`);
-    }
-    const windHtmlParts = [];
-    const compass = windCompassHtml(windDeg, { size: 32 });
-    if (compass) windHtmlParts.push(compass);
-    if (windSpeedBits.length || windDir) {
-      const speedLine = windSpeedBits.length
-        ? `<span class="wind-cell__mph">${escapeHtml(windSpeedBits.join(' · '))}</span>`
-        : '';
-      const dirLine = windDir
-        ? `<span class="wind-cell__dir">from ${escapeHtml(windDir)}</span>`
-        : '';
-      windHtmlParts.push(`<span class="wind-cell__speed">${speedLine}${dirLine}</span>`);
-    }
-    const windHtml = windHtmlParts.length
-      ? `<span class="wind-cell wind-cell--summary">${windHtmlParts.join('')}</span>`
-      : null;
-
-    const tstormNow =
-      current.thunderstorm_probability != null
-        ? `${Math.round(Number(current.thunderstorm_probability))}%`
-        : hourlyNow && Array.isArray(hourlyNow.thunderstorm_probability)
-          ? (() => {
-              const v = /** @type {number[]} */ (hourlyNow.thunderstorm_probability)[hi];
-              return v != null ? `${Math.round(Number(v))}%` : null;
-            })()
-          : null;
-
-    const code = /** @type {number | null} */ (current.weather_code ?? null);
-    const precipIn =
-      current.precip_in != null ? `${Number(current.precip_in).toFixed(2)} in this hour` : null;
-
-    const alertBody = hasAlerts
-      ? `<strong>Alerts:</strong> ${escapeHtml(alertText)}`
-      : '<strong>Alerts:</strong> None active for this area.';
-
-    const hourFreeze =
-      hourlyNow && Array.isArray(hourlyNow.freezing_level_height)
-        ? /** @type {number[]} */ (hourlyNow.freezing_level_height)[hi]
-        : null;
-    const hourCape =
-      hourlyNow && Array.isArray(hourlyNow.cape)
-        ? /** @type {number[]} */ (hourlyNow.cape)[hi]
-        : null;
-    const hourSnow =
-      hourlyNow && Array.isArray(hourlyNow.snowfall)
-        ? /** @type {number[]} */ (hourlyNow.snowfall)[hi]
-        : null;
-    const snowLine =
-      hourSnow != null && Number(hourSnow) > 0
-        ? `${Number(hourSnow).toFixed(2)} in this hour`
-        : null;
-    const daylightLeft = daylightRemaining(sunset);
-
-    const pressureMb =
-      current.surface_pressure_mb != null ? current.surface_pressure_mb : current.pressure_mb;
-
-    summarySection.innerHTML = `
-      <h2 id="summary-heading">Current conditions</h2>
-      <p class="summary-alert ${hasAlerts ? 'summary-alert--active' : 'summary-alert--clear'}" role="status">
-        <a class="detail-jump detail-jump--alert" href="#alerts-heading" data-jump-to="alerts-heading">${alertBody}</a>
-      </p>
-      <div class="summary-grid">
-        <div class="summary-primary">
-          <a class="detail-jump detail-jump--primary" href="#hourly-heading" data-jump-to="hourly-heading">
-            ${weatherIconHtml(code, { isDay: nowIsDay, size: 72, className: 'weather-icon weather-icon--lg', alt: String(current.condition ?? wmoLabel(code)) })}
-            <p class="summary-temp" aria-label="Temperature">
-              ${Math.round(Number(current.temp_f))}°F
-              ${(() => {
-                const temps = /** @type {number[]} */ (hourlyNow?.temperature_2m ?? []).slice(
-                  Math.max(0, hi - 11),
-                  hi + 1,
-                );
-                const spark = sparklineHtml(temps, { width: 72, height: 22, fill: true });
-                return spark ? `<span class="summary-spark">${spark}</span>` : '';
-              })()}
-            </p>
-            <p class="summary-conditions">${escapeHtml(String(current.condition ?? wmoLabel(code)))}</p>
-          </a>
-        </div>
-        <dl class="summary-details">
-          ${detailItem('Feels like', current.feels_like_f != null ? `${Math.round(Number(current.feels_like_f))}°F` : null, 'hourly-heading')}
-          ${detailItem('Today’s range', todayHi != null && todayLo != null ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F` : null, 'daily-heading')}
-          ${detailItemHtml(
-            'Chance of precip',
-            precipChance != null
-              ? `<span>${precipChance}% this hour</span>${(() => {
-                  const probs = /** @type {number[]} */ (
-                    hourlyNow?.precipitation_probability ?? []
-                  ).slice(hi, hi + 12);
-                  const bars = miniBarChartHtml(probs, { width: 72, height: 18 });
-                  return bars ? `<span class="summary-spark">${bars}</span>` : '';
-                })()}`
-              : null,
-            'hourly-heading',
-          )}
-          ${detailItem('Precipitation', precipIn, 'hourly-heading')}
-          ${detailItem(
-            'Rainfall today',
-            current.precip_today_in != null
-              ? `${Number(current.precip_today_in).toFixed(2)} in`
-              : null,
-            'hourly-heading',
-          )}
-          ${detailItem('Snowfall', snowLine, snowLine ? 'hourly-heading' : null)}
-          ${detailItem(
-            'Snow depth',
-            (() => {
-              const sn = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
-              return sn?.snow_depth_in != null ? `${sn.snow_depth_in} in (nearest SNOTEL)` : null;
-            })(),
-            'snowpack-heading',
-          )}
-          ${detailItem('Humidity', current.humidity != null ? `${current.humidity}%` : null, 'hourly-heading')}
-          ${detailItem('Dewpoint', hourDew != null ? `${Math.round(hourDew)}°F` : null, 'hourly-heading')}
-          ${detailItemHtml('Wind', windHtml, 'hourly-heading')}
-          ${detailItem('Thunderstorm', tstormNow, 'hourly-heading')}
-          ${detailItem('CAPE', capePlain(hourCape), hourCape != null ? 'hourly-heading' : null)}
-          ${detailItem('Freezing level', fmtFreezingLevelFt(hourFreeze), hourFreeze != null ? 'hourly-heading' : null)}
-          ${detailItem('Visibility', hourVis != null ? fmtVisibility(hourVis) : null, 'hourly-heading')}
-          ${detailItem('Cloud cover', current.cloud_cover != null ? `${current.cloud_cover}%` : null, 'hourly-heading')}
-          ${detailItem(
-            'Pressure',
-            pressureMb != null
-              ? `${Math.round(Number(pressureMb))} mb (${(Number(pressureMb) * 0.02953).toFixed(2)} inHg)`
-              : null,
-            'sources-heading',
-          )}
-          ${detailItemHtml(
-            'UV index',
-            (() => {
-              const plain = uvPlain(/** @type {number | null} */ (current.uv_index ?? null));
-              if (!plain) return null;
-              const bar = current.uv_index != null ? uvBarHtml(Number(current.uv_index)) : '';
-              return `<span>${escapeHtml(plain)}</span>${bar}`;
-            })(),
-            'daily-heading',
-          )}
-          ${detailItemHtml(
-            'Air quality',
-            (() => {
-              if (!aq) return null;
-              let aqiNum = null;
-              if (airnow?.aqi != null) aqiNum = Number(airnow.aqi);
-              else if (purpleair?.aqi_pm25 != null) aqiNum = Number(purpleair.aqi_pm25);
-              else if (omaq?.us_aqi != null) aqiNum = Number(omaq.us_aqi);
-              const bar = aqiNum != null && Number.isFinite(aqiNum) ? aqiBarHtml(aqiNum) : '';
-              return `<span>${escapeHtml(aq)}</span>${bar}`;
-            })(),
-            aq ? 'aqi-heading' : null,
-          )}
-          ${detailItem('Sunrise', sunrise ? fmtClock(sunrise) : null, 'daily-heading')}
-          ${detailItem('Sunset', sunset ? fmtClock(sunset) : null, 'daily-heading')}
-          ${detailItem('Daylight remaining', daylightLeft, daylightLeft ? 'daily-heading' : null)}
-          ${detailItem('Morning golden hour', golden.morning, 'daily-heading')}
-          ${detailItem('Evening golden hour', golden.evening, 'daily-heading')}
-          ${detailItem('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
-          ${(() => {
-            const usgs = /** @type {Record<string, unknown> | null} */ (data.usgs ?? null);
-            if (!usgs || usgs.discharge_cfs == null) return '';
-            const name = String(usgs.station_name ?? usgs.station_id ?? 'USGS gauge');
-            const short = name.length > 40 ? `${name.slice(0, 37)}…` : name;
-            const cfs = `${Math.round(Number(usgs.discharge_cfs))} cfs`;
-            return detailItem('Streamflow', `${short}: ${cfs}`, 'hydrology-heading');
-          })()}
-        </dl>
-      </div>
-      ${data.updatedAt ? `<p class="updated-at">Location snapshot ${fmtDateTime(String(data.updatedAt))} · <a class="detail-jump detail-jump--inline" href="#sources-heading" data-jump-to="sources-heading">Live data sources</a></p>` : ''}
-    `;
-  }
-  root.appendChild(summarySection);
-  bindDetailJumps(summarySection);
-
-  appendDeepForecast(root, data, {
-    sources: metaSources,
-    sunrises,
-    sunsets,
-    elevationFt,
-    links,
-    includeMapSlot: true,
-  });
-
-  const favBtn = /** @type {HTMLButtonElement | null} */ (root.querySelector('#btn-favorite'));
-  favBtn?.addEventListener('click', () => {
-    const next = onFavoriteToggle(slug);
-    favBtn.setAttribute('aria-pressed', String(next));
-    favBtn.setAttribute('aria-label', next ? 'Remove from favorites' : 'Add to favorites');
-    const span = favBtn.querySelector('span');
-    if (span) span.textContent = next ? '★' : '☆';
-  });
 }
 
 /**
@@ -2652,9 +2156,11 @@ function appendDeepForecast(root, data, ctx) {
       const ul = document.createElement('ul');
       ul.className = 'link-list';
       entries.forEach(([label, url]) => {
+        const safe = safeHttpsUrl(url) || safeExternalUrl(url);
+        if (!safe) return;
         const li = document.createElement('li');
         const a = document.createElement('a');
-        a.href = String(url);
+        a.href = safe;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
         a.textContent = String(label);

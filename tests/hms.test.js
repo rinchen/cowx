@@ -6,6 +6,7 @@ import {
   pointInRing,
   parseDbf,
   hmsSmokeZipUrl,
+  MAX_HMS_ZIP_BYTES,
 } from '../scripts/fetch/adapters/hms.js';
 
 describe('HMS helpers', () => {
@@ -67,5 +68,9 @@ describe('HMS helpers', () => {
 
   it('parseDbf returns empty for tiny buffer', () => {
     assert.deepEqual(parseDbf(Buffer.alloc(10)), []);
+  });
+
+  it('exports a modest max zip size (~50MB)', () => {
+    assert.equal(MAX_HMS_ZIP_BYTES, 50 * 1024 * 1024);
   });
 });

@@ -5,7 +5,8 @@
  */
 
 import { fetchJson } from '../../lib/http.js';
-import { nearestPoint } from '../../lib/geo.js';
+import { assignNearestWithin, roundKm } from '../../lib/geo.js';
+import { toFiniteNumber } from '../../lib/parse.js';
 
 /**
  * @param {import('../../lib/types.js').Location[]} locations
@@ -39,19 +40,21 @@ export async function fetchCoagmet(locations) {
         name: String(info.name ?? id),
         lat,
         lon,
-        st5: num(obs.st5cm ?? obs.soilTemp5 ?? obs.st5 ?? obs.soil_temp_5),
-        st15: num(obs.st15cm ?? obs.soilTemp15 ?? obs.st15 ?? obs.soil_temp_15),
-        sm5: num(obs.sm5cm ?? obs.soilMoisture5 ?? obs.vwc5 ?? obs.swc5 ?? obs.soil_moisture_5),
-        sm15: num(
+        st5: toFiniteNumber(obs.st5cm ?? obs.soilTemp5 ?? obs.st5 ?? obs.soil_temp_5),
+        st15: toFiniteNumber(obs.st15cm ?? obs.soilTemp15 ?? obs.st15 ?? obs.soil_temp_15),
+        sm5: toFiniteNumber(
+          obs.sm5cm ?? obs.soilMoisture5 ?? obs.vwc5 ?? obs.swc5 ?? obs.soil_moisture_5,
+        ),
+        sm15: toFiniteNumber(
           obs.sm15cm ?? obs.soilMoisture15 ?? obs.vwc15 ?? obs.swc15 ?? obs.soil_moisture_15,
         ),
-        precip: num(obs.precip ?? obs.precipitation ?? obs.rain ?? obs.precip_daily),
-        eto: num(obs.eto ?? obs.et0 ?? obs.refET ?? obs.et_os),
-        vp: num(obs.vaporPressure ?? obs.vp ?? obs.vpd ?? obs.vapor_pressure),
-        sr: num(obs.solarRad ?? obs.sr ?? obs.solar),
-        ws: num(obs.windSpeed ?? obs.ws ?? obs.wind),
-        tmean: num(obs.t ?? obs.temp ?? obs.airtemp),
-        rh: num(obs.rh ?? obs.humidity),
+        precip: toFiniteNumber(obs.precip ?? obs.precipitation ?? obs.rain ?? obs.precip_daily),
+        eto: toFiniteNumber(obs.eto ?? obs.et0 ?? obs.refET ?? obs.et_os),
+        vp: toFiniteNumber(obs.vaporPressure ?? obs.vp ?? obs.vpd ?? obs.vapor_pressure),
+        sr: toFiniteNumber(obs.solarRad ?? obs.sr ?? obs.solar),
+        ws: toFiniteNumber(obs.windSpeed ?? obs.ws ?? obs.wind),
+        tmean: toFiniteNumber(obs.t ?? obs.temp ?? obs.airtemp),
+        rh: toFiniteNumber(obs.rh ?? obs.humidity),
       });
     }
 
@@ -59,14 +62,12 @@ export async function fetchCoagmet(locations) {
       return { status: 'error', bySlug, error: 'no CoAgMET stations parsed', calls };
     }
 
-    for (const loc of locations) {
-      const nearest = nearestPoint({ lat: loc.lat, lon: loc.lon }, stations);
-      if (!nearest || nearest.distanceKm > 40) continue;
+    const assigned = assignNearestWithin(locations, stations, 40, (nearest) => {
       const s = nearest.point;
-      bySlug.set(loc.slug, {
+      return {
         station_id: s.id,
         station_name: s.name,
-        distance_km: Math.round(nearest.distanceKm * 10) / 10,
+        distance_km: roundKm(nearest.distanceKm),
         soil_temp_5cm_f: s.st5,
         soil_temp_15cm_f: s.st15,
         soil_moisture_5cm: s.sm5,
@@ -79,8 +80,9 @@ export async function fetchCoagmet(locations) {
         air_temp_f: s.tmean,
         relative_humidity: s.rh,
         url: `https://coagmet.colostate.edu/station/${encodeURIComponent(s.id)}`,
-      });
-    }
+      };
+    });
+    for (const [slug, row] of assigned) bySlug.set(slug, row);
 
     return {
       status: bySlug.size > 0 ? 'ok' : 'partial',
@@ -95,14 +97,4 @@ export async function fetchCoagmet(locations) {
       calls,
     };
   }
-}
-
-/**
- * @param {unknown} v
- * @returns {number | null}
- */
-function num(v) {
-  if (v == null || v === '') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
 }

@@ -90,10 +90,11 @@ export async function fetchPurpleAir(locations, env = process.env) {
 }
 
 /**
+ * EPA PM2.5 → AQI (NowCast-style breakpoints).
  * @param {number|null} pm
  * @returns {number|null}
  */
-function pm25ToAqi(pm) {
+export function pm25ToAqi(pm) {
   if (pm == null || !Number.isFinite(pm)) return null;
   const breakpoints = [
     [0, 12, 0, 50],

@@ -1,20 +1,7 @@
 /** @typedef {{ slug: string; name: string; lat: number; lon: number; county?: string }} IndexEntry */
 /** @typedef {{ zip: string; lat: number; lon: number; city: string; county: string }} ZipEntry */
 
-/**
- * Haversine distance km.
- * @param {{ lat: number; lon: number }} a
- * @param {{ lat: number; lon: number }} b
- */
-function haversineKm(a, b) {
-  const toRad = (d) => (d * Math.PI) / 180;
-  const dLat = toRad(b.lat - a.lat);
-  const dLon = toRad(b.lon - a.lon);
-  const lat1 = toRad(a.lat);
-  const lat2 = toRad(b.lat);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
-  return 2 * 6371 * Math.asin(Math.sqrt(h));
-}
+import { haversineKm } from './geo.js';
 
 /**
  * @param {IndexEntry[]} locations
@@ -34,7 +21,7 @@ export function searchLocations(locations, zips, query) {
     if (!zipHit || !Number.isFinite(zipHit.lat) || !Number.isFinite(zipHit.lon)) return [];
     let best = null;
     for (const loc of locations) {
-      const d = haversineKm(zipHit, loc);
+      const d = haversineKm(zipHit.lat, zipHit.lon, loc.lat, loc.lon);
       if (!best || d < best.d) best = { loc, d };
     }
     return best ? [best.loc] : [];

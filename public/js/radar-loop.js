@@ -31,11 +31,24 @@ export function selectRadarFrames(data, hours = 2) {
 }
 
 /**
+ * RainViewer frame paths are relative (`/v2/radar/...`). Reject absolute or scheme-relative.
+ * @param {unknown} path
+ * @returns {string | null}
+ */
+export function safeRadarPath(path) {
+  if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')) return null;
+  if (path.includes('://') || /[\s\\]/.test(path)) return null;
+  return path;
+}
+
+/**
  * @param {string} path
- * @returns {string}
+ * @returns {string | null}
  */
 export function radarTileUrl(path) {
-  return `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/2/1_1.png`;
+  const safe = safeRadarPath(path);
+  if (!safe) return null;
+  return `https://tilecache.rainviewer.com${safe}/256/{z}/{x}/{y}/2/1_1.png`;
 }
 
 /**
@@ -69,19 +82,29 @@ export class RadarLoopController {
   }
 
   /**
+   * @param {{ timeoutMs?: number, signal?: AbortSignal }} [opts]
    * @returns {Promise<boolean>}
    */
-  async load() {
+  async load(opts = {}) {
     this.destroy();
+    const timeoutMs = opts.timeoutMs ?? 12_000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const onOuterAbort = () => controller.abort();
+    opts.signal?.addEventListener('abort', onOuterAbort, { once: true });
     try {
-      const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+      const response = await fetch('https://api.rainviewer.com/public/weather-maps.json', {
+        signal: controller.signal,
+      });
       if (!response.ok) throw new Error('RainViewer API unavailable');
       const data = await response.json();
-      this.frames = selectRadarFrames(data, 2);
+      this.frames = selectRadarFrames(data, 2).filter((f) => safeRadarPath(f.path));
       if (!this.frames.length) throw new Error('No radar frames');
 
       for (const frame of this.frames) {
-        const layer = L.tileLayer(radarTileUrl(frame.path), {
+        const tileUrl = radarTileUrl(frame.path);
+        if (!tileUrl) continue;
+        const layer = L.tileLayer(tileUrl, {
           opacity: 0,
           maxZoom: RAINVIEWER_MAX_ZOOM,
           maxNativeZoom: RAINVIEWER_MAX_ZOOM,
@@ -90,6 +113,7 @@ export class RadarLoopController {
         layer.addTo(this.map);
         this.layers.push(layer);
       }
+      if (!this.layers.length) throw new Error('No valid radar tile paths');
 
       this.index = Math.max(0, this.frames.length - 1);
       this._show(this.index);
@@ -103,6 +127,9 @@ export class RadarLoopController {
     } catch {
       this.destroy();
       return false;
+    } finally {
+      clearTimeout(timer);
+      opts.signal?.removeEventListener('abort', onOuterAbort);
     }
   }
 

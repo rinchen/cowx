@@ -5,22 +5,13 @@
  */
 
 import { fetchJson } from '../../lib/http.js';
-import { nearestPoint } from '../../lib/geo.js';
+import { assignNearestWithin, roundKm } from '../../lib/geo.js';
+import { toFiniteNumber } from '../../lib/parse.js';
 
 const STATIONS_URL = 'https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations';
 const DATA_URL = 'https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/data';
 const MAX_DISTANCE_KM = 50;
 const MIN_ELEVATION_FT = 7000;
-
-/**
- * @param {unknown} v
- * @returns {number | null}
- */
-function num(v) {
-  if (v == null || v === '') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
 /**
  * @param {Date} d
@@ -41,8 +32,8 @@ export function filterCoSnotelStations(raw) {
   for (const s of raw) {
     if (!s || typeof s !== 'object') continue;
     if (s.stateCode !== 'CO' || s.networkCode !== 'SNTL') continue;
-    const lat = num(s.latitude);
-    const lon = num(s.longitude);
+    const lat = toFiniteNumber(s.latitude);
+    const lon = toFiniteNumber(s.longitude);
     if (lat == null || lon == null) continue;
     const triplet = String(s.stationTriplet ?? '');
     if (!triplet) continue;
@@ -52,7 +43,7 @@ export function filterCoSnotelStations(raw) {
       station_name: String(s.name ?? triplet),
       lat,
       lon,
-      elevation_ft: num(s.elevation),
+      elevation_ft: toFiniteNumber(s.elevation),
     });
   }
   return out;
@@ -69,7 +60,7 @@ function latestValue(values) {
     String(a.date ?? '').localeCompare(String(b.date ?? '')),
   );
   const last = sorted[sorted.length - 1];
-  return { value: num(last?.value), date: last?.date ? String(last.date) : null };
+  return { value: toFiniteNumber(last?.value), date: last?.date ? String(last.date) : null };
 }
 
 /**
@@ -82,8 +73,8 @@ export function precip24hFromPrec(values) {
   const sorted = [...values].sort((a, b) =>
     String(a.date ?? '').localeCompare(String(b.date ?? '')),
   );
-  const a = num(sorted[sorted.length - 2]?.value);
-  const b = num(sorted[sorted.length - 1]?.value);
+  const a = toFiniteNumber(sorted[sorted.length - 2]?.value);
+  const b = toFiniteNumber(sorted[sorted.length - 1]?.value);
   if (a == null || b == null) return null;
   const delta = b - a;
   return delta >= 0 ? Math.round(delta * 100) / 100 : null;
@@ -141,19 +132,15 @@ export function mergeSnotelData(stations, dataRaw) {
  */
 export function assignNearestSnotel(locations, stationsByTriplet) {
   const candidates = [...stationsByTriplet.values()];
-  /** @type {Map<string, object>} */
-  const bySlug = new Map();
-
-  for (const loc of locations) {
-    const elev = loc.elevation_ft;
-    if (elev == null || Number(elev) <= MIN_ELEVATION_FT) continue;
-    const nearest = nearestPoint({ lat: loc.lat, lon: loc.lon }, candidates);
-    if (!nearest || nearest.distanceKm > MAX_DISTANCE_KM) continue;
+  const highElev = locations.filter(
+    (loc) => loc.elevation_ft != null && Number(loc.elevation_ft) > MIN_ELEVATION_FT,
+  );
+  return assignNearestWithin(highElev, candidates, MAX_DISTANCE_KM, (nearest) => {
     const s = nearest.point;
-    bySlug.set(loc.slug, {
+    return {
       station_name: s.station_name,
       station_id: s.station_id,
-      distance_km: Math.round(nearest.distanceKm * 10) / 10,
+      distance_km: roundKm(nearest.distanceKm),
       elevation_ft: s.elevation_ft,
       snow_depth_in: s.snow_depth_in,
       swe_in: s.swe_in,
@@ -161,9 +148,8 @@ export function assignNearestSnotel(locations, stationsByTriplet) {
       precipitation_24h_in: s.precipitation_24h_in,
       observed: s.observed,
       url: s.url,
-    });
-  }
-  return bySlug;
+    };
+  });
 }
 
 /**

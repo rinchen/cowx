@@ -20,6 +20,18 @@ describe('sanitizeUrlForError', () => {
     assert.doesNotMatch(safe, /abc123/);
     assert.match(safe, /api_key=\[redacted\]/i);
   });
+
+  it('redacts Bearer and Authorization values', () => {
+    const bearer = sanitizeErrorMessage('upstream said Bearer sk-live-super-secret-token');
+    assert.doesNotMatch(bearer, /sk-live-super-secret-token/);
+    assert.match(bearer, /Bearer \[redacted\]/);
+
+    const auth = sanitizeErrorMessage(
+      'body: {"error":"denied","hint":"Authorization: Bearer eyJhbGciOi.secret"}',
+    );
+    assert.doesNotMatch(auth, /eyJhbGciOi\.secret/);
+    assert.match(auth, /Authorization:\s*\[redacted\]/i);
+  });
 });
 
 describe('runAdapterSafely', () => {
