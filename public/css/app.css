@@ -310,10 +310,18 @@ main {
   margin-bottom: 1rem;
 }
 
+.resolve-actions:has(+ .resolve-status:empty) {
+  margin-bottom: 0;
+}
+
 .resolve-status {
   margin: 0;
   color: var(--color-text-muted);
   font-size: 0.9375rem;
+}
+
+.resolve-status:empty {
+  display: none;
 }
 
 .search-panel label {
@@ -378,15 +386,6 @@ main {
 }
 
 /* Dashboard */
-.location-nav {
-  margin: 0 0 1rem;
-}
-
-.location-nav .btn {
-  display: inline-flex;
-  align-items: center;
-}
-
 .btn-link {
   display: inline;
   padding: 0;

@@ -142,7 +142,7 @@ function goHome() {
 }
 
 /**
- * Logo / Home / Change location — preventDefault so navigation is explicit.
+ * Logo / Home — preventDefault so navigation is explicit.
  */
 function bindHomeNavigation() {
   document.addEventListener('click', (event) => {
@@ -235,7 +235,7 @@ async function renderResolveView() {
       <input type="search" id="location-search" name="q" autocomplete="off" enterkeyhint="search" />
       <ul id="search-results" class="search-results" role="listbox" aria-label="Search results"></ul>
     </section>
-    <section class="favorites-panel" aria-labelledby="favorites-heading">
+    <section class="favorites-panel" id="favorites-panel" aria-labelledby="favorites-heading" hidden>
       <h2 id="favorites-heading">Favorites</h2>
       <ul id="favorites-list" class="location-list"></ul>
     </section>
@@ -366,12 +366,14 @@ function bindSearch(panel) {
  */
 function renderFavoritesList(listEl) {
   if (!listEl) return;
+  const panel = listEl.closest('.favorites-panel');
   const favs = getFavoriteLocations(locations, getFavorites());
   listEl.innerHTML = '';
   if (!favs.length) {
-    listEl.innerHTML = '<li class="empty-state">Star a location to save it here.</li>';
+    if (panel) panel.hidden = true;
     return;
   }
+  if (panel) panel.hidden = false;
   favs.forEach((loc) => {
     const li = document.createElement('li');
     const a = document.createElement('a');
@@ -421,12 +423,7 @@ async function renderLocationView(slug) {
     return;
   }
 
-  els.main.innerHTML = `
-    <p class="location-nav">
-      <a class="btn btn-secondary" href="#/" data-nav-home>← All locations</a>
-    </p>
-    <div id="dashboard-root"></div>
-  `;
+  els.main.innerHTML = `<div id="dashboard-root"></div>`;
 
   const dashRoot = document.getElementById('dashboard-root');
   if (!dashRoot) return;
