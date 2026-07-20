@@ -38,6 +38,7 @@ cowx/   # repo directory (brand: COWX)
 │       ├── cdot-alerts.geojson
 │       ├── cwop.geojson
 │       ├── hms-smoke.geojson
+│       ├── spc-firewx.geojson
 │       └── locations/{slug}.json   # Full per-location payload
 ├── tests/                    # Node test runner (`pnpm test`) — fixtures only, no live APIs
 │   └── fixtures/             # Recorded API responses for adapter/unit tests
@@ -137,7 +138,7 @@ export async function fetchExample(locations, env = process.env) {
 1. Load `colorado-locations.json`.
 2. Run each adapter via `runAdapterSafely` (unexpected throws become `status: 'error'`); collect per-source status for `meta.json`.
 3. Merge adapter `bySlug` maps into per-slug payloads (inline).
-4. Write `public/data/index.json`, `locations/{slug}.json`, `meta.json`, `alerts.geojson`, `cdot-cameras.geojson`, `cwop.geojson`, and copy `co-zips.json`.
+4. Write `public/data/index.json`, `locations/{slug}.json`, `meta.json`, `alerts.geojson`, `cdot-cameras.geojson`, `cwop.geojson`, `hms-smoke.geojson`, `spc-firewx.geojson`, and copy `co-zips.json`.
 5. Schemas under `schemas/` are reference contracts — CI currently runs lint/test/`validate:locations` only.
 
 **Resilience rules:**
@@ -195,6 +196,9 @@ Approximate call budget per run (scales with catalog size; actual counts are wri
 | CWOP / APRS (aprs.me grid)   | ~35–40                           | None                 |
 | Synoptic latest              | 0–1 (only if token set)          | `SYNOPTIC_API_TOKEN` |
 | NOAA HMS smoke               | 1–3 (zip download)               | None                 |
+| SPC fire weather (Day 1–2)   | 4 (Wind/RH + DryT GeoJSON)       | None                 |
+| NIFC WFIGS nearby fires      | 1 (CO incidents)                 | None                 |
+| COEM burn restrictions       | 1 (HTML status + curated links)  | None                 |
 | PurpleAir                    | 1–2 (only if key set)            | `PURPLEAIR_API_KEY`  |
 | AirNow                       | many grid points when keyed      | `AIRNOW_API_KEY`     |
 | Catalog `webcam_links`       | 0 (copied into payloads)         | None                 |
@@ -207,7 +211,7 @@ Partial adapter failure is acceptable; total failure (zero locations written or 
 
 Citizen, pilot, farmer, and firefighter needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, road alerts, etc.). The public dashboard shows **all** available sections for every location — there is no persona filter bar.
 
-Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, optional pin “At your location” current strip, 24h meteograms, CDOT cameras/RWIS/road alerts, local webcam **new-tab links**, nearby PWS, HMS smoke, RF ducting) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links.
+Locality pages are dual-pane **workspace** views: glass intel column (bottom-line headline, optional pin “At your location” current strip, 24h meteograms, CDOT cameras/RWIS/road alerts, local webcam **new-tab links**, nearby PWS, fire weather (SPC outlooks, HMS smoke, nearby NIFC incidents, burn-restriction links), RF ducting) beside an animated RainViewer radar map, with expandable 48h hourly metrics, full 10-day daily tables, alert text + `alerts.geojson` polygons, NOAA/NWS and CSU CIRA imagery click-throughs, and in-section source links.
 
 **Hyperlocal pin (client, no API keys):** Locate (high-accuracy GPS), IP “Go to”, or Colorado street-address Set pin (`public/js/geocode.js` → Nominatim, CO-bounded, submit-only) stores a session-only pin (`sessionStorage` `cowx:hyperlocalPin`). Always force-refresh the workspace after setting a pin even if the catalog slug is unchanged. The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip (fallback status if that fails). Searching a city clears the pin. Do not add client API **keys**; keep address geocode user-triggered and Colorado-bounded.
 

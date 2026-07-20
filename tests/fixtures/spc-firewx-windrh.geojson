@@ -1,0 +1,49 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-106.5, 39.0],
+            [-106.5, 40.5],
+            [-104.5, 40.5],
+            [-104.5, 39.0],
+            [-106.5, 39.0]
+          ]
+        ]
+      },
+      "properties": {
+        "DN": 8,
+        "LABEL": "Critical",
+        "VALID_ISO": "2026-07-20T12:00:00+00:00",
+        "EXPIRE_ISO": "2026-07-21T12:00:00+00:00",
+        "ISSUE_ISO": "2026-07-20T06:00:00+00:00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-107.0, 38.5],
+            [-107.0, 41.0],
+            [-104.0, 41.0],
+            [-104.0, 38.5],
+            [-107.0, 38.5]
+          ]
+        ]
+      },
+      "properties": {
+        "DN": 5,
+        "LABEL": "Elevated",
+        "VALID_ISO": "2026-07-20T12:00:00+00:00",
+        "EXPIRE_ISO": "2026-07-21T12:00:00+00:00",
+        "ISSUE_ISO": "2026-07-20T06:00:00+00:00"
+      }
+    }
+  ]
+}

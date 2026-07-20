@@ -1,0 +1,23 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": []
+      },
+      "properties": {
+        "DN": 0,
+        "VALID": "202607201700",
+        "EXPIRE": "202607211200",
+        "ISSUE": "202607201535",
+        "VALID_ISO": "2026-07-20T17:00:00+00:00",
+        "EXPIRE_ISO": "2026-07-21T12:00:00+00:00",
+        "ISSUE_ISO": "2026-07-20T15:35:00+00:00",
+        "LABEL": "No Areas",
+        "LABEL2": ""
+      }
+    }
+  ]
+}

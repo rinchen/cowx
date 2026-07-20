@@ -24,6 +24,9 @@ import { fetchCdot } from './adapters/cdot.js';
 import { fetchCwop } from './adapters/cwop.js';
 import { fetchSynoptic } from './adapters/synoptic.js';
 import { fetchHms } from './adapters/hms.js';
+import { fetchSpcFireWx } from './adapters/spc-firewx.js';
+import { fetchNifcFires } from './adapters/nifc-fires.js';
+import { fetchBurnRestrictions } from './adapters/burn-restrictions.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
@@ -114,6 +117,21 @@ export async function runFetch() {
     () => fetchHms(locations),
     () => '',
   );
+  const spcFireWx = await runAdapter(
+    'spc_firewx',
+    () => fetchSpcFireWx(locations),
+    () => '',
+  );
+  const nifcFires = await runAdapter(
+    'nifc_fires',
+    () => fetchNifcFires(locations),
+    () => '',
+  );
+  const burnRestrictions = await runAdapter(
+    'burn_restrictions',
+    () => fetchBurnRestrictions(locations),
+    () => '',
+  );
 
   const updatedAt = new Date().toISOString();
   const index = [];
@@ -156,6 +174,9 @@ export async function runFetch() {
     const cwopRec = cwop.bySlug.get(loc.slug) ?? null;
     const pwsRec = synoptic.bySlug.get(loc.slug) ?? cwop.pwsBySlug?.get(loc.slug) ?? null;
     const hmsRec = hms.bySlug.get(loc.slug) ?? null;
+    const fireWeather = spcFireWx.bySlug.get(loc.slug) ?? null;
+    const nearbyFires = nifcFires.bySlug.get(loc.slug) ?? null;
+    const fireRestrictions = burnRestrictions.bySlug.get(loc.slug) ?? null;
     const webcamLinks = Array.isArray(loc.webcam_links) ? loc.webcam_links : [];
 
     const payload = {
@@ -189,6 +210,9 @@ export async function runFetch() {
       cwop: cwopRec,
       pws: pwsRec,
       hms_smoke: hmsRec,
+      fire_weather: fireWeather,
+      nearby_fires: nearbyFires,
+      fire_restrictions: fireRestrictions,
       rf_comms: om?.rf_comms ?? prior?.rf_comms ?? null,
       links: {
         nws_forecast: `https://forecast.weather.gov/MapClick.php?lat=${loc.lat}&lon=${loc.lon}`,
@@ -265,6 +289,12 @@ export async function runFetch() {
   await writeFile(
     path.join(DATA_DIR, 'hms-smoke.geojson'),
     JSON.stringify(hms.smokeGeoJson ?? { type: 'FeatureCollection', features: [] }),
+    'utf8',
+  );
+
+  await writeFile(
+    path.join(DATA_DIR, 'spc-firewx.geojson'),
+    JSON.stringify(spcFireWx.fireWxGeoJson ?? { type: 'FeatureCollection', features: [] }),
     'utf8',
   );
 

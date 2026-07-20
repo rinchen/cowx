@@ -1,0 +1,75 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-105.0, 39.7] },
+      "properties": {
+        "IncidentName": "Near Denver Test",
+        "POOState": "US-CO",
+        "PercentContained": 50,
+        "InitialLatitude": 39.7,
+        "InitialLongitude": -105.0,
+        "IncidentSize": 120,
+        "FireDiscoveryDateTime": 1721404800000,
+        "IrwinID": "abc-123"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-108.7, 37.7] },
+      "properties": {
+        "IncidentName": "Far SW Fire",
+        "POOState": "US-CO",
+        "PercentContained": 10,
+        "InitialLatitude": 37.7,
+        "InitialLongitude": -108.7,
+        "IncidentSize": 5000,
+        "FireDiscoveryDateTime": 1721491200000,
+        "IrwinID": "def-456"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-104.95, 39.75] },
+      "properties": {
+        "IncidentName": "Closer Front Range",
+        "POOState": "US-CO",
+        "PercentContained": 0,
+        "InitialLatitude": 39.75,
+        "InitialLongitude": -104.95,
+        "IncidentSize": 12,
+        "FireDiscoveryDateTime": null,
+        "IrwinID": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-105.1, 39.8] },
+      "properties": {
+        "IncidentName": "Third Nearby",
+        "POOState": "US-CO",
+        "PercentContained": 80,
+        "InitialLatitude": 39.8,
+        "InitialLongitude": -105.1,
+        "IncidentSize": 3,
+        "FireDiscoveryDateTime": null,
+        "IrwinID": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-105.2, 39.65] },
+      "properties": {
+        "IncidentName": "Fourth Nearby Cap",
+        "POOState": "US-CO",
+        "PercentContained": 90,
+        "InitialLatitude": 39.65,
+        "InitialLongitude": -105.2,
+        "IncidentSize": 1,
+        "FireDiscoveryDateTime": null,
+        "IrwinID": null
+      }
+    }
+  ]
+}

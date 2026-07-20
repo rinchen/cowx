@@ -147,6 +147,82 @@
         "sourceUrl": { "type": ["string", "null"] }
       }
     },
+    "fire_weather": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "day1": {
+          "type": "object",
+          "properties": {
+            "windRh": {
+              "type": "string",
+              "enum": ["none", "elevated", "critical", "extreme"]
+            },
+            "dryT": {
+              "type": "string",
+              "enum": ["none", "isolated", "scattered"]
+            },
+            "valid": { "type": ["string", "null"] },
+            "expire": { "type": ["string", "null"] },
+            "issue": { "type": ["string", "null"] }
+          }
+        },
+        "day2": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "sourceUrl": { "type": ["string", "null"] }
+      }
+    },
+    "nearby_fires": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "incidents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "name": { "type": "string" },
+              "acres": { "type": ["number", "null"] },
+              "percentContained": { "type": ["number", "null"] },
+              "distance_km": { "type": "number" },
+              "lat": { "type": "number" },
+              "lon": { "type": "number" },
+              "updated": { "type": ["string", "null"] },
+              "url": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "sourceUrl": { "type": ["string", "null"] }
+      }
+    },
+    "fire_restrictions": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "county": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["restriction_reported", "none_reported", "unknown"]
+        },
+        "redFlagNote": { "type": "boolean" },
+        "countyUrl": { "type": ["string", "null"] },
+        "statewideUrls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "url": { "type": "string" }
+            }
+          }
+        },
+        "updatedAt": { "type": ["string", "null"] },
+        "disclaimer": { "type": "string" }
+      }
+    },
     "rf_comms": {
       "type": ["object", "null"],
       "additionalProperties": true,

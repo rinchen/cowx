@@ -179,6 +179,11 @@ export function renderIntel(root, data, options = {}) {
     hyperlocal?.current && typeof hyperlocal.current === 'object' ? hyperlocal.current : null;
   const coag = /** @type {Record<string, unknown> | null} */ (data.coagmet ?? null);
   const hms = /** @type {Record<string, unknown> | null} */ (data.hms_smoke ?? null);
+  const fireWeather = /** @type {Record<string, unknown> | null} */ (data.fire_weather ?? null);
+  const nearbyFires = /** @type {Record<string, unknown> | null} */ (data.nearby_fires ?? null);
+  const fireRestrictions = /** @type {Record<string, unknown> | null} */ (
+    data.fire_restrictions ?? null
+  );
   const snotel = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
   const links = /** @type {Record<string, unknown>} */ (data.links ?? {});
   const pwsLinks =
@@ -545,15 +550,52 @@ export function renderIntel(root, data, options = {}) {
           </section>`;
     })()}
 
-    ${
-      hms && hms.density && hms.density !== 'none'
-        ? `<section class="glass-panel" aria-labelledby="smoke-intel-heading">
-            <h2 id="smoke-intel-heading" class="glass-panel__title">Fire &amp; smoke</h2>
-            <p>HMS satellite smoke: <strong>${escapeHtml(String(hms.density))}</strong>${hms.observed ? ` · ${escapeHtml(String(hms.observed))}` : ''}</p>
-            <button type="button" class="btn btn-link intel-jump" data-jump-to="smoke-heading">Smoke &amp; air quality detail</button>
-          </section>`
-        : ''
-    }
+    ${(() => {
+      const day1 = /** @type {Record<string, unknown> | null} */ (fireWeather?.day1 ?? null);
+      const day2 = /** @type {Record<string, unknown> | null} */ (fireWeather?.day2 ?? null);
+      const windRh = String(day1?.windRh ?? 'none');
+      const windRh2 = String(day2?.windRh ?? 'none');
+      const spcActive =
+        /^(elevated|critical|extreme)$/.test(windRh) ||
+        /^(elevated|critical|extreme)$/.test(windRh2);
+      const smokeActive = Boolean(hms && hms.density && hms.density !== 'none');
+      const incidents = /** @type {Record<string, unknown>[]} */ (nearbyFires?.incidents ?? []);
+      const firesActive = incidents.length > 0;
+      const banActive = fireRestrictions?.status === 'restriction_reported';
+      if (!spcActive && !smokeActive && !firesActive && !banActive) return '';
+
+      const bits = [];
+      if (spcActive) {
+        const label = windRh !== 'none' ? windRh : windRh2;
+        bits.push(
+          `SPC Day ${windRh !== 'none' ? '1' : '2'} Wind/RH: <strong>${escapeHtml(label)}</strong>`,
+        );
+      }
+      if (smokeActive) {
+        bits.push(
+          `HMS smoke: <strong>${escapeHtml(String(hms?.density))}</strong>${hms?.observed ? ` · ${escapeHtml(String(hms.observed))}` : ''}`,
+        );
+      }
+      if (firesActive) {
+        const nearest = incidents[0];
+        bits.push(
+          `Nearby fire: <strong>${escapeHtml(String(nearest?.name ?? 'Incident'))}</strong>${
+            nearest?.distance_km != null ? ` (${Number(nearest.distance_km).toFixed(1)} km)` : ''
+          }`,
+        );
+      }
+      if (banActive) {
+        bits.push(
+          `Burn restriction reported for <strong>${escapeHtml(String(fireRestrictions?.county ?? data.county ?? 'county'))}</strong>`,
+        );
+      }
+
+      return `<section class="glass-panel" aria-labelledby="smoke-intel-heading">
+            <h2 id="smoke-intel-heading" class="glass-panel__title">Fire weather</h2>
+            <p>${bits.join('<br />')}</p>
+            <button type="button" class="btn btn-link intel-jump" data-jump-to="smoke-heading">Fire weather &amp; restrictions detail</button>
+          </section>`;
+    })()}
 
     ${
       pwsPrimary || cwop
@@ -631,7 +673,7 @@ export function renderIntel(root, data, options = {}) {
         <li><button type="button" class="intel-jump" data-jump-to="roads-heading">Roads &amp; passes</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="metar-heading">Aviation</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="aqi-heading">Air quality detail</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="smoke-heading">Fire &amp; smoke</button></li>
+        <li><button type="button" class="intel-jump" data-jump-to="smoke-heading">Fire weather &amp; restrictions</button></li>
         <li><button type="button" class="intel-jump" data-jump-to="links-heading">External tools</button></li>
       </ul>
     </nav>

@@ -111,8 +111,9 @@
         The <code>pnpm fetch</code> orchestrator calls independent adapters (Open-Meteo forecast and
         air quality, NWS alerts/AFD/HWO, CoAgMET, Aviation Weather METAR/TAF, USGS gauges, SNOTEL,
         CDOT cameras/RWIS/road alerts, CWOP/APRS (and optional Synoptic) neighborhood PWS, NOAA HMS
-        smoke, and optional PurpleAir and AirNow). Each source can succeed or fail on its own.
-        Results are merged into:
+        smoke, SPC fire weather outlooks, NIFC nearby wildfire locations, Colorado burn-restriction
+        status/links, and optional PurpleAir and AirNow). Each source can succeed or fail on its
+        own. Results are merged into:
       </p>
       <ul>
         <li><code>index.json</code> — slim list for search and the map</li>
@@ -120,8 +121,8 @@
         <li><code>alerts.geojson</code> — warning polygons when geometry is available</li>
         <li>
           <code>cdot-cameras.geojson</code> / <code>cdot-alerts.geojson</code> /
-          <code>cwop.geojson</code> / <code>hms-smoke.geojson</code> — roadway, APRS, and smoke
-          layers
+          <code>cwop.geojson</code> / <code>hms-smoke.geojson</code> /
+          <code>spc-firewx.geojson</code> — roadway, APRS, smoke, and fire-weather layers
         </li>
         <li><code>co-zips.json</code> — ZIP search table</li>
         <li>
@@ -142,7 +143,8 @@
         Each location opens a dual-pane <strong>workspace</strong>: a glass intel column with a
         plain-English bottom-line headline, now conditions, AQI badge, 24-hour meteograms, CDOT
         cameras/RWIS/road alerts when nearby (re-ranked from your session pin when Locate or an
-        address pin was used), local city webcam links (new tab), nearby PWS, HMS smoke density, and
+        address pin was used), local city webcam links (new tab), nearby PWS, fire weather (SPC Day
+        1–2 outlooks, HMS smoke, nearby wildfires, burn-restriction status and verify links), and
         model-derived VHF/UHF ducting cues — beside an animated RainViewer radar loop with playback
         controls. An optional <strong>At your location</strong> strip shows pin-exact current
         conditions from a single Open-Meteo call (or a status note if that call fails). Use

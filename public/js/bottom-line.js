@@ -133,7 +133,41 @@ export function synthesizeBottomLine(data) {
     return { headline: bits.filter(Boolean).join(': '), priority: 'hazard' };
   }
 
-  // 1b. CDOT road closure / chain law nearby
+  // 1b. SPC Critical/Extreme fire weather (before roads — meteorological hazard)
+  const fw = /** @type {Record<string, unknown> | null} */ (data.fire_weather ?? null);
+  const day1Rh = str(
+    /** @type {Record<string, unknown> | null} */ (fw?.day1)?.windRh,
+  ).toLowerCase();
+  const day2Rh = str(
+    /** @type {Record<string, unknown> | null} */ (fw?.day2)?.windRh,
+  ).toLowerCase();
+  if (day1Rh === 'extreme' || day1Rh === 'critical') {
+    return {
+      headline: `SPC Day 1 fire weather ${day1Rh} — critical fire-spread conditions possible`,
+      priority: 'fire',
+    };
+  }
+  if (day2Rh === 'extreme' || day2Rh === 'critical') {
+    return {
+      headline: `SPC Day 2 fire weather ${day2Rh} outlook — prepare for elevated wildfire risk`,
+      priority: 'fire',
+    };
+  }
+
+  // 1c. County burn restriction reported
+  const restrictions = /** @type {Record<string, unknown> | null} */ (
+    data.fire_restrictions ?? null
+  );
+  if (restrictions?.status === 'restriction_reported') {
+    const county = str(restrictions.county || data.county);
+    const where = county ? `${county} County` : 'this county';
+    return {
+      headline: `Fire restriction reported for ${where} — verify before burning or campfires`,
+      priority: 'fire',
+    };
+  }
+
+  // 1d. CDOT road closure / chain law nearby
   const roads = /** @type {Record<string, unknown> | null} */ (data.cdot_roads ?? null);
   const roadAlerts = /** @type {Record<string, unknown>[]} */ (roads?.alerts ?? []);
   const travelHit = roadAlerts.find((a) => a.closure || a.chain_law);

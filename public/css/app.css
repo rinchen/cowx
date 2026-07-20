@@ -1581,6 +1581,45 @@ body.workspace-active #main-content {
   color: #7e22ce;
 }
 
+.dash-subheading {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.dash-subheading:first-child {
+  margin-top: 0;
+}
+
+.fire-risk {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.fire-risk--none {
+  color: inherit;
+  font-weight: 500;
+}
+
+.fire-risk--elevated {
+  color: #92400e;
+}
+
+.fire-risk--critical {
+  color: #9a3412;
+}
+
+.fire-risk--extreme {
+  color: #7f1d1d;
+}
+
+.source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
 .intel-now-head {
   display: flex;
   align-items: flex-start;

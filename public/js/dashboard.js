@@ -1,4 +1,4 @@
-import { escapeHtml, safeHttpsUrl } from './dom.js';
+import { escapeHtml, safeHttpsUrl, safeExternalUrl } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
 import { miniBarChartHtml, sparklineHtml } from './sparkline.js';
@@ -610,6 +610,18 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
  */
 function sourceLink(href, label, className = 'btn btn-secondary btn-sm') {
   const safe = safeHttpsUrl(href);
+  if (!safe) return '';
+  return `<a class="${className}" href="${escapeHtml(safe)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+}
+
+/**
+ * http or https offsite verify links (county OEM pages).
+ * @param {string} href
+ * @param {string} label
+ * @param {string} [className]
+ */
+function externalVerifyLink(href, label, className = 'btn btn-secondary btn-sm') {
+  const safe = safeExternalUrl(href);
   if (!safe) return '';
   return `<a class="${className}" href="${escapeHtml(safe)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
 }
@@ -1805,39 +1817,215 @@ function appendDeepForecast(root, data, ctx) {
   renderCollapsibleSection(
     sections,
     'smoke-heading',
-    'Fire & smoke (HMS)',
+    'Fire weather & restrictions',
     () => {
-      const hms = /** @type {Record<string, unknown> | null} */ (data.hms_smoke ?? null);
       const wrap = document.createDocumentFragment();
-      if (!hms || !hms.density) {
-        renderEmpty(
-          wrap,
-          'No HMS smoke data',
-          'Satellite smoke analysis unavailable for this run.',
-        );
-        return wrap;
+      const alerts = /** @type {Record<string, unknown>[]} */ (data.alerts ?? []);
+      const fireAlerts = alerts.filter((a) =>
+        /red\s*flag|fire\s*weather/i.test(String(a.event ?? a.headline ?? '')),
+      );
+      const fw = /** @type {Record<string, unknown> | null} */ (data.fire_weather ?? null);
+      const hms = /** @type {Record<string, unknown> | null} */ (data.hms_smoke ?? null);
+      const nearby = /** @type {Record<string, unknown> | null} */ (data.nearby_fires ?? null);
+      const restrictions = /** @type {Record<string, unknown> | null} */ (
+        data.fire_restrictions ?? null
+      );
+
+      if (fireAlerts.length) {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'Active fire weather alerts';
+        wrap.appendChild(h);
+        const ul = document.createElement('ul');
+        ul.className = 'alert-list';
+        for (const a of fireAlerts) {
+          const li = document.createElement('li');
+          const event = String(a.event ?? 'Alert');
+          const headline = a.headline ? String(a.headline) : '';
+          li.innerHTML = `<strong>${escapeHtml(event)}</strong>${
+            headline && headline !== event ? ` — ${escapeHtml(headline)}` : ''
+          }${
+            a.url && safeHttpsUrl(String(a.url))
+              ? ` ${sourceLink(String(a.url), 'NWS detail', 'btn btn-link btn-sm')}`
+              : ''
+          }`;
+          ul.appendChild(li);
+        }
+        wrap.appendChild(ul);
       }
-      const dl = document.createElement('dl');
-      dl.className = 'metric-list';
-      dl.innerHTML = `
-        <dt>Smoke density</dt><dd>${escapeHtml(String(hms.density))}</dd>
-        ${hms.observed ? `<dt>Analysis date</dt><dd>${escapeHtml(String(hms.observed))}</dd>` : ''}
-      `;
-      wrap.appendChild(dl);
-      const note = document.createElement('p');
-      note.className = 'table-hint';
-      note.textContent =
-        'NOAA Hazard Mapping System smoke polygons. Density is estimated at this location.';
-      wrap.appendChild(note);
-      if (hms.sourceUrl) {
-        const p = document.createElement('p');
-        p.innerHTML = sourceLink(
-          String(hms.sourceUrl),
-          'HMS source archive',
-          'btn btn-secondary btn-sm',
-        );
-        wrap.appendChild(p);
+
+      {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'SPC fire weather outlook';
+        wrap.appendChild(h);
+        if (!fw || !fw.day1) {
+          renderEmpty(
+            wrap,
+            'No SPC outlook for this point today',
+            'Day 1–2 fire weather polygons unavailable for this run.',
+          );
+        } else {
+          const day1 = /** @type {Record<string, unknown>} */ (fw.day1);
+          const day2 = /** @type {Record<string, unknown>} */ (fw.day2 ?? {});
+          const dl = document.createElement('dl');
+          dl.className = 'metric-list';
+          dl.innerHTML = `
+            <dt>Day 1 Wind/RH</dt><dd><span class="fire-risk fire-risk--${escapeHtml(String(day1.windRh ?? 'none'))}">${escapeHtml(String(day1.windRh ?? 'none'))}</span></dd>
+            <dt>Day 1 Dry thunderstorms</dt><dd>${escapeHtml(String(day1.dryT ?? 'none'))}</dd>
+            <dt>Day 2 Wind/RH</dt><dd><span class="fire-risk fire-risk--${escapeHtml(String(day2.windRh ?? 'none'))}">${escapeHtml(String(day2.windRh ?? 'none'))}</span></dd>
+            <dt>Day 2 Dry thunderstorms</dt><dd>${escapeHtml(String(day2.dryT ?? 'none'))}</dd>
+            ${day1.valid ? `<dt>Day 1 valid</dt><dd>${escapeHtml(String(day1.valid))}</dd>` : ''}
+          `;
+          wrap.appendChild(dl);
+          const note = document.createElement('p');
+          note.className = 'table-hint';
+          note.textContent =
+            'Storm Prediction Center categorical outlook at this location (Elevated / Critical / Extreme). Not a burn ban.';
+          wrap.appendChild(note);
+          if (fw.sourceUrl) {
+            const p = document.createElement('p');
+            p.innerHTML = sourceLink(String(fw.sourceUrl), 'SPC fire weather overview');
+            wrap.appendChild(p);
+          }
+        }
       }
+
+      {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'HMS satellite smoke';
+        wrap.appendChild(h);
+        if (!hms || !hms.density) {
+          renderEmpty(
+            wrap,
+            'No HMS smoke data',
+            'Satellite smoke analysis unavailable for this run.',
+          );
+        } else {
+          const dl = document.createElement('dl');
+          dl.className = 'metric-list';
+          dl.innerHTML = `
+            <dt>Smoke density</dt><dd>${escapeHtml(String(hms.density))}</dd>
+            ${hms.observed ? `<dt>Analysis date</dt><dd>${escapeHtml(String(hms.observed))}</dd>` : ''}
+          `;
+          wrap.appendChild(dl);
+          const note = document.createElement('p');
+          note.className = 'table-hint';
+          note.textContent =
+            'NOAA Hazard Mapping System smoke polygons. Density is estimated at this location.';
+          wrap.appendChild(note);
+          if (hms.sourceUrl) {
+            const p = document.createElement('p');
+            p.innerHTML = sourceLink(String(hms.sourceUrl), 'HMS source archive');
+            wrap.appendChild(p);
+          }
+        }
+      }
+
+      {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'Nearby wildfires';
+        wrap.appendChild(h);
+        const incidents = /** @type {Record<string, unknown>[]} */ (nearby?.incidents ?? []);
+        if (!nearby || !incidents.length) {
+          renderEmpty(
+            wrap,
+            'No active incidents within 80 km',
+            'NIFC WFIGS current locations near this catalog point.',
+          );
+        } else {
+          const ul = document.createElement('ul');
+          ul.className = 'alert-list';
+          for (const inc of incidents) {
+            const li = document.createElement('li');
+            const bits = [escapeHtml(String(inc.name ?? 'Incident'))];
+            if (inc.distance_km != null) bits.push(`${Number(inc.distance_km).toFixed(1)} km`);
+            if (inc.acres != null) bits.push(`${Math.round(Number(inc.acres))} acres`);
+            if (inc.percentContained != null) {
+              bits.push(`${Math.round(Number(inc.percentContained))}% contained`);
+            }
+            li.innerHTML = bits.join(' · ');
+            if (inc.url && safeHttpsUrl(String(inc.url))) {
+              li.innerHTML += ` ${sourceLink(String(inc.url), 'InciWeb search', 'btn btn-link btn-sm')}`;
+            }
+            ul.appendChild(li);
+          }
+          wrap.appendChild(ul);
+          if (nearby.sourceUrl) {
+            const p = document.createElement('p');
+            p.innerHTML = sourceLink(String(nearby.sourceUrl), 'NIFC open data');
+            wrap.appendChild(p);
+          }
+        }
+      }
+
+      {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'Burn / fire restrictions';
+        wrap.appendChild(h);
+        if (!restrictions) {
+          renderEmpty(
+            wrap,
+            'Restriction status unavailable — check links below',
+            'County restriction feed did not return data for this run.',
+          );
+        } else {
+          const status = String(restrictions.status ?? 'unknown');
+          const statusLabel =
+            status === 'restriction_reported'
+              ? 'Restriction reported (county feed)'
+              : status === 'none_reported'
+                ? 'No restriction reported (county feed)'
+                : 'Status unavailable';
+          const dl = document.createElement('dl');
+          dl.className = 'metric-list';
+          dl.innerHTML = `
+            <dt>County</dt><dd>${escapeHtml(String(restrictions.county ?? data.county ?? ''))}</dd>
+            <dt>Status</dt><dd>${escapeHtml(statusLabel)}</dd>
+          `;
+          wrap.appendChild(dl);
+          if (restrictions.redFlagNote) {
+            const rf = document.createElement('p');
+            rf.className = 'table-hint';
+            rf.textContent =
+              'Many Colorado counties automatically tighten burn rules during Red Flag Warnings.';
+            wrap.appendChild(rf);
+          }
+          const disc = document.createElement('p');
+          disc.className = 'table-hint';
+          disc.textContent = String(
+            restrictions.disclaimer ??
+              'Verify with local sheriff / land manager before burning or campfires.',
+          );
+          wrap.appendChild(disc);
+
+          const linkBits = [];
+          if (restrictions.countyUrl) {
+            linkBits.push(
+              externalVerifyLink(
+                String(restrictions.countyUrl),
+                `${String(restrictions.county ?? 'County')} official page`,
+              ),
+            );
+          }
+          const statewide = /** @type {{ name?: string, url?: string }[]} */ (
+            restrictions.statewideUrls ?? []
+          );
+          for (const s of statewide) {
+            if (s?.url && s?.name) linkBits.push(externalVerifyLink(String(s.url), String(s.name)));
+          }
+          if (linkBits.filter(Boolean).length) {
+            const p = document.createElement('p');
+            p.className = 'source-links';
+            p.innerHTML = linkBits.filter(Boolean).join(' ');
+            wrap.appendChild(p);
+          }
+        }
+      }
+
       return wrap;
     },
     { open: false },

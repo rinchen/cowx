@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { aqiCategory, aqiMarkerColor, pickAqi } from '../public/js/aqi.js';
-import { escapeHtml, safeHttpsUrl } from '../public/js/dom.js';
+import { escapeHtml, safeHttpsUrl, safeExternalUrl } from '../public/js/dom.js';
 import { wmoLabel as clientWmo } from '../public/js/wmo.js';
 import { wmoLabel as fetchWmo } from '../scripts/lib/wmo.js';
 
@@ -16,6 +16,12 @@ describe('dom helpers', () => {
     assert.equal(safeHttpsUrl('http://example.com/a'), null);
     assert.equal(safeHttpsUrl('javascript:alert(1)'), null);
     assert.equal(safeHttpsUrl(''), null);
+  });
+
+  it('safeExternalUrl allows http and https', () => {
+    assert.equal(safeExternalUrl('https://example.com/a'), 'https://example.com/a');
+    assert.equal(safeExternalUrl('http://example.com/a'), 'http://example.com/a');
+    assert.equal(safeExternalUrl('javascript:alert(1)'), null);
   });
 });
 

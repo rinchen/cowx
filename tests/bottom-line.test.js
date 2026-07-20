@@ -92,6 +92,33 @@ describe('synthesizeBottomLine', () => {
     assert.match(headline, /smoke/i);
   });
 
+  it('flags SPC critical fire weather', () => {
+    const { headline, priority } = synthesizeBottomLine({
+      current: { wind_speed_mph: 10, condition: 'Clear', humidity: 25, temp_f: 80 },
+      alerts: [],
+      hourly: { time: [] },
+      fire_weather: {
+        day1: { windRh: 'critical', dryT: 'none' },
+        day2: { windRh: 'none', dryT: 'none' },
+      },
+    });
+    assert.equal(priority, 'fire');
+    assert.match(headline, /critical/i);
+  });
+
+  it('flags county burn restriction reported', () => {
+    const { headline, priority } = synthesizeBottomLine({
+      county: 'Jefferson',
+      current: { wind_speed_mph: 5, condition: 'Clear', humidity: 40, temp_f: 70 },
+      alerts: [],
+      hourly: { time: [] },
+      fire_restrictions: { status: 'restriction_reported', county: 'Jefferson' },
+    });
+    assert.equal(priority, 'fire');
+    assert.match(headline, /Jefferson/i);
+    assert.match(headline, /restriction/i);
+  });
+
   it('falls back to nominal pleasant summary', () => {
     const { headline, priority } = synthesizeBottomLine({
       current: { wind_speed_mph: 4, condition: 'Clear', humidity: 35, temp_f: 72 },

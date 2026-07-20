@@ -298,6 +298,9 @@ function updateFooterTimestamp() {
     cwop: 'CWOP/APRS',
     synoptic: 'Synoptic',
     hms: 'HMS smoke',
+    spc_firewx: 'SPC fire weather',
+    nifc_fires: 'NIFC fires',
+    burn_restrictions: 'Burn restrictions',
   };
   const names = sourceIds
     .map((id) => sourceLabels[/** @type {keyof typeof sourceLabels} */ (id)] ?? id)

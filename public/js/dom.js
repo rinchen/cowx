@@ -31,6 +31,23 @@ export function safeHttpsUrl(u) {
 }
 
 /**
+ * Allow http: or https: for official offsite verify links (some county sites are http-only).
+ * Rejects javascript:, data:, etc.
+ * @param {unknown} u
+ * @returns {string | null}
+ */
+export function safeExternalUrl(u) {
+  if (typeof u !== 'string' || !u.trim()) return null;
+  try {
+    const parsed = new URL(u.trim());
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+    return parsed.href;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Scroll to a section and open enclosing details when needed.
  * @param {string} id
  */
