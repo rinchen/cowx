@@ -35,6 +35,8 @@ Without running `fetch`, only stub or committed snapshot data in `public/data/` 
 
 The site is deployed from the `public/` directory on pushes to `main` (see `.github/workflows/pages.yml`).
 
+**Live site:** https://rinchen.github.io/cowx/
+
 Weather data is refreshed on a **45-minute** schedule via GitHub Actions (when the update workflow is enabled). Committed JSON in `public/data/` is what visitors see between runs.
 
 ## GitHub Actions secrets
