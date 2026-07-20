@@ -501,6 +501,11 @@ main {
   margin: 0;
 }
 
+.summary-details > div,
+.summary-details > .summary-detail {
+  min-width: 0;
+}
+
 .summary-details dt {
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -512,6 +517,90 @@ main {
 .summary-details dd {
   margin: 0.125rem 0 0;
   font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.detail-jump {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: calc(var(--radius) - 2px);
+  margin: -0.2rem;
+  padding: 0.2rem;
+}
+
+.detail-jump:hover {
+  background: var(--color-accent-soft);
+}
+
+.detail-jump:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.detail-jump__label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.detail-jump__value {
+  display: block;
+  margin: 0.125rem 0 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.detail-jump--primary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0.15rem;
+}
+
+.detail-jump--primary:hover {
+  background: transparent;
+}
+
+.detail-jump--primary:hover .summary-temp,
+.detail-jump--primary:hover .summary-conditions {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.detail-jump--alert {
+  display: block;
+  margin: -0.15rem;
+  padding: 0.15rem;
+  color: inherit;
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.detail-jump--alert:hover {
+  background: rgb(255 255 255 / 0.45);
+}
+
+.summary-alert--active .detail-jump--alert:hover {
+  background: rgb(255 255 255 / 0.35);
+}
+
+.detail-jump--inline {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  border-radius: 0;
+}
+
+.detail-jump--inline:hover {
+  background: transparent;
+  color: var(--color-accent-hover);
 }
 
 .detail-source {
@@ -844,6 +933,29 @@ main {
 
 .wind-cell__speed {
   white-space: nowrap;
+}
+
+.wind-cell--summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  max-width: 100%;
+}
+
+.wind-cell--summary .wind-cell__speed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  min-width: 0;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.wind-cell--summary .wind-cell__dir {
+  font-size: 0.875em;
+  font-weight: 500;
+  color: var(--color-text-muted);
 }
 
 .wind-compass {

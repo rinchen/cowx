@@ -100,14 +100,46 @@ function seriesHasValues(arr) {
 }
 
 /**
+ * Current-conditions jump target. Prefer in-page section ids; absolute URLs go offsite.
+ * Hash routing owns `location.hash`, so in-page jumps use data-jump-to + click handler.
+ * @param {string} label
+ * @param {string} valueHtml — trusted HTML for the value line (already escaped text or SVG)
+ * @param {string | null | undefined} [source]
+ * @param {string | null | undefined} [href] — section id (`hourly-heading`) or https URL
+ */
+function detailItemLinked(label, valueHtml, source, href) {
+  if (valueHtml == null || valueHtml === '') return '';
+  const src = source ? ` <span class="detail-source">${escapeHtml(source)}</span>` : '';
+  const value = `${valueHtml}${src}`;
+  if (!href) {
+    return `<div><dt>${escapeHtml(label)}</dt><dd>${value}</dd></div>`;
+  }
+  const external = /^https?:\/\//i.test(href);
+  if (external) {
+    return `<div class="summary-detail">
+      <a class="detail-jump" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">
+        <span class="detail-jump__label">${escapeHtml(label)}</span>
+        <span class="detail-jump__value">${value}</span>
+      </a>
+    </div>`;
+  }
+  return `<div class="summary-detail">
+    <a class="detail-jump" href="#${escapeHtml(href)}" data-jump-to="${escapeHtml(href)}">
+      <span class="detail-jump__label">${escapeHtml(label)}</span>
+      <span class="detail-jump__value">${value}</span>
+    </a>
+  </div>`;
+}
+
+/**
  * @param {string} label
  * @param {string | null | undefined} value
  * @param {string | null | undefined} [source]
+ * @param {string | null | undefined} [href]
  */
-function detailItem(label, value, source) {
+function detailItem(label, value, source, href) {
   if (value == null || value === '') return '';
-  const src = source ? ` <span class="detail-source">${escapeHtml(source)}</span>` : '';
-  return `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}${src}</dd></div>`;
+  return detailItemLinked(label, escapeHtml(value), source, href);
 }
 
 /**
@@ -115,11 +147,56 @@ function detailItem(label, value, source) {
  * @param {string} label
  * @param {string | null | undefined} html
  * @param {string | null | undefined} [source]
+ * @param {string | null | undefined} [href]
  */
-function detailItemHtml(label, html, source) {
+function detailItemHtml(label, html, source, href) {
   if (html == null || html === '') return '';
-  const src = source ? ` <span class="detail-source">${escapeHtml(source)}</span>` : '';
-  return `<div><dt>${escapeHtml(label)}</dt><dd>${html}${src}</dd></div>`;
+  return detailItemLinked(label, html, source, href);
+}
+
+/**
+ * Scroll to an on-page section without changing location.hash (SPA hash router).
+ * Opens a parent &lt;details&gt; when the target lives in a collapsed section.
+ * @param {string} id
+ */
+function jumpToSection(id) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  const details = target.closest('details');
+  if (details) details.open = true;
+  const reduceMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  if (typeof target.focus === 'function') {
+    const hadTabindex = target.hasAttribute('tabindex');
+    if (!hadTabindex) target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+    if (!hadTabindex) {
+      target.addEventListener(
+        'blur',
+        () => {
+          target.removeAttribute('tabindex');
+        },
+        { once: true },
+      );
+    }
+  }
+}
+
+/**
+ * @param {ParentNode} root
+ */
+function bindDetailJumps(root) {
+  root.querySelectorAll('a.detail-jump[data-jump-to]').forEach((node) => {
+    const a = /** @type {HTMLAnchorElement} */ (node);
+    a.addEventListener('click', (event) => {
+      const id = a.getAttribute('data-jump-to');
+      if (!id) return;
+      event.preventDefault();
+      jumpToSection(id);
+    });
+  });
 }
 
 /**
@@ -744,17 +821,20 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
     if (current.wind_gust_mph != null) {
       windSpeedBits.push(`gusts ${Math.round(Number(current.wind_gust_mph))} mph`);
     }
-    if (windDir) windSpeedBits.push(`from ${windDir}`);
     const windHtmlParts = [];
     const compass = windCompassHtml(windDeg, { size: 32 });
     if (compass) windHtmlParts.push(compass);
-    if (windSpeedBits.length) {
-      windHtmlParts.push(
-        `<span class="wind-cell__speed">${escapeHtml(windSpeedBits.join(' · '))}</span>`,
-      );
+    if (windSpeedBits.length || windDir) {
+      const speedLine = windSpeedBits.length
+        ? `<span class="wind-cell__mph">${escapeHtml(windSpeedBits.join(' · '))}</span>`
+        : '';
+      const dirLine = windDir
+        ? `<span class="wind-cell__dir">from ${escapeHtml(windDir)}</span>`
+        : '';
+      windHtmlParts.push(`<span class="wind-cell__speed">${speedLine}${dirLine}</span>`);
     }
     const windHtml = windHtmlParts.length
-      ? `<span class="wind-cell">${windHtmlParts.join('')}</span>`
+      ? `<span class="wind-cell wind-cell--summary">${windHtmlParts.join('')}</span>`
       : null;
 
     const tstormNow =
@@ -771,45 +851,51 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
     const precipIn =
       current.precip_in != null ? `${Number(current.precip_in).toFixed(2)} in this hour` : null;
 
+    const alertBody = hasAlerts
+      ? `<strong>Alerts:</strong> ${escapeHtml(alertText)} <span class="detail-source">NWS</span>`
+      : '<strong>Alerts:</strong> None active for this area. <span class="detail-source">NWS</span>';
+
     summarySection.innerHTML = `
       <h2 id="summary-heading">Current conditions</h2>
       <p class="summary-alert ${hasAlerts ? 'summary-alert--active' : 'summary-alert--clear'}" role="status">
-        ${hasAlerts ? `<strong>Alerts:</strong> ${escapeHtml(alertText)} <span class="detail-source">NWS</span>` : '<strong>Alerts:</strong> None active for this area. <span class="detail-source">NWS</span>'}
+        <a class="detail-jump detail-jump--alert" href="#alerts-heading" data-jump-to="alerts-heading">${alertBody}</a>
       </p>
       <div class="summary-grid">
         <div class="summary-primary">
-          ${weatherIconHtml(code, { isDay: nowIsDay, size: 72, className: 'weather-icon weather-icon--lg', alt: String(current.condition ?? wmoLabel(code)) })}
-          <p class="summary-temp" aria-label="Temperature">
-            ${Math.round(Number(current.temp_f))}°F
-          </p>
-          <p class="summary-conditions">${escapeHtml(String(current.condition ?? wmoLabel(code)))} <span class="detail-source">${escapeHtml(omSrc)}</span></p>
+          <a class="detail-jump detail-jump--primary" href="#hourly-heading" data-jump-to="hourly-heading">
+            ${weatherIconHtml(code, { isDay: nowIsDay, size: 72, className: 'weather-icon weather-icon--lg', alt: String(current.condition ?? wmoLabel(code)) })}
+            <p class="summary-temp" aria-label="Temperature">
+              ${Math.round(Number(current.temp_f))}°F
+            </p>
+            <p class="summary-conditions">${escapeHtml(String(current.condition ?? wmoLabel(code)))} <span class="detail-source">${escapeHtml(omSrc)}</span></p>
+          </a>
         </div>
         <dl class="summary-details">
-          ${detailItem('Feels like', current.feels_like_f != null ? `${Math.round(Number(current.feels_like_f))}°F` : null, omSrc)}
-          ${detailItem('Today’s range', todayHi != null && todayLo != null ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F` : null, omSrc)}
-          ${detailItem('Chance of precip', precipChance != null ? `${precipChance}% this hour` : null, omSrc)}
-          ${detailItem('Precipitation', precipIn, omSrc)}
-          ${detailItem('Humidity', current.humidity != null ? `${current.humidity}%` : null, omSrc)}
-          ${detailItem('Dewpoint', hourDew != null ? `${Math.round(hourDew)}°F` : null, omSrc)}
-          ${detailItemHtml('Wind', windHtml, omSrc)}
-          ${detailItem('Thunderstorm', tstormNow, omSrc)}
-          ${detailItem('Visibility', hourVis != null ? fmtVisibility(hourVis) : null, omSrc)}
-          ${detailItem('Cloud cover', current.cloud_cover != null ? `${current.cloud_cover}%` : null, omSrc)}
-          ${detailItem('Pressure', current.pressure_mb != null ? `${Math.round(Number(current.pressure_mb))} mb` : null, omSrc)}
-          ${detailItem('UV index', uvPlain(/** @type {number | null} */ (current.uv_index ?? null)), omSrc)}
-          ${detailItem('Air quality', aq, aqSrc)}
-          ${detailItem('Sunrise', sunrise ? fmtClock(sunrise) : null, omSrc)}
-          ${detailItem('Sunset', sunset ? fmtClock(sunset) : null, omSrc)}
-          ${detailItem('Morning golden hour', golden.morning, omSrc)}
-          ${detailItem('Evening golden hour', golden.evening, omSrc)}
-          ${detailItem('Aviation', flightCat, flightCat ? 'AWC METAR' : null)}
+          ${detailItem('Feels like', current.feels_like_f != null ? `${Math.round(Number(current.feels_like_f))}°F` : null, omSrc, 'hourly-heading')}
+          ${detailItem('Today’s range', todayHi != null && todayLo != null ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F` : null, omSrc, 'daily-heading')}
+          ${detailItem('Chance of precip', precipChance != null ? `${precipChance}% this hour` : null, omSrc, 'hourly-heading')}
+          ${detailItem('Precipitation', precipIn, omSrc, 'hourly-heading')}
+          ${detailItem('Humidity', current.humidity != null ? `${current.humidity}%` : null, omSrc, 'hourly-heading')}
+          ${detailItem('Dewpoint', hourDew != null ? `${Math.round(hourDew)}°F` : null, omSrc, 'hourly-heading')}
+          ${detailItemHtml('Wind', windHtml, omSrc, 'hourly-heading')}
+          ${detailItem('Thunderstorm', tstormNow, omSrc, 'hourly-heading')}
+          ${detailItem('Visibility', hourVis != null ? fmtVisibility(hourVis) : null, omSrc, 'hourly-heading')}
+          ${detailItem('Cloud cover', current.cloud_cover != null ? `${current.cloud_cover}%` : null, omSrc, 'hourly-heading')}
+          ${detailItem('Pressure', current.pressure_mb != null ? `${Math.round(Number(current.pressure_mb))} mb` : null, omSrc, 'sources-heading')}
+          ${detailItem('UV index', uvPlain(/** @type {number | null} */ (current.uv_index ?? null)), omSrc, 'daily-heading')}
+          ${detailItem('Air quality', aq, aqSrc, aq ? 'aqi-heading' : null)}
+          ${detailItem('Sunrise', sunrise ? fmtClock(sunrise) : null, omSrc, 'daily-heading')}
+          ${detailItem('Sunset', sunset ? fmtClock(sunset) : null, omSrc, 'daily-heading')}
+          ${detailItem('Morning golden hour', golden.morning, omSrc, 'daily-heading')}
+          ${detailItem('Evening golden hour', golden.evening, omSrc, 'daily-heading')}
+          ${detailItem('Aviation', flightCat, flightCat ? 'AWC METAR' : null, flightCat ? 'metar-heading' : null)}
         </dl>
       </div>
-      ${data.updatedAt ? `<p class="updated-at">Location snapshot ${fmtDateTime(String(data.updatedAt))} · see Live data sources below</p>` : ''}
+      ${data.updatedAt ? `<p class="updated-at">Location snapshot ${fmtDateTime(String(data.updatedAt))} · <a class="detail-jump detail-jump--inline" href="#sources-heading" data-jump-to="sources-heading">Live data sources</a></p>` : ''}
     `;
   }
   root.appendChild(summarySection);
-  renderLiveSourcesPanel(root, data, metaSources);
+  bindDetailJumps(summarySection);
 
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   if (!hourly?.time || !Array.isArray(hourly.time) || hourly.time.length === 0) {
@@ -1240,6 +1326,7 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
   );
 
   root.appendChild(sections);
+  renderLiveSourcesPanel(root, data, metaSources);
 
   const favBtn = /** @type {HTMLButtonElement | null} */ (root.querySelector('#btn-favorite'));
   favBtn?.addEventListener('click', () => {
