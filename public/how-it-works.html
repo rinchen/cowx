@@ -112,7 +112,7 @@
         repository.
       </p>
 
-      <h2>Privacy</h2>
+      <h2 id="privacy">Privacy</h2>
       <ul>
         <li>No accounts and no COWX backend database.</li>
         <li>
@@ -120,6 +120,11 @@
           <code>cowx:lastLocation</code> only.
         </li>
         <li>No third-party analytics by default.</li>
+        <li>
+          Optional network location uses a third-party IP geolocation request in the browser (no
+          tracking cookies). Some ad blockers incorrectly block that call and break region
+          detection.
+        </li>
         <li>
           API keys for PurpleAir/AirNow are used only in GitHub Actions at build time — never in the
           browser.

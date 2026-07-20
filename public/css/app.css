@@ -164,6 +164,21 @@ summary:focus-visible {
   text-underline-offset: 0.2em;
 }
 
+.site-notice {
+  margin: 0;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  background: var(--color-accent-soft);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.site-notice a {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .error-banner {
   margin: 0;
   padding: 0.75rem 1.25rem;
@@ -948,6 +963,10 @@ main {
 
 .page-content h1 {
   margin-top: 0;
+}
+
+.page-content h2 {
+  scroll-margin-top: calc(var(--header-height) + 0.75rem);
 }
 
 .page-content p {
