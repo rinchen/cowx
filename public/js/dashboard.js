@@ -1,7 +1,142 @@
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
+import { miniBarChartHtml, sparklineHtml } from './sparkline.js';
 import { windCellHtml, windCompassHtml, windDirLabel } from './wind.js';
 
+const COL_PREF_KEY = 'cowx:tableColumns';
+
+/** @type {string[]} */
+const DEFAULT_HIDDEN_OPTIONAL = [
+  'snow',
+  'cloudLayers',
+  'cape',
+  'freeze',
+  'wind80',
+  'precipHours',
+  'daylight',
+  'et0',
+];
+
+/**
+ * @returns {Record<string, boolean>}
+ */
+function loadColumnPrefs() {
+  try {
+    const raw = localStorage.getItem(COL_PREF_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * @param {Record<string, boolean>} prefs
+ */
+function saveColumnPrefs(prefs) {
+  try {
+    localStorage.setItem(COL_PREF_KEY, JSON.stringify(prefs));
+  } catch {
+    /* ignore quota */
+  }
+}
+
+/**
+ * @param {HTMLElement} wrap — table-scroll wrapper with data-table-kind
+ * @param {{ key: string, label: string, optional?: boolean }[]} cols
+ */
+function attachColumnToggles(wrap, cols) {
+  const optional = cols.filter((c) => c.optional);
+  if (!optional.length) return;
+
+  const prefs = loadColumnPrefs();
+  const kind = wrap.dataset.tableKind || 'table';
+
+  for (const col of optional) {
+    const prefKey = `${kind}:${col.key}`;
+    const visible =
+      prefs[prefKey] != null ? Boolean(prefs[prefKey]) : !DEFAULT_HIDDEN_OPTIONAL.includes(col.key);
+    if (!visible) wrap.classList.add(`hide-col-${col.key}`);
+  }
+
+  const details = document.createElement('details');
+  details.className = 'column-toggles';
+  const summary = document.createElement('summary');
+  summary.textContent = 'Columns';
+  details.appendChild(summary);
+  const list = document.createElement('div');
+  list.className = 'column-toggles__list';
+  list.setAttribute('role', 'group');
+  list.setAttribute('aria-label', 'Optional forecast columns');
+
+  for (const col of optional) {
+    const prefKey = `${kind}:${col.key}`;
+    const id = `col-toggle-${kind}-${col.key}`;
+    const label = document.createElement('label');
+    label.className = 'checkbox-label';
+    label.setAttribute('for', id);
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.id = id;
+    input.checked = !wrap.classList.contains(`hide-col-${col.key}`);
+    input.addEventListener('change', () => {
+      wrap.classList.toggle(`hide-col-${col.key}`, !input.checked);
+      const next = loadColumnPrefs();
+      next[prefKey] = input.checked;
+      saveColumnPrefs(next);
+    });
+    label.appendChild(input);
+    label.appendChild(document.createTextNode(` ${col.label}`));
+    list.appendChild(label);
+  }
+  details.appendChild(list);
+  wrap.insertBefore(details, wrap.firstChild);
+}
+
+/**
+ * AQI gradient bar with marker.
+ * @param {number} aqi
+ * @returns {string}
+ */
+function aqiBarHtml(aqi) {
+  const n = Math.max(0, Math.min(500, Number(aqi)));
+  const pct = (n / 500) * 100;
+  return `<div class="aqi-bar" role="img" aria-label="AQI ${Math.round(n)} on a 0 to 500 scale"><span class="aqi-bar__marker" style="left:${pct}%"></span></div>`;
+}
+
+/**
+ * UV gradient bar with marker (0–11+).
+ * @param {number} uv
+ * @returns {string}
+ */
+function uvBarHtml(uv) {
+  const n = Math.max(0, Number(uv));
+  const pct = Math.min(100, (n / 11) * 100);
+  return `<div class="uv-bar" role="img" aria-label="UV index ${n} on a 0 to 11 plus scale"><span class="uv-bar__marker" style="left:${pct}%"></span></div>`;
+}
+
+/**
+ * Secondary precip-type line for an hourly row.
+ * @param {number | null | undefined} rain
+ * @param {number | null | undefined} showers
+ * @param {number | null | undefined} snow
+ * @returns {string}
+ */
+function precipTypeLine(rain, showers, snow) {
+  const r = rain != null ? Number(rain) : null;
+  const sh = showers != null ? Number(showers) : null;
+  const s = snow != null ? Number(snow) : null;
+  if (r == null && sh == null && s == null) return '';
+  const rainTotal = (r ?? 0) + (sh ?? 0);
+  const snowVal = s ?? 0;
+  const parts = [];
+  if (rainTotal > 0 && snowVal > 0) parts.push('Mix');
+  else if (snowVal > 0) parts.push(`Snow ${snowVal.toFixed(2)}`);
+  else if (rainTotal > 0) parts.push(`Rain ${rainTotal.toFixed(2)}`);
+  if (!parts.length) return '';
+  return `<span class="precip-type">${escapeHtml(parts.join(' · '))}</span>`;
+}
 /**
  * @param {unknown} value
  */
@@ -97,6 +232,81 @@ function coagValue(v) {
  */
 function seriesHasValues(arr) {
   return Array.isArray(arr) && arr.some((v) => v != null && v !== '');
+}
+
+/**
+ * @param {unknown} arr
+ * @param {number} min
+ * @returns {boolean}
+ */
+function seriesHasAbove(arr, min) {
+  return Array.isArray(arr) && arr.some((v) => v != null && Number(v) > min);
+}
+
+/**
+ * @param {number | null | undefined} meters
+ * @returns {string | null}
+ */
+function fmtFreezingLevelFt(meters) {
+  if (meters == null || Number.isNaN(Number(meters))) return null;
+  return `${Math.round(Number(meters) * 3.28084).toLocaleString()} ft`;
+}
+
+/**
+ * @param {number | null | undefined} cape
+ * @returns {string | null}
+ */
+function capePlain(cape) {
+  if (cape == null || Number.isNaN(Number(cape))) return null;
+  const n = Math.round(Number(cape));
+  let level = 'Low';
+  if (n >= 3500) level = 'Extreme';
+  else if (n >= 2500) level = 'High';
+  else if (n >= 1000) level = 'Moderate';
+  return `${n} J/kg (${level})`;
+}
+
+/**
+ * Format Open-Meteo duration seconds as "Xh Ym".
+ * @param {number | null | undefined} seconds
+ * @returns {string | null}
+ */
+function fmtDurationSeconds(seconds) {
+  if (seconds == null || Number.isNaN(Number(seconds))) return null;
+  const total = Math.max(0, Math.round(Number(seconds)));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  return `${h}h ${m}m`;
+}
+
+/**
+ * Daylight remaining until today's sunset.
+ * @param {string | null | undefined} sunsetIso
+ * @param {number} [nowMs]
+ * @returns {string | null}
+ */
+function daylightRemaining(sunsetIso, nowMs = Date.now()) {
+  if (!sunsetIso) return null;
+  try {
+    const end = new Date(sunsetIso).getTime();
+    const rem = end - nowMs;
+    if (rem <= 0) return 'Sunset passed';
+    return `${fmtDurationSeconds(rem / 1000)} left`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Compact L/M/H cloud layer percentages.
+ * @param {number | null | undefined} low
+ * @param {number | null | undefined} mid
+ * @param {number | null | undefined} high
+ * @returns {string}
+ */
+function cloudLayersHtml(low, mid, high) {
+  const fmt = (v) => (v != null && !Number.isNaN(Number(v)) ? `${Math.round(Number(v))}` : '—');
+  return `<span class="cloud-layers" title="Low / Mid / High cloud cover %">${fmt(low)}/${fmt(mid)}/${fmt(high)}</span>`;
 }
 
 /**
@@ -254,7 +464,10 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
   const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
   const coag = /** @type {Record<string, unknown> | null} */ (data.coagmet ?? null);
   const aviation = /** @type {Record<string, unknown> | null} */ (data.aviation ?? null);
+  const usgs = /** @type {Record<string, unknown> | null} */ (data.usgs ?? null);
+  const snotel = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
   const afd = /** @type {Record<string, unknown> | null} */ (data.afd ?? null);
+  const hwo = /** @type {Record<string, unknown> | null} */ (data.hwo ?? null);
   const alerts = /** @type {unknown[]} */ (data.alerts ?? []);
 
   /** @type {{ title: string, body: string, href: string | null }[]} */
@@ -271,7 +484,7 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
   const nwsInfo = metaSourceInfo(metaSources, 'nws');
   rows.push({
     title: 'Alerts & forecast discussion',
-    body: `National Weather Service${alerts.length ? ` · ${alerts.length} active alert${alerts.length === 1 ? '' : 's'}` : ' · no active alerts'}${afd?.office ? ` · AFD ${afd.office}` : ''}${afd?.issued ? ` issued ${fmtDateTime(String(afd.issued))}` : ''}${nwsInfo.fetchedAt ? ` · fetched ${fmtDateTime(nwsInfo.fetchedAt)}` : ''}${sourceStatusNote(nwsInfo.status)}`,
+    body: `National Weather Service${alerts.length ? ` · ${alerts.length} active alert${alerts.length === 1 ? '' : 's'}` : ' · no active alerts'}${afd?.office ? ` · AFD ${afd.office}` : ''}${hwo?.office ? ` · HWO ${hwo.office}` : ''}${afd?.issued ? ` issued ${fmtDateTime(String(afd.issued))}` : ''}${nwsInfo.fetchedAt ? ` · fetched ${fmtDateTime(nwsInfo.fetchedAt)}` : ''}${sourceStatusNote(nwsInfo.status)}`,
     href: links.nws_forecast || 'https://www.weather.gov/',
   });
 
@@ -320,6 +533,26 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
       title: 'Aviation (METAR / TAF)',
       body: `${aviation.icao ?? 'Nearest station'}${aviation.flight_category ? ` · ${aviation.flight_category}` : ''}${obs ? ` · observed ${obs}` : ''}${avInfo.fetchedAt ? ` · fetched ${fmtDateTime(avInfo.fetchedAt)}` : ''}${sourceStatusNote(avInfo.status)}`,
       href: aviation.url ? String(aviation.url) : links.aviation || 'https://aviationweather.gov/',
+    });
+  }
+
+  if (usgs) {
+    const usgsInfo = metaSourceInfo(metaSources, 'usgs');
+    rows.push({
+      title: 'Hydrology (USGS)',
+      body: `${usgs.station_name ?? usgs.station_id}${usgs.discharge_cfs != null ? ` · ${Math.round(Number(usgs.discharge_cfs))} cfs` : ''}${usgs.distance_km != null ? ` · ${usgs.distance_km} km` : ''}${usgsInfo.fetchedAt ? ` · fetched ${fmtDateTime(usgsInfo.fetchedAt)}` : ''}${sourceStatusNote(usgsInfo.status)}`,
+      href: usgs.url ? String(usgs.url) : links.usgs || 'https://waterdata.usgs.gov/',
+    });
+  }
+
+  if (snotel) {
+    const snInfo = metaSourceInfo(metaSources, 'snotel');
+    rows.push({
+      title: 'Snowpack (SNOTEL)',
+      body: `${snotel.station_name ?? snotel.station_id}${snotel.snow_depth_in != null ? ` · ${snotel.snow_depth_in} in depth` : ''}${snotel.distance_km != null ? ` · ${snotel.distance_km} km` : ''}${snInfo.fetchedAt ? ` · fetched ${fmtDateTime(snInfo.fetchedAt)}` : ''}${sourceStatusNote(snInfo.status)}`,
+      href: snotel.url
+        ? String(snotel.url)
+        : links.snotel || 'https://www.nrcs.usda.gov/wps/portal/wcc/home/',
     });
   }
 
@@ -455,87 +688,133 @@ function renderEmpty(container, title, bodyHtml) {
  * @param {Record<string, unknown>} hourly
  * @param {string[]} sunrises
  * @param {string[]} sunsets
+ * @param {{ elevationFt?: number | null }} [opts]
  * @returns {HTMLElement}
  */
-function buildHourlyTable(hourly, sunrises, sunsets) {
+function buildHourlyTable(hourly, sunrises, sunsets, opts = {}) {
   const times = /** @type {string[]} */ (hourly.time).slice(0, 48);
+  const elevationFt = opts.elevationFt ?? null;
   const showFeels = seriesHasValues(hourly.apparent_temperature);
   const showPrecipPct = seriesHasValues(hourly.precipitation_probability);
   const showPrecipIn = seriesHasValues(hourly.precipitation);
+  const showSnow = seriesHasAbove(hourly.snowfall, 0);
   const showWind =
     seriesHasValues(hourly.wind_speed_10m) || seriesHasValues(hourly.wind_direction_10m);
   const showGust = seriesHasValues(hourly.wind_gusts_10m);
+  const showWind80 =
+    seriesHasValues(hourly.wind_speed_80m) || seriesHasValues(hourly.wind_direction_80m);
   const showTstorm = seriesHasValues(hourly.thunderstorm_probability);
+  const showCape = seriesHasAbove(hourly.cape, 100);
   const showRh = seriesHasValues(hourly.relative_humidity_2m);
   const showDew = seriesHasValues(hourly.dewpoint_2m);
   const showCloud = seriesHasValues(hourly.cloud_cover);
+  const showCloudLayers =
+    seriesHasValues(hourly.cloud_cover_low) ||
+    seriesHasValues(hourly.cloud_cover_mid) ||
+    seriesHasValues(hourly.cloud_cover_high);
   const showUv = seriesHasValues(hourly.uv_index);
   const showVis = seriesHasValues(hourly.visibility);
+  const showFreeze =
+    elevationFt != null &&
+    Number(elevationFt) > 8000 &&
+    seriesHasValues(hourly.freezing_level_height);
 
-  const headers = ['Time', 'Cond.', 'Temp'];
-  if (showFeels) headers.push('Feels');
-  if (showPrecipPct) headers.push('Precip %');
-  if (showPrecipIn) headers.push('Precip in');
-  if (showWind) headers.push('Wind');
-  if (showGust) headers.push('Gust');
-  if (showTstorm) headers.push('Tstorm %');
-  if (showRh) headers.push('RH');
-  if (showDew) headers.push('Dew');
-  if (showCloud) headers.push('Cloud');
-  if (showUv) headers.push('UV');
-  if (showVis) headers.push('Vis');
+  /** @type {{ key: string, label: string, optional?: boolean }[]} */
+  const cols = [
+    { key: 'time', label: 'Time' },
+    { key: 'cond', label: 'Cond.' },
+    { key: 'temp', label: 'Temp' },
+  ];
+  if (showFeels) cols.push({ key: 'feels', label: 'Feels' });
+  if (showPrecipPct) cols.push({ key: 'precipPct', label: 'Precip %' });
+  if (showPrecipIn) cols.push({ key: 'precipIn', label: 'Precip in' });
+  if (showSnow) cols.push({ key: 'snow', label: 'Snow', optional: true });
+  if (showWind) cols.push({ key: 'wind', label: 'Wind' });
+  if (showGust) cols.push({ key: 'gust', label: 'Gust' });
+  if (showWind80) cols.push({ key: 'wind80', label: 'Wind 80m', optional: true });
+  if (showTstorm) cols.push({ key: 'tstorm', label: 'Tstorm %' });
+  if (showCape) cols.push({ key: 'cape', label: 'CAPE', optional: true });
+  if (showRh) cols.push({ key: 'rh', label: 'RH' });
+  if (showDew) cols.push({ key: 'dew', label: 'Dew' });
+  if (showCloud) cols.push({ key: 'cloud', label: 'Cloud' });
+  if (showCloudLayers) cols.push({ key: 'cloudLayers', label: 'L/M/H', optional: true });
+  if (showFreeze) cols.push({ key: 'freeze', label: 'Freeze lvl', optional: true });
+  if (showUv) cols.push({ key: 'uv', label: 'UV' });
+  if (showVis) cols.push({ key: 'vis', label: 'Vis' });
 
   const wrap = document.createElement('div');
   wrap.className = 'table-scroll';
+  wrap.dataset.tableKind = 'hourly';
   const table = document.createElement('table');
   table.className = 'data-table data-table--dense data-table--forecast';
   table.innerHTML = `
     <caption class="sr-only">48-hour hourly forecast</caption>
-    <thead><tr>${headers.map((h) => `<th scope="col">${escapeHtml(h)}</th>`).join('')}</tr></thead>
+    <thead><tr>${cols
+      .map(
+        (c) =>
+          `<th scope="col" class="col-${escapeHtml(c.key)}${c.optional ? ' col-optional' : ''}" data-col="${escapeHtml(c.key)}">${escapeHtml(c.label)}</th>`,
+      )
+      .join('')}</tr></thead>
   `;
   const tbody = document.createElement('tbody');
+  const isDaySeries = /** @type {(number | null)[]} */ (hourly.is_day ?? []);
   times.forEach((t, i) => {
     const code = /** @type {number[]} */ (hourly.weather_code ?? [])[i];
     const temp = /** @type {number[]} */ (hourly.temperature_2m ?? [])[i];
     const feels = /** @type {number[]} */ (hourly.apparent_temperature ?? [])[i];
     const precipPct = /** @type {number[]} */ (hourly.precipitation_probability ?? [])[i];
     const precipIn = /** @type {number[]} */ (hourly.precipitation ?? [])[i];
+    const snow = /** @type {number[]} */ (hourly.snowfall ?? [])[i];
     const wind = /** @type {number[]} */ (hourly.wind_speed_10m ?? [])[i];
     const windDir = /** @type {number[]} */ (hourly.wind_direction_10m ?? [])[i];
     const gust = /** @type {number[]} */ (hourly.wind_gusts_10m ?? [])[i];
+    const wind80 = /** @type {number[]} */ (hourly.wind_speed_80m ?? [])[i];
+    const wind80Dir = /** @type {number[]} */ (hourly.wind_direction_80m ?? [])[i];
     const tstorm = /** @type {number[]} */ (hourly.thunderstorm_probability ?? [])[i];
+    const cape = /** @type {number[]} */ (hourly.cape ?? [])[i];
     const rh = /** @type {number[]} */ (hourly.relative_humidity_2m ?? [])[i];
     const dew = /** @type {number[]} */ (hourly.dewpoint_2m ?? [])[i];
     const cloud = /** @type {number[]} */ (hourly.cloud_cover ?? [])[i];
+    const cloudLow = /** @type {number[]} */ (hourly.cloud_cover_low ?? [])[i];
+    const cloudMid = /** @type {number[]} */ (hourly.cloud_cover_mid ?? [])[i];
+    const cloudHigh = /** @type {number[]} */ (hourly.cloud_cover_high ?? [])[i];
+    const freeze = /** @type {number[]} */ (hourly.freezing_level_height ?? [])[i];
     const uv = /** @type {number[]} */ (hourly.uv_index ?? [])[i];
     const vis = /** @type {number[]} */ (hourly.visibility ?? [])[i];
-    const day = isDaytime(t, sunrises, sunsets);
-    const cells = [
-      `<td class="sticky-col">${escapeHtml(fmtTime(t))}</td>`,
-      `<td class="cond-cell">${weatherIconHtml(code, { isDay: day, size: 28, className: 'weather-icon weather-icon--sm', alt: wmoLabel(code) })} <span>${escapeHtml(wmoLabel(code))}</span></td>`,
-      `<td>${temp != null ? `${Math.round(temp)}°F` : '—'}</td>`,
-    ];
-    if (showFeels) cells.push(`<td>${feels != null ? `${Math.round(feels)}°F` : '—'}</td>`);
-    if (showPrecipPct) cells.push(`<td>${precipPct != null ? `${precipPct}%` : '—'}</td>`);
-    if (showPrecipIn) {
-      cells.push(`<td>${precipIn != null ? Number(precipIn).toFixed(2) : '—'}</td>`);
-    }
-    if (showWind)
-      cells.push(`<td class="wind-td">${windCellHtml(windDir, wind, { size: 24 })}</td>`);
-    if (showGust) cells.push(`<td>${gust != null ? `${Math.round(gust)} mph` : '—'}</td>`);
-    if (showTstorm)
-      cells.push(`<td>${tstorm != null ? `${Math.round(Number(tstorm))}%` : '—'}</td>`);
-    if (showRh) cells.push(`<td>${rh != null ? `${rh}%` : '—'}</td>`);
-    if (showDew) cells.push(`<td>${dew != null ? `${Math.round(dew)}°F` : '—'}</td>`);
-    if (showCloud) cells.push(`<td>${cloud != null ? `${cloud}%` : '—'}</td>`);
-    if (showUv) cells.push(`<td>${uv != null ? String(uv) : '—'}</td>`);
-    if (showVis) cells.push(`<td>${fmtVisibility(vis)}</td>`);
+    const rain = /** @type {number[]} */ (hourly.rain ?? [])[i];
+    const showers = /** @type {number[]} */ (hourly.showers ?? [])[i];
+    const dayFlag = isDaySeries[i];
+    const day = dayFlag === 0 || dayFlag === 1 ? dayFlag === 1 : isDaytime(t, sunrises, sunsets);
+    const precipType = precipTypeLine(rain, showers, snow);
+    /** @type {Record<string, string>} */
+    const cellByKey = {
+      time: `<td class="sticky-col col-time" data-col="time">${escapeHtml(fmtTime(t))}</td>`,
+      cond: `<td class="cond-cell col-cond" data-col="cond">${weatherIconHtml(code, { isDay: day, size: 28, className: 'weather-icon weather-icon--sm', alt: wmoLabel(code) })} <span>${escapeHtml(wmoLabel(code))}</span>${precipType}</td>`,
+      temp: `<td class="col-temp" data-col="temp">${temp != null ? `${Math.round(temp)}°F` : '—'}</td>`,
+      feels: `<td class="col-feels" data-col="feels">${feels != null ? `${Math.round(feels)}°F` : '—'}</td>`,
+      precipPct: `<td class="col-precipPct" data-col="precipPct">${precipPct != null ? `${precipPct}%` : '—'}</td>`,
+      precipIn: `<td class="col-precipIn" data-col="precipIn">${precipIn != null ? Number(precipIn).toFixed(2) : '—'}</td>`,
+      snow: `<td class="col-snow" data-col="snow">${snow != null ? Number(snow).toFixed(2) : '—'}</td>`,
+      wind: `<td class="wind-td col-wind" data-col="wind">${windCellHtml(windDir, wind, { size: 24 })}</td>`,
+      gust: `<td class="col-gust" data-col="gust">${gust != null ? `${Math.round(gust)} mph` : '—'}</td>`,
+      wind80: `<td class="wind-td col-wind80" data-col="wind80">${windCellHtml(wind80Dir, wind80, { size: 24 })}</td>`,
+      tstorm: `<td class="col-tstorm" data-col="tstorm">${tstorm != null ? `${Math.round(Number(tstorm))}%` : '—'}</td>`,
+      cape: `<td class="col-cape" data-col="cape">${cape != null ? `${Math.round(Number(cape))}` : '—'}</td>`,
+      rh: `<td class="col-rh" data-col="rh">${rh != null ? `${rh}%` : '—'}</td>`,
+      dew: `<td class="col-dew" data-col="dew">${dew != null ? `${Math.round(dew)}°F` : '—'}</td>`,
+      cloud: `<td class="col-cloud" data-col="cloud">${cloud != null ? `${cloud}%` : '—'}</td>`,
+      cloudLayers: `<td class="col-cloudLayers" data-col="cloudLayers">${cloudLayersHtml(cloudLow, cloudMid, cloudHigh)}</td>`,
+      freeze: `<td class="col-freeze" data-col="freeze">${fmtFreezingLevelFt(freeze) ?? '—'}</td>`,
+      uv: `<td class="col-uv" data-col="uv">${uv != null ? String(uv) : '—'}</td>`,
+      vis: `<td class="col-vis" data-col="vis">${fmtVisibility(vis)}</td>`,
+    };
     const tr = document.createElement('tr');
-    tr.innerHTML = cells.join('');
+    tr.innerHTML = cols.map((c) => cellByKey[c.key]).join('');
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
   wrap.appendChild(table);
+  attachColumnToggles(wrap, cols);
   return wrap;
 }
 
@@ -546,27 +825,44 @@ function buildHourlyTable(hourly, sunrises, sunsets) {
 function buildDailyTable(daily) {
   const times = /** @type {string[]} */ (daily.time ?? []);
   const showTstorm = seriesHasValues(daily.thunderstorm_probability_max);
+  const showSnow = seriesHasValues(daily.snowfall_sum);
+  const showPrecipHours = seriesHasValues(daily.precipitation_hours);
+  const showDaylight = seriesHasValues(daily.daylight_duration);
+  const showEt0 = seriesHasValues(daily.et0_fao_evapotranspiration);
+
+  /** @type {{ key: string, label: string, optional?: boolean }[]} */
+  const cols = [
+    { key: 'day', label: 'Day' },
+    { key: 'cond', label: 'Cond.' },
+    { key: 'high', label: 'High' },
+    { key: 'low', label: 'Low' },
+    { key: 'precipPct', label: 'Precip %' },
+    { key: 'precipIn', label: 'Precip in' },
+  ];
+  if (showSnow) cols.push({ key: 'snow', label: 'Snow', optional: true });
+  if (showPrecipHours) cols.push({ key: 'precipHours', label: 'Precip hrs', optional: true });
+  cols.push({ key: 'wind', label: 'Wind' }, { key: 'gust', label: 'Gust' });
+  if (showTstorm) cols.push({ key: 'tstorm', label: 'Tstorm %' });
+  cols.push({ key: 'uv', label: 'UV' });
+  if (showDaylight) cols.push({ key: 'daylight', label: 'Daylight', optional: true });
+  if (showEt0) cols.push({ key: 'et0', label: 'ET₀', optional: true });
+  cols.push({ key: 'sunrise', label: 'Sunrise' }, { key: 'sunset', label: 'Sunset' });
+
   const wrap = document.createElement('div');
   wrap.className = 'table-scroll';
+  wrap.dataset.tableKind = 'daily';
   const table = document.createElement('table');
   table.className = 'data-table data-table--dense data-table--forecast';
-  const tstormTh = showTstorm ? '<th scope="col">Tstorm %</th>' : '';
   table.innerHTML = `
     <caption class="sr-only">10-day daily forecast</caption>
     <thead>
       <tr>
-        <th scope="col">Day</th>
-        <th scope="col">Cond.</th>
-        <th scope="col">High</th>
-        <th scope="col">Low</th>
-        <th scope="col">Precip %</th>
-        <th scope="col">Precip in</th>
-        <th scope="col">Wind</th>
-        <th scope="col">Gust</th>
-        ${tstormTh}
-        <th scope="col">UV</th>
-        <th scope="col">Sunrise</th>
-        <th scope="col">Sunset</th>
+        ${cols
+          .map(
+            (c) =>
+              `<th scope="col" class="col-${escapeHtml(c.key)}${c.optional ? ' col-optional' : ''}" data-col="${escapeHtml(c.key)}">${escapeHtml(c.label)}</th>`,
+          )
+          .join('')}
       </tr>
     </thead>
   `;
@@ -577,35 +873,43 @@ function buildDailyTable(daily) {
     const lo = /** @type {number[]} */ (daily.temperature_2m_min ?? [])[i];
     const precipPct = /** @type {number[]} */ (daily.precipitation_probability_max ?? [])[i];
     const precipSum = /** @type {number[]} */ (daily.precipitation_sum ?? [])[i];
+    const snow = /** @type {number[]} */ (daily.snowfall_sum ?? [])[i];
+    const precipHours = /** @type {number[]} */ (daily.precipitation_hours ?? [])[i];
     const windMax = /** @type {number[]} */ (daily.wind_speed_10m_max ?? [])[i];
     const windDir = /** @type {number[]} */ (daily.wind_direction_10m_dominant ?? [])[i];
     const gustMax = /** @type {number[]} */ (daily.wind_gusts_10m_max ?? [])[i];
     const tstormMax = /** @type {number[]} */ (daily.thunderstorm_probability_max ?? [])[i];
     const uvMax = /** @type {number[]} */ (daily.uv_index_max ?? [])[i];
+    const daylight = /** @type {number[]} */ (daily.daylight_duration ?? [])[i];
+    const et0 = /** @type {number[]} */ (daily.et0_fao_evapotranspiration ?? [])[i];
     const code = /** @type {number[]} */ (daily.weather_code ?? [])[i];
     const rise = /** @type {string[]} */ (daily.sunrise ?? [])[i];
     const set = /** @type {string[]} */ (daily.sunset ?? [])[i];
-    const tstormTd = showTstorm
-      ? `<td>${tstormMax != null ? `${Math.round(Number(tstormMax))}%` : '—'}</td>`
-      : '';
-    tr.innerHTML = `
-      <td class="sticky-col">${fmtDate(times[i])}</td>
-      <td class="cond-cell">${weatherIconHtml(code, { isDay: true, size: 28, className: 'weather-icon weather-icon--sm', alt: wmoLabel(code) })} <span>${escapeHtml(wmoLabel(code))}</span></td>
-      <td>${hi != null ? `${Math.round(hi)}°F` : '—'}</td>
-      <td>${lo != null ? `${Math.round(lo)}°F` : '—'}</td>
-      <td>${precipPct != null ? `${precipPct}%` : '—'}</td>
-      <td>${precipSum != null ? `${Number(precipSum).toFixed(2)}` : '—'}</td>
-      <td class="wind-td">${windCellHtml(windDir, windMax, { size: 24 })}</td>
-      <td>${gustMax != null ? `${Math.round(gustMax)} mph` : '—'}</td>
-      ${tstormTd}
-      <td>${uvMax != null ? String(uvMax) : '—'}</td>
-      <td>${fmtClock(rise)}</td>
-      <td>${fmtClock(set)}</td>
-    `;
+    /** @type {Record<string, string>} */
+    const cellByKey = {
+      day: `<td class="sticky-col col-day" data-col="day">${fmtDate(times[i])}</td>`,
+      cond: `<td class="cond-cell col-cond" data-col="cond">${weatherIconHtml(code, { isDay: true, size: 28, className: 'weather-icon weather-icon--sm', alt: wmoLabel(code) })} <span>${escapeHtml(wmoLabel(code))}</span></td>`,
+      high: `<td class="col-high" data-col="high">${hi != null ? `${Math.round(hi)}°F` : '—'}</td>`,
+      low: `<td class="col-low" data-col="low">${lo != null ? `${Math.round(lo)}°F` : '—'}</td>`,
+      precipPct: `<td class="col-precipPct" data-col="precipPct">${precipPct != null ? `${precipPct}%` : '—'}</td>`,
+      precipIn: `<td class="col-precipIn" data-col="precipIn">${precipSum != null ? `${Number(precipSum).toFixed(2)}` : '—'}</td>`,
+      snow: `<td class="col-snow" data-col="snow">${snow != null ? Number(snow).toFixed(2) : '—'}</td>`,
+      precipHours: `<td class="col-precipHours" data-col="precipHours">${precipHours != null ? String(precipHours) : '—'}</td>`,
+      wind: `<td class="wind-td col-wind" data-col="wind">${windCellHtml(windDir, windMax, { size: 24 })}</td>`,
+      gust: `<td class="col-gust" data-col="gust">${gustMax != null ? `${Math.round(gustMax)} mph` : '—'}</td>`,
+      tstorm: `<td class="col-tstorm" data-col="tstorm">${tstormMax != null ? `${Math.round(Number(tstormMax))}%` : '—'}</td>`,
+      uv: `<td class="col-uv" data-col="uv">${uvMax != null ? String(uvMax) : '—'}</td>`,
+      daylight: `<td class="col-daylight" data-col="daylight">${fmtDurationSeconds(daylight) ?? '—'}</td>`,
+      et0: `<td class="col-et0" data-col="et0">${et0 != null ? Number(et0).toFixed(2) : '—'}</td>`,
+      sunrise: `<td class="col-sunrise" data-col="sunrise">${fmtClock(rise)}</td>`,
+      sunset: `<td class="col-sunset" data-col="sunset">${fmtClock(set)}</td>`,
+    };
+    tr.innerHTML = cols.map((c) => cellByKey[c.key]).join('');
     tbody.appendChild(tr);
   }
   table.appendChild(tbody);
   wrap.appendChild(table);
+  attachColumnToggles(wrap, cols);
   return wrap;
 }
 
@@ -722,7 +1026,15 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
   const links = /** @type {Record<string, string | null>} */ (data.links ?? {});
   const sunrises = /** @type {string[]} */ (daily?.sunrise ?? []);
   const sunsets = /** @type {string[]} */ (daily?.sunset ?? []);
-  const nowIsDay = isDaytime(new Date().toISOString(), sunrises, sunsets);
+  const elevationFt =
+    data.elevation_ft != null && !Number.isNaN(Number(data.elevation_ft))
+      ? Number(data.elevation_ft)
+      : null;
+  const currentIsDay =
+    current?.is_day === 0 || current?.is_day === 1
+      ? current.is_day === 1
+      : isDaytime(new Date().toISOString(), sunrises, sunsets);
+  const nowIsDay = currentIsDay;
 
   const header = document.createElement('header');
   header.className = 'dashboard-header';
@@ -843,6 +1155,27 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
       ? `<strong>Alerts:</strong> ${escapeHtml(alertText)}`
       : '<strong>Alerts:</strong> None active for this area.';
 
+    const hourFreeze =
+      hourlyNow && Array.isArray(hourlyNow.freezing_level_height)
+        ? /** @type {number[]} */ (hourlyNow.freezing_level_height)[hi]
+        : null;
+    const hourCape =
+      hourlyNow && Array.isArray(hourlyNow.cape)
+        ? /** @type {number[]} */ (hourlyNow.cape)[hi]
+        : null;
+    const hourSnow =
+      hourlyNow && Array.isArray(hourlyNow.snowfall)
+        ? /** @type {number[]} */ (hourlyNow.snowfall)[hi]
+        : null;
+    const snowLine =
+      hourSnow != null && Number(hourSnow) > 0
+        ? `${Number(hourSnow).toFixed(2)} in this hour`
+        : null;
+    const daylightLeft = daylightRemaining(sunset);
+
+    const pressureMb =
+      current.surface_pressure_mb != null ? current.surface_pressure_mb : current.pressure_mb;
+
     summarySection.innerHTML = `
       <h2 id="summary-heading">Current conditions</h2>
       <p class="summary-alert ${hasAlerts ? 'summary-alert--active' : 'summary-alert--clear'}" role="status">
@@ -854,6 +1187,14 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
             ${weatherIconHtml(code, { isDay: nowIsDay, size: 72, className: 'weather-icon weather-icon--lg', alt: String(current.condition ?? wmoLabel(code)) })}
             <p class="summary-temp" aria-label="Temperature">
               ${Math.round(Number(current.temp_f))}°F
+              ${(() => {
+                const temps = /** @type {number[]} */ (hourlyNow?.temperature_2m ?? []).slice(
+                  Math.max(0, hi - 11),
+                  hi + 1,
+                );
+                const spark = sparklineHtml(temps, { width: 72, height: 22, fill: true });
+                return spark ? `<span class="summary-spark">${spark}</span>` : '';
+              })()}
             </p>
             <p class="summary-conditions">${escapeHtml(String(current.condition ?? wmoLabel(code)))}</p>
           </a>
@@ -861,22 +1202,67 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
         <dl class="summary-details">
           ${detailItem('Feels like', current.feels_like_f != null ? `${Math.round(Number(current.feels_like_f))}°F` : null, 'hourly-heading')}
           ${detailItem('Today’s range', todayHi != null && todayLo != null ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F` : null, 'daily-heading')}
-          ${detailItem('Chance of precip', precipChance != null ? `${precipChance}% this hour` : null, 'hourly-heading')}
+          ${detailItemHtml(
+            'Chance of precip',
+            precipChance != null
+              ? `<span>${precipChance}% this hour</span>${(() => {
+                  const probs = /** @type {number[]} */ (
+                    hourlyNow?.precipitation_probability ?? []
+                  ).slice(hi, hi + 12);
+                  const bars = miniBarChartHtml(probs, { width: 72, height: 18 });
+                  return bars ? `<span class="summary-spark">${bars}</span>` : '';
+                })()}`
+              : null,
+            'hourly-heading',
+          )}
           ${detailItem('Precipitation', precipIn, 'hourly-heading')}
+          ${detailItem('Snowfall', snowLine, snowLine ? 'hourly-heading' : null)}
           ${detailItem('Humidity', current.humidity != null ? `${current.humidity}%` : null, 'hourly-heading')}
           ${detailItem('Dewpoint', hourDew != null ? `${Math.round(hourDew)}°F` : null, 'hourly-heading')}
           ${detailItemHtml('Wind', windHtml, 'hourly-heading')}
           ${detailItem('Thunderstorm', tstormNow, 'hourly-heading')}
+          ${detailItem('CAPE', capePlain(hourCape), hourCape != null ? 'hourly-heading' : null)}
+          ${detailItem('Freezing level', fmtFreezingLevelFt(hourFreeze), hourFreeze != null ? 'hourly-heading' : null)}
           ${detailItem('Visibility', hourVis != null ? fmtVisibility(hourVis) : null, 'hourly-heading')}
           ${detailItem('Cloud cover', current.cloud_cover != null ? `${current.cloud_cover}%` : null, 'hourly-heading')}
-          ${detailItem('Pressure', current.pressure_mb != null ? `${Math.round(Number(current.pressure_mb))} mb` : null, 'sources-heading')}
-          ${detailItem('UV index', uvPlain(/** @type {number | null} */ (current.uv_index ?? null)), 'daily-heading')}
-          ${detailItem('Air quality', aq, aq ? 'aqi-heading' : null)}
+          ${detailItem('Pressure', pressureMb != null ? `${Math.round(Number(pressureMb))} mb` : null, 'sources-heading')}
+          ${detailItemHtml(
+            'UV index',
+            (() => {
+              const plain = uvPlain(/** @type {number | null} */ (current.uv_index ?? null));
+              if (!plain) return null;
+              const bar = current.uv_index != null ? uvBarHtml(Number(current.uv_index)) : '';
+              return `<span>${escapeHtml(plain)}</span>${bar}`;
+            })(),
+            'daily-heading',
+          )}
+          ${detailItemHtml(
+            'Air quality',
+            (() => {
+              if (!aq) return null;
+              let aqiNum = null;
+              if (airnow?.aqi != null) aqiNum = Number(airnow.aqi);
+              else if (purpleair?.aqi_pm25 != null) aqiNum = Number(purpleair.aqi_pm25);
+              else if (omaq?.us_aqi != null) aqiNum = Number(omaq.us_aqi);
+              const bar = aqiNum != null && Number.isFinite(aqiNum) ? aqiBarHtml(aqiNum) : '';
+              return `<span>${escapeHtml(aq)}</span>${bar}`;
+            })(),
+            aq ? 'aqi-heading' : null,
+          )}
           ${detailItem('Sunrise', sunrise ? fmtClock(sunrise) : null, 'daily-heading')}
           ${detailItem('Sunset', sunset ? fmtClock(sunset) : null, 'daily-heading')}
+          ${detailItem('Daylight remaining', daylightLeft, daylightLeft ? 'daily-heading' : null)}
           ${detailItem('Morning golden hour', golden.morning, 'daily-heading')}
           ${detailItem('Evening golden hour', golden.evening, 'daily-heading')}
           ${detailItem('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
+          ${(() => {
+            const usgs = /** @type {Record<string, unknown> | null} */ (data.usgs ?? null);
+            if (!usgs || usgs.discharge_cfs == null) return '';
+            const name = String(usgs.station_name ?? usgs.station_id ?? 'USGS gauge');
+            const short = name.length > 40 ? `${name.slice(0, 37)}…` : name;
+            const cfs = `${Math.round(Number(usgs.discharge_cfs))} cfs`;
+            return detailItem('Streamflow', `${short}: ${cfs}`, 'hydrology-heading');
+          })()}
         </dl>
       </div>
       ${data.updatedAt ? `<p class="updated-at">Location snapshot ${fmtDateTime(String(data.updatedAt))} · <a class="detail-jump detail-jump--inline" href="#sources-heading" data-jump-to="sources-heading">Live data sources</a></p>` : ''}
@@ -901,7 +1287,7 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
       root,
       'hourly-heading',
       'Hourly forecast (48h)',
-      buildHourlyTable(hourly, sunrises, sunsets),
+      buildHourlyTable(hourly, sunrises, sunsets, { elevationFt }),
     );
   }
 
@@ -1018,6 +1404,18 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
           <p class="afd-snippet"><strong>NWS ${escapeHtml(String(afd.office ?? ''))} discussion${escapeHtml(issued)}:</strong>
             ${afd.snippet ? escapeHtml(String(afd.snippet)) : ''}</p>
           ${afd.url ? sourceLink(String(afd.url), 'Full Area Forecast Discussion', 'btn btn-secondary btn-sm') : ''}
+        `;
+        wrap.appendChild(box);
+      }
+      const hwo = /** @type {Record<string, unknown> | null} */ (data.hwo ?? null);
+      if (hwo?.snippet || hwo?.url) {
+        const box = document.createElement('div');
+        box.className = 'afd-box';
+        const issued = hwo.issued ? ` · issued ${fmtDateTime(String(hwo.issued))}` : '';
+        box.innerHTML = `
+          <p class="afd-snippet"><strong>NWS ${escapeHtml(String(hwo.office ?? ''))} hazardous weather outlook${escapeHtml(issued)}:</strong>
+            ${hwo.snippet ? escapeHtml(String(hwo.snippet)) : ''}</p>
+          ${hwo.url ? sourceLink(String(hwo.url), 'Full Hazardous Weather Outlook', 'btn btn-secondary btn-sm') : ''}
         `;
         wrap.appendChild(box);
       }
@@ -1182,7 +1580,7 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
       const parts = [];
       if (an) {
         parts.push(
-          `<dt>AirNow AQI</dt><dd>${an.aqi ?? '—'} ${an.category ? `(${escapeHtml(String(an.category))})` : ''}</dd>`,
+          `<dt>AirNow AQI</dt><dd>${an.aqi ?? '—'} ${an.category ? `(${escapeHtml(String(an.category))})` : ''}${an.aqi != null ? aqiBarHtml(Number(an.aqi)) : ''}</dd>`,
         );
         parts.push(
           `<dt>Dominant parameter</dt><dd>${an.parameter ? escapeHtml(String(an.parameter)) : '—'}</dd>`,
@@ -1227,12 +1625,19 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
         parts.push(
           `<dt>Model PM2.5</dt><dd>${omaq.pm25 != null ? `${omaq.pm25} µg/m³` : '—'}</dd>`,
         );
+        if (omaq.pm10 != null) {
+          parts.push(`<dt>Model PM10</dt><dd>${omaq.pm10} µg/m³</dd>`);
+        }
         parts.push(
-          `<dt>Model US AQI</dt><dd>${omaq.us_aqi != null ? String(omaq.us_aqi) : '—'}</dd>`,
+          `<dt>Model US AQI</dt><dd>${omaq.us_aqi != null ? String(omaq.us_aqi) : '—'}${omaq.us_aqi != null ? aqiBarHtml(Number(omaq.us_aqi)) : ''}</dd>`,
         );
         parts.push(
           `<dt>Model European AQI</dt><dd>${omaq.european_aqi != null ? String(omaq.european_aqi) : '—'}</dd>`,
         );
+        if (omaq.o3 != null) parts.push(`<dt>Ozone</dt><dd>${omaq.o3} µg/m³</dd>`);
+        if (omaq.no2 != null) parts.push(`<dt>NO₂</dt><dd>${omaq.no2} µg/m³</dd>`);
+        if (omaq.so2 != null) parts.push(`<dt>SO₂</dt><dd>${omaq.so2} µg/m³</dd>`);
+        if (omaq.co != null) parts.push(`<dt>CO</dt><dd>${omaq.co} µg/m³</dd>`);
         if (omaq.time) {
           parts.push(
             `<dt>Model AQ time</dt><dd>${escapeHtml(fmtDateTime(String(omaq.time)))}</dd>`,
@@ -1263,6 +1668,115 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
     { open: false },
   );
 
+  renderCollapsibleSection(
+    sections,
+    'hydrology-heading',
+    'Hydrology (USGS)',
+    () => {
+      const usgs = /** @type {Record<string, unknown> | null} */ (data.usgs ?? null);
+      if (!usgs) {
+        const frag = document.createDocumentFragment();
+        renderEmpty(frag, 'No nearby USGS gauge', 'within 30 km of this location.');
+        return frag;
+      }
+      const wrap = document.createDocumentFragment();
+      const dl = document.createElement('dl');
+      dl.className = 'metric-list';
+      const rows = [
+        [
+          'Station',
+          `${usgs.station_name ?? usgs.station_id}${usgs.distance_km != null ? ` (${usgs.distance_km} km)` : ''}`,
+        ],
+        [
+          'Discharge',
+          usgs.discharge_cfs != null ? `${Math.round(Number(usgs.discharge_cfs))} cfs` : null,
+        ],
+        [
+          'Gauge height',
+          usgs.gauge_height_ft != null ? `${Number(usgs.gauge_height_ft).toFixed(2)} ft` : null,
+        ],
+        [
+          'Water temperature',
+          usgs.water_temp_f != null ? `${Math.round(Number(usgs.water_temp_f))}°F` : null,
+        ],
+        ['Observed', usgs.observed ? fmtDateTime(String(usgs.observed)) : null],
+      ].filter(([, v]) => v != null && v !== '');
+      dl.innerHTML = rows
+        .map(([k, v]) => `<dt>${escapeHtml(String(k))}</dt><dd>${escapeHtml(String(v))}</dd>`)
+        .join('');
+      wrap.appendChild(dl);
+      const p = document.createElement('p');
+      p.className = 'section-cta';
+      const linkBits = [];
+      if (usgs.url) {
+        linkBits.push(sourceLink(String(usgs.url), 'USGS gauge page', 'btn btn-secondary btn-sm'));
+      }
+      linkBits.push(
+        sourceLink('https://waterwatch.usgs.gov/', 'USGS WaterWatch', 'btn btn-secondary btn-sm'),
+      );
+      p.innerHTML = linkBits.join(' ');
+      wrap.appendChild(p);
+      return wrap;
+    },
+    { open: false },
+  );
+
+  renderCollapsibleSection(
+    sections,
+    'snowpack-heading',
+    'Snowpack (SNOTEL)',
+    () => {
+      const sn = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
+      if (!sn) {
+        const frag = document.createDocumentFragment();
+        renderEmpty(
+          frag,
+          'No nearby SNOTEL station',
+          'Shown for sites above 7,000 ft when a station is within 50 km.',
+        );
+        return frag;
+      }
+      const wrap = document.createDocumentFragment();
+      const dl = document.createElement('dl');
+      dl.className = 'metric-list';
+      const rows = [
+        [
+          'Station',
+          `${sn.station_name ?? sn.station_id}${sn.distance_km != null ? ` (${sn.distance_km} km)` : ''}${sn.elevation_ft != null ? ` · ${Number(sn.elevation_ft).toLocaleString()} ft` : ''}`,
+        ],
+        ['Snow depth', sn.snow_depth_in != null ? `${sn.snow_depth_in} in` : null],
+        ['Snow water equivalent', sn.swe_in != null ? `${sn.swe_in} in` : null],
+        ['Air temp', sn.air_temp_f != null ? `${sn.air_temp_f}°F` : null],
+        [
+          '24h precipitation',
+          sn.precipitation_24h_in != null ? `${sn.precipitation_24h_in} in` : null,
+        ],
+        ['Observed', sn.observed ? String(sn.observed) : null],
+      ].filter(([, v]) => v != null && v !== '');
+      dl.innerHTML = rows
+        .map(([k, v]) => `<dt>${escapeHtml(String(k))}</dt><dd>${escapeHtml(String(v))}</dd>`)
+        .join('');
+      wrap.appendChild(dl);
+      const p = document.createElement('p');
+      p.className = 'section-cta';
+      const linkBits = [];
+      if (sn.url) {
+        linkBits.push(sourceLink(String(sn.url), 'SNOTEL site page', 'btn btn-secondary btn-sm'));
+      }
+      linkBits.push(
+        sourceLink(
+          'https://www.nrcs.usda.gov/wps/portal/wcc/home/quicklinks/states/colorado/',
+          'NRCS Colorado snow report',
+          'btn btn-secondary btn-sm',
+        ),
+      );
+      p.innerHTML = linkBits.join(' ');
+      wrap.appendChild(p);
+      return wrap;
+    },
+    { open: false },
+  );
+
   const imgUrls = imageryUrls(
     /** @type {number | null} */ (data.lat ?? null),
     /** @type {number | null} */ (data.lon ?? null),
@@ -1283,6 +1797,8 @@ export function renderDashboard(root, data, onFavoriteToggle, starred = false, o
         ['AirNow', links.airnow],
         ['CoAgMET', links.coagmet],
         ['Aviation Weather', links.aviation],
+        ['USGS stream gauge', links.usgs],
+        ['SNOTEL snowpack', links.snotel],
       ].filter(([, url]) => Boolean(url));
       if (!entries.length) {
         const frag = document.createDocumentFragment();

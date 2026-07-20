@@ -1,0 +1,21 @@
+{
+  "value": {
+    "timeSeries": [
+      {
+        "sourceInfo": {
+          "siteName": "CACHE LA POUDRE RIV AT CANYON MOUTH NR FT COLLINS",
+          "siteCode": [{ "value": "06752000" }],
+          "geoLocation": {
+            "geogLocation": { "latitude": 40.665, "longitude": -105.223 }
+          }
+        },
+        "variable": { "variableCode": [{ "value": "00060" }] },
+        "values": [
+          {
+            "value": [{ "value": "312", "dateTime": "2026-07-20T13:00:00-06:00" }]
+          }
+        ]
+      }
+    ]
+  }
+}

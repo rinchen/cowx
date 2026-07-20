@@ -1,7 +1,7 @@
 /**
- * NWS alerts + Area Forecast Discussion adapter.
+ * NWS alerts + Area Forecast Discussion + Hazardous Weather Outlook adapter.
  * Failure point: 403 without User-Agent, timeouts.
- * Fallback: empty alerts / no AFD; status error/partial.
+ * Fallback: empty alerts / no AFD/HWO; status error/partial.
  */
 
 import { fetchJson, NWS_USER_AGENT } from '../../lib/http.js';
@@ -9,7 +9,124 @@ import { fetchJson, NWS_USER_AGENT } from '../../lib/http.js';
 const OFFICES = ['BOU', 'PUB', 'GJT'];
 
 /**
- * @returns {Promise<{ status: string, alertsGeoJson: object, byCounty: Map<string, object[]>, afdByWfo: Map<string, object>, error?: string, calls: number }>}
+ * Ray-cast point-in-ring (lon/lat). Ring is [[lon,lat], ...] (GeoJSON order).
+ * @param {number} lon
+ * @param {number} lat
+ * @param {number[][]} ring
+ * @returns {boolean}
+ */
+export function pointInRing(lon, lat, ring) {
+  if (!Array.isArray(ring) || ring.length < 3) return false;
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = Number(ring[i][0]);
+    const yi = Number(ring[i][1]);
+    const xj = Number(ring[j][0]);
+    const yj = Number(ring[j][1]);
+    const intersect = yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * @param {number} lon
+ * @param {number} lat
+ * @param {{ type?: string, coordinates?: unknown }} geometry
+ * @returns {boolean}
+ */
+export function pointInGeometry(lon, lat, geometry) {
+  if (!geometry?.type || !geometry.coordinates) return false;
+  if (geometry.type === 'Polygon') {
+    const rings = /** @type {number[][][]} */ (geometry.coordinates);
+    if (!rings[0] || !pointInRing(lon, lat, rings[0])) return false;
+    for (let i = 1; i < rings.length; i += 1) {
+      if (pointInRing(lon, lat, rings[i])) return false;
+    }
+    return true;
+  }
+  if (geometry.type === 'MultiPolygon') {
+    const polys = /** @type {number[][][][]} */ (geometry.coordinates);
+    return polys.some((poly) => pointInGeometry(lon, lat, { type: 'Polygon', coordinates: poly }));
+  }
+  return false;
+}
+
+/**
+ * Merge county-matched alerts with geometry-contains matches (dedupe by id/event+ends).
+ * @param {number} lat
+ * @param {number} lon
+ * @param {string} countyKey
+ * @param {Map<string, object[]>} byCounty
+ * @param {{ features?: object[] }} alertsGeoJson
+ * @returns {object[]}
+ */
+export function alertsForLocation(lat, lon, countyKey, byCounty, alertsGeoJson) {
+  /** @type {Map<string, object>} */
+  const byKey = new Map();
+  const add = (/** @type {object} */ a) => {
+    const key = String(a.id ?? `${a.event}|${a.ends}|${a.headline}`);
+    if (!byKey.has(key)) byKey.set(key, a);
+  };
+
+  for (const a of byCounty.get(String(countyKey).toLowerCase()) ?? []) add(a);
+
+  const features = Array.isArray(alertsGeoJson?.features) ? alertsGeoJson.features : [];
+  for (const f of features) {
+    if (!f?.geometry) continue;
+    if (!pointInGeometry(lon, lat, f.geometry)) continue;
+    const props = f.properties ?? f;
+    add(props);
+  }
+
+  return [...byKey.values()];
+}
+
+/**
+ * @param {string} office
+ * @param {'AFD' | 'HWO'} productType
+ * @returns {Promise<{ office: string, issued: string | null, snippet: string, url: string } | null>}
+ */
+async function fetchOfficeProduct(office, productType) {
+  const list = await fetchJson(
+    `https://api.weather.gov/products/types/${productType}/locations/${office}`,
+    { headers: { 'User-Agent': NWS_USER_AGENT, Accept: 'application/ld+json' } },
+  );
+  const first = list?.['@graph']?.[0];
+  const productId = first?.id ?? first?.['@id'];
+  if (!productId) return null;
+  const productUrl = String(productId).startsWith('http')
+    ? String(productId)
+    : `https://api.weather.gov/products/${productId}`;
+  const product = await fetchJson(productUrl, {
+    headers: { 'User-Agent': NWS_USER_AGENT, Accept: 'application/ld+json' },
+  });
+  const text = String(product?.productText ?? '');
+  let snippet;
+  if (productType === 'AFD') {
+    const synopsisMatch = text.match(/\.SYNOPSIS[\s\S]*?(?=\n\.[A-Z]|\n\$\$|$)/i);
+    snippet = (synopsisMatch?.[0] ?? text).replace(/\s+/g, ' ').trim().slice(0, 400);
+  } else {
+    snippet = text.replace(/\s+/g, ' ').trim().slice(0, 400);
+  }
+  return {
+    office,
+    issued: product?.issuanceTime ?? null,
+    snippet,
+    url: `https://forecast.weather.gov/product.php?site=${office}&issuedby=${office}&product=${productType}&format=CI`,
+  };
+}
+
+/**
+ * @returns {Promise<{
+ *   status: string,
+ *   alertsGeoJson: object,
+ *   byCounty: Map<string, object[]>,
+ *   afdByWfo: Map<string, object>,
+ *   hwoByWfo: Map<string, object>,
+ *   error?: string,
+ *   calls: number
+ * }>}
  */
 export async function fetchNws() {
   let calls = 0;
@@ -18,6 +135,8 @@ export async function fetchNws() {
   const byCounty = new Map();
   /** @type {Map<string, object>} */
   const afdByWfo = new Map();
+  /** @type {Map<string, object>} */
+  const hwoByWfo = new Map();
   let alertsGeoJson = { type: 'FeatureCollection', features: [] };
 
   try {
@@ -82,43 +201,37 @@ export async function fetchNws() {
 
   for (const office of OFFICES) {
     try {
-      calls += 1;
-      const list = await fetchJson(
-        `https://api.weather.gov/products/types/AFD/locations/${office}`,
-        { headers: { 'User-Agent': NWS_USER_AGENT, Accept: 'application/ld+json' } },
-      );
-      const first = list?.['@graph']?.[0];
-      const productId = first?.id ?? first?.['@id'];
-      if (!productId) continue;
-      const productUrl = String(productId).startsWith('http')
-        ? String(productId)
-        : `https://api.weather.gov/products/${productId}`;
-      calls += 1;
-      const product = await fetchJson(productUrl, {
-        headers: { 'User-Agent': NWS_USER_AGENT, Accept: 'application/ld+json' },
-      });
-      const text = String(product?.productText ?? '');
-      const synopsisMatch = text.match(/\.SYNOPSIS[\s\S]*?(?=\n\.[A-Z]|\n\$\$|$)/i);
-      const snippet = (synopsisMatch?.[0] ?? text).replace(/\s+/g, ' ').trim().slice(0, 400);
-      afdByWfo.set(office, {
-        office,
-        issued: product?.issuanceTime ?? null,
-        snippet,
-        url: `https://forecast.weather.gov/product.php?site=${office}&issuedby=${office}&product=AFD&format=CI`,
-      });
+      const afd = await fetchOfficeProduct(office, 'AFD');
+      calls += 2;
+      if (afd) afdByWfo.set(office, afd);
     } catch (err) {
-      errors.push(`${office}: ${err instanceof Error ? err.message : String(err)}`);
+      calls += 1;
+      errors.push(`AFD ${office}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    try {
+      const hwo = await fetchOfficeProduct(office, 'HWO');
+      calls += 2;
+      if (hwo) hwoByWfo.set(office, hwo);
+    } catch (err) {
+      calls += 1;
+      errors.push(`HWO ${office}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
   const okAlerts = errors.length === 0 || byCounty.size > 0 || alertsGeoJson.features.length > 0;
-  const status = errors.length === 0 ? 'ok' : okAlerts || afdByWfo.size > 0 ? 'partial' : 'error';
+  const status =
+    errors.length === 0
+      ? 'ok'
+      : okAlerts || afdByWfo.size > 0 || hwoByWfo.size > 0
+        ? 'partial'
+        : 'error';
 
   return {
     status,
     alertsGeoJson,
     byCounty,
     afdByWfo,
+    hwoByWfo,
     error: errors.length ? errors.join('; ') : undefined,
     calls,
   };

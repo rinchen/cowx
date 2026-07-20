@@ -66,6 +66,91 @@ describe('mapResult wind fields', () => {
     assert.equal(mapped.current.thunderstorm_probability, null);
     assert.deepEqual(mapped.hourly.thunderstorm_probability, []);
   });
+
+  it('maps enriched current/hourly/daily fields when present', () => {
+    const mapped = mapResult(
+      {
+        current: {
+          temperature_2m: 70,
+          apparent_temperature: 68,
+          relative_humidity_2m: 40,
+          weather_code: 0,
+          cloud_cover: 10,
+          pressure_msl: 1010,
+          surface_pressure: 820,
+          is_day: 1,
+          wind_speed_10m: 8,
+          wind_direction_10m: 45,
+          wind_gusts_10m: 12,
+          precipitation: 0,
+          uv_index: 3,
+        },
+        hourly: {
+          time: ['2026-07-20T12:00'],
+          temperature_2m: [70],
+          apparent_temperature: [68],
+          precipitation_probability: [10],
+          precipitation: [0],
+          rain: [0],
+          showers: [0],
+          snowfall: [0.1],
+          weather_code: [0],
+          wind_speed_10m: [8],
+          wind_direction_10m: [45],
+          wind_gusts_10m: [12],
+          wind_speed_80m: [15],
+          wind_direction_80m: [50],
+          relative_humidity_2m: [40],
+          dewpoint_2m: [40],
+          cloud_cover: [10],
+          cloud_cover_low: [5],
+          cloud_cover_mid: [10],
+          cloud_cover_high: [20],
+          visibility: [16000],
+          uv_index: [3],
+          soil_temperature_6cm: [55],
+          soil_moisture_3_to_9cm: [0.2],
+          cape: [800],
+          shortwave_radiation: [400],
+          freezing_level_height: [3500],
+          is_day: [1],
+        },
+        daily: {
+          time: ['2026-07-20'],
+          weather_code: [2],
+          temperature_2m_max: [80],
+          temperature_2m_min: [55],
+          apparent_temperature_max: [78],
+          apparent_temperature_min: [53],
+          precipitation_sum: [0],
+          precipitation_probability_max: [20],
+          precipitation_hours: [2],
+          snowfall_sum: [0.5],
+          wind_speed_10m_max: [15],
+          wind_gusts_10m_max: [22],
+          wind_direction_10m_dominant: [60],
+          uv_index_max: [8],
+          sunrise: ['2026-07-20T05:45'],
+          sunset: ['2026-07-20T20:20'],
+          sunshine_duration: [36000],
+          daylight_duration: [50400],
+          shortwave_radiation_sum: [20],
+          et0_fao_evapotranspiration: [0.25],
+        },
+      },
+      'Clear',
+    );
+
+    assert.equal(mapped.current.surface_pressure_mb, 820);
+    assert.equal(mapped.current.is_day, 1);
+    assert.deepEqual(mapped.hourly.snowfall, [0.1]);
+    assert.deepEqual(mapped.hourly.cape, [800]);
+    assert.deepEqual(mapped.hourly.freezing_level_height, [3500]);
+    assert.deepEqual(mapped.hourly.cloud_cover_low, [5]);
+    assert.deepEqual(mapped.daily.snowfall_sum, [0.5]);
+    assert.deepEqual(mapped.daily.et0_fao_evapotranspiration, [0.25]);
+    assert.deepEqual(mapped.daily.daylight_duration, [50400]);
+  });
 });
 
 describe('thunderstorm merge helpers', () => {

@@ -11,47 +11,134 @@
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
+    "name": { "type": "string" },
+    "lat": { "type": "number" },
+    "lon": { "type": "number" },
+    "elevation_ft": { "type": ["number", "null"] },
     "updatedAt": {
       "type": "string",
       "format": "date-time"
     },
-    "temperatureF": {
-      "type": ["number", "null"]
-    },
-    "humidityPct": {
-      "type": ["number", "null"],
-      "minimum": 0,
-      "maximum": 100
-    },
-    "windMph": {
-      "type": ["number", "null"]
-    },
-    "aqi": {
-      "type": ["integer", "null"],
-      "minimum": 0
-    },
-    "pm25": {
-      "type": ["number", "null"],
-      "minimum": 0
-    },
-    "conditions": {
-      "type": ["string", "null"]
-    },
-    "sources": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": ["ok", "error", "unavailable"]
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
+    "forecastStale": { "type": "boolean" },
+    "current": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "temp_f": { "type": ["number", "null"] },
+        "feels_like_f": { "type": ["number", "null"] },
+        "humidity": { "type": ["number", "null"] },
+        "weather_code": { "type": ["number", "null"] },
+        "condition": { "type": ["string", "null"] },
+        "cloud_cover": { "type": ["number", "null"] },
+        "pressure_mb": { "type": ["number", "null"] },
+        "surface_pressure_mb": { "type": ["number", "null"] },
+        "is_day": { "type": ["number", "null"] },
+        "wind_speed_mph": { "type": ["number", "null"] },
+        "wind_dir_deg": { "type": ["number", "null"] },
+        "wind_gust_mph": { "type": ["number", "null"] },
+        "precip_in": { "type": ["number", "null"] },
+        "uv_index": { "type": ["number", "null"] },
+        "thunderstorm_probability": { "type": ["number", "null"] }
       }
-    }
+    },
+    "hourly": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "time": { "type": "array", "items": { "type": "string" } },
+        "temperature_2m": { "type": "array" },
+        "rain": { "type": "array" },
+        "showers": { "type": "array" },
+        "snowfall": { "type": "array" },
+        "cape": { "type": "array" },
+        "freezing_level_height": { "type": "array" },
+        "cloud_cover_low": { "type": "array" },
+        "cloud_cover_mid": { "type": "array" },
+        "cloud_cover_high": { "type": "array" },
+        "wind_speed_80m": { "type": "array" },
+        "wind_direction_80m": { "type": "array" },
+        "soil_temperature_6cm": { "type": "array" },
+        "soil_moisture_3_to_9cm": { "type": "array" },
+        "shortwave_radiation": { "type": "array" },
+        "is_day": { "type": "array" }
+      }
+    },
+    "daily": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "time": { "type": "array", "items": { "type": "string" } },
+        "snowfall_sum": { "type": "array" },
+        "precipitation_hours": { "type": "array" },
+        "daylight_duration": { "type": "array" },
+        "sunshine_duration": { "type": "array" },
+        "shortwave_radiation_sum": { "type": "array" },
+        "et0_fao_evapotranspiration": { "type": "array" },
+        "apparent_temperature_max": { "type": "array" },
+        "apparent_temperature_min": { "type": "array" }
+      }
+    },
+    "openmeteo_aq": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "pm25": { "type": ["number", "null"] },
+        "pm10": { "type": ["number", "null"] },
+        "co": { "type": ["number", "null"] },
+        "no2": { "type": ["number", "null"] },
+        "so2": { "type": ["number", "null"] },
+        "o3": { "type": ["number", "null"] },
+        "european_aqi": { "type": ["number", "null"] },
+        "us_aqi": { "type": ["number", "null"] },
+        "time": { "type": ["string", "null"] }
+      }
+    },
+    "usgs": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "station_id": { "type": "string" },
+        "station_name": { "type": "string" },
+        "distance_km": { "type": "number" },
+        "discharge_cfs": { "type": ["number", "null"] },
+        "gauge_height_ft": { "type": ["number", "null"] },
+        "water_temp_f": { "type": ["number", "null"] },
+        "observed": { "type": ["string", "null"] },
+        "url": { "type": "string" }
+      }
+    },
+    "snotel": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "station_name": { "type": "string" },
+        "station_id": { "type": "string" },
+        "distance_km": { "type": "number" },
+        "elevation_ft": { "type": ["number", "null"] },
+        "snow_depth_in": { "type": ["number", "null"] },
+        "swe_in": { "type": ["number", "null"] },
+        "air_temp_f": { "type": ["number", "null"] },
+        "precipitation_24h_in": { "type": ["number", "null"] },
+        "observed": { "type": ["string", "null"] },
+        "url": { "type": "string" }
+      }
+    },
+    "hwo": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "office": { "type": "string" },
+        "issued": { "type": ["string", "null"] },
+        "snippet": { "type": ["string", "null"] },
+        "url": { "type": "string" }
+      }
+    },
+    "alerts": { "type": "array" },
+    "afd": { "type": ["object", "null"] },
+    "coagmet": { "type": ["object", "null"] },
+    "aviation": { "type": ["object", "null"] },
+    "purpleair": { "type": ["object", "null"] },
+    "airnow": { "type": ["object", "null"] },
+    "links": { "type": "object" }
   }
 }

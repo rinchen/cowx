@@ -497,6 +497,10 @@ main {
   line-height: 1;
   letter-spacing: -0.03em;
   color: var(--color-accent);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .summary-conditions {
@@ -1050,6 +1054,113 @@ main {
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
   background: var(--color-bg);
+}
+
+.cloud-layers {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+}
+
+/* Visual indicator bars (Phase 4 fills in marker behavior) */
+.aqi-bar,
+.uv-bar {
+  height: 8px;
+  border-radius: 4px;
+  position: relative;
+  margin: 0.35rem 0 0.15rem;
+  max-width: 14rem;
+}
+
+.aqi-bar {
+  background: linear-gradient(
+    to right,
+    #00e400 0%,
+    #00e400 20%,
+    #ffff00 20%,
+    #ffff00 40%,
+    #ff7e00 40%,
+    #ff7e00 60%,
+    #ff0000 60%,
+    #ff0000 80%,
+    #8f3f97 80%,
+    #8f3f97 96%,
+    #7e0023 96%,
+    #7e0023 100%
+  );
+}
+
+.uv-bar {
+  background: linear-gradient(
+    to right,
+    #289500 0%,
+    #289500 18%,
+    #f7e400 18%,
+    #f7e400 36%,
+    #f85900 36%,
+    #f85900 54%,
+    #d8001d 54%,
+    #d8001d 72%,
+    #6b49c8 72%,
+    #6b49c8 100%
+  );
+}
+
+.aqi-bar__marker,
+.uv-bar__marker {
+  position: absolute;
+  width: 3px;
+  height: 14px;
+  top: -3px;
+  background: var(--color-text);
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+.summary-spark {
+  display: inline-flex;
+  vertical-align: middle;
+  color: var(--color-accent, var(--color-text-muted));
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.precip-type {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 0.15rem;
+}
+
+.column-toggles {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.column-toggles summary {
+  cursor: pointer;
+  color: var(--color-text-muted);
+  width: fit-content;
+}
+
+.column-toggles__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.hide-col-snow .col-snow,
+.hide-col-cloudLayers .col-cloudLayers,
+.hide-col-cape .col-cape,
+.hide-col-freeze .col-freeze,
+.hide-col-wind80 .col-wind80,
+.hide-col-precipHours .col-precipHours,
+.hide-col-daylight .col-daylight,
+.hide-col-et0 .col-et0 {
+  display: none;
 }
 
 .metric-list {

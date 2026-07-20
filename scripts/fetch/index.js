@@ -11,11 +11,13 @@ import { fileURLToPath } from 'node:url';
 
 import { fetchOpenMeteo } from './adapters/openmeteo.js';
 import { fetchOpenMeteoAq } from './adapters/openmeteo-aq.js';
-import { fetchNws } from './adapters/nws.js';
+import { alertsForLocation, fetchNws } from './adapters/nws.js';
 import { fetchCoagmet } from './adapters/coagmet.js';
 import { fetchAviation } from './adapters/aviation.js';
 import { fetchPurpleAir } from './adapters/purpleair.js';
 import { fetchAirNow } from './adapters/airnow.js';
+import { fetchUsgs } from './adapters/usgs.js';
+import { fetchSnotel } from './adapters/snotel.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
@@ -90,6 +92,16 @@ export async function runFetch() {
   totalCalls += airnow.calls ?? 0;
   console.log(`  airnow: ${airnow.status} (${airnow.bySlug.size} locs)`);
 
+  const usgs = await fetchUsgs(locations);
+  sources.push(sourceMeta('usgs', usgs));
+  totalCalls += usgs.calls ?? 0;
+  console.log(`  usgs: ${usgs.status} (${usgs.bySlug.size} locs)`);
+
+  const snotel = await fetchSnotel(locations);
+  sources.push(sourceMeta('snotel', snotel));
+  totalCalls += snotel.calls ?? 0;
+  console.log(`  snotel: ${snotel.status} (${snotel.bySlug.size} locs)`);
+
   const updatedAt = new Date().toISOString();
   const index = [];
   let staleCount = 0;
@@ -111,13 +123,22 @@ export async function runFetch() {
     }
 
     const countyKey = String(loc.county ?? '').toLowerCase();
-    const alerts = nws.byCounty?.get(countyKey) ?? [];
+    const alerts = alertsForLocation(
+      loc.lat,
+      loc.lon,
+      countyKey,
+      nws.byCounty ?? new Map(),
+      nws.alertsGeoJson ?? { type: 'FeatureCollection', features: [] },
+    );
     const afd = nws.afdByWfo?.get(loc.wfo) ?? null;
+    const hwo = nws.hwoByWfo?.get(loc.wfo) ?? null;
     const ag = coagmet.bySlug.get(loc.slug) ?? null;
     const av = aviation.bySlug.get(loc.slug) ?? null;
     const pa = purpleair.bySlug.get(loc.slug) ?? null;
     const an = airnow.bySlug.get(loc.slug) ?? null;
     const omaq = openmeteoAq.bySlug.get(loc.slug) ?? null;
+    const gauge = usgs.bySlug.get(loc.slug) ?? null;
+    const snow = snotel.bySlug.get(loc.slug) ?? null;
 
     const payload = {
       slug: loc.slug,
@@ -136,11 +157,14 @@ export async function runFetch() {
       daily,
       alerts,
       afd,
+      hwo,
       coagmet: ag,
       aviation: av,
       purpleair: pa,
       airnow: an,
       openmeteo_aq: omaq,
+      usgs: gauge,
+      snotel: snow,
       links: {
         nws_forecast: `https://forecast.weather.gov/MapClick.php?lat=${loc.lat}&lon=${loc.lon}`,
         pws: loc.pws_id
@@ -151,6 +175,8 @@ export async function runFetch() {
         coagmet: ag?.url ?? 'https://coagmet.colostate.edu/',
         aviation: av?.url ?? 'https://aviationweather.gov/',
         rainviewer: 'https://www.rainviewer.com/map.html',
+        usgs: gauge?.url ?? 'https://waterdata.usgs.gov/nwis/rt',
+        snotel: snow?.url ?? 'https://www.nrcs.usda.gov/wps/portal/wcc/home/',
       },
     };
 

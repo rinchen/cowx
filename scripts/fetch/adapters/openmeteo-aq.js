@@ -29,7 +29,7 @@ export async function fetchOpenMeteoAq(locations) {
     const lons = chunk.map((l) => l.lon).join(',');
     const url =
       `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lats}&longitude=${lons}` +
-      `&current=pm2_5,european_aqi,us_aqi&timezone=America%2FDenver`;
+      `&current=pm2_5,pm10,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,european_aqi,us_aqi&timezone=America%2FDenver`;
 
     try {
       calls += 1;
@@ -42,6 +42,11 @@ export async function fetchOpenMeteoAq(locations) {
         if (!cur) continue;
         bySlug.set(loc.slug, {
           pm25: cur.pm2_5 ?? null,
+          pm10: cur.pm10 ?? null,
+          co: cur.carbon_monoxide ?? null,
+          no2: cur.nitrogen_dioxide ?? null,
+          so2: cur.sulphur_dioxide ?? null,
+          o3: cur.ozone ?? null,
           european_aqi: cur.european_aqi ?? null,
           us_aqi: cur.us_aqi ?? null,
           time: cur.time ?? null,

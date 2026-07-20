@@ -61,11 +61,20 @@ function buildUrl(chunk) {
   const lons = chunk.map((l) => l.lon).join(',');
   return (
     `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
-    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,uv_index` +
-    `&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,relative_humidity_2m,dewpoint_2m,cloud_cover,visibility,uv_index` +
-    `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,uv_index_max,sunrise,sunset` +
+    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pressure_msl,surface_pressure,is_day,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,uv_index` +
+    `&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,wind_speed_80m,wind_direction_80m,relative_humidity_2m,dewpoint_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,uv_index,soil_temperature_6cm,soil_moisture_3_to_9cm,cape,shortwave_radiation,freezing_level_height,is_day` +
+    `&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,precipitation_probability_max,precipitation_hours,snowfall_sum,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,uv_index_max,sunrise,sunset,sunshine_duration,daylight_duration,shortwave_radiation_sum,et0_fao_evapotranspiration` +
     `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FDenver&forecast_days=10&forecast_hours=48`
   );
+}
+
+/**
+ * Slice an hourly array to 48 entries (or empty if missing).
+ * @param {unknown} arr
+ * @returns {unknown[]}
+ */
+function sliceHourly(arr) {
+  return Array.isArray(arr) ? arr.slice(0, 48) : [];
 }
 
 /**
@@ -162,6 +171,8 @@ export function mapResult(r, condition) {
       condition,
       cloud_cover: cur.cloud_cover,
       pressure_mb: cur.pressure_msl,
+      surface_pressure_mb: cur.surface_pressure ?? null,
+      is_day: cur.is_day ?? null,
       wind_speed_mph: cur.wind_speed_10m,
       wind_dir_deg: cur.wind_direction_10m,
       wind_gust_mph: cur.wind_gusts_10m,
@@ -171,20 +182,34 @@ export function mapResult(r, condition) {
     },
     hourly: r.hourly
       ? {
-          time: r.hourly.time?.slice(0, 48) ?? [],
-          temperature_2m: r.hourly.temperature_2m?.slice(0, 48) ?? [],
-          apparent_temperature: r.hourly.apparent_temperature?.slice(0, 48) ?? [],
-          precipitation_probability: r.hourly.precipitation_probability?.slice(0, 48) ?? [],
-          precipitation: r.hourly.precipitation?.slice(0, 48) ?? [],
-          weather_code: r.hourly.weather_code?.slice(0, 48) ?? [],
-          wind_speed_10m: r.hourly.wind_speed_10m?.slice(0, 48) ?? [],
-          wind_direction_10m: r.hourly.wind_direction_10m?.slice(0, 48) ?? [],
-          wind_gusts_10m: r.hourly.wind_gusts_10m?.slice(0, 48) ?? [],
-          relative_humidity_2m: r.hourly.relative_humidity_2m?.slice(0, 48) ?? [],
-          dewpoint_2m: r.hourly.dewpoint_2m?.slice(0, 48) ?? [],
-          cloud_cover: r.hourly.cloud_cover?.slice(0, 48) ?? [],
-          visibility: r.hourly.visibility?.slice(0, 48) ?? [],
-          uv_index: r.hourly.uv_index?.slice(0, 48) ?? [],
+          time: sliceHourly(r.hourly.time),
+          temperature_2m: sliceHourly(r.hourly.temperature_2m),
+          apparent_temperature: sliceHourly(r.hourly.apparent_temperature),
+          precipitation_probability: sliceHourly(r.hourly.precipitation_probability),
+          precipitation: sliceHourly(r.hourly.precipitation),
+          rain: sliceHourly(r.hourly.rain),
+          showers: sliceHourly(r.hourly.showers),
+          snowfall: sliceHourly(r.hourly.snowfall),
+          weather_code: sliceHourly(r.hourly.weather_code),
+          wind_speed_10m: sliceHourly(r.hourly.wind_speed_10m),
+          wind_direction_10m: sliceHourly(r.hourly.wind_direction_10m),
+          wind_gusts_10m: sliceHourly(r.hourly.wind_gusts_10m),
+          wind_speed_80m: sliceHourly(r.hourly.wind_speed_80m),
+          wind_direction_80m: sliceHourly(r.hourly.wind_direction_80m),
+          relative_humidity_2m: sliceHourly(r.hourly.relative_humidity_2m),
+          dewpoint_2m: sliceHourly(r.hourly.dewpoint_2m),
+          cloud_cover: sliceHourly(r.hourly.cloud_cover),
+          cloud_cover_low: sliceHourly(r.hourly.cloud_cover_low),
+          cloud_cover_mid: sliceHourly(r.hourly.cloud_cover_mid),
+          cloud_cover_high: sliceHourly(r.hourly.cloud_cover_high),
+          visibility: sliceHourly(r.hourly.visibility),
+          uv_index: sliceHourly(r.hourly.uv_index),
+          soil_temperature_6cm: sliceHourly(r.hourly.soil_temperature_6cm),
+          soil_moisture_3_to_9cm: sliceHourly(r.hourly.soil_moisture_3_to_9cm),
+          cape: sliceHourly(r.hourly.cape),
+          shortwave_radiation: sliceHourly(r.hourly.shortwave_radiation),
+          freezing_level_height: sliceHourly(r.hourly.freezing_level_height),
+          is_day: sliceHourly(r.hourly.is_day),
           thunderstorm_probability: [],
         }
       : null,
@@ -194,14 +219,22 @@ export function mapResult(r, condition) {
           weather_code: r.daily.weather_code ?? [],
           temperature_2m_max: r.daily.temperature_2m_max ?? [],
           temperature_2m_min: r.daily.temperature_2m_min ?? [],
+          apparent_temperature_max: r.daily.apparent_temperature_max ?? [],
+          apparent_temperature_min: r.daily.apparent_temperature_min ?? [],
           precipitation_sum: r.daily.precipitation_sum ?? [],
           precipitation_probability_max: r.daily.precipitation_probability_max ?? [],
+          precipitation_hours: r.daily.precipitation_hours ?? [],
+          snowfall_sum: r.daily.snowfall_sum ?? [],
           wind_speed_10m_max: r.daily.wind_speed_10m_max ?? [],
           wind_gusts_10m_max: r.daily.wind_gusts_10m_max ?? [],
           wind_direction_10m_dominant: r.daily.wind_direction_10m_dominant ?? [],
           uv_index_max: r.daily.uv_index_max ?? [],
           sunrise: r.daily.sunrise ?? [],
           sunset: r.daily.sunset ?? [],
+          sunshine_duration: r.daily.sunshine_duration ?? [],
+          daylight_duration: r.daily.daylight_duration ?? [],
+          shortwave_radiation_sum: r.daily.shortwave_radiation_sum ?? [],
+          et0_fao_evapotranspiration: r.daily.et0_fao_evapotranspiration ?? [],
           thunderstorm_probability_max: [],
         }
       : null,
