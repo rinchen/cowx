@@ -26,6 +26,28 @@ export function nearestHourIndex(times, nowMs = Date.now()) {
 }
 
 /**
+ * Sky for "now" from the nearest hourly slot (same clock as Short-Term Outlook).
+ * Prefer this over a frozen fetch-time `current` snapshot so the hero/bottom-line
+ * stay aligned with the outlook as the wall clock advances between fetches.
+ * @param {Record<string, unknown> | null | undefined} hourly
+ * @param {number} [nowMs]
+ * @returns {{ weather_code: number | null, condition: string, is_day: boolean } | null}
+ */
+export function pickNowSky(hourly, nowMs = Date.now()) {
+  const times = /** @type {string[]} */ (hourly?.time ?? []);
+  if (!times.length) return null;
+  const hi = nearestHourIndex(times, nowMs);
+  const weather_code = numOrNull(/** @type {(number | null)[]} */ (hourly?.weather_code ?? [])[hi]);
+  const dayFlag = /** @type {(number | null)[]} */ (hourly?.is_day ?? [])[hi];
+  const is_day = dayFlag === 0 || dayFlag === 1 ? dayFlag === 1 : true;
+  return {
+    weather_code,
+    condition: wmoLabel(weather_code),
+    is_day,
+  };
+}
+
+/**
  * @typedef {{
  *   index: number,
  *   time: string,

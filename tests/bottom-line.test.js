@@ -132,6 +132,29 @@ describe('synthesizeBottomLine', () => {
     assert.match(headline, /Clear/);
     assert.match(headline, /ideal outdoor/i);
   });
+
+  it('uses nearest-hour sky when current snapshot is still Clear', () => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const h = now.getHours();
+    /** @param {number} hour */
+    const localHour = (hour) =>
+      `${y}-${mo}-${day}T${String(((hour % 24) + 24) % 24).padStart(2, '0')}:00`;
+    const { headline, priority } = synthesizeBottomLine({
+      current: { wind_speed_mph: 4, condition: 'Clear', humidity: 35, temp_f: 72, weather_code: 0 },
+      alerts: [],
+      hourly: {
+        time: [localHour(h - 1), localHour(h), localHour(h + 1)],
+        weather_code: [0, 3, 3],
+        is_day: [1, 1, 1],
+      },
+    });
+    assert.equal(priority, 'nominal');
+    assert.match(headline, /Overcast/);
+    assert.doesNotMatch(headline, /^Clear/);
+  });
 });
 
 describe('bottomLineJumpTarget', () => {

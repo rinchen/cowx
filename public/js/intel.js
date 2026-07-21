@@ -11,6 +11,7 @@ import {
   buildPeriodSummaries,
   formatCompactHourLabel,
   nearestHourIndex,
+  pickNowSky,
   sliceCompactHours,
 } from './outlook.js';
 import {
@@ -216,11 +217,15 @@ export function renderHero(root, data, options = {}) {
 
   const sunrises = /** @type {string[]} */ (daily?.sunrise ?? []);
   const sunsets = /** @type {string[]} */ (daily?.sunset ?? []);
-  const isDay =
-    current?.is_day === 0 || current?.is_day === 1
+  // Catalog path: nearest-hour sky matches Short-Term Outlook; pin keeps live current sky.
+  const nowSky = !usingPinNow ? pickNowSky(hourly) : null;
+  const isDay = nowSky
+    ? nowSky.is_day
+    : current?.is_day === 0 || current?.is_day === 1
       ? current.is_day === 1
       : isDaytime(new Date().toISOString(), sunrises, sunsets);
-  const code = /** @type {number | null} */ (current?.weather_code ?? null);
+  const code = /** @type {number | null} */ (nowSky?.weather_code ?? current?.weather_code ?? null);
+  const conditionLabel = String(nowSky?.condition ?? current?.condition ?? wmoLabel(code));
 
   const windDeg = /** @type {number | null} */ (current?.wind_dir_deg ?? null);
   const compass = windCompassHtml(windDeg, { size: 22 });
@@ -349,11 +354,11 @@ export function renderHero(root, data, options = {}) {
       <div class="intel-now">
         ${
           current?.temp_f != null
-            ? `<button type="button" class="intel-now-hero" data-jump-to="hourly-heading" aria-label="${escapeHtml(`Current conditions ${Math.round(Number(current.temp_f))} degrees Fahrenheit, ${String(current.condition ?? wmoLabel(code))}. Open hourly forecast.`)}">
+            ? `<button type="button" class="intel-now-hero" data-jump-to="hourly-heading" aria-label="${escapeHtml(`Current conditions ${Math.round(Number(current.temp_f))} degrees Fahrenheit, ${conditionLabel}. Open hourly forecast.`)}">
                 ${weatherIconHtml(code, { isDay, size: 48, className: 'weather-icon', alt: '' })}
                 <span class="intel-now-hero__text">
                   <span class="intel-temp">${Math.round(Number(current.temp_f))}°F</span>
-                  <span class="intel-cond">${escapeHtml(String(current.condition ?? wmoLabel(code)))}</span>
+                  <span class="intel-cond">${escapeHtml(conditionLabel)}</span>
                   ${
                     current?.feels_like_f != null
                       ? `<span class="intel-feels">Feels like ${Math.round(Number(current.feels_like_f))}°F</span>`

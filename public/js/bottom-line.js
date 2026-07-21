@@ -3,6 +3,8 @@
  * Priority: severe hazards → wind/travel → precip/temp → AQ/smoke → nominal.
  */
 
+import { pickNowSky } from './outlook.js';
+
 /**
  * @param {unknown} s
  * @returns {string}
@@ -182,7 +184,8 @@ export function synthesizeBottomLine(data, options = {}) {
   const humidity = num(current?.humidity);
   const gust = num(current?.wind_gust_mph);
   const wind = num(current?.wind_speed_mph);
-  const condition = str(current?.condition || 'Conditions');
+  const nowSky = pickNowSky(hourly);
+  const condition = str(nowSky?.condition || current?.condition || 'Conditions');
 
   // 1. Severe hazards
   const alert = highestAlert(alerts);

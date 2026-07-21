@@ -5,6 +5,7 @@ import {
   buildOutlookHighlights,
   buildPeriodSummaries,
   nearestHourIndex,
+  pickNowSky,
   sliceCompactHours,
   sourceStatusChips,
   sourceStatusLabel,
@@ -79,6 +80,41 @@ describe('nearestHourIndex', () => {
 
   it('returns 0 for empty series', () => {
     assert.equal(nearestHourIndex([]), 0);
+  });
+});
+
+describe('pickNowSky', () => {
+  it('returns Overcast from nearest hour when earlier hour was Clear', () => {
+    const hourly = {
+      time: ['2026-07-21T06:00:00', '2026-07-21T07:00:00', '2026-07-21T08:00:00'],
+      weather_code: [0, 3, 3],
+      is_day: [1, 1, 1],
+    };
+    const nowMs = new Date('2026-07-21T07:36:00').getTime();
+    const sky = pickNowSky(hourly, nowMs);
+    assert.ok(sky);
+    assert.equal(sky.weather_code, 3);
+    assert.equal(sky.condition, 'Overcast');
+    assert.equal(sky.is_day, true);
+  });
+
+  it('returns null when hourly times are missing', () => {
+    assert.equal(pickNowSky(null), null);
+    assert.equal(pickNowSky({ weather_code: [0] }), null);
+    assert.equal(pickNowSky({ time: [] }), null);
+  });
+
+  it('labels missing weather_code via wmoLabel', () => {
+    const hourly = {
+      time: ['2026-07-21T12:00:00'],
+      weather_code: [null],
+      is_day: [0],
+    };
+    const sky = pickNowSky(hourly, new Date('2026-07-21T12:00:00').getTime());
+    assert.ok(sky);
+    assert.equal(sky.weather_code, null);
+    assert.equal(sky.condition, '—');
+    assert.equal(sky.is_day, false);
   });
 });
 
