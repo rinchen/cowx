@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="COWX — Colorado weather, air quality, and alerts aggregated for citizens, pilots, farmers, and firefighters."
+    />
+    <!--
+      Modest CSP for the static app shell. style-src 'unsafe-inline' is required
+      because Leaflet sets element styles. External origins match client usage:
+      Leaflet (unpkg), Google Fonts, CARTO basemap tiles, RainViewer API/tiles,
+      Nominatim, IP geo, Open-Meteo pin fetch, CDOT camera snapshots.
+      connect-src includes unpkg so DevTools can load Leaflet source maps.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.basemaps.cartocdn.com https://tilecache.rainviewer.com https://cocam.carsprogram.org https://unpkg.com; connect-src 'self' https://unpkg.com https://api.rainviewer.com https://nominatim.openstreetmap.org https://ipwho.is https://get.geojs.io https://api.open-meteo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    />
+    <title>COWX — Colorado Weather</title>
+    <link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/app.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <header class="site-header">
+      <a class="site-logo" href="#/" data-nav-home>
+        <img
+          class="site-logo-flag"
+          src="img/colorado-flag.svg"
+          width="27"
+          height="18"
+          alt=""
+          decoding="async"
+        />
+        <strong>COWX</strong>
+        <span>Colorado Weather</span>
+      </a>
+      <p class="site-header-tip">
+        <a href="how-it-works.html#ad-blockers">Disable ad block</a>
+        <span class="site-header-tip__detail"> for location</span>
+      </p>
+      <nav class="site-nav" aria-label="Site">
+        <ul>
+          <li><a href="#/" data-nav-home>Home</a></li>
+          <li><a href="how-it-works.html">How it works</a></li>
+          <li><a href="credits.html">Credits</a></li>
+          <li>
+            <a
+              class="site-nav-github"
+              href="https://github.com/rinchen/cowx"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="COWX on GitHub (opens in new tab)"
+            >
+              <svg
+                class="site-nav-github-icon"
+                viewBox="0 0 16 16"
+                width="18"
+                height="18"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  fill="currentColor"
+                  d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"
+                />
+              </svg>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div id="error-banner" class="error-banner" role="alert" hidden></div>
+
+    <div id="status-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <main id="main-content" tabindex="-1"></main>
+
+    <button
+      type="button"
+      class="back-to-top"
+      id="back-to-top"
+      hidden
+      aria-label="Back to top of page"
+    >
+      Top
+    </button>
+
+    <footer class="site-footer">
+      <p id="data-updated">Loading data freshness…</p>
+      <div id="data-sources" class="site-footer__sources" hidden></div>
+    </footer>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
