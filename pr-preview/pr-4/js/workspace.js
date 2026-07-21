@@ -30,7 +30,7 @@ async function loadSpaceWeather(dataBase) {
   try {
     const res = await fetch(`${dataBase}/space-weather.json`, { signal: controller.signal });
     if (!res.ok) {
-      console.warn(`workspace: space-weather.json HTTP ${res.status}`);
+      console.warn('workspace: space-weather.json HTTP %s', res.status);
       return null;
     }
     const json = await res.json();

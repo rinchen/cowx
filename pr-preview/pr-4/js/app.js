@@ -728,7 +728,7 @@ async function renderLocationView(slug, opts = {}, generation = ++routeGeneratio
   try {
     payload = await fetchJson(`locations/${slug}.json`, { bustCache: Boolean(opts.bustCache) });
   } catch (err) {
-    console.warn(`renderLocationView: locations/${slug}.json failed`, err);
+    console.warn('renderLocationView: locations/%s.json failed', slug, err);
     if (generation !== routeGeneration) return;
     document.body.classList.remove('workspace-active');
     renderErrorCard(

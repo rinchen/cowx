@@ -145,7 +145,7 @@ export async function fetchPinCurrent(pin) {
   try {
     const res = await fetch(url, { signal: controller.signal });
     if (!res.ok) {
-      console.warn(`hyperlocal: pin current HTTP ${res.status}`);
+      console.warn('hyperlocal: pin current HTTP %s', res.status);
       return null;
     }
     const json = await res.json();
