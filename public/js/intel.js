@@ -7,7 +7,6 @@ import { aqiCategory, pickAqi } from './aqi.js';
 import { escapeHtml, safeHttpsUrl } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import {
-  buildHourlyModalTableHtml,
   buildOutlookHighlights,
   buildPeriodSummaries,
   formatCompactHourLabel,
@@ -244,7 +243,6 @@ export function renderHero(root, data, options = {}) {
   );
   const snotel = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
   const links = /** @type {Record<string, unknown>} */ (data.links ?? {});
-  const rf = /** @type {Record<string, unknown> | null} */ (data.rf_comms ?? null);
 
   const hourUv =
     current?.uv_index != null
@@ -296,21 +294,6 @@ export function renderHero(root, data, options = {}) {
   const previewCam = cams[0];
   const camImage = previewCam ? safeHttpsUrl(previewCam.imageUrl) : null;
   const camPage = previewCam ? safeHttpsUrl(previewCam.pageUrl) : null;
-
-  const rfLabel =
-    rf?.status === 'ducting_likely'
-      ? 'Ducting likely'
-      : rf?.status === 'poor'
-        ? 'Poor'
-        : rf
-          ? 'Nominal'
-          : null;
-  const rfClass =
-    rf?.status === 'ducting_likely'
-      ? 'rf-badge--ducting'
-      : rf?.status === 'poor'
-        ? 'rf-badge--poor'
-        : 'rf-badge--nominal';
 
   root.innerHTML = `
     <section class="glass-panel glance-hero${usingPinNow ? ' glass-panel--pin-now' : ''}" aria-labelledby="glance-hero-heading">
@@ -462,14 +445,6 @@ export function renderHero(root, data, options = {}) {
               </figure>`
             : ''
         }
-        ${
-          rfLabel
-            ? `<button type="button" class="rf-badge ${rfClass} glance-ducting" data-jump-to="ham-heading" aria-label="VHF UHF ducting ${rfLabel}. Open ham radio details.">
-                <span class="rf-badge__status">VHF/UHF: ${escapeHtml(rfLabel)}</span>
-                <span class="rf-badge__detail">${escapeHtml(String(rf?.detail ?? 'Model-derived estimate'))}</span>
-              </button>`
-            : ''
-        }
         <button type="button" class="btn btn-secondary btn-sm" id="glance-radar-jump">View radar map</button>
       </div>
       ${(() => {
@@ -594,20 +569,18 @@ export function renderHero(root, data, options = {}) {
 }
 
 /**
- * Short-Term Outlook + 48h hourly modal.
+ * Short-Term Outlook (compact hourly; full 48h is a collapsed deep section).
  * @param {HTMLElement} root
  * @param {Record<string, unknown>} data
  * @param {{
  *   onJump?: (id: string) => void,
  *   spaceWeather?: Record<string, unknown> | null,
  * }} [options]
- * @returns {{ openHourlyModal: () => void, destroy: () => void }}
+ * @returns {{ destroy: () => void }}
  */
 export function renderOutlook(root, data, options = {}) {
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
-  const sunrises = /** @type {string[]} */ (daily?.sunrise ?? []);
-  const sunsets = /** @type {string[]} */ (daily?.sunset ?? []);
   const afd = /** @type {Record<string, unknown> | null} */ (data.afd ?? null);
 
   const compact = sliceCompactHours(hourly, { count: 10 });
@@ -681,8 +654,6 @@ export function renderOutlook(root, data, options = {}) {
       ? String(afd.snippet).slice(0, 220) + (String(afd.snippet).length > 220 ? '…' : '')
       : '';
 
-  const modalTable = buildHourlyModalTableHtml(hourly, { sunrises, sunsets, maxRows: 48 });
-
   root.innerHTML = `
     <section class="glass-panel outlook-card" aria-labelledby="outlook-heading">
       <h2 id="outlook-heading" class="glass-panel__title">Short-Term Outlook</h2>
@@ -693,7 +664,7 @@ export function renderOutlook(root, data, options = {}) {
             ? `<ul class="outlook-hours" aria-labelledby="outlook-hours-heading">${hourCards}</ul>`
             : `<p class="empty-state">Hourly forecast unavailable.</p>`
         }
-        <button type="button" class="btn outlook-hourly-cta" id="btn-open-hourly-modal">
+        <button type="button" class="btn outlook-hourly-cta" data-jump-to="hourly-heading">
           View Full 48-Hour Hourly Forecast
         </button>
       </div>
@@ -792,60 +763,9 @@ export function renderOutlook(root, data, options = {}) {
         </div>
       </section>
     </section>
-    <dialog class="hourly-modal" id="hourly-forecast-modal" aria-labelledby="hourly-modal-title">
-      <div class="hourly-modal__panel">
-        <header class="hourly-modal__header">
-          <h2 id="hourly-modal-title" class="hourly-modal__title">
-            <span id="hourly-heading">48-hour hourly forecast</span>
-          </h2>
-          <button type="button" class="btn btn-secondary btn-sm hourly-modal__close" data-hourly-close aria-label="Close hourly forecast">Close</button>
-        </header>
-        <div class="hourly-modal__body">${modalTable}</div>
-      </div>
-    </dialog>
   `;
 
   bindJumps(root, options.onJump);
-
-  const dialog = /** @type {HTMLDialogElement | null} */ (
-    root.querySelector('#hourly-forecast-modal')
-  );
-  const openBtn = root.querySelector('#btn-open-hourly-modal');
-  const closeBtns = root.querySelectorAll('[data-hourly-close]');
-
-  /**
-   * @returns {void}
-   */
-  function openHourlyModal() {
-    if (!dialog) return;
-    if (typeof dialog.showModal === 'function') {
-      dialog.showModal();
-    } else {
-      dialog.setAttribute('open', '');
-    }
-    const closeBtn = /** @type {HTMLElement | null} */ (
-      dialog.querySelector('[data-hourly-close]')
-    );
-    closeBtn?.focus();
-  }
-
-  /**
-   * @returns {void}
-   */
-  function closeHourlyModal() {
-    if (!dialog) return;
-    if (typeof dialog.close === 'function') {
-      dialog.close();
-    } else {
-      dialog.removeAttribute('open');
-    }
-  }
-
-  openBtn?.addEventListener('click', () => openHourlyModal());
-  closeBtns.forEach((btn) => btn.addEventListener('click', () => closeHourlyModal()));
-  dialog?.addEventListener('click', (event) => {
-    if (event.target === dialog) closeHourlyModal();
-  });
 
   const stack = /** @type {HTMLElement | null} */ (root.querySelector('[data-meteogram-stack]'));
   if (stack && chartTimes.length) {
@@ -880,10 +800,7 @@ export function renderOutlook(root, data, options = {}) {
   }
 
   return {
-    openHourlyModal,
-    destroy: () => {
-      closeHourlyModal();
-    },
+    destroy: () => {},
   };
 }
 
@@ -1041,26 +958,6 @@ export function renderSpecialtyIntel(root, data, options = {}) {
           </section>`);
   }
 
-  if (pwsPrimary || cwop) {
-    parts.push(`<section class="glass-panel" aria-labelledby="pws-heading">
-            <h2 id="pws-heading" class="glass-panel__title">Nearby PWS</h2>
-            <dl class="metric-list metric-list--compact">
-              <dt>Station</dt><dd>${escapeHtml(String(cwop?.callsign ?? ''))}${cwop?.network ? ` · ${escapeHtml(String(cwop.network))}` : ''}${distanceLabel(/** @type {number | null} */ (cwop?.distance_km), fromYou && Boolean(hyperlocal?.pws))}</dd>
-              ${cwop?.temp_f != null ? `<dt>Temp</dt><dd>${Math.round(Number(cwop.temp_f))}°F</dd>` : ''}
-              ${cwop?.humidity != null ? `<dt>Humidity</dt><dd>${Math.round(Number(cwop.humidity))}%</dd>` : ''}
-              ${cwop?.wind_speed_mph != null ? `<dt>Wind</dt><dd>${Math.round(Number(cwop.wind_speed_mph))} mph</dd>` : ''}
-              ${cwop?.observed ? `<dt>Observed</dt><dd>${escapeHtml(String(cwop.observed))}</dd>` : ''}
-            </dl>
-            ${
-              pwsLinks.aprs && safeHttpsUrl(String(pwsLinks.aprs))
-                ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(String(pwsLinks.aprs))))}" target="_blank" rel="noopener noreferrer" aria-label="Open station on aprs.fi (opens in new tab)">aprs.fi</a></p>`
-                : safeHttpsUrl(links.pws)
-                  ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(links.pws)))}" target="_blank" rel="noopener noreferrer" aria-label="Weather Underground PWS (opens in new tab)">Weather Underground</a></p>`
-                  : ''
-            }
-          </section>`);
-  }
-
   if (showHamPanel) {
     parts.push(`<section class="glass-panel" aria-labelledby="rf-heading">
             <h2 id="rf-heading" class="glass-panel__title">Ham radio / RF</h2>
@@ -1102,6 +999,26 @@ export function renderSpecialtyIntel(root, data, options = {}) {
               sw
                 ? `<button type="button" class="btn btn-link intel-jump" data-jump-to="ham-heading">Full ham &amp; space weather</button>`
                 : ''
+            }
+          </section>`);
+  }
+
+  if (pwsPrimary || cwop) {
+    parts.push(`<section class="glass-panel" aria-labelledby="pws-heading">
+            <h2 id="pws-heading" class="glass-panel__title">Nearby PWS</h2>
+            <dl class="metric-list metric-list--compact">
+              <dt>Station</dt><dd>${escapeHtml(String(cwop?.callsign ?? ''))}${cwop?.network ? ` · ${escapeHtml(String(cwop.network))}` : ''}${distanceLabel(/** @type {number | null} */ (cwop?.distance_km), fromYou && Boolean(hyperlocal?.pws))}</dd>
+              ${cwop?.temp_f != null ? `<dt>Temp</dt><dd>${Math.round(Number(cwop.temp_f))}°F</dd>` : ''}
+              ${cwop?.humidity != null ? `<dt>Humidity</dt><dd>${Math.round(Number(cwop.humidity))}%</dd>` : ''}
+              ${cwop?.wind_speed_mph != null ? `<dt>Wind</dt><dd>${Math.round(Number(cwop.wind_speed_mph))} mph</dd>` : ''}
+              ${cwop?.observed ? `<dt>Observed</dt><dd>${escapeHtml(String(cwop.observed))}</dd>` : ''}
+            </dl>
+            ${
+              pwsLinks.aprs && safeHttpsUrl(String(pwsLinks.aprs))
+                ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(String(pwsLinks.aprs))))}" target="_blank" rel="noopener noreferrer" aria-label="Open station on aprs.fi (opens in new tab)">aprs.fi</a></p>`
+                : safeHttpsUrl(links.pws)
+                  ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(links.pws)))}" target="_blank" rel="noopener noreferrer" aria-label="Weather Underground PWS (opens in new tab)">Weather Underground</a></p>`
+                  : ''
             }
           </section>`);
   }

@@ -1,6 +1,6 @@
 /**
- * Dual-pane locality workspace: sticky radar | Hero + Short-Term,
- * then full-width specialty intel, then deep forecast.
+ * Dual-pane locality workspace: sticky-free radar | Hero,
+ * then full-width Short-Term Outlook, specialty intel, and deep forecast.
  */
 
 import { renderDeepForecast } from './dashboard.js';
@@ -145,9 +145,9 @@ export async function renderWorkspace(root, data, options) {
         </div>
         <div class="workspace__primary" id="workspace-primary">
           <div id="workspace-hero"></div>
-          <div id="workspace-outlook"></div>
         </div>
       </div>
+      <div id="workspace-outlook" class="workspace__outlook"></div>
       <div class="workspace__specialty" id="workspace-specialty"></div>
       <div class="workspace__deep glass-panel glass-panel--deep" id="workspace-deep"></div>
     </div>
@@ -161,21 +161,10 @@ export async function renderWorkspace(root, data, options) {
   const radarControls = /** @type {HTMLElement} */ (root.querySelector('#radar-controls'));
 
   /** @type {(() => void) | null} */
-  let openHourlyModal = null;
-
-  /**
-   * @param {string} id
-   */
-  function onJump(id) {
-    if (id === 'hourly-heading') {
-      openHourlyModal?.();
-      return;
-    }
-    jumpToSection(id);
-  }
+  let destroyOutlook = null;
 
   const { headline, destroy: destroyHero } = renderHero(heroRoot, data, {
-    onJump,
+    onJump: jumpToSection,
     pin,
     hyperlocal,
     spaceWeather,
@@ -183,13 +172,13 @@ export async function renderWorkspace(root, data, options) {
   });
 
   const outlookApi = renderOutlook(outlookRoot, data, {
-    onJump,
+    onJump: jumpToSection,
     spaceWeather,
   });
-  openHourlyModal = outlookApi.openHourlyModal;
+  destroyOutlook = outlookApi.destroy;
 
   renderSpecialtyIntel(specialtyRoot, data, {
-    onJump,
+    onJump: jumpToSection,
     pin,
     hyperlocal,
     spaceWeather,
@@ -199,9 +188,8 @@ export async function renderWorkspace(root, data, options) {
     sources: options.sources ?? [],
     includeMapSlot: false,
     spaceWeather,
-    omitHourlyTable: true,
+    hourlyCollapsed: true,
     dailyCollapsed: true,
-    onOpenHourly: () => openHourlyModal?.(),
   });
 
   const favBtn = /** @type {HTMLButtonElement | null} */ (root.querySelector('#btn-favorite'));
@@ -260,7 +248,7 @@ export async function renderWorkspace(root, data, options) {
     headline,
     destroy: () => {
       destroyHero();
-      outlookApi.destroy();
+      destroyOutlook?.();
       destroyMap();
     },
   };

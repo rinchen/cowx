@@ -925,9 +925,8 @@ function buildDailyTable(daily) {
  *   sources?: unknown[],
  *   includeMapSlot?: boolean,
  *   spaceWeather?: Record<string, unknown> | null,
- *   omitHourlyTable?: boolean,
+ *   hourlyCollapsed?: boolean,
  *   dailyCollapsed?: boolean,
- *   onOpenHourly?: () => void,
  * }} [options]
  */
 export function renderDeepForecast(root, data, options = {}) {
@@ -948,9 +947,8 @@ export function renderDeepForecast(root, data, options = {}) {
     links,
     includeMapSlot: options.includeMapSlot === true,
     spaceWeather: options.spaceWeather ?? null,
-    omitHourlyTable: options.omitHourlyTable === true,
+    hourlyCollapsed: options.hourlyCollapsed === true,
     dailyCollapsed: options.dailyCollapsed === true,
-    onOpenHourly: options.onOpenHourly,
   });
 }
 
@@ -965,9 +963,8 @@ export function renderDeepForecast(root, data, options = {}) {
  *   links: Record<string, string | null>,
  *   includeMapSlot?: boolean,
  *   spaceWeather?: Record<string, unknown> | null,
- *   omitHourlyTable?: boolean,
+ *   hourlyCollapsed?: boolean,
  *   dailyCollapsed?: boolean,
- *   onOpenHourly?: () => void,
  * }} ctx
  */
 function appendDeepForecast(root, data, ctx) {
@@ -978,42 +975,43 @@ function appendDeepForecast(root, data, ctx) {
     links,
     sources: metaSources,
     spaceWeather = null,
-    omitHourlyTable = false,
+    hourlyCollapsed = false,
     dailyCollapsed = false,
-    onOpenHourly,
   } = ctx;
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
 
-  if (!omitHourlyTable) {
-    if (!hourly?.time || !Array.isArray(hourly.time) || hourly.time.length === 0) {
-      const empty = document.createElement('div');
-      renderEmpty(
-        empty,
-        'No hourly data',
-        data.forecastStale
-          ? 'Prior forecast also lacked hourly rows.'
-          : 'Forecast temporarily unavailable (source rate-limited or failed this run).',
-      );
-      renderForecastCard(root, 'hourly-heading', 'Hourly forecast (48h)', empty);
+  if (!hourly?.time || !Array.isArray(hourly.time) || hourly.time.length === 0) {
+    const empty = document.createElement('div');
+    renderEmpty(
+      empty,
+      'No hourly data',
+      data.forecastStale
+        ? 'Prior forecast also lacked hourly rows.'
+        : 'Forecast temporarily unavailable (source rate-limited or failed this run).',
+    );
+    if (hourlyCollapsed) {
+      renderCollapsibleSection(root, 'hourly-heading', 'Hourly forecast (48h)', () => empty, {
+        open: false,
+      });
     } else {
-      renderForecastCard(
-        root,
-        'hourly-heading',
-        'Hourly forecast (48h)',
-        buildHourlyTable(hourly, sunrises, sunsets, { elevationFt }),
-      );
+      renderForecastCard(root, 'hourly-heading', 'Hourly forecast (48h)', empty);
     }
-  } else if (typeof onOpenHourly === 'function') {
-    const teaser = document.createElement('section');
-    teaser.className = 'forecast-card forecast-card--hourly-teaser';
-    teaser.innerHTML = `
-      <h2 class="sr-only">Hourly forecast</h2>
-      <p class="intel-muted">Full 48-hour hourly table opens in a dialog from Short-Term Outlook.</p>
-      <button type="button" class="btn outlook-hourly-cta" id="deep-open-hourly">View Full 48-Hour Hourly Forecast</button>
-    `;
-    teaser.querySelector('#deep-open-hourly')?.addEventListener('click', () => onOpenHourly());
-    root.appendChild(teaser);
+  } else if (hourlyCollapsed) {
+    renderCollapsibleSection(
+      root,
+      'hourly-heading',
+      'Hourly forecast (48h)',
+      () => buildHourlyTable(hourly, sunrises, sunsets, { elevationFt }),
+      { open: false },
+    );
+  } else {
+    renderForecastCard(
+      root,
+      'hourly-heading',
+      'Hourly forecast (48h)',
+      buildHourlyTable(hourly, sunrises, sunsets, { elevationFt }),
+    );
   }
 
   const dailyTimes = /** @type {string[]} */ (daily?.time ?? []);
