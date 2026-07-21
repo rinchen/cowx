@@ -1,88 +1,88 @@
 {
-  "generatedAt": "2026-07-21T07:48:42.012Z",
+  "generatedAt": "2026-07-21T10:22:35.574Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-21T07:44:32.360Z",
+      "fetchedAt": "2026-07-21T10:17:30.333Z",
       "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-21T07:46:10.293Z",
-      "error": "fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-21T10:19:18.300Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:46:11.186Z"
+      "fetchedAt": "2026-07-21T10:19:18.969Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:46:13.934Z"
+      "fetchedAt": "2026-07-21T10:19:26.414Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:46:14.142Z"
+      "fetchedAt": "2026-07-21T10:19:29.277Z"
     },
     {
       "id": "purpleair",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:46:14.472Z"
+      "fetchedAt": "2026-07-21T10:19:29.634Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:48:05.008Z"
+      "fetchedAt": "2026-07-21T10:21:04.473Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:48:06.115Z"
+      "fetchedAt": "2026-07-21T10:21:05.843Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:48:28.992Z"
+      "fetchedAt": "2026-07-21T10:22:13.336Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:48:29.955Z"
+      "fetchedAt": "2026-07-21T10:22:23.593Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-21T07:48:40.954Z"
+      "fetchedAt": "2026-07-21T10:22:34.312Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:48:41.313Z"
+      "fetchedAt": "2026-07-21T10:22:34.657Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:48:41.418Z"
+      "fetchedAt": "2026-07-21T10:22:34.920Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:48:41.578Z"
+      "fetchedAt": "2026-07-21T10:22:35.188Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:48:41.813Z"
+      "fetchedAt": "2026-07-21T10:22:35.395Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-07-21T07:48:42.012Z"
+      "fetchedAt": "2026-07-21T10:22:35.574Z"
     }
   ],
   "locationCount": 338,
