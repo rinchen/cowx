@@ -11,6 +11,9 @@ permissions:
 jobs:
   fetch:
     runs-on: ubuntu-latest
+    outputs:
+      # Only the weather orchestrator step — not install/commit/push races.
+      fetch_failed: ${{ steps.weather_fetch.outcome == 'failure' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -25,6 +28,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Fetch weather data
+        id: weather_fetch
         env:
           PURPLEAIR_API_KEY: ${{ secrets.PURPLEAIR_API_KEY }}
           AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
@@ -43,12 +47,24 @@ jobs:
           git add public/data
           # Do not use [skip ci]: Pages must redeploy so the live site gets fresh JSON.
           git commit -m "chore: update weather data"
-          git push
+          # Concurrent pushes (code commits or overlapping schedules) can reject a
+          # bare push; rebase onto remote main and retry a few times.
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main"
+            git pull --rebase origin main
+          done
+          echo "Failed to push data commit after retries"
+          exit 1
 
   notify-on-failure:
     runs-on: ubuntu-latest
     needs: fetch
-    if: failure()
+    # Discord only when the weather data pull itself failed — not checkout,
+    # install, prettier hooks, or git push races after a successful fetch.
+    if: needs.fetch.outputs.fetch_failed == 'true'
     steps:
       - name: Post Discord notification
         env:
