@@ -233,29 +233,7 @@ summary:focus-visible {
 }
 
 @media (max-width: 640px) {
-  .site-header {
-    flex-wrap: wrap;
-    row-gap: 0.35rem;
-  }
-
-  .site-logo {
-    order: 1;
-  }
-
-  .site-nav {
-    order: 2;
-    margin-left: auto;
-  }
-
   .site-header-tip {
-    order: 3;
-    flex: 1 0 100%;
-    text-align: start;
-    padding-top: 0.15rem;
-    border-top: 1px solid var(--color-border);
-  }
-
-  .site-header-tip__detail {
     display: none;
   }
 }
