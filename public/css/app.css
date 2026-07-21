@@ -1703,26 +1703,6 @@ body.workspace-active #main-content {
   color: var(--glass-muted);
 }
 
-.glance-hero__previews {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 0.65rem;
-  margin-top: 0.65rem;
-}
-
-.glance-preview-cam {
-  margin: 0;
-  flex: 1 1 10rem;
-  max-width: 14rem;
-}
-
-.glance-preview-cam .cdot-cam {
-  width: 100%;
-  border-radius: 8px;
-  border: 1px solid var(--glass-border);
-}
-
 .glance-freshness {
   display: flex;
   flex-wrap: wrap;

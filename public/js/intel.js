@@ -230,11 +230,6 @@ export function renderHero(root, data, options = {}) {
   if (windDir) windMetaParts.push(`from ${windDir}`);
 
   const alerts = /** @type {Record<string, unknown>[]} */ (data.alerts ?? []);
-  const roads = /** @type {Record<string, unknown> | null} */ (data.cdot_roads ?? null);
-  const catalogCams = /** @type {Record<string, unknown>[]} */ (
-    roads?.cameras ?? (data.cdot_camera ? [data.cdot_camera] : [])
-  );
-  const cams = hyperlocal?.cameras?.length ? hyperlocal.cameras : catalogCams;
   const hms = /** @type {Record<string, unknown> | null} */ (data.hms_smoke ?? null);
   const fireWeather = /** @type {Record<string, unknown> | null} */ (data.fire_weather ?? null);
   const nearbyFires = /** @type {Record<string, unknown> | null} */ (data.nearby_fires ?? null);
@@ -290,10 +285,6 @@ export function renderHero(root, data, options = {}) {
         )
         .join('')}</ul>`
     : '';
-
-  const previewCam = cams[0];
-  const camImage = previewCam ? safeHttpsUrl(previewCam.imageUrl) : null;
-  const camPage = previewCam ? safeHttpsUrl(previewCam.pageUrl) : null;
 
   root.innerHTML = `
     <section class="glass-panel glance-hero${usingPinNow ? ' glass-panel--pin-now' : ''}" aria-labelledby="glance-hero-heading">
@@ -435,18 +426,6 @@ export function renderHero(root, data, options = {}) {
         )}
         ${metricRow('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
       </div>
-      <div class="glance-hero__previews">
-        ${
-          camImage || camPage
-            ? `<figure class="glance-preview-cam">
-                <figcaption class="intel-muted">${escapeHtml(String(previewCam?.name ?? 'Road camera'))}</figcaption>
-                ${camImage ? `<img class="cdot-cam" src="${escapeHtml(camImage)}?t=${Date.now()}" alt="CDOT traffic camera: ${escapeHtml(String(previewCam?.name ?? 'Colorado roadway'))}" loading="lazy" decoding="async" data-cdot-cam />` : ''}
-                ${camPage ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(camPage)}" target="_blank" rel="noopener noreferrer">Open on COtrip <span class="sr-only">(opens in new tab)</span></a></p>` : ''}
-              </figure>`
-            : ''
-        }
-        <button type="button" class="btn btn-secondary btn-sm" id="glance-radar-jump">View radar map</button>
-      </div>
       ${(() => {
         const day1 = /** @type {Record<string, unknown> | null} */ (fireWeather?.day1 ?? null);
         const day2 = /** @type {Record<string, unknown> | null} */ (fireWeather?.day2 ?? null);
@@ -529,19 +508,7 @@ export function renderHero(root, data, options = {}) {
     </section>
   `;
 
-  // map-heading may not exist — jump to map container via radar summary
-  const radarJump = root.querySelector('#glance-radar-jump');
-  radarJump?.addEventListener('click', (e) => {
-    e.preventDefault();
-    const mapEl = document.getElementById('map-container');
-    if (mapEl) {
-      mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      mapEl.focus?.({ preventScroll: true });
-    }
-  });
-
   bindJumps(root, options.onJump);
-  bindCamErrors(root);
 
   const clockEl = /** @type {HTMLElement | null} */ (root.querySelector('#glance-clock'));
   function tickClock() {
