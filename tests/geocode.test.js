@@ -57,8 +57,10 @@ describe('geocodeColoradoAddress', () => {
   /** @type {typeof globalThis.fetch | undefined} */
   let originalFetch;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     originalFetch = globalThis.fetch;
+    const { resetNominatimCooldownForTests } = await import('../public/js/geocode.js');
+    resetNominatimCooldownForTests();
   });
   afterEach(() => {
     if (originalFetch) globalThis.fetch = originalFetch;
@@ -98,5 +100,36 @@ describe('geocodeColoradoAddress', () => {
       });
     const result = await geocodeColoradoAddress('123 Main St Denver CO');
     assert.deepEqual(result, { ok: false, reason: 'http' });
+  });
+
+  it('enforces Nominatim cooldown between successful calls', async () => {
+    const { geocodeColoradoAddress, NOMINATIM_MIN_INTERVAL_MS, resetNominatimCooldownForTests } =
+      await import('../public/js/geocode.js');
+    resetNominatimCooldownForTests();
+
+    globalThis.fetch = async () =>
+      /** @type {Response} */ ({
+        ok: true,
+        status: 200,
+        json: async () => [
+          {
+            lat: '39.7392',
+            lon: '-104.9903',
+            display_name: '1600 Broadway, Denver, Colorado',
+          },
+        ],
+      });
+
+    const first = await geocodeColoradoAddress('1600 Broadway Denver CO');
+    assert.equal(first.ok, true);
+
+    const started = Date.now();
+    const second = await geocodeColoradoAddress('1610 Broadway Denver CO');
+    const elapsed = Date.now() - started;
+    assert.equal(second.ok, true);
+    assert.ok(
+      elapsed >= NOMINATIM_MIN_INTERVAL_MS - 50,
+      `expected ~${NOMINATIM_MIN_INTERVAL_MS}ms cooldown, got ${elapsed}ms`,
+    );
   });
 });

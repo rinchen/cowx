@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 
 import { runAdapterSafely } from '../scripts/lib/adapter-runner.js';
-import { sanitizeErrorMessage, sanitizeUrlForError } from '../scripts/lib/http.js';
+import {
+  fetchJson,
+  fetchWithTimeout,
+  sanitizeErrorMessage,
+  sanitizeUrlForError,
+} from '../scripts/lib/http.js';
 
 describe('sanitizeUrlForError', () => {
   it('redacts API_KEY query params', () => {
@@ -61,5 +66,74 @@ describe('runAdapterSafely', () => {
     assert.equal(result.bySlug.size, 0);
     assert.doesNotMatch(String(result.error), /leak-me/);
     assert.match(String(result.error), /API_KEY=\[redacted\]/i);
+  });
+});
+
+describe('fetchWithTimeout / fetchJson', () => {
+  /** @type {typeof globalThis.fetch | undefined} */
+  let originalFetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+  afterEach(() => {
+    if (originalFetch) globalThis.fetch = originalFetch;
+  });
+
+  it('aborts when the request exceeds timeoutMs', async () => {
+    globalThis.fetch = async (_url, init) => {
+      const signal = init?.signal;
+      return new Promise((_resolve, reject) => {
+        if (!signal) {
+          reject(new Error('missing abort signal'));
+          return;
+        }
+        if (signal.aborted) {
+          reject(Object.assign(new Error('Aborted'), { name: 'AbortError' }));
+          return;
+        }
+        signal.addEventListener('abort', () => {
+          reject(Object.assign(new Error('Aborted'), { name: 'AbortError' }));
+        });
+      });
+    };
+
+    await assert.rejects(
+      () => fetchWithTimeout('https://example.com/slow', { timeoutMs: 30 }),
+      (err) => err instanceof Error && err.name === 'AbortError',
+    );
+  });
+
+  it('throws on non-OK responses with redacted URL secrets', async () => {
+    globalThis.fetch = async () =>
+      /** @type {Response} */ ({
+        ok: false,
+        status: 401,
+        text: async () => 'unauthorized API_KEY=should-not-matter',
+        json: async () => ({}),
+      });
+
+    await assert.rejects(
+      () => fetchJson('https://api.example.com/data?API_KEY=super-secret'),
+      (err) => {
+        assert.ok(err instanceof Error);
+        assert.match(err.message, /HTTP 401/);
+        assert.doesNotMatch(err.message, /super-secret/);
+        assert.match(err.message, /API_KEY=%5Bredacted%5D|API_KEY=\[redacted\]/);
+        return true;
+      },
+    );
+  });
+
+  it('returns parsed JSON on success', async () => {
+    globalThis.fetch = async () =>
+      /** @type {Response} */ ({
+        ok: true,
+        status: 200,
+        text: async () => '{"ok":true}',
+        json: async () => ({ ok: true }),
+      });
+    const data = await fetchJson('https://example.com/ok');
+    assert.deepEqual(data, { ok: true });
   });
 });

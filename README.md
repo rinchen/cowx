@@ -19,7 +19,7 @@ npx serve public
 
 Open the URL printed by `serve` (typically `http://localhost:3000`). The app loads data from `public/data/`.
 
-Without running `fetch`, only committed snapshot data in `public/data/` is available.
+Without running `pnpm run fetch:data`, only committed snapshot data in `public/data/` is available.
 
 ## Scripts
 
@@ -39,26 +39,26 @@ The site is deployed from the `public/` directory to the `gh-pages` branch on pu
 
 ### PR previews
 
-Same-repo pull requests get a sticky comment with a live preview URL under `/pr-preview/pr-{N}/` (see `.github/workflows/preview.yml`). Previews use the PR’s committed `public/` tree (including weather JSON); they are removed when the PR closes. Fork PRs do not get automatic previews — use `npx serve public` locally.
+Same-repo pull requests get a sticky comment with a live preview URL under `/pr-preview/pr-{N}/` (see `.github/workflows/preview.yml`). Previews use the PR’s committed `public/` tree (including weather JSON); they are removed when the PR closes. Fork PRs do not get automatic previews — use `npx serve public` locally. Preview URLs share the production GitHub Pages origin — treat them as **untrusted** until you review the PR.
 
 **One-time setup** (after the first `gh-pages` deploy succeeds):
 
 1. **Settings → Pages → Build and deployment → Source:** Deploy from a branch → `gh-pages` / `/` (not “GitHub Actions”).
 2. **Settings → Actions → General → Workflow permissions:** Read and write permissions.
 
-Weather data is refreshed on a **45-minute** schedule via `.github/workflows/update-weather.yml` (`*/45 * * * *` plus `workflow_dispatch`). Failures notify via `NOTIFY_WEBHOOK_URL` when set (no GitHub Issue). Committed JSON in `public/data/` is what visitors see between runs.
+Weather data is refreshed on a **45-minute** schedule via `.github/workflows/update-weather.yml` (`*/45 * * * *` plus `workflow_dispatch`). When the **weather fetch step** fails, Actions can notify via `NOTIFY_WEBHOOK_URL` (if set; no GitHub Issue). Committed JSON in `public/data/` is what visitors see between runs. `public/.nojekyll` keeps GitHub Pages from running Jekyll on the static tree.
 
 ## GitHub Actions secrets
 
 Optional secrets improve inline sensor/AQI data and failure alerting. Configure under **Settings → Secrets and variables → Actions**. Use these **names** only — never commit values:
 
-| Secret name          | Purpose                                                            |
-| -------------------- | ------------------------------------------------------------------ |
-| `PURPLEAIR_API_KEY`  | PurpleAir sensor readings at build time                            |
-| `AIRNOW_API_KEY`     | EPA AirNow AQI near locations                                      |
-| `NOTIFY_WEBHOOK_URL` | Webhook for Discord (or compatible) alerts when fetch/update fails |
+| Secret name          | Purpose                                                                      |
+| -------------------- | ---------------------------------------------------------------------------- |
+| `PURPLEAIR_API_KEY`  | PurpleAir sensor readings at build time                                      |
+| `AIRNOW_API_KEY`     | EPA AirNow AQI near locations                                                |
+| `NOTIFY_WEBHOOK_URL` | Webhook for Discord (or compatible) alerts when the weather fetch step fails |
 
-The site works without these keys; affected sources degrade to skipped status in `meta.json` and offsite links in the UI. CDOT cameras, road alerts, CWOP PWS, HMS smoke, SPC fire weather, NIFC nearby fires, and burn-restriction links need no secrets. City webcam portals are catalog **links** (new tab), not embedded feeds.
+The site works without these keys; affected sources degrade to skipped status in `meta.json` and offsite links in the UI. CDOT cameras, road alerts, CWOP PWS, HMS smoke, SPC fire weather, NIFC nearby fires, and burn-restriction links need no secrets. City webcam portals are catalog **links** (new tab), not embedded feeds. For local fetch testing, copy [`.env.example`](.env.example) to `.env` (gitignored); notify is Actions-only.
 
 ## Privacy
 

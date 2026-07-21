@@ -1,7 +1,22 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { sanitizeWebcamLinks } from '../scripts/fetch/index.js';
+import { locationPayloadPath, sanitizeWebcamLinks } from '../scripts/fetch/index.js';
+
+describe('locationPayloadPath', () => {
+  it('resolves a valid slug under public/data/locations', () => {
+    const p = locationPayloadPath('fort-collins');
+    assert.equal(path.basename(p), 'fort-collins.json');
+    assert.match(p, /[/\\]public[/\\]data[/\\]locations[/\\]fort-collins\.json$/);
+  });
+
+  it('rejects path tricks, empty, and uppercase slugs', () => {
+    for (const bad of ['../etc/passwd', 'foo/bar', '', 'Denver', 'UPPER']) {
+      assert.throws(() => locationPayloadPath(bad), /invalid location slug/);
+    }
+  });
+});
 
 describe('sanitizeWebcamLinks', () => {
   it('keeps https webcam entries and drops unsafe schemes', () => {

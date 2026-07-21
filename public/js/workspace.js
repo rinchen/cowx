@@ -29,7 +29,10 @@ async function loadSpaceWeather(dataBase) {
   const timer = setTimeout(() => controller.abort(), 12_000);
   try {
     const res = await fetch(`${dataBase}/space-weather.json`, { signal: controller.signal });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn(`workspace: space-weather.json HTTP ${res.status}`);
+      return null;
+    }
     const json = await res.json();
     return json && typeof json === 'object' ? /** @type {Record<string, unknown>} */ (json) : null;
   } catch (err) {
@@ -51,12 +54,15 @@ async function loadSpaceWeather(dataBase) {
  *   onAnnounce?: (msg: string) => void,
  *   dataBase?: string,
  *   pin?: import('./geo.js').HyperlocalPin | null,
+ *   routeGeneration?: number,
+ *   isCurrent?: () => boolean,
  * }} options
  * @returns {Promise<{ headline: string, destroy: () => void }>}
  */
 export async function renderWorkspace(root, data, options) {
   const slug = String(data.slug ?? '');
   const name = String(data.name ?? slug);
+  const stillCurrent = () => (options.isCurrent ? options.isCurrent() : true);
   destroyMap();
 
   const pin = options.pin ?? getHyperlocalPin();
@@ -73,6 +79,11 @@ export async function renderWorkspace(root, data, options) {
       : Promise.resolve(null),
     loadSpaceWeather(dataBase),
   ]);
+
+  if (!stillCurrent()) {
+    return { headline: '', destroy: () => destroyMap() };
+  }
+
   const hyperlocal = hyperlocalResult;
 
   const pinSourceLabel =
@@ -254,6 +265,14 @@ export async function renderWorkspace(root, data, options) {
       options.onAnnounce?.(msg);
     },
   });
+
+  if (!stillCurrent()) {
+    mapDetails?.removeEventListener('toggle', onMapDetailsToggle);
+    destroyHero();
+    destroyOutlook?.();
+    destroyMap();
+    return { headline, destroy: () => {} };
+  }
 
   if (!radarOk) {
     options.onAnnounce?.('RainViewer radar could not load; map basemap is still available.');

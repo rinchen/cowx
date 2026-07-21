@@ -5,7 +5,7 @@
  */
 
 import { fetchJson, sleep } from '../../lib/http.js';
-import { nearestPoint, roundKm } from '../../lib/geo.js';
+import { assignNearestWithin, roundKm } from '../../lib/geo.js';
 
 const GRID = 0.2;
 const DELAY_MS = 350;
@@ -98,14 +98,11 @@ export async function fetchAirNow(locations, env = process.env) {
     };
   }
 
-  for (const loc of locations) {
-    const n = nearestPoint({ lat: loc.lat, lon: loc.lon }, samples);
-    if (!n || n.distanceKm > 80) continue;
-    bySlug.set(loc.slug, {
-      ...n.point.payload,
-      distance_km: roundKm(n.distanceKm),
-    });
-  }
+  const assigned = assignNearestWithin(locations, samples, 80, (nearest) => ({
+    ...nearest.point.payload,
+    distance_km: roundKm(nearest.distanceKm),
+  }));
+  for (const [slug, row] of assigned) bySlug.set(slug, row);
 
   const status =
     errors.length || bySlug.size < locations.length * 0.7

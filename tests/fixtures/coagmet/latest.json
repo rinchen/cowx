@@ -1,0 +1,41 @@
+{
+  "ftc01": {
+    "st5cm": 62.1,
+    "st15cm": 58.4,
+    "sm5cm": 0.22,
+    "sm15cm": 0.28,
+    "precip": 0.05,
+    "eto": 0.18,
+    "vaporPressure": 1.1,
+    "solarRad": 520,
+    "windSpeed": 8.2,
+    "t": 71.5,
+    "rh": 41
+  },
+  "den01": {
+    "soilTemp5": 65,
+    "soil_temp_15": 60,
+    "soilMoisture5": 0.19,
+    "vwc15": 0.25,
+    "precipitation": 0.0,
+    "et0": 0.2,
+    "vp": 1.0,
+    "sr": 480,
+    "ws": 6.5,
+    "temp": 74,
+    "humidity": 35
+  },
+  "far01": {
+    "st5": 50,
+    "st15": 48,
+    "vwc5": 0.3,
+    "swc15": 0.31,
+    "rain": 0.1,
+    "refET": 0.15,
+    "vpd": 0.9,
+    "solar": 400,
+    "wind": 12,
+    "airtemp": 68,
+    "rh": 50
+  }
+}

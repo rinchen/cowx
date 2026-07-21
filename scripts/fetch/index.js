@@ -13,6 +13,7 @@ import { sanitizeErrorMessage } from '../lib/http.js';
 import { runAdapterSafely } from '../lib/adapter-runner.js';
 import { buildAstronomy } from '../lib/astronomy.js';
 import { buildPollenHealthLinks } from '../lib/pollen-links.js';
+import { validateLocationsData } from '../validate-locations.js';
 import { fetchOpenMeteo } from './adapters/openmeteo.js';
 import { fetchOpenMeteoAq } from './adapters/openmeteo-aq.js';
 import { alertsForLocation, fetchNws } from './adapters/nws.js';
@@ -33,9 +34,29 @@ import { fetchSpaceWeather } from './adapters/space-weather.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
 const DATA_DIR = path.join(ROOT, 'public/data');
+const LOCATIONS_DIR = path.join(DATA_DIR, 'locations');
 const LOCATIONS_PATH = path.join(ROOT, 'scripts/locations/colorado-locations.json');
 const ZIPS_SRC = path.join(ROOT, 'scripts/locations/co-zips.json');
 const ZIPS_DST = path.join(DATA_DIR, 'co-zips.json');
+const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * Resolve a location JSON path under public/data/locations/ (rejects path escape).
+ * @param {string} slug
+ * @returns {string}
+ */
+export function locationPayloadPath(slug) {
+  if (typeof slug !== 'string' || !SLUG_RE.test(slug)) {
+    throw new Error(`invalid location slug: ${String(slug)}`);
+  }
+  const resolvedDir = path.resolve(LOCATIONS_DIR);
+  const filePath = path.resolve(resolvedDir, `${slug}.json`);
+  const prefix = resolvedDir.endsWith(path.sep) ? resolvedDir : `${resolvedDir}${path.sep}`;
+  if (!filePath.startsWith(prefix)) {
+    throw new Error(`location path escaped data dir for slug: ${slug}`);
+  }
+  return filePath;
+}
 
 /**
  * Keep only webcam_links that pass the same https:// rule as validate-locations.
@@ -73,7 +94,7 @@ export function sanitizeWebcamLinks(links) {
  */
 async function readPrior(slug) {
   try {
-    const raw = await readFile(path.join(DATA_DIR, 'locations', `${slug}.json`), 'utf8');
+    const raw = await readFile(locationPayloadPath(slug), 'utf8');
     return JSON.parse(raw);
   } catch {
     return null;
@@ -87,11 +108,12 @@ export async function runFetch() {
   const raw = await readFile(LOCATIONS_PATH, 'utf8');
   /** @type {import('../lib/types.js').Location[]} */
   const locations = JSON.parse(raw);
-  if (!Array.isArray(locations) || locations.length === 0) {
-    throw new Error('colorado-locations.json is empty');
+  const catalogErrors = validateLocationsData(locations);
+  if (catalogErrors.length) {
+    throw new Error(`colorado-locations.json invalid:\n${catalogErrors.slice(0, 20).join('\n')}`);
   }
 
-  await mkdir(path.join(DATA_DIR, 'locations'), { recursive: true });
+  await mkdir(LOCATIONS_DIR, { recursive: true });
 
   /** @type {{ id: string, status: string, fetchedAt: string, error?: string }[]} */
   const sources = [];
@@ -296,11 +318,7 @@ export async function runFetch() {
         },
       };
 
-      await writeFile(
-        path.join(DATA_DIR, 'locations', `${loc.slug}.json`),
-        JSON.stringify(payload),
-        'utf8',
-      );
+      await writeFile(locationPayloadPath(loc.slug), JSON.stringify(payload), 'utf8');
 
       index.push({
         slug: loc.slug,

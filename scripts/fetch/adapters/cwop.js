@@ -5,7 +5,9 @@
  */
 
 import { fetchJson } from '../../lib/http.js';
-import { nearestPoints } from '../../lib/geo.js';
+import { nearestPoints, roundKm } from '../../lib/geo.js';
+import { isInColorado } from '../../lib/colorado.js';
+import { toFiniteNumber } from '../../lib/parse.js';
 
 const NEARBY_URL = 'https://aprs.me/api/v1/weather/nearby';
 const MAX_DISTANCE_KM = 60;
@@ -56,16 +58,6 @@ const SAMPLE_POINTS = [
 ];
 
 /**
- * @param {unknown} v
- * @returns {number | null}
- */
-function num(v) {
-  if (v == null || v === '') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-/**
  * @param {unknown} raw
  * @returns {{ callsign: string, lat: number, lon: number, temp_f: number | null, humidity: number | null, pressure_mb: number | null, wind_speed_mph: number | null, wind_gust_mph: number | null, wind_dir_deg: number | null, observed: string | null }[]}
  */
@@ -74,10 +66,10 @@ export function parseNearbyStations(raw) {
   const out = [];
   for (const row of list) {
     if (!row || typeof row !== 'object') continue;
-    const lat = num(row.position?.lat ?? row.lat);
-    const lon = num(row.position?.lon ?? row.lon);
+    const lat = toFiniteNumber(row.position?.lat ?? row.lat);
+    const lon = toFiniteNumber(row.position?.lon ?? row.lon);
     if (lat == null || lon == null) continue;
-    if (lat < 36.8 || lat > 41.2 || lon < -109.3 || lon > -101.8) continue;
+    if (!isInColorado(lat, lon)) continue;
     const callsign = String(row.callsign ?? row.base_callsign ?? '');
     if (!callsign) continue;
     const wx = row.weather ?? {};
@@ -85,12 +77,12 @@ export function parseNearbyStations(raw) {
       callsign,
       lat,
       lon,
-      temp_f: num(wx.temperature),
-      humidity: num(wx.humidity),
-      pressure_mb: num(wx.pressure),
-      wind_speed_mph: num(wx.wind_speed),
-      wind_gust_mph: num(wx.wind_gust),
-      wind_dir_deg: num(wx.wind_direction),
+      temp_f: toFiniteNumber(wx.temperature),
+      humidity: toFiniteNumber(wx.humidity),
+      pressure_mb: toFiniteNumber(wx.pressure),
+      wind_speed_mph: toFiniteNumber(wx.wind_speed),
+      wind_gust_mph: toFiniteNumber(wx.wind_gust),
+      wind_dir_deg: toFiniteNumber(wx.wind_direction),
       observed: row.last_report ? String(row.last_report) : null,
     });
   }
@@ -123,7 +115,7 @@ export function assignPwsFromStations(loc, stations, linkOpts = {}) {
       wind_gust_mph: p.wind_gust_mph,
       wind_dir_deg: p.wind_dir_deg,
       observed: p.observed,
-      distance_km: Math.round(h.distanceKm * 10) / 10,
+      distance_km: roundKm(h.distanceKm),
     };
   });
 

@@ -1,7 +1,7 @@
 /**
  * Shared Colorado bounding box for fetch adapters.
  * Keep in sync with public/js/geocode.js for client checks.
- * Do not change validate-locations.js bbox without care — that gate is stricter/catalog-specific.
+ * validate-locations.js uses a slightly stricter west lon (-109.15 vs -109.2) intentionally.
  */
 
 /** Rough Colorado bounding box (same as HMS / SPC padding sources). */

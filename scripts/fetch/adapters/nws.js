@@ -42,6 +42,29 @@ export function alertsForLocation(lat, lon, countyKey, byCounty, alertsGeoJson) 
 }
 
 /**
+ * Resolve an NWS product id or URL to an allowlisted api.weather.gov HTTPS URL.
+ * @param {unknown} productId
+ * @returns {string | null}
+ */
+export function resolveNwsProductUrl(productId) {
+  if (productId == null) return null;
+  const raw = String(productId).trim();
+  if (!raw) return null;
+  if (!raw.startsWith('http')) {
+    // Product ids are opaque path segments (e.g. UUID-like); reject path tricks.
+    if (raw.includes('/') || raw.includes('..') || /\s/.test(raw)) return null;
+    return `https://api.weather.gov/products/${encodeURIComponent(raw)}`;
+  }
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== 'https:' || url.hostname !== 'api.weather.gov') return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * @param {string} office
  * @param {'AFD' | 'HWO'} productType
  * @returns {Promise<{ office: string, issued: string | null, snippet: string, url: string } | null>}
@@ -49,16 +72,18 @@ export function alertsForLocation(lat, lon, countyKey, byCounty, alertsGeoJson) 
 async function fetchOfficeProduct(office, productType) {
   const list = await fetchJson(
     `https://api.weather.gov/products/types/${productType}/locations/${office}`,
-    { headers: { 'User-Agent': NWS_USER_AGENT, Accept: 'application/ld+json' } },
+    {
+      headers: { 'User-Agent': NWS_USER_AGENT, Accept: 'application/ld+json' },
+      timeoutMs: 45_000,
+    },
   );
   const first = list?.['@graph']?.[0];
   const productId = first?.id ?? first?.['@id'];
-  if (!productId) return null;
-  const productUrl = String(productId).startsWith('http')
-    ? String(productId)
-    : `https://api.weather.gov/products/${productId}`;
+  const productUrl = resolveNwsProductUrl(productId);
+  if (!productUrl) return null;
   const product = await fetchJson(productUrl, {
     headers: { 'User-Agent': NWS_USER_AGENT, Accept: 'application/ld+json' },
+    timeoutMs: 45_000,
   });
   const text = String(product?.productText ?? '');
   let snippet;
