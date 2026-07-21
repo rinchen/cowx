@@ -238,7 +238,6 @@ export function renderHero(root, data, options = {}) {
     data.fire_restrictions ?? null
   );
   const snotel = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
-  const links = /** @type {Record<string, unknown>} */ (data.links ?? {});
 
   const hourUv =
     current?.uv_index != null
@@ -493,37 +492,6 @@ export function renderHero(root, data, options = {}) {
             <h3 class="intel-now-extras__title">Fire weather</h3>
             <p class="intel-now-extras__body">${bits.join('<br />')}</p>
             <button type="button" class="btn btn-link intel-jump" data-jump-to="smoke-heading">Fire weather &amp; restrictions detail</button>
-          </div>`;
-      })()}
-      ${(() => {
-        const pollenUrl = safeHttpsUrl(String(links.pollen ?? ''));
-        const nabLinks = /** @type {{ name?: string, url?: string }[]} */ (links.nab_links ?? []);
-        const zip = links.pollen_zip != null ? String(links.pollen_zip) : null;
-        const city = links.pollen_city != null ? String(links.pollen_city) : null;
-        const nabItems = nabLinks
-          .map((l) => {
-            const u = safeHttpsUrl(String(l.url ?? ''));
-            if (!u || !l.name) return '';
-            return `<li><a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer">${escapeHtml(String(l.name))} <span class="sr-only">(opens in new tab)</span></a></li>`;
-          })
-          .filter(Boolean)
-          .join('');
-        if (!pollenUrl && !nabItems) return '';
-        const pollenLabel = zip
-          ? `Pollen.com (ZIP ${zip}${city ? `, ${city}` : ''})`
-          : 'Pollen.com forecast';
-        return `<div class="intel-now-extras">
-            <h3 class="intel-now-extras__title">Health &amp; pollen</h3>
-            <p class="intel-muted intel-now-extras__note">Live US pollen counts are not free to redistribute — open offsite forecasts. AQI and UV are shown above.</p>
-            <ul class="intel-link-list">
-              ${
-                pollenUrl
-                  ? `<li><a href="${escapeHtml(pollenUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(pollenLabel)} <span class="sr-only">(opens in new tab)</span></a></li>`
-                  : ''
-              }
-              ${nabItems}
-            </ul>
-            <button type="button" class="btn btn-link intel-jump" data-jump-to="aqi-heading">Air quality &amp; pollen detail</button>
           </div>`;
       })()}
     </section>
