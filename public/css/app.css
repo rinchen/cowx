@@ -2664,6 +2664,28 @@ body.workspace-active #main-content {
   margin: 0;
 }
 
+.cdot-cam-more {
+  margin: 0.65rem 0 0;
+}
+
+.cdot-cam-more > summary {
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--glass-muted);
+  list-style-position: outside;
+}
+
+.cdot-cam-more > summary:focus-visible {
+  outline: 3px solid var(--glass-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.cdot-cam-more .cdot-cam-strip--more {
+  margin-top: 0.55rem;
+}
+
 .glass-panel__subtitle {
   font-size: 0.85rem;
   font-weight: 600;

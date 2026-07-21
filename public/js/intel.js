@@ -922,12 +922,14 @@ export function renderSpecialtyIntel(root, data, options = {}) {
   }
 
   if (cams.length || webcamLinks.length) {
-    const camHtml = cams
-      .slice(0, 3)
-      .map((c) => {
-        const imageUrl = safeHttpsUrl(c.imageUrl);
-        const pageUrl = safeHttpsUrl(c.pageUrl);
-        return `<figure class="cdot-cam-card">
+    /**
+     * @param {Record<string, unknown>} c
+     * @returns {string}
+     */
+    function camCardHtml(c) {
+      const imageUrl = safeHttpsUrl(c.imageUrl);
+      const pageUrl = safeHttpsUrl(c.pageUrl);
+      return `<figure class="cdot-cam-card">
               <figcaption class="intel-muted">${escapeHtml(String(c.name ?? 'Camera'))}${distanceLabel(/** @type {number | null} */ (c.distance_km), fromYou && Boolean(hyperlocal?.cameras?.length))}</figcaption>
               ${
                 imageUrl
@@ -936,8 +938,21 @@ export function renderSpecialtyIntel(root, data, options = {}) {
               }
               ${pageUrl ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(String(c.name ?? 'camera'))} on COtrip (opens in new tab)">Open on COtrip</a></p>` : ''}
             </figure>`;
-      })
-      .join('');
+    }
+
+    const shownCams = cams.slice(0, 3);
+    const primaryCam = shownCams[0];
+    const extraCams = shownCams.slice(1);
+    const primaryHtml = primaryCam
+      ? camCardHtml(primaryCam)
+      : '<p class="intel-muted">No CDOT camera assigned.</p>';
+    const moreHtml =
+      extraCams.length > 0
+        ? `<details class="cdot-cam-more">
+            <summary>More road cameras (${extraCams.length})</summary>
+            <div class="cdot-cam-strip cdot-cam-strip--more">${extraCams.map(camCardHtml).join('')}</div>
+          </details>`
+        : '';
     const localLinks = webcamLinks
       .filter((l) => safeHttpsUrl(l.url))
       .map(
@@ -947,7 +962,8 @@ export function renderSpecialtyIntel(root, data, options = {}) {
       .join('');
     parts.push(`<section class="glass-panel" aria-labelledby="cam-heading" id="cdot-camera-panel">
             <h2 id="cam-heading" class="glass-panel__title">Road cameras</h2>
-            <div class="cdot-cam-strip">${camHtml || '<p class="intel-muted">No CDOT camera assigned.</p>'}</div>
+            <div class="cdot-cam-strip">${primaryHtml}</div>
+            ${moreHtml}
             ${
               localLinks
                 ? `<h3 class="glass-panel__subtitle">Local webcams</h3>
