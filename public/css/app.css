@@ -1984,6 +1984,11 @@ body.workspace-active #main-content {
   letter-spacing: 0.03em;
 }
 
+button.glance-aqi-bar__source.intel-jump {
+  padding: 0;
+  color: var(--glass-accent);
+}
+
 .glance-aqi-bar__value {
   color: var(--glass-text);
   font-variant-numeric: tabular-nums;
@@ -1993,12 +1998,6 @@ body.workspace-active #main-content {
   max-width: none;
   margin: 0.15rem 0 0;
   height: 10px;
-}
-
-.glance-aqi-bars .btn-link {
-  align-self: flex-start;
-  margin: 0.1rem 0 0;
-  font-size: 0.8125rem;
 }
 
 .source-legend {
