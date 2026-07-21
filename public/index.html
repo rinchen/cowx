@@ -12,10 +12,11 @@
       because Leaflet sets element styles. External origins match client usage:
       Leaflet (unpkg), Google Fonts, CARTO basemap tiles, RainViewer API/tiles,
       Nominatim, IP geo, Open-Meteo pin fetch, CDOT camera snapshots.
+      connect-src includes unpkg so DevTools can load Leaflet source maps.
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.basemaps.cartocdn.com https://tilecache.rainviewer.com https://cocam.carsprogram.org https://unpkg.com; connect-src 'self' https://api.rainviewer.com https://nominatim.openstreetmap.org https://ipwho.is https://get.geojs.io https://api.open-meteo.com; object-src 'none'; base-uri 'self'; form-action 'self'"
+      content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.basemaps.cartocdn.com https://tilecache.rainviewer.com https://cocam.carsprogram.org https://unpkg.com; connect-src 'self' https://unpkg.com https://api.rainviewer.com https://nominatim.openstreetmap.org https://ipwho.is https://get.geojs.io https://api.open-meteo.com; object-src 'none'; base-uri 'self'; form-action 'self'"
     />
     <title>COWX — Colorado Weather</title>
     <link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32" />
