@@ -20,7 +20,7 @@ pnpm test
 npx serve public
 ```
 
-Point GitHub Pages at `public/` (see `.github/workflows/pages.yml`). Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `SYNOPTIC_API_TOKEN`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
+Point GitHub Pages at `public/` (see `.github/workflows/pages.yml`). Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
 
 ---
 
@@ -115,7 +115,7 @@ Most sources are national APIs keyed by lat/lon. These are Colorado-hardcoded to
 | [`scripts/fetch/adapters/aviation.js`](scripts/fetch/adapters/aviation.js)                   | Seed ICAO list (`KDEN`, …) → major airports in your state                                                                |
 | [`scripts/fetch/adapters/coagmet.js`](scripts/fetch/adapters/coagmet.js)                     | **Colorado-only** (CSU CoAgMET). Replace with your ag network or remove the adapter, orchestrator wiring, and UI section |
 | [`scripts/fetch/adapters/cdot.js`](scripts/fetch/adapters/cdot.js)                           | Colorado DOT cameras / RWIS / alerts — replace with your DOT traveler feeds or remove                                    |
-| [`scripts/fetch/adapters/cwop.js`](scripts/fetch/adapters/cwop.js) / `synoptic.js`           | Adjust CO bbox / sample grid; Synoptic uses optional `SYNOPTIC_API_TOKEN`                                                |
+| [`scripts/fetch/adapters/cwop.js`](scripts/fetch/adapters/cwop.js)                           | Adjust CO bbox / sample grid                                                                                             |
 | [`scripts/fetch/adapters/hms.js`](scripts/fetch/adapters/hms.js)                             | National HMS smoke — keep; adjust CO bbox clip if desired                                                                |
 | [`scripts/fetch/adapters/spc-firewx.js`](scripts/fetch/adapters/spc-firewx.js)               | National SPC fire weather — keep; adjust CO bbox clip if desired                                                         |
 | [`scripts/fetch/adapters/nifc-fires.js`](scripts/fetch/adapters/nifc-fires.js)               | Filter `POOState='US-CO'` → your state code                                                                              |

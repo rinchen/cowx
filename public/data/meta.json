@@ -60,12 +60,6 @@
       "fetchedAt": "2026-07-20T23:54:06.747Z"
     },
     {
-      "id": "synoptic",
-      "status": "skipped",
-      "fetchedAt": "2026-07-20T23:54:06.748Z",
-      "error": "SYNOPTIC_API_TOKEN not set"
-    },
-    {
       "id": "hms",
       "status": "ok",
       "fetchedAt": "2026-07-20T23:54:06.979Z"

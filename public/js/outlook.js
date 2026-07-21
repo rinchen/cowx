@@ -411,17 +411,8 @@ export function buildHourlyModalTableHtml(hourly, opts = {}) {
  * @typedef {{ id: string, label: string, status: string }} SourceChip
  */
 
-/** @type {Record<string, string>} */
-const SOURCE_STATUS_HINTS = {
-  ok: 'fetched successfully',
-  partial: 'incomplete or degraded this run',
-  error: 'failed this run',
-  skipped: 'not fetched (optional or unavailable)',
-  unknown: 'status unknown',
-};
-
 /**
- * Human-readable source status for legends and tooltips.
+ * Human-readable source status for legends.
  * @param {string} status
  * @returns {string}
  */
@@ -479,14 +470,17 @@ export function sourceStatusChips(sources) {
     purpleair: 'PA',
     coagmet: 'CoAg',
     aviation: 'AV',
-    synoptic: 'Syn',
     cwop: 'CWOP',
     cdot: 'CDOT',
     snotel: 'SNOTEL',
     usgs: 'USGS',
     hms: 'HMS',
     spc: 'SPC',
+    spc_firewx: 'SPC',
     nifc: 'NIFC',
+    nifc_fires: 'NIFC',
+    burn_restrictions: 'Burn',
+    space_weather: 'SWPC',
     swpc: 'SWPC',
   };
   /** @type {SourceChip[]} */
@@ -504,17 +498,6 @@ export function sourceStatusChips(sources) {
     });
   }
   return chips;
-}
-
-/**
- * Title / aria text for a source chip.
- * @param {SourceChip} chip
- * @returns {string}
- */
-export function sourceChipTooltip(chip) {
-  const statusLabel = sourceStatusLabel(chip.status);
-  const hint = SOURCE_STATUS_HINTS[chip.status] ?? SOURCE_STATUS_HINTS.unknown;
-  return `${chip.id}: ${statusLabel} — ${hint}`;
 }
 
 /**

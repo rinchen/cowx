@@ -6,7 +6,6 @@ import {
   buildPeriodSummaries,
   nearestHourIndex,
   sliceCompactHours,
-  sourceChipTooltip,
   sourceStatusChips,
   sourceStatusLabel,
   sourceStatusLegendHtml,
@@ -249,18 +248,11 @@ describe('sourceStatusChips', () => {
 });
 
 describe('source status key', () => {
-  it('labels statuses for tooltips', () => {
+  it('labels statuses for the legend', () => {
     assert.equal(sourceStatusLabel('ok'), 'OK');
     assert.equal(sourceStatusLabel('partial'), 'Partial');
     assert.equal(sourceStatusLabel('error'), 'Error');
     assert.equal(sourceStatusLabel('skipped'), 'Skipped');
-  });
-
-  it('builds a tooltip with status meaning', () => {
-    const tip = sourceChipTooltip({ id: 'nws', label: 'NWS', status: 'partial' });
-    assert.match(tip, /nws/i);
-    assert.match(tip, /Partial/);
-    assert.match(tip, /incomplete|degraded/i);
   });
 
   it('renders a color legend with status swatches', () => {

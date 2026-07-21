@@ -12,7 +12,6 @@ import {
   formatCompactHourLabel,
   nearestHourIndex,
   sliceCompactHours,
-  sourceChipTooltip,
   sourceStatusChips,
   sourceStatusLegendHtml,
 } from './outlook.js';
@@ -614,10 +613,10 @@ export function renderOutlook(root, data, options = {}) {
   const chips = sourceStatusChips(options.sources ?? []);
   const chipHtml = chips.length
     ? `<ul class="source-chips" aria-label="Data source status">${chips
-        .map((c) => {
-          const tip = sourceChipTooltip(c);
-          return `<li><span class="source-chip source-chip--${escapeHtml(c.status)}" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">${escapeHtml(c.label)}</span></li>`;
-        })
+        .map(
+          (c) =>
+            `<li><span class="source-chip source-chip--${escapeHtml(c.status)}" aria-label="${escapeHtml(c.label)}: ${escapeHtml(c.status)}">${escapeHtml(c.label)}</span></li>`,
+        )
         .join('')}</ul>`
     : '';
 
@@ -852,70 +851,44 @@ export function renderSpecialtyIntel(root, data, options = {}) {
 
   const parts = [];
 
-  {
-    const topAlert = roadAlerts[0];
-    if (topAlert || cams.length || rwis) {
-      const alertBits = roadAlerts
-        .slice(0, 3)
-        .map((a) => {
-          const flags = [
-            a.chain_law ? 'chain law' : null,
-            a.closure ? 'closure' : null,
-            a.pass_relevant ? 'pass' : null,
-          ]
-            .filter(Boolean)
-            .join(', ');
-          return `<li><button type="button" class="intel-jump" data-jump-to="roads-heading"><strong>${escapeHtml(String(a.title ?? 'Travel alert'))}</strong>${distanceLabel(/** @type {number | null} */ (a.distance_km), fromYou && Boolean(hyperlocal?.alerts?.length))}${flags ? ` · ${escapeHtml(flags)}` : ''}</button></li>`;
-        })
-        .join('');
-      parts.push(`<section class="glass-panel" aria-labelledby="roads-intel-heading">
-            <h2 id="roads-intel-heading" class="glass-panel__title">Roads &amp; passes</h2>
+  /**
+   * @param {Record<string, unknown>} c
+   * @returns {string}
+   */
+  function camCardHtml(c) {
+    const imageUrl = safeHttpsUrl(c.imageUrl);
+    const pageUrl = safeHttpsUrl(c.pageUrl);
+    return `<figure class="cdot-cam-card">
+            <figcaption class="intel-muted">${escapeHtml(String(c.name ?? 'Camera'))}${distanceLabel(/** @type {number | null} */ (c.distance_km), fromYou && Boolean(hyperlocal?.cameras?.length))}</figcaption>
             ${
-              topAlert
-                ? `<ul class="intel-alert-list">${alertBits}</ul>
-                   <button type="button" class="btn btn-link intel-jump" data-jump-to="roads-heading">All road alerts</button>`
-                : `<p class="intel-muted">No nearby CDOT travel alerts.</p>`
-            }
-            ${
-              rwis
-                ? `<dl class="metric-list metric-list--compact">
-                    <dt>Nearest RWIS</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${distanceLabel(/** @type {number | null} */ (rwis.distance_km), false)}</dd>
-                    ${rwis.air_temp_f != null ? `<dt>Air</dt><dd>${Math.round(Number(rwis.air_temp_f))}°F</dd>` : ''}
-                    ${rwis.surface_temp_f != null ? `<dt>Pavement</dt><dd>${Math.round(Number(rwis.surface_temp_f))}°F${rwis.surface_status ? ` · ${escapeHtml(String(rwis.surface_status))}` : ''}</dd>` : ''}
-                    ${rwis.wind_speed_mph != null ? `<dt>Wind</dt><dd>${Math.round(Number(rwis.wind_speed_mph))} mph</dd>` : ''}
-                  </dl>`
+              imageUrl
+                ? `<img class="cdot-cam" src="${escapeHtml(imageUrl)}?t=${Date.now()}" alt="CDOT traffic camera: ${escapeHtml(String(c.name ?? 'Colorado roadway'))}" loading="lazy" decoding="async" data-cdot-cam />`
                 : ''
             }
-            <p><a class="btn btn-secondary btn-sm" href="https://maps.cotrip.org/" target="_blank" rel="noopener noreferrer" aria-label="Open COtrip map (opens in new tab)">Open COtrip</a></p>
-          </section>`);
-    }
+            ${pageUrl ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(String(c.name ?? 'camera'))} on COtrip (opens in new tab)">Open on COtrip</a></p>` : ''}
+          </figure>`;
   }
 
-  if (cams.length || webcamLinks.length) {
-    /**
-     * @param {Record<string, unknown>} c
-     * @returns {string}
-     */
-    function camCardHtml(c) {
-      const imageUrl = safeHttpsUrl(c.imageUrl);
-      const pageUrl = safeHttpsUrl(c.pageUrl);
-      return `<figure class="cdot-cam-card">
-              <figcaption class="intel-muted">${escapeHtml(String(c.name ?? 'Camera'))}${distanceLabel(/** @type {number | null} */ (c.distance_km), fromYou && Boolean(hyperlocal?.cameras?.length))}</figcaption>
-              ${
-                imageUrl
-                  ? `<img class="cdot-cam" src="${escapeHtml(imageUrl)}?t=${Date.now()}" alt="CDOT traffic camera: ${escapeHtml(String(c.name ?? 'Colorado roadway'))}" loading="lazy" decoding="async" data-cdot-cam />`
-                  : ''
-              }
-              ${pageUrl ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(String(c.name ?? 'camera'))} on COtrip (opens in new tab)">Open on COtrip</a></p>` : ''}
-            </figure>`;
-    }
-
+  const topAlert = roadAlerts[0];
+  const showRoadsPanel = Boolean(topAlert || cams.length || rwis || webcamLinks.length);
+  if (showRoadsPanel) {
+    const alertBits = roadAlerts
+      .slice(0, 3)
+      .map((a) => {
+        const flags = [
+          a.chain_law ? 'chain law' : null,
+          a.closure ? 'closure' : null,
+          a.pass_relevant ? 'pass' : null,
+        ]
+          .filter(Boolean)
+          .join(', ');
+        return `<li><button type="button" class="intel-jump" data-jump-to="roads-heading"><strong>${escapeHtml(String(a.title ?? 'Travel alert'))}</strong>${distanceLabel(/** @type {number | null} */ (a.distance_km), fromYou && Boolean(hyperlocal?.alerts?.length))}${flags ? ` · ${escapeHtml(flags)}` : ''}</button></li>`;
+      })
+      .join('');
     const shownCams = cams.slice(0, 3);
     const primaryCam = shownCams[0];
     const extraCams = shownCams.slice(1);
-    const primaryHtml = primaryCam
-      ? camCardHtml(primaryCam)
-      : '<p class="intel-muted">No CDOT camera assigned.</p>';
+    const primaryHtml = primaryCam ? camCardHtml(primaryCam) : '';
     const moreHtml =
       extraCams.length > 0
         ? `<details class="cdot-cam-more">
@@ -930,136 +903,191 @@ export function renderSpecialtyIntel(root, data, options = {}) {
           `<li><a href="${escapeHtml(String(safeHttpsUrl(l.url)))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(String(l.name ?? 'Webcam'))} (opens in new tab)">${escapeHtml(String(l.name ?? 'Local webcam'))}</a></li>`,
       )
       .join('');
-    parts.push(`<section class="glass-panel" aria-labelledby="cam-heading" id="cdot-camera-panel">
-            <h2 id="cam-heading" class="glass-panel__title">Road cameras</h2>
-            <div class="cdot-cam-strip">${primaryHtml}</div>
-            ${moreHtml}
+    const rwisBits = [];
+    if (rwis?.air_temp_f != null) rwisBits.push(`Air ${Math.round(Number(rwis.air_temp_f))}°F`);
+    if (rwis?.surface_temp_f != null) {
+      rwisBits.push(
+        `Pavement ${Math.round(Number(rwis.surface_temp_f))}°F${rwis.surface_status ? ` · ${String(rwis.surface_status)}` : ''}`,
+      );
+    }
+    if (rwis?.wind_speed_mph != null) {
+      rwisBits.push(`Wind ${Math.round(Number(rwis.wind_speed_mph))} mph`);
+    }
+
+    parts.push(`<section class="glass-panel specialty-card" aria-labelledby="roads-intel-heading" id="cdot-camera-panel">
+          <h2 id="roads-intel-heading" class="glass-panel__title">Roads &amp; cameras</h2>
+          <div class="specialty-block">
             ${
-              localLinks
-                ? `<h3 class="glass-panel__subtitle">Local webcams</h3>
-                   <ul class="link-list link-list--compact">${localLinks}</ul>
-                   <p class="intel-muted">City and county portals open in a new tab.</p>`
+              topAlert
+                ? `<ul class="intel-alert-list">${alertBits}</ul>
+                   <button type="button" class="btn btn-link intel-jump" data-jump-to="roads-heading">All road alerts</button>`
+                : `<p class="intel-muted">No nearby CDOT travel alerts.</p>`
+            }
+            ${
+              rwis
+                ? `<p class="specialty-inline"><span class="specialty-inline__label">RWIS</span> ${escapeHtml(String(rwis.name ?? ''))}${distanceLabel(/** @type {number | null} */ (rwis.distance_km), false)}${rwisBits.length ? ` · ${escapeHtml(rwisBits.join(' · '))}` : ''}</p>`
                 : ''
             }
-          </section>`);
+            <p class="specialty-actions"><a class="btn btn-secondary btn-sm" href="https://maps.cotrip.org/" target="_blank" rel="noopener noreferrer" aria-label="Open COtrip map (opens in new tab)">Open COtrip</a></p>
+          </div>
+          ${
+            primaryHtml || localLinks
+              ? `<div class="specialty-block" id="cam-heading">
+                  ${primaryHtml ? `<div class="cdot-cam-strip">${primaryHtml}</div>${moreHtml}` : ''}
+                  ${
+                    localLinks
+                      ? `<h3 class="glass-panel__subtitle">Local webcams</h3>
+                         <ul class="link-list link-list--compact">${localLinks}</ul>`
+                      : ''
+                  }
+                </div>`
+              : ''
+          }
+        </section>`);
   }
 
   if (showHamPanel) {
-    parts.push(`<section class="glass-panel" aria-labelledby="rf-heading">
-            <h2 id="rf-heading" class="glass-panel__title">Ham radio / RF</h2>
-            ${
-              swScales
-                ? `<div class="sw-scales" role="group" aria-label="NOAA space weather scales">
-                    ${scaleChip('R', swScales.R)}
-                    ${scaleChip('S', swScales.S)}
-                    ${scaleChip('G', swScales.G)}
-                  </div>`
-                : ''
-            }
-            ${
-              swSfi || swKp
-                ? `<dl class="metric-list metric-list--compact">
-                    ${swSfi?.value != null ? `<dt>SFI</dt><dd>${Math.round(Number(swSfi.value))}${swSfi.ninety_day_mean != null ? ` <span class="intel-muted">(90d ${Math.round(Number(swSfi.ninety_day_mean))})</span>` : ''}</dd>` : ''}
-                    ${swKp?.value != null ? `<dt>Kp</dt><dd>${Number(swKp.value).toFixed(1)}${swBoulder?.value != null ? ` <span class="intel-muted">· Boulder ${Number(swBoulder.value).toFixed(1)}</span>` : ''}</dd>` : ''}
-                  </dl>`
-                : ''
-            }
-            ${
-              swAurora
-                ? `<p class="sw-aurora sw-aurora--${escapeHtml(String(swAurora.chance ?? 'unlikely'))}"><span class="sw-aurora__label">Aurora (CO): ${escapeHtml(String(swAurora.chance ?? 'unlikely'))}</span>
-                    <span class="sw-aurora__detail">${escapeHtml(String(swAurora.detail ?? ''))}</span></p>`
-                : ''
-            }
-            ${
-              hfSummaryBits.length
-                ? `<p class="sw-hf-summary"><span class="sw-hf-summary__label">HF (estimate)</span> ${escapeHtml(hfSummaryBits.join(' · '))}</p>`
-                : ''
-            }
-            ${
-              rfLabel
-                ? `<p class="rf-badge ${rfClass}"><span class="rf-badge__status">VHF/UHF ducting: ${escapeHtml(rfLabel)}</span>
-                    <span class="rf-badge__detail">${escapeHtml(String(rf?.detail ?? 'Model-derived estimate'))}</span></p>`
-                : ''
-            }
-            ${
-              sw
-                ? `<button type="button" class="btn btn-link intel-jump" data-jump-to="ham-heading">Full ham &amp; space weather</button>`
-                : ''
-            }
-          </section>`);
-  }
-
-  if (pwsPrimary || cwop) {
-    parts.push(`<section class="glass-panel" aria-labelledby="pws-heading">
-            <h2 id="pws-heading" class="glass-panel__title">Nearby PWS</h2>
-            <dl class="metric-list metric-list--compact">
-              <dt>Station</dt><dd>${escapeHtml(String(cwop?.callsign ?? ''))}${cwop?.network ? ` · ${escapeHtml(String(cwop.network))}` : ''}${distanceLabel(/** @type {number | null} */ (cwop?.distance_km), fromYou && Boolean(hyperlocal?.pws))}</dd>
-              ${cwop?.temp_f != null ? `<dt>Temp</dt><dd>${Math.round(Number(cwop.temp_f))}°F</dd>` : ''}
-              ${cwop?.humidity != null ? `<dt>Humidity</dt><dd>${Math.round(Number(cwop.humidity))}%</dd>` : ''}
-              ${cwop?.wind_speed_mph != null ? `<dt>Wind</dt><dd>${Math.round(Number(cwop.wind_speed_mph))} mph</dd>` : ''}
-              ${cwop?.observed ? `<dt>Observed</dt><dd>${escapeHtml(String(cwop.observed))}</dd>` : ''}
-            </dl>
-            ${
-              pwsLinks.aprs && safeHttpsUrl(String(pwsLinks.aprs))
-                ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(String(pwsLinks.aprs))))}" target="_blank" rel="noopener noreferrer" aria-label="Open station on aprs.fi (opens in new tab)">aprs.fi</a></p>`
-                : safeHttpsUrl(links.pws)
-                  ? `<p><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(links.pws)))}" target="_blank" rel="noopener noreferrer" aria-label="Weather Underground PWS (opens in new tab)">Weather Underground</a></p>`
-                  : ''
-            }
-          </section>`);
+    parts.push(`<section class="glass-panel specialty-card" aria-labelledby="rf-heading">
+          <h2 id="rf-heading" class="glass-panel__title">Ham radio / RF</h2>
+          ${
+            swScales
+              ? `<div class="sw-scales" role="group" aria-label="NOAA space weather scales">
+                  ${scaleChip('R', swScales.R)}
+                  ${scaleChip('S', swScales.S)}
+                  ${scaleChip('G', swScales.G)}
+                </div>`
+              : ''
+          }
+          ${
+            swSfi || swKp
+              ? `<p class="specialty-inline">${[
+                  swSfi?.value != null
+                    ? `<span class="specialty-inline__label">SFI</span> ${Math.round(Number(swSfi.value))}${swSfi.ninety_day_mean != null ? ` <span class="intel-muted">(90d ${Math.round(Number(swSfi.ninety_day_mean))})</span>` : ''}`
+                    : '',
+                  swKp?.value != null
+                    ? `<span class="specialty-inline__label">Kp</span> ${Number(swKp.value).toFixed(1)}${swBoulder?.value != null ? ` <span class="intel-muted">· Boulder ${Number(swBoulder.value).toFixed(1)}</span>` : ''}`
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join('<span class="specialty-inline__sep" aria-hidden="true">·</span>')}</p>`
+              : ''
+          }
+          ${
+            swAurora
+              ? `<p class="sw-aurora sw-aurora--${escapeHtml(String(swAurora.chance ?? 'unlikely'))}"><span class="sw-aurora__label">Aurora (CO): ${escapeHtml(String(swAurora.chance ?? 'unlikely'))}</span>
+                  <span class="sw-aurora__detail">${escapeHtml(String(swAurora.detail ?? ''))}</span></p>`
+              : ''
+          }
+          ${
+            hfSummaryBits.length
+              ? `<p class="sw-hf-summary"><span class="sw-hf-summary__label">HF</span> ${escapeHtml(hfSummaryBits.join(' · '))}</p>`
+              : ''
+          }
+          ${
+            rfLabel
+              ? `<p class="rf-badge ${rfClass}"><span class="rf-badge__status">VHF/UHF: ${escapeHtml(rfLabel)}</span>
+                  <span class="rf-badge__detail">${escapeHtml(String(rf?.detail ?? 'Model-derived estimate'))}</span></p>`
+              : ''
+          }
+          ${
+            sw
+              ? `<button type="button" class="btn btn-link intel-jump" data-jump-to="ham-heading">Full ham &amp; space weather</button>`
+              : ''
+          }
+        </section>`);
   }
 
   {
     const astro = /** @type {Record<string, unknown> | null} */ (data.astronomy ?? null);
     const moon = /** @type {Record<string, unknown> | null} */ (astro?.moon ?? null);
-    if (astro) {
-      const civil = /** @type {Record<string, unknown>} */ (astro.civil_twilight ?? {});
-      const dayLen = fmtDuration(/** @type {number | null} */ (astro.day_length_s ?? null));
-      parts.push(`<section class="glass-panel" aria-labelledby="astro-intel-heading">
-            <h2 id="astro-intel-heading" class="glass-panel__title">Astronomy</h2>
-            <dl class="metric-list metric-list--compact">
-              <dt>Sunrise</dt><dd>${escapeHtml(fmtIntelClock(astro.sunrise))}</dd>
-              <dt>Sunset</dt><dd>${escapeHtml(fmtIntelClock(astro.sunset))}</dd>
-              ${dayLen ? `<dt>Length of day</dt><dd>${escapeHtml(dayLen)}</dd>` : ''}
-              <dt>Civil twilight</dt><dd>${escapeHtml(fmtIntelClock(civil.begin))} – ${escapeHtml(fmtIntelClock(civil.end))}</dd>
-              ${
-                moon
-                  ? `<dt>Moon</dt><dd>${escapeHtml(String(moon.phase_label ?? '—'))}${moon.illumination_pct != null ? ` · ${Math.round(Number(moon.illumination_pct))}% lit` : ''}</dd>
-                     <dt>Moonrise</dt><dd>${escapeHtml(fmtIntelClock(moon.rise))}</dd>
-                     <dt>Moonset</dt><dd>${escapeHtml(fmtIntelClock(moon.set))}</dd>`
-                  : ''
-              }
-            </dl>
+    const showSnow = Boolean(snotel && Number(data.elevation_ft) >= 7000);
+    const showLocal = Boolean(pwsPrimary || cwop || coag || astro || showSnow);
+
+    if (showLocal) {
+      const localBlocks = [];
+
+      if (pwsPrimary || cwop) {
+        const pwsBits = [];
+        if (cwop?.temp_f != null) pwsBits.push(`${Math.round(Number(cwop.temp_f))}°F`);
+        if (cwop?.humidity != null) pwsBits.push(`${Math.round(Number(cwop.humidity))}% RH`);
+        if (cwop?.wind_speed_mph != null) {
+          pwsBits.push(`${Math.round(Number(cwop.wind_speed_mph))} mph`);
+        }
+        const pwsLink =
+          pwsLinks.aprs && safeHttpsUrl(String(pwsLinks.aprs))
+            ? `<a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(String(pwsLinks.aprs))))}" target="_blank" rel="noopener noreferrer" aria-label="Open station on aprs.fi (opens in new tab)">aprs.fi</a>`
+            : safeHttpsUrl(links.pws)
+              ? `<a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(links.pws)))}" target="_blank" rel="noopener noreferrer" aria-label="Weather Underground PWS (opens in new tab)">Weather Underground</a>`
+              : '';
+        localBlocks.push(`<div class="specialty-block" id="pws-heading">
+            <h3 class="glass-panel__subtitle">Nearby PWS</h3>
+            <p class="specialty-inline"><strong>${escapeHtml(String(cwop?.callsign ?? 'Station'))}</strong>${cwop?.network ? ` · ${escapeHtml(String(cwop.network))}` : ''}${distanceLabel(/** @type {number | null} */ (cwop?.distance_km), fromYou && Boolean(hyperlocal?.pws))}${pwsBits.length ? ` · ${escapeHtml(pwsBits.join(' · '))}` : ''}</p>
+            ${cwop?.observed ? `<p class="intel-muted">Observed ${escapeHtml(String(cwop.observed))}</p>` : ''}
+            ${pwsLink ? `<p class="specialty-actions">${pwsLink}</p>` : ''}
+          </div>`);
+      }
+
+      if (coag) {
+        const soilBits = [];
+        if (coag.soil_temp_5cm_f != null) soilBits.push(`5 cm ${coag.soil_temp_5cm_f}°F`);
+        if (coag.soil_temp_15cm_f != null) soilBits.push(`15 cm ${coag.soil_temp_15cm_f}°F`);
+        if (coag.soil_moisture_5cm != null) {
+          soilBits.push(`Moisture ${String(coag.soil_moisture_5cm)}`);
+        }
+        if (coag.eto_in != null) soilBits.push(`ET₀ ${String(coag.eto_in)}`);
+        localBlocks.push(`<div class="specialty-block" id="soil-heading">
+            <h3 class="glass-panel__subtitle">CoAgMET soil</h3>
+            <p class="specialty-inline"><strong>${escapeHtml(String(coag.station_name ?? coag.station_id ?? 'Station'))}</strong>${soilBits.length ? ` · ${escapeHtml(soilBits.join(' · '))}` : ''}</p>
+            <button type="button" class="btn btn-link intel-jump" data-jump-to="coagmet-heading">Full agriculture</button>
+          </div>`);
+      }
+
+      if (showSnow && snotel) {
+        const snowBits = [];
+        if (snotel.snow_depth_in != null) snowBits.push(`Depth ${String(snotel.snow_depth_in)} in`);
+        if (snotel.swe_in != null) snowBits.push(`SWE ${String(snotel.swe_in)} in`);
+        if (snotel.precipitation_24h_in != null) {
+          snowBits.push(`24h ${String(snotel.precipitation_24h_in)} in`);
+        }
+        localBlocks.push(`<div class="specialty-block" id="snow-intel-heading">
+            <h3 class="glass-panel__subtitle">Snowpack</h3>
+            <p class="specialty-inline"><strong>${escapeHtml(String(snotel.station_name ?? snotel.station_id ?? 'SNOTEL'))}</strong>${snotel.distance_km != null ? ` · ${snotel.distance_km} km` : ''}${snowBits.length ? ` · ${escapeHtml(snowBits.join(' · '))}` : ''}</p>
+            <button type="button" class="btn btn-link intel-jump" data-jump-to="snowpack-heading">Full snowpack</button>
+          </div>`);
+      }
+
+      if (astro) {
+        const civil = /** @type {Record<string, unknown>} */ (astro.civil_twilight ?? {});
+        const dayLen = fmtDuration(/** @type {number | null} */ (astro.day_length_s ?? null));
+        const sunBits = [
+          `Rise ${fmtIntelClock(astro.sunrise)}`,
+          `Set ${fmtIntelClock(astro.sunset)}`,
+          dayLen ? dayLen : null,
+        ].filter(Boolean);
+        const moonBits = moon
+          ? [
+              String(moon.phase_label ?? '—'),
+              moon.illumination_pct != null
+                ? `${Math.round(Number(moon.illumination_pct))}% lit`
+                : null,
+              `Rise ${fmtIntelClock(moon.rise)}`,
+              `Set ${fmtIntelClock(moon.set)}`,
+            ].filter(Boolean)
+          : [];
+        localBlocks.push(`<div class="specialty-block" id="astro-intel-heading">
+            <h3 class="glass-panel__subtitle">Astronomy</h3>
+            <p class="specialty-inline"><span class="specialty-inline__label">Sun</span> ${escapeHtml(sunBits.join(' · '))}</p>
+            <p class="specialty-inline"><span class="specialty-inline__label">Twilight</span> ${escapeHtml(fmtIntelClock(civil.begin))} – ${escapeHtml(fmtIntelClock(civil.end))}</p>
+            ${moonBits.length ? `<p class="specialty-inline"><span class="specialty-inline__label">Moon</span> ${escapeHtml(moonBits.join(' · '))}</p>` : ''}
             <button type="button" class="btn btn-link intel-jump" data-jump-to="astronomy-heading">Full astronomy</button>
-          </section>`);
+          </div>`);
+      }
+
+      parts.push(`<section class="glass-panel specialty-card" aria-labelledby="local-obs-heading">
+          <h2 id="local-obs-heading" class="glass-panel__title">Local observations</h2>
+          ${localBlocks.join('\n')}
+        </section>`);
     }
-  }
-
-  if (coag) {
-    parts.push(`<section class="glass-panel" aria-labelledby="soil-heading">
-            <h2 id="soil-heading" class="glass-panel__title">CoAgMET soil</h2>
-            <dl class="metric-list metric-list--compact">
-              <dt>Station</dt><dd>${escapeHtml(String(coag.station_name ?? coag.station_id ?? ''))}</dd>
-              ${coag.soil_temp_5cm_f != null ? `<dt>Soil 5 cm</dt><dd>${coag.soil_temp_5cm_f}°F</dd>` : ''}
-              ${coag.soil_temp_15cm_f != null ? `<dt>Soil 15 cm</dt><dd>${coag.soil_temp_15cm_f}°F</dd>` : ''}
-              ${coag.soil_moisture_5cm != null ? `<dt>Moisture 5 cm</dt><dd>${escapeHtml(String(coag.soil_moisture_5cm))}</dd>` : ''}
-              ${coag.eto_in != null ? `<dt>ET₀</dt><dd>${escapeHtml(String(coag.eto_in))}</dd>` : ''}
-            </dl>
-            <button type="button" class="btn btn-link intel-jump" data-jump-to="coagmet-heading">Full agriculture section</button>
-          </section>`);
-  }
-
-  if (snotel && Number(data.elevation_ft) >= 7000) {
-    parts.push(`<section class="glass-panel" aria-labelledby="snow-intel-heading">
-            <h2 id="snow-intel-heading" class="glass-panel__title">Snowpack</h2>
-            <dl class="metric-list metric-list--compact">
-              <dt>SNOTEL</dt><dd>${escapeHtml(String(snotel.station_name ?? snotel.station_id ?? ''))}${snotel.distance_km != null ? ` · ${snotel.distance_km} km` : ''}</dd>
-              ${snotel.snow_depth_in != null ? `<dt>Depth</dt><dd>${escapeHtml(String(snotel.snow_depth_in))} in</dd>` : ''}
-              ${snotel.swe_in != null ? `<dt>SWE</dt><dd>${escapeHtml(String(snotel.swe_in))} in</dd>` : ''}
-              ${snotel.precipitation_24h_in != null ? `<dt>24h precip</dt><dd>${escapeHtml(String(snotel.precipitation_24h_in))} in</dd>` : ''}
-            </dl>
-            <button type="button" class="btn btn-link intel-jump" data-jump-to="snowpack-heading">Full snowpack section</button>
-          </section>`);
   }
 
   root.innerHTML = parts.join('\n');

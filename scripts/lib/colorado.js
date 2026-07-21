@@ -4,7 +4,7 @@
  * Do not change validate-locations.js bbox without care — that gate is stricter/catalog-specific.
  */
 
-/** Rough Colorado bounding box (same as Synoptic / HMS / SPC padding sources). */
+/** Rough Colorado bounding box (same as HMS / SPC padding sources). */
 export const CO_BBOX = { west: -109.2, south: 36.9, east: -102.0, north: 41.1 };
 
 /**

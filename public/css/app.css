@@ -1550,8 +1550,40 @@ body.workspace-active #main-content {
 }
 
 .workspace__specialty .glass-panel__subtitle {
-  margin: 0.4rem 0 0.2rem;
-  font-size: 0.78rem;
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--glass-muted);
+}
+
+.workspace__specialty .specialty-block + .specialty-block {
+  margin-top: 0.55rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.workspace__specialty .specialty-inline {
+  margin: 0.15rem 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--glass-text);
+}
+
+.workspace__specialty .specialty-inline__label {
+  font-weight: 600;
+  color: var(--glass-muted);
+  margin-right: 0.2rem;
+}
+
+.workspace__specialty .specialty-inline__sep {
+  margin: 0 0.35rem;
+  color: var(--glass-muted);
+}
+
+.workspace__specialty .specialty-actions {
+  margin: 0.25rem 0 0;
 }
 
 .workspace__specialty .metric-list--compact {
@@ -1584,7 +1616,7 @@ body.workspace-active #main-content {
 }
 
 .workspace__specialty .cdot-cam {
-  max-height: 140px;
+  max-height: 120px;
   margin: 0.25rem 0;
 }
 
@@ -1638,6 +1670,12 @@ body.workspace-active #main-content {
   line-height: 1.35;
 }
 
+.workspace__specialty .sw-hf-summary__label {
+  font-weight: 600;
+  color: var(--glass-muted);
+  margin-right: 0.25rem;
+}
+
 .workspace__specialty .intel-nav {
   gap: 0.2rem 0.65rem;
 }
@@ -1658,13 +1696,13 @@ body.workspace-active #main-content {
   }
 
   .workspace__specialty {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (min-width: 1200px) {
+@media (max-width: 959px) and (min-width: 640px) {
   .workspace__specialty {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1959,7 +1997,6 @@ body.workspace-active #main-content {
   letter-spacing: 0.02em;
   background: #e2e8f0;
   color: #334155;
-  cursor: help;
 }
 
 .source-chip--ok {

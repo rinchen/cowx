@@ -4,7 +4,7 @@
  * Fallback: caller keeps catalog search; no pin set.
  */
 
-/** Rough Colorado bounding box (same as catalog validator / Synoptic). */
+/** Rough Colorado bounding box (same as catalog validator). */
 export const CO_BBOX = {
   west: -109.2,
   south: 36.9,

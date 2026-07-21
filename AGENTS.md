@@ -159,13 +159,12 @@ export async function fetchExample(locations, env = process.env) {
 
 **Optional secrets** (read from `process.env` / GitHub Actions secrets — names only, never commit values):
 
-| Env var              | Adapter                              |
-| -------------------- | ------------------------------------ |
-| `PURPLEAIR_API_KEY`  | PurpleAir inline sensor data         |
-| `AIRNOW_API_KEY`     | EPA AirNow AQI / observations        |
-| `SYNOPTIC_API_TOKEN` | Synoptic/MesoWest denser PWS/mesonet |
+| Env var             | Adapter                       |
+| ------------------- | ----------------------------- |
+| `PURPLEAIR_API_KEY` | PurpleAir inline sensor data  |
+| `AIRNOW_API_KEY`    | EPA AirNow AQI / observations |
 
-If unset, PurpleAir, AirNow, and Synoptic adapters should skip gracefully; the UI falls back to offsite links or other PWS sources.
+If unset, PurpleAir and AirNow adapters should skip gracefully; the UI falls back to offsite links or other PWS sources.
 
 ---
 
@@ -177,7 +176,6 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 | -------------------- | --------------------------------------------------------------------- |
 | `PURPLEAIR_API_KEY`  | PurpleAir API access for build-time sensor snapshots                  |
 | `AIRNOW_API_KEY`     | AirNow API access for official AQI near locations                     |
-| `SYNOPTIC_API_TOKEN` | Optional Synoptic/MesoWest denser PWS/mesonet (skip if unset)         |
 | `NOTIFY_WEBHOOK_URL` | Discord (or compatible) webhook URL for fetch/workflow failure alerts |
 
 **Never** commit secret values to git, docs, issues, logs, or test fixtures. Reference secret **names** only.
@@ -192,26 +190,25 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):
 
-| Source                       | Calls / run (approx @ ~340 locs)       | Auth                 |
-| ---------------------------- | -------------------------------------- | -------------------- |
-| Open-Meteo Forecast          | ~34+ (chunk 20 + NBM per chunk)        | None                 |
-| Open-Meteo Air Quality       | ~9 (chunk 40)                          | None                 |
-| NWS alerts + AFD/HWO         | ~8–12 selective                        | User-Agent header    |
-| CoAgMET                      | 1–2                                    | None                 |
-| Aviation Weather METAR/TAF   | 1–3 batched                            | None                 |
-| USGS NWIS                    | 1                                      | None                 |
-| SNOTEL                       | 1–2                                    | None                 |
-| CDOT cameras + RWIS + alerts | 4                                      | None                 |
-| CWOP / APRS (aprs.me grid)   | ~35–40                                 | None                 |
-| Synoptic latest              | 0–1 (only if token set)                | `SYNOPTIC_API_TOKEN` |
-| NOAA HMS smoke               | 1–3 (zip download)                     | None                 |
-| SPC fire weather (Day 1–2)   | 4 (Wind/RH + DryT GeoJSON)             | None                 |
-| NIFC WFIGS nearby fires      | 1 (CO incidents)                       | None                 |
-| COEM burn restrictions       | 1 (HTML status + curated links)        | None                 |
-| NOAA SWPC space weather      | ~5 (scales, Kp, Boulder K, SFI, X-ray) | None                 |
-| PurpleAir                    | 1–2 (only if key set)                  | `PURPLEAIR_API_KEY`  |
-| AirNow                       | many grid points when keyed            | `AIRNOW_API_KEY`     |
-| Catalog `webcam_links`       | 0 (copied into payloads)               | None                 |
+| Source                       | Calls / run (approx @ ~340 locs)       | Auth                |
+| ---------------------------- | -------------------------------------- | ------------------- |
+| Open-Meteo Forecast          | ~34+ (chunk 20 + NBM per chunk)        | None                |
+| Open-Meteo Air Quality       | ~9 (chunk 40)                          | None                |
+| NWS alerts + AFD/HWO         | ~8–12 selective                        | User-Agent header   |
+| CoAgMET                      | 1–2                                    | None                |
+| Aviation Weather METAR/TAF   | 1–3 batched                            | None                |
+| USGS NWIS                    | 1                                      | None                |
+| SNOTEL                       | 1–2                                    | None                |
+| CDOT cameras + RWIS + alerts | 4                                      | None                |
+| CWOP / APRS (aprs.me grid)   | ~35–40                                 | None                |
+| NOAA HMS smoke               | 1–3 (zip download)                     | None                |
+| SPC fire weather (Day 1–2)   | 4 (Wind/RH + DryT GeoJSON)             | None                |
+| NIFC WFIGS nearby fires      | 1 (CO incidents)                       | None                |
+| COEM burn restrictions       | 1 (HTML status + curated links)        | None                |
+| NOAA SWPC space weather      | ~5 (scales, Kp, Boulder K, SFI, X-ray) | None                |
+| PurpleAir                    | 1–2 (only if key set)                  | `PURPLEAIR_API_KEY` |
+| AirNow                       | many grid points when keyed            | `AIRNOW_API_KEY`    |
+| Catalog `webcam_links`       | 0 (copied into payloads)               | None                |
 
 Partial adapter failure is acceptable; total failure (zero locations written or all critical adapters down) should fail the workflow so notifications fire.
 

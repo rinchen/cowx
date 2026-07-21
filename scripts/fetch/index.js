@@ -24,7 +24,6 @@ import { fetchUsgs } from './adapters/usgs.js';
 import { fetchSnotel } from './adapters/snotel.js';
 import { fetchCdot } from './adapters/cdot.js';
 import { fetchCwop } from './adapters/cwop.js';
-import { fetchSynoptic } from './adapters/synoptic.js';
 import { fetchHms } from './adapters/hms.js';
 import { fetchSpcFireWx } from './adapters/spc-firewx.js';
 import { fetchNifcFires } from './adapters/nifc-fires.js';
@@ -140,11 +139,6 @@ export async function runFetch() {
     () => fetchCwop(locations),
     () => '',
   );
-  const synoptic = await runAdapter(
-    'synoptic',
-    () => fetchSynoptic(locations, process.env, cwop.pwsBySlug ?? new Map()),
-    () => '',
-  );
   const hms = await runAdapter(
     'hms',
     () => fetchHms(locations),
@@ -230,7 +224,7 @@ export async function runFetch() {
     const snow = snotel.bySlug.get(loc.slug) ?? null;
     const cdotRec = cdot.bySlug.get(loc.slug) ?? null;
     const cwopRec = cwop.bySlug.get(loc.slug) ?? null;
-    const pwsRec = synoptic.bySlug.get(loc.slug) ?? cwop.pwsBySlug?.get(loc.slug) ?? null;
+    const pwsRec = cwop.pwsBySlug?.get(loc.slug) ?? null;
     const hmsRec = hms.bySlug.get(loc.slug) ?? null;
     const fireWeather = spcFireWx.bySlug.get(loc.slug) ?? null;
     const nearbyFires = nifcFires.bySlug.get(loc.slug) ?? null;

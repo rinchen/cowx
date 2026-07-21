@@ -314,7 +314,6 @@ function updateFooterTimestamp() {
     snotel: 'SNOTEL',
     cdot: 'CDOT',
     cwop: 'CWOP/APRS',
-    synoptic: 'Synoptic',
     hms: 'HMS smoke',
     spc_firewx: 'SPC fire weather',
     nifc_fires: 'NIFC fires',
