@@ -890,6 +890,11 @@ main {
   box-shadow: var(--shadow);
 }
 
+/* Belt-and-suspenders: some engines still lay out flex-summary details bodies when closed. */
+.dash-section:not([open]) > .dash-section-body {
+  display: none;
+}
+
 .dash-section > summary {
   display: flex;
   flex-wrap: wrap;
@@ -904,6 +909,25 @@ main {
 
 .dash-section > summary::-webkit-details-marker {
   display: none;
+}
+
+.dash-section > summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 1em;
+  flex: 0 0 auto;
+  color: var(--color-muted, var(--glass-muted));
+  transition: transform 0.15s ease;
+}
+
+.dash-section[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-section > summary::before {
+    transition: none;
+  }
 }
 
 .dash-section-title {
