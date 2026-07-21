@@ -583,7 +583,7 @@ function renderForecastCard(parent, headingId, title, body) {
  * @param {string} headingId
  * @param {string} title
  * @param {() => (Node | null)} renderBody
- * @param {{ open?: boolean, actionsHtml?: string }} [opts]
+ * @param {{ open?: boolean, actionsHtml?: string }} [opts] — `open: true` expands; default collapsed
  */
 function renderCollapsibleSection(parent, headingId, title, renderBody, opts = {}) {
   const body = renderBody();
@@ -591,7 +591,6 @@ function renderCollapsibleSection(parent, headingId, title, renderBody, opts = {
 
   const details = document.createElement('details');
   details.className = 'dash-section';
-  details.open = opts.open !== false;
   const summary = document.createElement('summary');
   summary.id = headingId;
   const actionsHtml = opts.actionsHtml ?? '';
@@ -607,6 +606,8 @@ function renderCollapsibleSection(parent, headingId, title, renderBody, opts = {
   content.appendChild(body);
   details.appendChild(content);
   parent.appendChild(details);
+  // Set after mount so engines that ignore pre-connect `open` stay collapsed by default.
+  details.open = opts.open === true;
 }
 
 /**
