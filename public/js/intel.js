@@ -3,7 +3,7 @@
  */
 
 import { synthesizeBottomLine } from './bottom-line.js';
-import { aqiCategory, pickAqi } from './aqi.js';
+import { aqiBarHtml, aqiCategory, pickAqi } from './aqi.js';
 import { escapeHtml, safeHttpsUrl } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import {
@@ -12,7 +12,9 @@ import {
   formatCompactHourLabel,
   nearestHourIndex,
   sliceCompactHours,
+  sourceChipTooltip,
   sourceStatusChips,
+  sourceStatusLegendHtml,
 } from './outlook.js';
 import {
   bindMeteogramScrubber,
@@ -276,6 +278,38 @@ export function renderHero(root, data, options = {}) {
   const locTitle = `${name}, CO`;
   const updatedAt = data.updatedAt ?? data.updated_at ?? null;
 
+  const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
+  const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
+  const aqiBars = [];
+  if (airnow?.aqi != null && Number.isFinite(Number(airnow.aqi))) {
+    const n = Math.round(Number(airnow.aqi));
+    const catLabel = airnow.category != null ? String(airnow.category) : aqiCategory(n).label;
+    aqiBars.push(`<div class="glance-aqi-bar">
+        <div class="glance-aqi-bar__meta">
+          <span class="glance-aqi-bar__source">AirNow</span>
+          <span class="glance-aqi-bar__value">${n}${catLabel ? ` · ${escapeHtml(catLabel)}` : ''}</span>
+        </div>
+        ${aqiBarHtml(n, { label: `AirNow AQI ${n} on a 0 to 500 scale` })}
+      </div>`);
+  }
+  if (omaq?.us_aqi != null && Number.isFinite(Number(omaq.us_aqi))) {
+    const n = Math.round(Number(omaq.us_aqi));
+    const catLabel = aqiCategory(n).label;
+    aqiBars.push(`<div class="glance-aqi-bar">
+        <div class="glance-aqi-bar__meta">
+          <span class="glance-aqi-bar__source">Model US AQI</span>
+          <span class="glance-aqi-bar__value">${n} · ${escapeHtml(catLabel)}</span>
+        </div>
+        ${aqiBarHtml(n, { label: `Open-Meteo model US AQI ${n} on a 0 to 500 scale` })}
+      </div>`);
+  }
+  const aqiBarsHtml = aqiBars.length
+    ? `<div class="glance-aqi-bars" aria-label="Air quality index scales">
+        ${aqiBars.join('')}
+        <button type="button" class="btn btn-link intel-jump" data-jump-to="aqi-heading">Air quality &amp; pollen detail</button>
+      </div>`
+    : '';
+
   root.innerHTML = `
     <section class="glass-panel glance-hero${usingPinNow ? ' glass-panel--pin-now' : ''}" aria-labelledby="glance-hero-heading">
       <div class="glance-hero__top">
@@ -416,6 +450,7 @@ export function renderHero(root, data, options = {}) {
         )}
         ${metricRow('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
       </div>
+      ${aqiBarsHtml}
       ${(() => {
         const day1 = /** @type {Record<string, unknown> | null} */ (fireWeather?.day1 ?? null);
         const day2 = /** @type {Record<string, unknown> | null} */ (fireWeather?.day2 ?? null);
@@ -611,10 +646,10 @@ export function renderOutlook(root, data, options = {}) {
   const chips = sourceStatusChips(options.sources ?? []);
   const chipHtml = chips.length
     ? `<ul class="source-chips" aria-label="Data source status">${chips
-        .map(
-          (c) =>
-            `<li><span class="source-chip source-chip--${escapeHtml(c.status)}" title="${escapeHtml(c.id)}: ${escapeHtml(c.status)}" aria-label="${escapeHtml(c.id)} ${escapeHtml(c.status)}">${escapeHtml(c.label)}</span></li>`,
-        )
+        .map((c) => {
+          const tip = sourceChipTooltip(c);
+          return `<li><span class="source-chip source-chip--${escapeHtml(c.status)}" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">${escapeHtml(c.label)}</span></li>`;
+        })
         .join('')}</ul>`
     : '';
 
@@ -723,7 +758,10 @@ export function renderOutlook(root, data, options = {}) {
     </section>
     <aside class="glass-panel workspace__sources" aria-label="Data sources">
       <div class="glance-freshness">
-        <span class="glance-freshness__label">Sources</span>
+        <div class="glance-freshness__head">
+          <span class="glance-freshness__label">Sources</span>
+          ${sourceStatusLegendHtml()}
+        </div>
         ${chipHtml || '<span class="intel-muted">Status unavailable</span>'}
       </div>
     </aside>
@@ -1055,22 +1093,6 @@ export function renderSpecialtyIntel(root, data, options = {}) {
             <button type="button" class="btn btn-link intel-jump" data-jump-to="snowpack-heading">Full snowpack section</button>
           </section>`);
   }
-
-  parts.push(`<nav class="glass-panel glass-panel--nav" aria-label="Deep forecast sections">
-      <h2 class="glass-panel__title">Deep forecast</h2>
-      <ul class="intel-nav">
-        <li><button type="button" class="intel-jump" data-jump-to="hourly-heading">48-hour hourly</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="daily-heading">10-day daily</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="alerts-heading">Alerts &amp; discussion</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="roads-heading">Roads &amp; passes</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="metar-heading">Aviation</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="aqi-heading">Air quality &amp; pollen</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="astronomy-heading">Astronomy</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="smoke-heading">Fire weather &amp; restrictions</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="ham-heading">Ham radio &amp; space weather</button></li>
-        <li><button type="button" class="intel-jump" data-jump-to="links-heading">External tools</button></li>
-      </ul>
-    </nav>`);
 
   root.innerHTML = parts.join('\n');
   bindJumps(root, options.onJump);

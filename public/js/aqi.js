@@ -54,6 +54,20 @@ export function aqiCategory(aqi) {
 }
 
 /**
+ * AQI gradient bar with marker (0–500 US AQI scale).
+ * @param {number} aqi
+ * @param {{ label?: string }} [opts]
+ * @returns {string}
+ */
+export function aqiBarHtml(aqi, opts = {}) {
+  const n = Math.max(0, Math.min(500, Number(aqi)));
+  if (!Number.isFinite(n)) return '';
+  const pct = (n / 500) * 100;
+  const label = opts.label ?? `AQI ${Math.round(n)} on a 0 to 500 scale`;
+  return `<div class="aqi-bar" role="img" aria-label="${label}"><span class="aqi-bar__marker" style="left:${pct}%"></span></div>`;
+}
+
+/**
  * Marker colors for US AQI (light-mode readable fills).
  * @param {number | null | undefined} aqi
  * @returns {{ stroke: string, fill: string }}

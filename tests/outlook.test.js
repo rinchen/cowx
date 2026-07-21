@@ -6,7 +6,10 @@ import {
   buildPeriodSummaries,
   nearestHourIndex,
   sliceCompactHours,
+  sourceChipTooltip,
   sourceStatusChips,
+  sourceStatusLabel,
+  sourceStatusLegendHtml,
 } from '../public/js/outlook.js';
 
 /**
@@ -242,5 +245,32 @@ describe('sourceStatusChips', () => {
 
   it('returns empty for non-arrays', () => {
     assert.deepEqual(sourceStatusChips(/** @type {any} */ (null)), []);
+  });
+});
+
+describe('source status key', () => {
+  it('labels statuses for tooltips', () => {
+    assert.equal(sourceStatusLabel('ok'), 'OK');
+    assert.equal(sourceStatusLabel('partial'), 'Partial');
+    assert.equal(sourceStatusLabel('error'), 'Error');
+    assert.equal(sourceStatusLabel('skipped'), 'Skipped');
+  });
+
+  it('builds a tooltip with status meaning', () => {
+    const tip = sourceChipTooltip({ id: 'nws', label: 'NWS', status: 'partial' });
+    assert.match(tip, /nws/i);
+    assert.match(tip, /Partial/);
+    assert.match(tip, /incomplete|degraded/i);
+  });
+
+  it('renders a color legend with status swatches', () => {
+    const html = sourceStatusLegendHtml();
+    assert.match(html, /source-legend/);
+    assert.match(html, /source-chip--ok/);
+    assert.match(html, /source-chip--partial/);
+    assert.match(html, /source-chip--error/);
+    assert.match(html, /source-chip--skipped/);
+    assert.match(html, /OK/);
+    assert.match(html, /Partial/);
   });
 });

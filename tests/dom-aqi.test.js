@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { aqiCategory, aqiMarkerColor, pickAqi } from '../public/js/aqi.js';
+import { aqiBarHtml, aqiCategory, aqiMarkerColor, pickAqi } from '../public/js/aqi.js';
 import { escapeHtml, safeHttpsUrl, safeExternalUrl } from '../public/js/dom.js';
 import { wmoLabel as clientWmo } from '../public/js/wmo.js';
 import { wmoLabel as fetchWmo } from '../scripts/lib/wmo.js';
@@ -45,6 +45,14 @@ describe('aqi helpers', () => {
   it('aqiMarkerColor returns stroke/fill', () => {
     const c = aqiMarkerColor(75);
     assert.ok(c.stroke && c.fill);
+  });
+
+  it('aqiBarHtml places a marker on the 0–500 scale', () => {
+    const html = aqiBarHtml(100);
+    assert.match(html, /aqi-bar/);
+    assert.match(html, /aqi-bar__marker/);
+    assert.match(html, /left:20%/);
+    assert.match(html, /AQI 100/);
   });
 });
 

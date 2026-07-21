@@ -411,6 +411,59 @@ export function buildHourlyModalTableHtml(hourly, opts = {}) {
  * @typedef {{ id: string, label: string, status: string }} SourceChip
  */
 
+/** @type {Record<string, string>} */
+const SOURCE_STATUS_HINTS = {
+  ok: 'fetched successfully',
+  partial: 'incomplete or degraded this run',
+  error: 'failed this run',
+  skipped: 'not fetched (optional or unavailable)',
+  unknown: 'status unknown',
+};
+
+/**
+ * Human-readable source status for legends and tooltips.
+ * @param {string} status
+ * @returns {string}
+ */
+export function sourceStatusLabel(status) {
+  switch (String(status)) {
+    case 'ok':
+      return 'OK';
+    case 'partial':
+      return 'Partial';
+    case 'error':
+      return 'Error';
+    case 'skipped':
+      return 'Skipped';
+    default:
+      return 'Unknown';
+  }
+}
+
+/**
+ * Compact HTML legend for source status colors.
+ * @returns {string}
+ */
+export function sourceStatusLegendHtml() {
+  const items = [
+    ['ok', 'OK'],
+    ['partial', 'Partial'],
+    ['error', 'Error'],
+    ['skipped', 'Skipped'],
+  ];
+  return `<ul class="source-legend" aria-label="Source status color key">
+    ${items
+      .map(
+        ([status, label]) =>
+          `<li class="source-legend__item">
+            <span class="source-legend__swatch source-chip--${status}" aria-hidden="true"></span>
+            <span class="source-legend__text">${label}</span>
+          </li>`,
+      )
+      .join('')}
+  </ul>`;
+}
+
 /**
  * @param {unknown[]} sources
  * @returns {SourceChip[]}
@@ -451,6 +504,17 @@ export function sourceStatusChips(sources) {
     });
   }
   return chips;
+}
+
+/**
+ * Title / aria text for a source chip.
+ * @param {SourceChip} chip
+ * @returns {string}
+ */
+export function sourceChipTooltip(chip) {
+  const statusLabel = sourceStatusLabel(chip.status);
+  const hint = SOURCE_STATUS_HINTS[chip.status] ?? SOURCE_STATUS_HINTS.unknown;
+  return `${chip.id}: ${statusLabel} — ${hint}`;
 }
 
 /**

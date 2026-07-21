@@ -1,4 +1,5 @@
 import { escapeHtml, safeHttpsUrl, safeExternalUrl } from './dom.js';
+import { aqiBarHtml } from './aqi.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
 import { windCellHtml } from './wind.js';
@@ -92,17 +93,6 @@ function attachColumnToggles(wrap, cols) {
   }
   details.appendChild(list);
   wrap.insertBefore(details, wrap.firstChild);
-}
-
-/**
- * AQI gradient bar with marker.
- * @param {number} aqi
- * @returns {string}
- */
-function aqiBarHtml(aqi) {
-  const n = Math.max(0, Math.min(500, Number(aqi)));
-  const pct = (n / 500) * 100;
-  return `<div class="aqi-bar" role="img" aria-label="AQI ${Math.round(n)} on a 0 to 500 scale"><span class="aqi-bar__marker" style="left:${pct}%"></span></div>`;
 }
 
 /**
