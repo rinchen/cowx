@@ -69,4 +69,4 @@ See [how-it-works.html](public/how-it-works.html) for details.
 
 ## License
 
-See repository license file when present. Third-party data remains subject to each provider’s terms.
+[MIT](LICENSE). Third-party data remains subject to each provider’s terms.

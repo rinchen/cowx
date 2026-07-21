@@ -4,6 +4,7 @@
   "description": "COWX — Colorado Weather: aggregated air quality and weather data",
   "type": "module",
   "private": true,
+  "license": "MIT",
   "engines": {
     "node": ">=20"
   },
