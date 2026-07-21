@@ -284,36 +284,20 @@ export function renderHero(root, data, options = {}) {
   const updatedAt = data.updatedAt ?? data.updated_at ?? null;
 
   const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
-  const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
-  const aqiBars = [];
+  let aqiBarsHtml = '';
   if (airnow?.aqi != null && Number.isFinite(Number(airnow.aqi))) {
     const n = Math.round(Number(airnow.aqi));
     const catLabel = airnow.category != null ? String(airnow.category) : aqiCategory(n).label;
-    aqiBars.push(`<div class="glance-aqi-bar">
-        <div class="glance-aqi-bar__meta">
-          <span class="glance-aqi-bar__source">AirNow</span>
-          <span class="glance-aqi-bar__value">${n}${catLabel ? ` · ${escapeHtml(catLabel)}` : ''}</span>
+    aqiBarsHtml = `<div class="glance-aqi-bars" aria-label="Air quality index">
+        <div class="glance-aqi-bar">
+          <div class="glance-aqi-bar__meta">
+            <button type="button" class="glance-aqi-bar__source intel-jump" data-jump-to="aqi-heading" aria-label="AirNow. Open air quality and pollen details.">AirNow</button>
+            <span class="glance-aqi-bar__value">${n}${catLabel ? ` · ${escapeHtml(catLabel)}` : ''}</span>
+          </div>
+          ${aqiBarHtml(n, { label: `AirNow AQI ${n} on a 0 to 500 scale` })}
         </div>
-        ${aqiBarHtml(n, { label: `AirNow AQI ${n} on a 0 to 500 scale` })}
-      </div>`);
+      </div>`;
   }
-  if (omaq?.us_aqi != null && Number.isFinite(Number(omaq.us_aqi))) {
-    const n = Math.round(Number(omaq.us_aqi));
-    const catLabel = aqiCategory(n).label;
-    aqiBars.push(`<div class="glance-aqi-bar">
-        <div class="glance-aqi-bar__meta">
-          <span class="glance-aqi-bar__source">Model US AQI</span>
-          <span class="glance-aqi-bar__value">${n} · ${escapeHtml(catLabel)}</span>
-        </div>
-        ${aqiBarHtml(n, { label: `Open-Meteo model US AQI ${n} on a 0 to 500 scale` })}
-      </div>`);
-  }
-  const aqiBarsHtml = aqiBars.length
-    ? `<div class="glance-aqi-bars" aria-label="Air quality index scales">
-        ${aqiBars.join('')}
-        <button type="button" class="btn btn-link intel-jump" data-jump-to="aqi-heading">Air quality &amp; pollen detail</button>
-      </div>`
-    : '';
 
   root.innerHTML = `
     <section class="glass-panel glance-hero${usingPinNow ? ' glass-panel--pin-now' : ''}" aria-labelledby="glance-hero-heading">
