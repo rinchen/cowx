@@ -1043,7 +1043,7 @@ function appendDeepForecast(root, data, ctx) {
     mapSlot.innerHTML = `
     <section class="map-section" aria-labelledby="map-heading">
       <h2 id="map-heading">Local map &amp; radar</h2>
-      <p class="map-lead">Regional view with RainViewer radar (zoom fixed for supported radar tiles). Alert polygons load when available.</p>
+      <p class="map-lead">Regional view with RainViewer radar (pan and zoom within supported tile levels). Alert polygons load when available.</p>
       <div class="map-controls">
         <label class="checkbox-label">
           <input type="checkbox" id="radar-toggle" />

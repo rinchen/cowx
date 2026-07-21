@@ -8,7 +8,14 @@ import { escapeHtml, jumpToSection } from './dom.js';
 import { getHyperlocalPin, pinDistanceKm } from './geo.js';
 import { buildHyperlocalOverlay } from './hyperlocal.js';
 import { renderHero, renderOutlook, renderSpecialtyIntel } from './intel.js';
-import { bindRadarLoopControls, destroyMap, initStateMap, setAqiLayer } from './map.js';
+import {
+  bindRadarLoopControls,
+  destroyMap,
+  initStateMap,
+  invalidateMapSize,
+  resetMapView,
+  setAqiLayer,
+} from './map.js';
 
 /**
  * Load statewide space-weather snapshot (planetary; shared for all locations).
@@ -118,6 +125,7 @@ export async function renderWorkspace(root, data, options) {
             <summary>Map &amp; radar</summary>
             <div class="map-controls map-controls--loop" id="radar-controls">
               <button type="button" class="btn btn-secondary btn-sm" id="radar-play" aria-pressed="false">Play</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="radar-reset-view">Reset view</button>
               <label class="opacity-label" for="radar-scrub">
                 Frame
                 <input type="range" id="radar-scrub" min="0" max="0" value="0" />
@@ -205,9 +213,30 @@ export async function renderWorkspace(root, data, options) {
   initStateMap(mapContainer, options.locations, slug, () => {}, {
     loadAlerts: true,
     alertsUrl: `${options.dataBase ?? 'data'}/alerts.geojson`,
-    fixedView: true,
+    fixedView: false,
     showMarkers: false,
     onAlertsError: (msg) => options.onAnnounce?.(`Alert map unavailable: ${msg}`),
+  });
+
+  const mapDetails = /** @type {HTMLDetailsElement | null} */ (
+    root.querySelector('.workspace-map-details')
+  );
+  const onMapDetailsToggle = () => {
+    if (mapDetails?.open) {
+      requestAnimationFrame(() => invalidateMapSize());
+    }
+  };
+  mapDetails?.addEventListener('toggle', onMapDetailsToggle);
+
+  const resetViewBtn = /** @type {HTMLButtonElement | null} */ (
+    root.querySelector('#radar-reset-view')
+  );
+  const viewLat = Number(data.lat);
+  const viewLon = Number(data.lon);
+  resetViewBtn?.addEventListener('click', () => {
+    if (!resetMapView(viewLat, viewLon)) {
+      options.onAnnounce?.('Could not reset map view.');
+    }
   });
 
   const radarOk = await bindRadarLoopControls(radarControls, {
@@ -248,6 +277,7 @@ export async function renderWorkspace(root, data, options) {
   return {
     headline,
     destroy: () => {
+      mapDetails?.removeEventListener('toggle', onMapDetailsToggle);
       destroyHero();
       destroyOutlook?.();
       destroyMap();

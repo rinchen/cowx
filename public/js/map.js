@@ -20,9 +20,13 @@ let aqiLayer = null;
 /** @type {RadarLoopController | null} */
 let radarLoop = null;
 
+/** @type {(() => void) | null} */
+let removeMapResizeListeners = null;
+
 const CO_CENTER = [39.0, -105.5];
 const CO_ZOOM = 7;
-const LOCALITY_ZOOM = 7;
+/** Locality default one step below RainViewer max so pinch/zoom-in has room. */
+export const LOCALITY_ZOOM = 6;
 
 const SEVERITY_COLORS = {
   Extreme: '#7f1d1d',
@@ -132,6 +136,8 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
     stateMap.setView([active.lat, active.lon], LOCALITY_ZOOM);
   }
 
+  bindMapSizeObservers(generation);
+
   setTimeout(() => {
     if (generation === mapGeneration) stateMap?.invalidateSize();
   }, 100);
@@ -143,6 +149,44 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
       generation,
     );
   }
+}
+
+/**
+ * Keep Leaflet sized after rotate, URL-bar show/hide, or layout changes.
+ * @param {number} generation
+ */
+function bindMapSizeObservers(generation) {
+  removeMapResizeListeners?.();
+  const onResize = () => {
+    if (generation !== mapGeneration) return;
+    stateMap?.invalidateSize();
+  };
+  window.addEventListener('resize', onResize);
+  const vv = window.visualViewport;
+  vv?.addEventListener('resize', onResize);
+  removeMapResizeListeners = () => {
+    window.removeEventListener('resize', onResize);
+    vv?.removeEventListener('resize', onResize);
+    removeMapResizeListeners = null;
+  };
+}
+
+/** Invalidate Leaflet size after layout changes (e.g. details toggle). */
+export function invalidateMapSize() {
+  stateMap?.invalidateSize();
+}
+
+/**
+ * Recenter the map on a locality (used by Reset view).
+ * @param {number} lat
+ * @param {number} lon
+ * @param {number} [zoom]
+ * @returns {boolean}
+ */
+export function resetMapView(lat, lon, zoom = LOCALITY_ZOOM) {
+  if (!stateMap || !Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+  stateMap.setView([lat, lon], zoom);
+  return true;
 }
 
 /**
@@ -479,6 +523,7 @@ export async function bindRadarLoopControls(controlsEl, options = {}) {
 
 export function destroyMap() {
   mapGeneration += 1;
+  removeMapResizeListeners?.();
   if (radarLoop) {
     radarLoop.destroy();
     radarLoop = null;
