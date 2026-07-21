@@ -487,6 +487,7 @@ export function sourceStatusChips(sources) {
   const labels = {
     openmeteo: 'OM',
     openmeteo_aq: 'AQ',
+    openmeteo_climatology: 'Climo',
     nws: 'NWS',
     airnow: 'AirNow',
     purpleair: 'PA',

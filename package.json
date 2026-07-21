@@ -11,6 +11,7 @@
   "scripts": {
     "fetch": "node scripts/fetch/index.js",
     "fetch:data": "node scripts/fetch/index.js",
+    "fetch:climatology": "env FORCE_CLIMATOLOGY=1 node scripts/fetch/index.js",
     "test": "node --test tests/*.test.js",
     "lint": "eslint .",
     "format": "prettier --write .",

@@ -1,5 +1,6 @@
 import { escapeHtml, safeHttpsUrl, safeExternalUrl } from './dom.js';
 import { aqiBarHtml } from './aqi.js';
+import { climatologyPeriodLabel, compareDailyToNormal, formatTempDelta } from './climatology.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
 import { windCellHtml } from './wind.js';
@@ -756,9 +757,10 @@ function buildHourlyTable(hourly, sunrises, sunsets, opts = {}) {
 
 /**
  * @param {Record<string, unknown>} daily
+ * @param {Record<string, unknown> | null} [climatology]
  * @returns {HTMLElement}
  */
-function buildDailyTable(daily) {
+function buildDailyTable(daily, climatology = null) {
   const times = /** @type {string[]} */ (daily.time ?? []);
   const showFeels =
     seriesHasValues(daily.apparent_temperature_max) ||
@@ -776,6 +778,7 @@ function buildDailyTable(daily) {
   const showSunshine = seriesHasValues(daily.sunshine_duration);
   const showDaylight = seriesHasValues(daily.daylight_duration);
   const showEt0 = seriesHasValues(daily.et0_fao_evapotranspiration);
+  const showVsTypical = Boolean(climatology?.doy);
 
   /** @type {{ key: string, label: string, optional?: boolean }[]} */
   const cols = [
@@ -784,6 +787,7 @@ function buildDailyTable(daily) {
     { key: 'high', label: 'High' },
     { key: 'low', label: 'Low' },
   ];
+  if (showVsTypical) cols.push({ key: 'vsTypical', label: 'Vs typical' });
   if (showFeels) cols.push({ key: 'feels', label: 'Feels' });
   cols.push({ key: 'precipPct', label: 'Precip %' }, { key: 'precipIn', label: 'Precip in' });
   if (showSnow) cols.push({ key: 'snow', label: 'Snow', optional: true });
@@ -848,6 +852,11 @@ function buildDailyTable(daily) {
     const code = /** @type {number[]} */ (daily.weather_code ?? [])[i];
     const rise = /** @type {string[]} */ (daily.sunrise ?? [])[i];
     const set = /** @type {string[]} */ (daily.sunset ?? [])[i];
+    const iso = String(times[i]).slice(0, 10);
+    const cmp = compareDailyToNormal(climatology, iso, hi, lo, precipSum);
+    const vsHi = formatTempDelta(cmp.deltaHi);
+    const vsLo = formatTempDelta(cmp.deltaLo);
+    const vsLabel = vsHi && vsLo ? `${vsHi} / ${vsLo}` : vsHi || vsLo || '—';
     const feelsLabel =
       feelsHi != null && feelsLo != null
         ? `${Math.round(feelsHi)}° / ${Math.round(feelsLo)}°`
@@ -878,6 +887,7 @@ function buildDailyTable(daily) {
       cond: `<td class="cond-cell col-cond" data-col="cond">${weatherIconHtml(code, { isDay: true, size: 28, className: 'weather-icon weather-icon--sm', alt: wmoLabel(code) })} <span>${escapeHtml(wmoLabel(code))}</span></td>`,
       high: `<td class="col-high" data-col="high">${hi != null ? `${Math.round(hi)}°F` : '—'}</td>`,
       low: `<td class="col-low" data-col="low">${lo != null ? `${Math.round(lo)}°F` : '—'}</td>`,
+      vsTypical: `<td class="col-vsTypical" data-col="vsTypical"><span class="vs-typical-cell">${escapeHtml(vsLabel)}</span></td>`,
       feels: `<td class="col-feels" data-col="feels">${feelsLabel}</td>`,
       precipPct: `<td class="col-precipPct" data-col="precipPct">${precipPct != null ? `${precipPct}%` : '—'}</td>`,
       precipIn: `<td class="col-precipIn" data-col="precipIn">${precipSum != null ? `${Number(precipSum).toFixed(2)}` : '—'}</td>`,
@@ -904,6 +914,84 @@ function buildDailyTable(daily) {
   table.appendChild(tbody);
   wrap.appendChild(table);
   attachColumnToggles(wrap, cols);
+  return wrap;
+}
+
+/**
+ * Collapsed comparison detail under the 10-day forecast.
+ * @param {Record<string, unknown> | null} daily
+ * @param {Record<string, unknown> | null} climatology
+ * @returns {HTMLElement}
+ */
+function buildClimatologyCompareSection(daily, climatology) {
+  const wrap = document.createElement('div');
+  wrap.className = 'climatology-compare';
+  if (!climatology?.doy) {
+    renderEmpty(
+      wrap,
+      'Climatology unavailable',
+      'Typical conditions for this date have not been loaded yet (ERA5 normals refresh about monthly).',
+    );
+    return wrap;
+  }
+
+  const period = climatologyPeriodLabel(climatology);
+  const lead = document.createElement('p');
+  lead.className = 'climatology-compare__lead';
+  lead.textContent = `Forecast highs and lows compared with typical values for each calendar date from ERA5 reanalysis (${period}). This is not an official NOAA/NCEI climate normal.`;
+  wrap.appendChild(lead);
+
+  const times = /** @type {string[]} */ (daily?.time ?? []);
+  if (!times.length) {
+    renderEmpty(wrap, 'No daily forecast', 'Cannot compare without a 10-day forecast.');
+    return wrap;
+  }
+
+  const tableWrap = document.createElement('div');
+  tableWrap.className = 'table-scroll';
+  const table = document.createElement('table');
+  table.className = 'data-table data-table--dense';
+  table.innerHTML = `
+    <caption class="sr-only">Forecast compared to typical conditions</caption>
+    <thead>
+      <tr>
+        <th scope="col">Day</th>
+        <th scope="col">Forecast high / low</th>
+        <th scope="col">Typical high / low</th>
+        <th scope="col">Δ high / low</th>
+        <th scope="col">Precip vs typical</th>
+      </tr>
+    </thead>
+  `;
+  const tbody = document.createElement('tbody');
+  for (let i = 0; i < Math.min(10, times.length); i += 1) {
+    const iso = String(times[i]).slice(0, 10);
+    const hi = /** @type {(number | null)[]} */ (daily?.temperature_2m_max ?? [])[i];
+    const lo = /** @type {(number | null)[]} */ (daily?.temperature_2m_min ?? [])[i];
+    const precip = /** @type {(number | null)[]} */ (daily?.precipitation_sum ?? [])[i];
+    const cmp = compareDailyToNormal(climatology, iso, hi, lo, precip);
+    const fc =
+      hi != null && lo != null ? `${Math.round(Number(hi))}° / ${Math.round(Number(lo))}°` : '—';
+    const typ =
+      cmp.normal?.tmax != null && cmp.normal?.tmin != null
+        ? `${Math.round(cmp.normal.tmax)}° / ${Math.round(cmp.normal.tmin)}°`
+        : '—';
+    const dHi = formatTempDelta(cmp.deltaHi);
+    const dLo = formatTempDelta(cmp.deltaLo);
+    const delta = dHi && dLo ? `${dHi} / ${dLo}` : dHi || dLo || '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${fmtDate(times[i])}</td>
+      <td>${escapeHtml(fc)}</td>
+      <td>${escapeHtml(typ)}</td>
+      <td><span class="vs-typical-cell">${escapeHtml(delta)}</span></td>
+      <td>${escapeHtml(cmp.precipLabel ?? '—')}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  tableWrap.appendChild(table);
+  wrap.appendChild(tableWrap);
   return wrap;
 }
 
@@ -970,6 +1058,7 @@ function appendDeepForecast(root, data, ctx) {
   } = ctx;
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
+  const climatology = /** @type {Record<string, unknown> | null} */ (data.climatology ?? null);
 
   if (!hourly?.time || !Array.isArray(hourly.time) || hourly.time.length === 0) {
     const empty = document.createElement('div');
@@ -1024,7 +1113,7 @@ function appendDeepForecast(root, data, ctx) {
       root,
       'daily-heading',
       'Daily forecast (10 day)',
-      () => buildDailyTable(/** @type {Record<string, unknown>} */ (daily)),
+      () => buildDailyTable(/** @type {Record<string, unknown>} */ (daily), climatology),
       { open: false },
     );
   } else {
@@ -1032,9 +1121,17 @@ function appendDeepForecast(root, data, ctx) {
       root,
       'daily-heading',
       'Daily forecast (10 day)',
-      buildDailyTable(/** @type {Record<string, unknown>} */ (daily)),
+      buildDailyTable(/** @type {Record<string, unknown>} */ (daily), climatology),
     );
   }
+
+  renderCollapsibleSection(
+    root,
+    'climatology-heading',
+    'Compared to typical',
+    () => buildClimatologyCompareSection(daily, climatology),
+    { open: false },
+  );
 
   if (ctx.includeMapSlot) {
     const mapSlot = document.createElement('div');

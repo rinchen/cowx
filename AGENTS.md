@@ -193,25 +193,26 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):
 
-| Source                       | Calls / run (approx @ ~340 locs)        | Auth                |
-| ---------------------------- | --------------------------------------- | ------------------- |
-| Open-Meteo Forecast          | ~34+ (chunk 20 + NBM per chunk)         | None                |
-| Open-Meteo Air Quality       | ~9 (chunk 40)                           | None                |
-| NWS alerts + AFD/HWO         | ~7–13 (alerts + AFD/HWO per office)     | User-Agent header   |
-| CoAgMET                      | 1–2                                     | None                |
-| Aviation Weather METAR/TAF   | 1–3 batched                             | None                |
-| USGS NWIS                    | 1                                       | None                |
-| SNOTEL                       | 1–2                                     | None                |
-| CDOT cameras + RWIS + alerts | 4                                       | None                |
-| CWOP / APRS (aprs.me grid)   | ~35–40                                  | None                |
-| NOAA HMS smoke               | 1–3 (zip download)                      | None                |
-| SPC fire weather (Day 1–2)   | 4 (Wind/RH + DryT GeoJSON)              | None                |
-| NIFC WFIGS nearby fires      | 1 (CO incidents)                        | None                |
-| COEM burn restrictions       | 1 (HTML status + curated links)         | None                |
-| NOAA SWPC space weather      | ~5 (scales, Kp, Boulder K, SFI, X-ray)  | None                |
-| PurpleAir                    | 1–2 (only if key set)                   | `PURPLEAIR_API_KEY` |
-| AirNow                       | ~200–220 grid points when keyed (@0.2°) | `AIRNOW_API_KEY`    |
-| Catalog `webcam_links`       | 0 (copied into payloads)                | None                |
+| Source                       | Calls / run (approx @ ~340 locs)                                        | Auth                |
+| ---------------------------- | ----------------------------------------------------------------------- | ------------------- |
+| Open-Meteo Forecast          | ~34+ (chunk 20 + NBM per chunk)                                         | None                |
+| Open-Meteo Air Quality       | ~9 (chunk 40)                                                           | None                |
+| Open-Meteo ERA5 climatology  | ~0 most runs; ~monthly / cold-start (capped ~24 locs/run × year slices) | None                |
+| NWS alerts + AFD/HWO         | ~7–13 (alerts + AFD/HWO per office)                                     | User-Agent header   |
+| CoAgMET                      | 1–2                                                                     | None                |
+| Aviation Weather METAR/TAF   | 1–3 batched                                                             | None                |
+| USGS NWIS                    | 1                                                                       | None                |
+| SNOTEL                       | 1–2                                                                     | None                |
+| CDOT cameras + RWIS + alerts | 4                                                                       | None                |
+| CWOP / APRS (aprs.me grid)   | ~35–40                                                                  | None                |
+| NOAA HMS smoke               | 1–3 (zip download)                                                      | None                |
+| SPC fire weather (Day 1–2)   | 4 (Wind/RH + DryT GeoJSON)                                              | None                |
+| NIFC WFIGS nearby fires      | 1 (CO incidents)                                                        | None                |
+| COEM burn restrictions       | 1 (HTML status + curated links)                                         | None                |
+| NOAA SWPC space weather      | ~5 (scales, Kp, Boulder K, SFI, X-ray)                                  | None                |
+| PurpleAir                    | 1–2 (only if key set)                                                   | `PURPLEAIR_API_KEY` |
+| AirNow                       | ~200–220 grid points when keyed (@0.2°)                                 | `AIRNOW_API_KEY`    |
+| Catalog `webcam_links`       | 0 (copied into payloads)                                                | None                |
 
 Partial adapter failure is acceptable; total failure (zero locations written or all critical adapters down) should fail the workflow so notifications fire.
 

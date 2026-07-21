@@ -3,6 +3,13 @@
  */
 
 import { synthesizeBottomLine } from './bottom-line.js';
+import {
+  climatologyPeriodLabel,
+  compareDailyToNormal,
+  formatTodayVsTypical,
+  formatVsTypicalShort,
+  normalForDate,
+} from './climatology.js';
 import { aqiBarHtml, aqiCategory, pickAqi } from './aqi.js';
 import { escapeHtml, safeHttpsUrl } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
@@ -193,6 +200,13 @@ export function renderHero(root, data, options = {}) {
   const hi = times.length ? nearestHourIndex(times) : 0;
   const todayHi = /** @type {number[]} */ (daily?.temperature_2m_max ?? [])[0];
   const todayLo = /** @type {number[]} */ (daily?.temperature_2m_min ?? [])[0];
+  const climatology = /** @type {Record<string, unknown> | null} */ (data.climatology ?? null);
+  const todayIso =
+    /** @type {string[]} */ (daily?.time ?? [])[0] != null
+      ? String(/** @type {string[]} */ (daily.time)[0]).slice(0, 10)
+      : null;
+  const todayNormal = todayIso ? normalForDate(climatology, todayIso) : null;
+  const vsTypicalToday = formatTodayVsTypical(todayHi, todayLo, todayNormal);
   const precipChance =
     hourly && Array.isArray(hourly.precipitation_probability)
       ? /** @type {number[]} */ (hourly.precipitation_probability)[hi]
@@ -353,6 +367,11 @@ export function renderHero(root, data, options = {}) {
                       ? `<span class="intel-range">High ${Math.round(todayHi)}° · Low ${Math.round(todayLo)}°</span>`
                       : ''
                   }
+                  ${
+                    vsTypicalToday
+                      ? `<span class="intel-vs-typical">${escapeHtml(vsTypicalToday)}</span>`
+                      : ''
+                  }
                 </span>
               </button>`
             : `<p class="empty-state">Current conditions unavailable.</p>`
@@ -382,6 +401,7 @@ export function renderHero(root, data, options = {}) {
             : null,
           'daily-heading',
         )}
+        ${metricRow('Vs typical', vsTypicalToday, 'climatology-heading')}
         ${metricRow(
           'Precip chance',
           precipChance != null ? `${Math.round(Number(precipChance))}% this hour` : null,
@@ -532,6 +552,29 @@ export function renderOutlook(root, data, options = {}) {
   const compact = sliceCompactHours(hourly, { count: 10 });
   const periods = buildPeriodSummaries(hourly, daily);
   const highlights = buildOutlookHighlights(hourly, { hours: 48 });
+  const climatology = /** @type {Record<string, unknown> | null} */ (data.climatology ?? null);
+  const dailyTimes = /** @type {string[]} */ (daily?.time ?? []);
+  /** @type {string[]} */
+  const shortTermVs = [];
+  for (let i = 0; i < Math.min(3, dailyTimes.length); i += 1) {
+    const iso = String(dailyTimes[i]).slice(0, 10);
+    const hi = /** @type {(number | null)[]} */ (daily?.temperature_2m_max ?? [])[i];
+    const lo = /** @type {(number | null)[]} */ (daily?.temperature_2m_min ?? [])[i];
+    const cmp = compareDailyToNormal(climatology, iso, hi, lo, null);
+    const label = formatVsTypicalShort(cmp.deltaHi);
+    if (!label) continue;
+    let dayLabel = iso;
+    try {
+      dayLabel = new Intl.DateTimeFormat(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+      }).format(new Date(`${iso}T12:00:00`));
+    } catch {
+      /* keep iso */
+    }
+    shortTermVs.push(`${dayLabel}: ${label}`);
+  }
 
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   const hi = times.length ? nearestHourIndex(times) : 0;
@@ -584,16 +627,38 @@ export function renderOutlook(root, data, options = {}) {
     .join('');
 
   const periodHtml = periods
-    .map(
-      (p) => `<article class="outlook-period" aria-labelledby="outlook-period-${p.id}">
+    .map((p) => {
+      let vsLine = '';
+      if (p.id === 'today' && dailyTimes[0]) {
+        const cmp = compareDailyToNormal(
+          climatology,
+          String(dailyTimes[0]).slice(0, 10),
+          p.temp_high_f,
+          p.temp_low_f,
+          null,
+        );
+        const vs = formatTodayVsTypical(p.temp_high_f, p.temp_low_f, cmp.normal);
+        if (vs) {
+          vsLine = `<p class="outlook-period__vs">${escapeHtml(vs)}</p>`;
+        }
+      }
+      return `<article class="outlook-period" aria-labelledby="outlook-period-${p.id}">
         <h3 id="outlook-period-${p.id}" class="outlook-period__title">
           ${weatherIconHtml(p.weather_code, { isDay: p.is_day, size: 28, className: 'weather-icon weather-icon--sm', alt: '' })}
           ${escapeHtml(p.label)}
         </h3>
         <p class="outlook-period__body">${escapeHtml(p.summary)}</p>
-      </article>`,
-    )
+        ${vsLine}
+      </article>`;
+    })
     .join('');
+
+  const shortTermVsHtml = shortTermVs.length
+    ? `<p class="outlook-vs-typical" role="note">
+        <span class="outlook-vs-typical__label">Vs typical (${escapeHtml(climatologyPeriodLabel(climatology))} ERA5)</span>
+        ${escapeHtml(shortTermVs.join(' · '))}
+      </p>`
+    : '';
 
   const highlightHtml = highlights.length
     ? `<ul class="outlook-highlights">${highlights
@@ -623,6 +688,7 @@ export function renderOutlook(root, data, options = {}) {
       <div class="outlook-periods" aria-label="Today and tonight">
         ${periodHtml || '<p class="intel-muted">Period summaries unavailable.</p>'}
       </div>
+      ${shortTermVsHtml}
       ${
         afdSnippet
           ? `<p class="outlook-afd"><strong>NWS discussion:</strong> ${escapeHtml(afdSnippet)}

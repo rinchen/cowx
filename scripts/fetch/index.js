@@ -16,6 +16,11 @@ import { buildPollenHealthLinks } from '../lib/pollen-links.js';
 import { validateLocationsData } from '../validate-locations.js';
 import { fetchOpenMeteo } from './adapters/openmeteo.js';
 import { fetchOpenMeteoAq } from './adapters/openmeteo-aq.js';
+import {
+  climatologyIsFresh,
+  DEFAULT_MAX_LOCS_PER_RUN,
+  fetchOpenMeteoClimatology,
+} from './adapters/openmeteo-climatology.js';
 import { alertsForLocation, fetchNws } from './adapters/nws.js';
 import { fetchCoagmet } from './adapters/coagmet.js';
 import { fetchAviation } from './adapters/aviation.js';
@@ -140,6 +145,9 @@ export async function runFetch() {
 
   const openmeteo = await runAdapter('openmeteo', () => fetchOpenMeteo(locations));
   const openmeteoAq = await runAdapter('openmeteo_aq', () => fetchOpenMeteoAq(locations));
+  const climatology = await runAdapter('openmeteo_climatology', () =>
+    runClimatologyAdapter(locations),
+  );
   const nws = await runAdapter(
     'nws',
     () => fetchNws(),
@@ -204,7 +212,7 @@ export async function runFetch() {
   for (const loc of locations) {
     try {
       const om = openmeteo.bySlug.get(loc.slug);
-      const prior = om ? null : await readPrior(loc.slug);
+      const prior = await readPrior(loc.slug);
       let current = om?.current ?? null;
       let hourly = om?.hourly ?? null;
       let daily = om?.daily ?? null;
@@ -261,6 +269,10 @@ export async function runFetch() {
       const fireRestrictions = burnRestrictions.bySlug.get(loc.slug) ?? null;
       const webcamLinks = sanitizeWebcamLinks(loc.webcam_links);
 
+      const climatologyRec =
+        climatology.bySlug.get(loc.slug) ??
+        (prior?.climatology && typeof prior.climatology === 'object' ? prior.climatology : null);
+
       const payload = {
         slug: loc.slug,
         name: loc.name,
@@ -277,6 +289,7 @@ export async function runFetch() {
         hourly,
         daily,
         astronomy,
+        climatology: climatologyRec,
         alerts,
         afd,
         hwo,
@@ -453,6 +466,41 @@ export async function runFetch() {
   if (!criticalOk || index.length === 0) {
     throw new Error('Critical weather sources failed or no locations written');
   }
+}
+
+/**
+ * Monthly (or cold-start) ERA5 climatology refresh; skips when all locations are fresh.
+ * @param {import('../lib/types.js').Location[]} locations
+ */
+async function runClimatologyAdapter(locations) {
+  if (process.env.SKIP_CLIMATOLOGY === '1') {
+    return { status: 'skipped', bySlug: new Map(), calls: 0 };
+  }
+
+  const force = process.env.FORCE_CLIMATOLOGY === '1';
+  const maxLocs = force
+    ? Number(process.env.CLIMATOLOGY_MAX_LOCS || locations.length) || locations.length
+    : Number(process.env.CLIMATOLOGY_MAX_LOCS || DEFAULT_MAX_LOCS_PER_RUN) ||
+      DEFAULT_MAX_LOCS_PER_RUN;
+
+  /** @type {import('../lib/types.js').Location[]} */
+  const stale = [];
+  for (const loc of locations) {
+    const prior = await readPrior(loc.slug);
+    if (force || !climatologyIsFresh(prior?.climatology)) {
+      stale.push(loc);
+    }
+  }
+
+  if (!stale.length) {
+    console.log('openmeteo-climatology: all locations fresh — skipping');
+    return { status: 'skipped', bySlug: new Map(), calls: 0 };
+  }
+
+  console.log(
+    `openmeteo-climatology: refreshing ${Math.min(stale.length, maxLocs)}/${stale.length} stale locations`,
+  );
+  return fetchOpenMeteoClimatology(stale, { maxLocs });
 }
 
 /**

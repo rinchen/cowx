@@ -1951,11 +1951,44 @@ body.workspace-active #main-content {
 }
 
 .intel-feels,
-.intel-range {
+.intel-range,
+.intel-vs-typical {
   display: block;
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--glass-muted);
+}
+
+.intel-vs-typical {
+  margin-top: 0.15rem;
+}
+
+.outlook-period__vs,
+.outlook-vs-typical {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--glass-muted);
+}
+
+.outlook-vs-typical__label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.15rem;
+}
+
+.vs-typical-cell {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.climatology-compare__lead {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-muted, var(--glass-muted));
+  max-width: 42rem;
 }
 
 .glance-aqi-bars {

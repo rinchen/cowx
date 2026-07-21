@@ -120,9 +120,10 @@
       <h2>Data pipeline</h2>
       <p>
         The <code>pnpm fetch:data</code> orchestrator calls independent adapters (Open-Meteo
-        forecast and air quality, NWS alerts/AFD/HWO, CoAgMET, Aviation Weather METAR/TAF, USGS
-        gauges, SNOTEL, CDOT cameras/RWIS/road alerts, CWOP/APRS neighborhood PWS, NOAA HMS smoke,
-        SPC fire weather outlooks, NIFC nearby wildfire locations, Colorado burn-restriction
+        forecast and air quality, Open-Meteo ERA5 climatology refreshed about monthly for
+        forecast-vs-typical comparisons, NWS alerts/AFD/HWO, CoAgMET, Aviation Weather METAR/TAF,
+        USGS gauges, SNOTEL, CDOT cameras/RWIS/road alerts, CWOP/APRS neighborhood PWS, NOAA HMS
+        smoke, SPC fire weather outlooks, NIFC nearby wildfire locations, Colorado burn-restriction
         status/links, NOAA SWPC space weather, and optional PurpleAir and AirNow). Each location
         payload also gets locally computed astronomy and nearest-ZIP pollen offsite links (no pollen
         API key). Each source can succeed or fail on its own. Results are merged into:
@@ -165,9 +166,11 @@
         Day 1–2 outlooks, HMS smoke, nearby wildfires, burn-restriction status and verify links),
         and ham radio context (NOAA SWPC R/S/G scales, SFI/Kp, Colorado aurora chance, heuristic HF
         band cues, and model-derived VHF/UHF ducting). Collapsed deep panels hold expandable 48-hour
-        hourly and 10-day daily tables, air quality &amp; pollen offsite links (nearest ZIP
-        Pollen.com forecast plus AAAAI NAB map — live pollen indexes are not redistributed here),
-        and a <strong>Live data sources</strong> footer listing fetch/observation times. Use
+        hourly and 10-day daily tables (with vs-typical deltas when ERA5 climatology is present), a
+        <strong>Compared to typical</strong> section (1991–2020 ERA5 day-of-year means — not
+        official NCEI normals), air quality &amp; pollen offsite links (nearest ZIP Pollen.com
+        forecast plus AAAAI NAB map — live pollen indexes are not redistributed here), and a
+        <strong>Live data sources</strong> footer listing fetch/observation times. Use
         <strong>Refine location</strong> on a locality page to set a new pin.
       </p>
       <p>
