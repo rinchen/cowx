@@ -15,8 +15,32 @@ export const CO_BBOX = {
 const GEOCODE_TIMEOUT_MS = 12_000;
 /** Cap query length before hitting Nominatim (UI maxlength should match). */
 export const GEOCODE_MAX_QUERY_LENGTH = 200;
+/** Nominatim usage policy: max ~1 request/second. */
+export const NOMINATIM_MIN_INTERVAL_MS = 1100;
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const LABEL_MAX = 200;
+
+/** @type {number} */
+let lastNominatimAt = 0;
+
+/** Reset cooldown (tests only). */
+export function resetNominatimCooldownForTests() {
+  lastNominatimAt = 0;
+}
+
+/**
+ * Wait until Nominatim min interval has elapsed since the last request.
+ * @returns {Promise<void>}
+ */
+async function respectNominatimCooldown() {
+  const elapsed = Date.now() - lastNominatimAt;
+  if (lastNominatimAt > 0 && elapsed < NOMINATIM_MIN_INTERVAL_MS) {
+    await new Promise((resolve) => {
+      setTimeout(resolve, NOMINATIM_MIN_INTERVAL_MS - elapsed);
+    });
+  }
+  lastNominatimAt = Date.now();
+}
 
 /**
  * @param {number} lat
@@ -86,6 +110,7 @@ export async function geocodeColoradoAddress(query) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), GEOCODE_TIMEOUT_MS);
   try {
+    await respectNominatimCooldown();
     const res = await fetch(`${NOMINATIM_URL}?${params}`, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },

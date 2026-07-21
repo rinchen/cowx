@@ -3,6 +3,7 @@
  * Priority: severe hazards → wind/travel → precip/temp → AQ/smoke → nominal.
  */
 
+import { pickAqi } from './aqi.js';
 import { pickNowSky } from './outlook.js';
 
 /**
@@ -331,11 +332,7 @@ export function synthesizeBottomLine(data, options = {}) {
   }
 
   // 4. AQ / smoke
-  const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
-  const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
-  const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
-  const aqi = num(airnow?.aqi) ?? num(purpleair?.aqi_pm25) ?? num(omaq?.us_aqi);
-  const pm25 = num(purpleair?.pm25) ?? num(omaq?.pm25);
+  const { aqi, pm25 } = pickAqi(data);
   if ((aqi != null && aqi >= 101) || (pm25 != null && pm25 >= 35.5)) {
     const parts = [];
     if (aqi != null) parts.push(`AQI ${Math.round(aqi)}`);

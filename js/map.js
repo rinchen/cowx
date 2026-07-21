@@ -147,7 +147,9 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
       options.alertsUrl ?? 'data/alerts.geojson',
       options.onAlertsError,
       generation,
-    );
+    ).catch((err) => {
+      console.error('loadAlertPolygons unhandled', err);
+    });
   }
 }
 
@@ -240,7 +242,11 @@ export async function loadAlertPolygons(url, onError, expectedGeneration = mapGe
   } catch (err) {
     if (expectedGeneration !== mapGeneration) return;
     const msg = err instanceof Error ? err.message : String(err);
-    onError?.(msg);
+    try {
+      onError?.(msg);
+    } catch (callbackErr) {
+      console.error('onAlertsError callback failed', callbackErr);
+    }
   }
 }
 
@@ -348,7 +354,8 @@ export async function setCwopLayer(enabled, url = 'data/cwop.geojson') {
     });
     cwopLayer.addTo(stateMap);
     return true;
-  } catch {
+  } catch (err) {
+    console.warn('setCwopLayer failed', err);
     return false;
   }
 }
@@ -404,7 +411,8 @@ export async function setRadarOverlay(enabled, opacity = 0.5) {
     });
     radarLayer.addTo(stateMap);
     return true;
-  } catch {
+  } catch (err) {
+    console.warn('setRadarOverlay failed', err);
     return false;
   }
 }
