@@ -15,6 +15,7 @@ import {
   toggleFavorite,
 } from './favorites.js';
 import { escapeHtml } from './dom.js';
+import { sourceStatusChips, sourceStatusLegendHtml } from './outlook.js';
 import { getFavoriteLocations, searchLocations } from './search.js';
 import { renderWorkspace } from './workspace.js';
 import { destroyMap } from './map.js';
@@ -45,6 +46,7 @@ const els = {
   errorBanner: /** @type {HTMLElement | null} */ (null),
   main: /** @type {HTMLElement | null} */ (null),
   updatedFooter: /** @type {HTMLElement | null} */ (null),
+  dataSources: /** @type {HTMLElement | null} */ (null),
 };
 
 /**
@@ -295,39 +297,33 @@ function findLocation(slug) {
 }
 
 function updateFooterTimestamp() {
-  if (!els.updatedFooter) return;
-  const ts = meta?.updated_at ?? meta?.generatedAt;
-  const sourceIds = Array.isArray(meta?.sources)
-    ? /** @type {{ id?: string; status?: string }[]} */ (meta.sources)
-        .filter((s) => s?.status === 'ok' && s.id)
-        .map((s) => String(s.id))
-    : [];
-  const sourceLabels = {
-    openmeteo: 'Open-Meteo',
-    openmeteo_aq: 'Open-Meteo AQ',
-    nws: 'NWS',
-    coagmet: 'CoAgMET',
-    aviation: 'AWC',
-    purpleair: 'PurpleAir',
-    airnow: 'AirNow',
-    usgs: 'USGS',
-    snotel: 'SNOTEL',
-    cdot: 'CDOT',
-    cwop: 'CWOP/APRS',
-    hms: 'HMS smoke',
-    spc_firewx: 'SPC fire weather',
-    nifc_fires: 'NIFC fires',
-    burn_restrictions: 'Burn restrictions',
-    space_weather: 'SWPC space weather',
-  };
-  const names = sourceIds
-    .map((id) => sourceLabels[/** @type {keyof typeof sourceLabels} */ (id)] ?? id)
-    .filter(Boolean);
-  const unique = [...new Set(names)];
-  const srcBit = unique.length ? ` · Sources: ${unique.join(', ')}` : '';
-  els.updatedFooter.textContent = ts
-    ? `Data updated ${formatTimestamp(String(ts))}${srcBit}`
-    : 'Data update time unknown';
+  if (els.updatedFooter) {
+    const ts = meta?.updated_at ?? meta?.generatedAt;
+    els.updatedFooter.textContent = ts
+      ? `Data updated ${formatTimestamp(String(ts))}`
+      : 'Data update time unknown';
+  }
+
+  if (!els.dataSources) return;
+  const sources = Array.isArray(meta?.sources) ? /** @type {unknown[]} */ (meta.sources) : [];
+  const chips = sourceStatusChips(sources);
+  if (!chips.length) {
+    els.dataSources.hidden = true;
+    els.dataSources.innerHTML = '';
+    return;
+  }
+  const chipHtml = `<ul class="source-chips" aria-label="Data source status">${chips
+    .map(
+      (c) =>
+        `<li><span class="source-chip source-chip--${escapeHtml(c.status)}" aria-label="${escapeHtml(c.label)}: ${escapeHtml(c.status)}">${escapeHtml(c.label)}</span></li>`,
+    )
+    .join('')}</ul>`;
+  els.dataSources.innerHTML = `<div class="site-footer__sources-head">
+      <span class="site-footer__sources-label">Sources</span>
+      ${sourceStatusLegendHtml()}
+    </div>
+    ${chipHtml}`;
+  els.dataSources.hidden = false;
 }
 
 /**
@@ -808,6 +804,7 @@ async function init() {
   els.errorBanner = document.getElementById('error-banner');
   els.main = document.getElementById('main-content');
   els.updatedFooter = document.getElementById('data-updated');
+  els.dataSources = document.getElementById('data-sources');
 
   bindBackToTop();
   await loadCoreData();

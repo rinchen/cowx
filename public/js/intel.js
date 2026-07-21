@@ -12,8 +12,6 @@ import {
   formatCompactHourLabel,
   nearestHourIndex,
   sliceCompactHours,
-  sourceStatusChips,
-  sourceStatusLegendHtml,
 } from './outlook.js';
 import {
   bindMeteogramScrubber,
@@ -610,16 +608,6 @@ export function renderOutlook(root, data, options = {}) {
       ? String(afd.snippet).slice(0, 220) + (String(afd.snippet).length > 220 ? '…' : '')
       : '';
 
-  const chips = sourceStatusChips(options.sources ?? []);
-  const chipHtml = chips.length
-    ? `<ul class="source-chips" aria-label="Data source status">${chips
-        .map(
-          (c) =>
-            `<li><span class="source-chip source-chip--${escapeHtml(c.status)}" aria-label="${escapeHtml(c.label)}: ${escapeHtml(c.status)}">${escapeHtml(c.label)}</span></li>`,
-        )
-        .join('')}</ul>`
-    : '';
-
   root.innerHTML = `
     <section class="glass-panel outlook-card" aria-labelledby="outlook-heading">
       <h2 id="outlook-heading" class="glass-panel__title">Short-Term Outlook</h2>
@@ -723,15 +711,6 @@ export function renderOutlook(root, data, options = {}) {
         </div>
       </section>
     </section>
-    <aside class="glass-panel workspace__sources" aria-label="Data sources">
-      <div class="glance-freshness">
-        <div class="glance-freshness__head">
-          <span class="glance-freshness__label">Sources</span>
-          ${sourceStatusLegendHtml()}
-        </div>
-        ${chipHtml || '<span class="intel-muted">Status unavailable</span>'}
-      </div>
-    </aside>
   `;
 
   bindJumps(root, options.onJump);

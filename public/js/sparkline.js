@@ -4,7 +4,7 @@
 
 /** Shared plot width so stacked meteograms align. */
 export const METEOGRAM_WIDTH = 320;
-export const METEOGRAM_HEIGHT = 56;
+export const METEOGRAM_HEIGHT = 80;
 
 /**
  * @param {number[]} values
@@ -97,22 +97,64 @@ export function detectPressureDip(inHgValues, opts = {}) {
 }
 
 /**
- * Format hour labels for the shared time axis.
+ * Format a single ISO local hour for the shared axis (e.g. "7 PM").
+ * @param {string} iso
+ * @returns {string}
+ */
+function formatAxisHour(iso) {
+  if (!iso) return '';
+  try {
+    return new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).format(new Date(iso));
+  } catch {
+    return String(iso).slice(11, 16);
+  }
+}
+
+/**
+ * Hour ticks for the shared time axis, spaced for a ~24h series.
+ * @param {string[]} times
+ * @param {{ stepHours?: number }} [opts]
+ * @returns {{ index: number, label: string, pct: number }[]}
+ */
+export function formatMeteogramAxisTicks(times, opts = {}) {
+  const n = Array.isArray(times) ? times.length : 0;
+  if (!n) return [];
+  const stepHours = Math.max(1, Math.round(opts.stepHours ?? (n > 18 ? 3 : 2)));
+  /** @type {{ index: number, label: string, pct: number }[]} */
+  const ticks = [];
+  for (let i = 0; i < n; i += stepHours) {
+    const label = formatAxisHour(times[i]);
+    if (!label) continue;
+    ticks.push({
+      index: i,
+      label,
+      pct: n <= 1 ? 0 : (i / (n - 1)) * 100,
+    });
+  }
+  const last = n - 1;
+  if (!ticks.length || ticks[ticks.length - 1].index !== last) {
+    const label = formatAxisHour(times[last]);
+    if (label) {
+      ticks.push({ index: last, label, pct: 100 });
+    }
+  }
+  return ticks;
+}
+
+/**
+ * Format hour labels for the shared time axis (start / mid / end).
  * @param {string[]} times
  * @returns {{ start: string, mid: string, end: string }}
  */
 export function formatMeteogramTimeLabels(times) {
-  const fmt = (iso) => {
-    if (!iso) return '';
-    try {
-      return new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).format(new Date(iso));
-    } catch {
-      return String(iso).slice(11, 16);
-    }
+  const ticks = formatMeteogramAxisTicks(times);
+  if (!ticks.length) return { start: '', mid: '', end: '' };
+  const mid = ticks[Math.floor(ticks.length / 2)];
+  return {
+    start: ticks[0].label,
+    mid: mid?.label ?? '',
+    end: ticks[ticks.length - 1].label,
   };
-  if (!times.length) return { start: '', mid: '', end: '' };
-  const mid = times[Math.floor((times.length - 1) / 2)];
-  return { start: fmt(times[0]), mid: fmt(mid), end: fmt(times[times.length - 1]) };
 }
 
 /**
@@ -135,25 +177,36 @@ export function formatMeteogramHour(iso) {
  * Shared time-axis row under aligned meteograms.
  * Labels are HTML (not SVG text) so they are not squashed by preserveAspectRatio=none.
  * @param {string[]} times
- * @param {{ width?: number }} [opts]
+ * @param {{ width?: number, stepHours?: number }} [opts]
  * @returns {string}
  */
 export function meteogramTimeAxisHtml(times, opts = {}) {
   const width = opts.width ?? METEOGRAM_WIDTH;
-  const labels = formatMeteogramTimeLabels(times);
-  if (!labels.start) return '';
+  const ticks = formatMeteogramAxisTicks(times, { stepHours: opts.stepHours });
+  if (!ticks.length) return '';
+  const tickLines = ticks
+    .map((t) => {
+      const x = ((t.pct / 100) * width).toFixed(1);
+      return `<line x1="${x}" y1="2" x2="${x}" y2="7" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>`;
+    })
+    .join('');
+  const labelSpans = ticks
+    .map((t, i) => {
+      const edge =
+        i === 0
+          ? ' meteogram-axis__label--start'
+          : i === ticks.length - 1
+            ? ' meteogram-axis__label--end'
+            : '';
+      return `<span class="meteogram-axis__label${edge}" style="left:${t.pct.toFixed(2)}%">${escapeXml(t.label)}</span>`;
+    })
+    .join('');
   return `<div class="meteogram-axis">
     <svg class="meteogram-axis__ticks" viewBox="0 0 ${width} 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">
       <line x1="0" y1="2" x2="${width}" y2="2" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
-      <line x1="0" y1="2" x2="0" y2="7" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
-      <line x1="${width / 2}" y1="2" x2="${width / 2}" y2="7" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
-      <line x1="${width}" y1="2" x2="${width}" y2="7" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
+      ${tickLines}
     </svg>
-    <div class="meteogram-axis__labels" aria-hidden="true">
-      <span>${escapeXml(labels.start)}</span>
-      <span>${escapeXml(labels.mid)}</span>
-      <span>${escapeXml(labels.end)}</span>
-    </div>
+    <div class="meteogram-axis__labels" aria-hidden="true">${labelSpans}</div>
   </div>`;
 }
 

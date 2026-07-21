@@ -253,6 +253,34 @@ main {
   color: var(--color-text-muted);
   font-size: 0.875rem;
   border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.site-footer__sources {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.site-footer__sources-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.85rem;
+}
+
+.site-footer__sources-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.site-footer .source-legend__item {
+  color: var(--color-text-muted);
 }
 
 /* Buttons */
@@ -1522,16 +1550,6 @@ body.workspace-active #main-content {
   gap: 0.75rem;
 }
 
-.workspace__sources {
-  padding: 0.55rem 0.85rem;
-}
-
-.workspace__sources .glance-freshness {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: 0;
-}
-
 .workspace__specialty {
   display: grid;
   gap: 0.55rem;
@@ -1906,32 +1924,6 @@ body.workspace-active #main-content {
   align-self: flex-start;
   margin: 0.1rem 0 0;
   font-size: 0.8125rem;
-}
-
-.glance-freshness {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-items: stretch;
-  gap: 0.45rem;
-  margin-top: 0.75rem;
-  padding-top: 0.55rem;
-  border-top: 1px solid var(--glass-border);
-}
-
-.glance-freshness__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 1rem;
-}
-
-.glance-freshness__label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--glass-muted);
 }
 
 .source-legend {
@@ -2664,7 +2656,7 @@ body.workspace-active #main-content {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.7rem;
   width: 100%;
 }
 
@@ -2698,16 +2690,16 @@ body.workspace-active #main-content {
 .meteogram {
   display: block;
   width: 100%;
-  height: 56px;
+  height: 80px;
   color: var(--glass-muted);
 }
 
 .meteogram-axis {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.15rem;
   width: 100%;
-  margin-top: 0.1rem;
+  margin-top: 0.2rem;
   color: var(--glass-muted);
 }
 
@@ -2718,17 +2710,26 @@ body.workspace-active #main-content {
 }
 
 .meteogram-axis__labels {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.35rem;
-  font-size: 0.7rem;
+  position: relative;
+  height: 1.15rem;
+  font-size: 0.72rem;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
 
-.meteogram-axis__labels span {
-  flex: 0 1 auto;
+.meteogram-axis__label {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
   white-space: nowrap;
+}
+
+.meteogram-axis__label--start {
+  transform: translateX(0);
+}
+
+.meteogram-axis__label--end {
+  transform: translateX(-100%);
 }
 
 .meteogram-scrub-layer {

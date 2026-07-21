@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   detectPressureDip,
   formatMeteogramHour,
+  formatMeteogramAxisTicks,
   formatMeteogramTimeLabels,
   mbToInHg,
   meteogramHtml,
@@ -56,13 +57,20 @@ describe('sparkline / meteogram', () => {
     ]);
     assert.ok(labels.start);
     assert.ok(labels.end);
-    const axis = meteogramTimeAxisHtml([
-      '2026-07-20T13:00',
-      '2026-07-20T18:00',
-      '2026-07-21T01:00',
-    ]);
+    const times = [];
+    for (let h = 0; h < 24; h += 1) {
+      times.push(`2026-07-20T${String(h).padStart(2, '0')}:00:00`);
+    }
+    const ticks = formatMeteogramAxisTicks(times);
+    assert.ok(ticks.length >= 8);
+    assert.equal(ticks[0].pct, 0);
+    assert.equal(ticks[ticks.length - 1].pct, 100);
+    const axis = meteogramTimeAxisHtml(times);
     assert.match(axis, /meteogram-axis/);
     assert.match(axis, /meteogram-axis__labels/);
+    assert.match(axis, /meteogram-axis__label--start/);
+    assert.match(axis, /meteogram-axis__label--end/);
+    assert.match(axis, /style="left:0/);
     assert.match(axis, /<line/);
   });
 
