@@ -32,6 +32,12 @@ describe('sanitizeUrlForError', () => {
     assert.doesNotMatch(auth, /eyJhbGciOi\.secret/);
     assert.match(auth, /Authorization:\s*\[redacted\]/i);
   });
+
+  it('redacts X-API-Key header-style secrets', () => {
+    const hdr = sanitizeErrorMessage('upstream echo X-API-Key: pa-super-secret-purpleair');
+    assert.doesNotMatch(hdr, /pa-super-secret-purpleair/);
+    assert.match(hdr, /X-API-Key=\[redacted\]/i);
+  });
 });
 
 describe('runAdapterSafely', () => {

@@ -16,6 +16,7 @@ const GEOCODE_TIMEOUT_MS = 12_000;
 /** Cap query length before hitting Nominatim (UI maxlength should match). */
 export const GEOCODE_MAX_QUERY_LENGTH = 200;
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+const LABEL_MAX = 200;
 
 /**
  * @param {number} lat
@@ -48,7 +49,7 @@ export function pickColoradoNominatimResult(raw) {
     if (!isInColorado(lat, lon)) continue;
     const label =
       typeof rec.display_name === 'string' && rec.display_name.trim()
-        ? rec.display_name.trim()
+        ? rec.display_name.trim().slice(0, LABEL_MAX)
         : `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
     return { lat, lon, label };
   }
@@ -56,14 +57,21 @@ export function pickColoradoNominatimResult(raw) {
 }
 
 /**
+ * @typedef {{ ok: true, lat: number, lon: number, label: string }} GeocodeOk
+ * @typedef {{ ok: false, reason: 'invalid' | 'http' | 'timeout' | 'network' | 'empty' }} GeocodeFail
+ */
+
+/**
  * Geocode a Colorado street address / place (explicit user submit only).
  * Browser sends Referer; do not set forbidden User-Agent headers.
  * @param {string} query
- * @returns {Promise<{ lat: number, lon: number, label: string } | null>}
+ * @returns {Promise<GeocodeOk | GeocodeFail>}
  */
 export async function geocodeColoradoAddress(query) {
   const q = String(query ?? '').trim();
-  if (q.length < 3 || q.length > GEOCODE_MAX_QUERY_LENGTH) return null;
+  if (q.length < 3 || q.length > GEOCODE_MAX_QUERY_LENGTH) {
+    return { ok: false, reason: 'invalid' };
+  }
 
   const params = new URLSearchParams({
     q,
@@ -82,11 +90,26 @@ export async function geocodeColoradoAddress(query) {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn('geocode: Nominatim HTTP', res.status);
+      return { ok: false, reason: 'http' };
+    }
     const json = await res.json();
-    return pickColoradoNominatimResult(json);
-  } catch {
-    return null;
+    const hit = pickColoradoNominatimResult(json);
+    if (!hit) return { ok: false, reason: 'empty' };
+    return { ok: true, ...hit };
+  } catch (err) {
+    const aborted =
+      (err instanceof Error && err.name === 'AbortError') ||
+      (typeof DOMException !== 'undefined' &&
+        err instanceof DOMException &&
+        err.name === 'AbortError');
+    if (aborted) {
+      console.warn('geocode: Nominatim timeout');
+      return { ok: false, reason: 'timeout' };
+    }
+    console.warn('geocode: Nominatim network error', err);
+    return { ok: false, reason: 'network' };
   } finally {
     clearTimeout(timer);
   }

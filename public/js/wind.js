@@ -2,16 +2,7 @@
  * Wind direction labels and compact compass SVG for forecast surfaces.
  */
 
-/**
- * @param {string} s
- */
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
-}
+import { escapeHtml } from './dom.js';
 
 /**
  * @param {number | null | undefined} deg

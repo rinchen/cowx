@@ -315,7 +315,8 @@ export async function fetchHms(locations) {
     const zipPath = path.join(dir, 'hms.zip');
     await writeFile(zipPath, zipBuf);
     try {
-      await execFileAsync('unzip', ['-o', '-q', zipPath, '-d', dir], { timeout: 60_000 });
+      // -j junks paths so a malicious archive cannot zip-slip outside `dir`.
+      await execFileAsync('unzip', ['-o', '-q', '-j', zipPath, '-d', dir], { timeout: 60_000 });
     } catch (err) {
       for (const loc of locations) bySlug.set(loc.slug, null);
       return {

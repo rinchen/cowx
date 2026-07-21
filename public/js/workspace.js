@@ -25,7 +25,8 @@ async function loadSpaceWeather(dataBase) {
     if (!res.ok) return null;
     const json = await res.json();
     return json && typeof json === 'object' ? /** @type {Record<string, unknown>} */ (json) : null;
-  } catch {
+  } catch (err) {
+    console.warn('workspace: space-weather.json unavailable', err);
     return null;
   } finally {
     clearTimeout(timer);

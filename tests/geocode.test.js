@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 
 import { isInColorado, pickColoradoNominatimResult } from '../public/js/geocode.js';
 
@@ -41,5 +41,62 @@ describe('pickColoradoNominatimResult', () => {
     );
     assert.equal(pickColoradoNominatimResult([]), null);
     assert.equal(pickColoradoNominatimResult(null), null);
+  });
+
+  it('truncates long display names', () => {
+    const long = 'A'.repeat(300);
+    const hit = pickColoradoNominatimResult([
+      { lat: '39.7392', lon: '-104.9903', display_name: long },
+    ]);
+    assert.ok(hit);
+    assert.equal(hit.label.length, 200);
+  });
+});
+
+describe('geocodeColoradoAddress', () => {
+  /** @type {typeof globalThis.fetch | undefined} */
+  let originalFetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+  afterEach(() => {
+    if (originalFetch) globalThis.fetch = originalFetch;
+  });
+
+  it('returns invalid for short queries without fetching', async () => {
+    let called = false;
+    globalThis.fetch = async () => {
+      called = true;
+      throw new Error('should not fetch');
+    };
+    const { geocodeColoradoAddress } = await import('../public/js/geocode.js');
+    const result = await geocodeColoradoAddress('ab');
+    assert.deepEqual(result, { ok: false, reason: 'invalid' });
+    assert.equal(called, false);
+  });
+
+  it('returns empty when Nominatim has no in-state hits', async () => {
+    const { geocodeColoradoAddress } = await import('../public/js/geocode.js');
+    globalThis.fetch = async () =>
+      /** @type {Response} */ ({
+        ok: true,
+        status: 200,
+        json: async () => [{ lat: '41.5', lon: '-104.8', display_name: 'Cheyenne' }],
+      });
+    const result = await geocodeColoradoAddress('123 Main St Denver CO');
+    assert.deepEqual(result, { ok: false, reason: 'empty' });
+  });
+
+  it('returns http on non-OK response', async () => {
+    const { geocodeColoradoAddress } = await import('../public/js/geocode.js');
+    globalThis.fetch = async () =>
+      /** @type {Response} */ ({
+        ok: false,
+        status: 503,
+        json: async () => ({}),
+      });
+    const result = await geocodeColoradoAddress('123 Main St Denver CO');
+    assert.deepEqual(result, { ok: false, reason: 'http' });
   });
 });

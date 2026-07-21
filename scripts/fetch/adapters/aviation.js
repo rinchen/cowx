@@ -60,8 +60,9 @@ export async function fetchAviation(locations) {
         tafs = await tafRes.json();
         if (!Array.isArray(tafs)) tafs = [];
       }
-    } catch {
-      // TAF optional
+    } catch (err) {
+      // TAF optional — METAR alone is still useful
+      console.warn('aviation: TAF fetch failed', err instanceof Error ? err.message : String(err));
     }
 
     const stations = metars

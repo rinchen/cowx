@@ -16,6 +16,20 @@ describe('nws geometry alerts', () => {
     assert.equal(pointInRing(-106.0, 40.0, square), false);
   });
 
+  it('skips null or non-finite ring vertices without throwing', () => {
+    const dirty = [
+      null,
+      [-105.1, 39.9],
+      [undefined, 40],
+      [-104.9, 39.9],
+      [-104.9, 40.1],
+      [-105.1, 40.1],
+      [-105.1, 39.9],
+    ];
+    assert.equal(pointInRing(-105.0, 40.0, /** @type {any} */ (dirty)), true);
+    assert.equal(pointInRing(-106.0, 40.0, /** @type {any} */ (dirty)), false);
+  });
+
   it('handles polygon geometry', () => {
     assert.equal(pointInGeometry(-105.0, 40.0, { type: 'Polygon', coordinates: [square] }), true);
   });

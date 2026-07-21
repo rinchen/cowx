@@ -11,13 +11,24 @@
  */
 export function pointInRing(lon, lat, ring) {
   if (!Array.isArray(ring) || ring.length < 3) return false;
+  /** @type {number[][]} */
+  const pts = [];
+  for (const pt of ring) {
+    if (!Array.isArray(pt) || pt.length < 2) continue;
+    const x = Number(pt[0]);
+    const y = Number(pt[1]);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    pts.push([x, y]);
+  }
+  if (pts.length < 3) return false;
   let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const xi = Number(ring[i][0]);
-    const yi = Number(ring[i][1]);
-    const xj = Number(ring[j][0]);
-    const yj = Number(ring[j][1]);
-    const intersect = yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const xi = pts[i][0];
+    const yi = pts[i][1];
+    const xj = pts[j][0];
+    const yj = pts[j][1];
+    const denom = yj - yi || Number.EPSILON;
+    const intersect = yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / denom + xi;
     if (intersect) inside = !inside;
   }
   return inside;

@@ -152,7 +152,8 @@ function scaleChip(letter, block) {
           : scale >= 1
             ? 'minor'
             : 'none';
-  return `<span class="sw-scale sw-scale--${sev}" title="${escapeHtml(letter)} scale${detail}"><span class="sw-scale__code">${escapeHtml(label)}</span><span class="sw-scale__text">${escapeHtml(detail.trim() || 'none')}</span></span>`;
+  const title = `${letter} scale${detail}`;
+  return `<span class="sw-scale sw-scale--${sev}" title="${escapeHtml(title)}"><span class="sw-scale__code">${escapeHtml(label)}</span><span class="sw-scale__text">${escapeHtml(detail.trim() || 'none')}</span></span>`;
 }
 
 /**

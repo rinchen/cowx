@@ -45,6 +45,11 @@ export function sanitizeErrorMessage(message) {
     /([?&](?:api[_-]?key|access[_-]?token|token|key|auth|password|secret)=)[^&\s]*/gi,
     '$1[redacted]',
   );
+  // Header-style secrets (PurpleAir X-API-Key, api-key, etc.)
+  s = s.replace(
+    /((?:X-)?API[_-]?Key|api[_-]?key|access[_-]?token)\s*[:=]\s*[^\s,;"']+/gi,
+    '$1=[redacted]',
+  );
   // Authorization: Bearer <token> | Authorization=<token>
   s = s.replace(/(Authorization\s*[:=]\s*)(?:Bearer\s+)?[^\s,;"']+/gi, '$1[redacted]');
   // Standalone Bearer tokens (JSON bodies, WWW-Authenticate echoes, etc.)

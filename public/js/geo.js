@@ -8,6 +8,24 @@ const EARTH_RADIUS_KM = 6371;
 const IP_GEO_TIMEOUT_MS = 5000;
 const IP_GEO_ENDPOINTS = ['https://ipwho.is/', 'https://get.geojs.io/v1/ip/geo.json'];
 const PIN_STORAGE_KEY = 'cowx:hyperlocalPin';
+/** Cap stored pin labels (Nominatim display_name can be very long). */
+const PIN_LABEL_MAX = 200;
+
+/**
+ * @param {unknown} label
+ * @returns {string | undefined}
+ */
+function sanitizePinLabel(label) {
+  if (typeof label !== 'string') return undefined;
+  let cleaned = '';
+  for (const ch of label) {
+    const code = ch.codePointAt(0) ?? 0;
+    if (code < 32 || code === 127) continue;
+    cleaned += ch;
+  }
+  cleaned = cleaned.trim().slice(0, PIN_LABEL_MAX);
+  return cleaned || undefined;
+}
 
 /**
  * Haversine distance in kilometers between two WGS84 points.
@@ -77,7 +95,11 @@ export function pinDistanceKm(pin, loc) {
 export function setHyperlocalPin(pin) {
   if (!pin || !isInColorado(pin.lat, pin.lon)) return;
   try {
-    const raw = JSON.stringify(pin);
+    const safe = {
+      ...pin,
+      label: sanitizePinLabel(pin.label),
+    };
+    const raw = JSON.stringify(safe);
     localStorage.setItem(PIN_STORAGE_KEY, raw);
     try {
       sessionStorage.removeItem(PIN_STORAGE_KEY);
@@ -129,8 +151,7 @@ export function getHyperlocalPin() {
           : null,
       at: typeof parsed.at === 'string' ? parsed.at : new Date().toISOString(),
       source,
-      label:
-        typeof parsed.label === 'string' && parsed.label.trim() ? parsed.label.trim() : undefined,
+      label: sanitizePinLabel(parsed.label),
     };
   } catch {
     return null;

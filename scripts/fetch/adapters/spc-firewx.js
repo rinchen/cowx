@@ -258,25 +258,32 @@ export async function fetchSpcFireWx(locations) {
   }
 
   for (const loc of locations) {
-    const d1w = windRhAtPoint(loc.lon, loc.lat, loaded.day1_windrh);
-    const d2w = windRhAtPoint(loc.lon, loc.lat, loaded.day2_windrh);
-    bySlug.set(loc.slug, {
-      day1: {
-        windRh: d1w.risk,
-        dryT: dryTAtPoint(loc.lon, loc.lat, loaded.day1_dryt),
-        valid: d1w.valid,
-        expire: d1w.expire,
-        issue: d1w.issue,
-      },
-      day2: {
-        windRh: d2w.risk,
-        dryT: dryTAtPoint(loc.lon, loc.lat, loaded.day2_dryt),
-        valid: d2w.valid,
-        expire: d2w.expire,
-        issue: d2w.issue,
-      },
-      sourceUrl: SOURCE_URL,
-    });
+    try {
+      const d1w = windRhAtPoint(loc.lon, loc.lat, loaded.day1_windrh);
+      const d2w = windRhAtPoint(loc.lon, loc.lat, loaded.day2_windrh);
+      bySlug.set(loc.slug, {
+        day1: {
+          windRh: d1w.risk,
+          dryT: dryTAtPoint(loc.lon, loc.lat, loaded.day1_dryt),
+          valid: d1w.valid,
+          expire: d1w.expire,
+          issue: d1w.issue,
+        },
+        day2: {
+          windRh: d2w.risk,
+          dryT: dryTAtPoint(loc.lon, loc.lat, loaded.day2_dryt),
+          valid: d2w.valid,
+          expire: d2w.expire,
+          issue: d2w.issue,
+        },
+        sourceUrl: SOURCE_URL,
+      });
+    } catch (err) {
+      console.warn(
+        `spc-firewx: skip ${loc.slug} — ${err instanceof Error ? err.message : String(err)}`,
+      );
+      bySlug.set(loc.slug, null);
+    }
   }
 
   const fireWxGeoJson = clipSpcToColorado(loaded);

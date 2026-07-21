@@ -5,7 +5,7 @@
  * Fallback: partial source failures recorded in meta.json; carry-forward prior forecast on Open-Meteo miss.
  */
 
-import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -180,138 +180,151 @@ export async function runFetch() {
   }
 
   for (const loc of locations) {
-    const om = openmeteo.bySlug.get(loc.slug);
-    const prior = om ? null : await readPrior(loc.slug);
-    let current = om?.current ?? null;
-    let hourly = om?.hourly ?? null;
-    let daily = om?.daily ?? null;
-    let forecastStale = false;
-    let astronomy = om?.astronomy ?? null;
-    if (!astronomy) {
-      try {
-        astronomy = buildAstronomy(loc.lat, loc.lon);
-      } catch {
-        astronomy = prior?.astronomy ?? null;
+    try {
+      const om = openmeteo.bySlug.get(loc.slug);
+      const prior = om ? null : await readPrior(loc.slug);
+      let current = om?.current ?? null;
+      let hourly = om?.hourly ?? null;
+      let daily = om?.daily ?? null;
+      let forecastStale = false;
+      let astronomy = om?.astronomy ?? null;
+      if (!astronomy) {
+        try {
+          astronomy = buildAstronomy(loc.lat, loc.lon);
+        } catch {
+          astronomy = prior?.astronomy ?? null;
+        }
       }
+
+      if (!current && prior?.current) {
+        current = prior.current;
+        hourly = prior.hourly ?? null;
+        daily = prior.daily ?? null;
+        forecastStale = true;
+        staleCount += 1;
+      }
+
+      const pollenHealth = buildPollenHealthLinks(loc, zipPoints);
+
+      const countyKey = String(loc.county ?? '').toLowerCase();
+      let alerts = [];
+      try {
+        alerts = alertsForLocation(
+          loc.lat,
+          loc.lon,
+          countyKey,
+          nws.byCounty ?? new Map(),
+          nws.alertsGeoJson ?? { type: 'FeatureCollection', features: [] },
+        );
+      } catch (err) {
+        console.warn(
+          `fetch: alertsForLocation failed for ${loc.slug} — ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+      const afd = nws.afdByWfo?.get(loc.wfo) ?? null;
+      const hwo = nws.hwoByWfo?.get(loc.wfo) ?? null;
+      const ag = coagmet.bySlug.get(loc.slug) ?? null;
+      const av = aviation.bySlug.get(loc.slug) ?? null;
+      const pa = purpleair.bySlug.get(loc.slug) ?? null;
+      const an = airnow.bySlug.get(loc.slug) ?? null;
+      const omaq = openmeteoAq.bySlug.get(loc.slug) ?? null;
+      const gauge = usgs.bySlug.get(loc.slug) ?? null;
+      const snow = snotel.bySlug.get(loc.slug) ?? null;
+      const cdotRec = cdot.bySlug.get(loc.slug) ?? null;
+      const cwopRec = cwop.bySlug.get(loc.slug) ?? null;
+      const pwsRec = cwop.pwsBySlug?.get(loc.slug) ?? null;
+      const hmsRec = hms.bySlug.get(loc.slug) ?? null;
+      const fireWeather = spcFireWx.bySlug.get(loc.slug) ?? null;
+      const nearbyFires = nifcFires.bySlug.get(loc.slug) ?? null;
+      const fireRestrictions = burnRestrictions.bySlug.get(loc.slug) ?? null;
+      const webcamLinks = sanitizeWebcamLinks(loc.webcam_links);
+
+      const payload = {
+        slug: loc.slug,
+        name: loc.name,
+        lat: loc.lat,
+        lon: loc.lon,
+        region: loc.region,
+        county: loc.county,
+        wfo: loc.wfo,
+        elevation_ft: loc.elevation_ft,
+        icao: loc.icao ?? null,
+        updatedAt,
+        forecastStale,
+        current,
+        hourly,
+        daily,
+        astronomy,
+        alerts,
+        afd,
+        hwo,
+        coagmet: ag,
+        aviation: av,
+        purpleair: pa,
+        airnow: an,
+        openmeteo_aq: omaq,
+        usgs: gauge,
+        snotel: snow,
+        cdot_camera: cdotRec?.camera ?? null,
+        cdot_rwis: cdotRec?.rwis ?? null,
+        cdot_roads: cdotRec?.cdot_roads ?? null,
+        cwop: cwopRec,
+        pws: pwsRec,
+        hms_smoke: hmsRec,
+        fire_weather: fireWeather,
+        nearby_fires: nearbyFires,
+        fire_restrictions: fireRestrictions,
+        rf_comms: om?.rf_comms ?? prior?.rf_comms ?? null,
+        links: {
+          nws_forecast: `https://forecast.weather.gov/MapClick.php?lat=${loc.lat}&lon=${loc.lon}`,
+          pws: loc.pws_id
+            ? `https://www.wunderground.com/dashboard/pws/${encodeURIComponent(loc.pws_id)}`
+            : null,
+          pollen: pollenHealth.pollen,
+          pollen_zip: pollenHealth.pollen_zip,
+          pollen_city: pollenHealth.pollen_city,
+          nab_links: pollenHealth.nab_links,
+          purpleair_map: 'https://map.purpleair.com/',
+          airnow: 'https://www.airnow.gov/',
+          coagmet: ag?.url ?? 'https://coagmet.colostate.edu/',
+          aviation: av?.url ?? 'https://aviationweather.gov/',
+          rainviewer: 'https://www.rainviewer.com/map.html',
+          usgs: gauge?.url ?? 'https://waterdata.usgs.gov/nwis/rt',
+          snotel: snow?.url ?? 'https://www.nrcs.usda.gov/wps/portal/wcc/home/',
+          cotrip: 'https://maps.cotrip.org/',
+          webcam_links: webcamLinks,
+        },
+      };
+
+      await writeFile(
+        path.join(DATA_DIR, 'locations', `${loc.slug}.json`),
+        JSON.stringify(payload),
+        'utf8',
+      );
+
+      index.push({
+        slug: loc.slug,
+        name: loc.name,
+        lat: loc.lat,
+        lon: loc.lon,
+        region: loc.region,
+        county: loc.county,
+        elevation_ft: loc.elevation_ft,
+        temp_f: current?.temp_f ?? null,
+        condition: current?.condition ?? null,
+        humidity: current?.humidity ?? null,
+        wind_speed_mph: current?.wind_speed_mph ?? null,
+        uv_index: current?.uv_index ?? null,
+        aqi: an?.aqi ?? pa?.aqi_pm25 ?? omaq?.us_aqi ?? null,
+        nws_alert: alerts.length > 0,
+        forecast_stale: forecastStale,
+        updated_at: updatedAt,
+      });
+    } catch (err) {
+      console.warn(
+        `fetch: skipped location ${loc.slug} — ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
-
-    if (!current && prior?.current) {
-      current = prior.current;
-      hourly = prior.hourly ?? null;
-      daily = prior.daily ?? null;
-      forecastStale = true;
-      staleCount += 1;
-    }
-
-    const pollenHealth = buildPollenHealthLinks(loc, zipPoints);
-
-    const countyKey = String(loc.county ?? '').toLowerCase();
-    const alerts = alertsForLocation(
-      loc.lat,
-      loc.lon,
-      countyKey,
-      nws.byCounty ?? new Map(),
-      nws.alertsGeoJson ?? { type: 'FeatureCollection', features: [] },
-    );
-    const afd = nws.afdByWfo?.get(loc.wfo) ?? null;
-    const hwo = nws.hwoByWfo?.get(loc.wfo) ?? null;
-    const ag = coagmet.bySlug.get(loc.slug) ?? null;
-    const av = aviation.bySlug.get(loc.slug) ?? null;
-    const pa = purpleair.bySlug.get(loc.slug) ?? null;
-    const an = airnow.bySlug.get(loc.slug) ?? null;
-    const omaq = openmeteoAq.bySlug.get(loc.slug) ?? null;
-    const gauge = usgs.bySlug.get(loc.slug) ?? null;
-    const snow = snotel.bySlug.get(loc.slug) ?? null;
-    const cdotRec = cdot.bySlug.get(loc.slug) ?? null;
-    const cwopRec = cwop.bySlug.get(loc.slug) ?? null;
-    const pwsRec = cwop.pwsBySlug?.get(loc.slug) ?? null;
-    const hmsRec = hms.bySlug.get(loc.slug) ?? null;
-    const fireWeather = spcFireWx.bySlug.get(loc.slug) ?? null;
-    const nearbyFires = nifcFires.bySlug.get(loc.slug) ?? null;
-    const fireRestrictions = burnRestrictions.bySlug.get(loc.slug) ?? null;
-    const webcamLinks = sanitizeWebcamLinks(loc.webcam_links);
-
-    const payload = {
-      slug: loc.slug,
-      name: loc.name,
-      lat: loc.lat,
-      lon: loc.lon,
-      region: loc.region,
-      county: loc.county,
-      wfo: loc.wfo,
-      elevation_ft: loc.elevation_ft,
-      icao: loc.icao ?? null,
-      updatedAt,
-      forecastStale,
-      current,
-      hourly,
-      daily,
-      astronomy,
-      alerts,
-      afd,
-      hwo,
-      coagmet: ag,
-      aviation: av,
-      purpleair: pa,
-      airnow: an,
-      openmeteo_aq: omaq,
-      usgs: gauge,
-      snotel: snow,
-      cdot_camera: cdotRec?.camera ?? null,
-      cdot_rwis: cdotRec?.rwis ?? null,
-      cdot_roads: cdotRec?.cdot_roads ?? null,
-      cwop: cwopRec,
-      pws: pwsRec,
-      hms_smoke: hmsRec,
-      fire_weather: fireWeather,
-      nearby_fires: nearbyFires,
-      fire_restrictions: fireRestrictions,
-      rf_comms: om?.rf_comms ?? prior?.rf_comms ?? null,
-      links: {
-        nws_forecast: `https://forecast.weather.gov/MapClick.php?lat=${loc.lat}&lon=${loc.lon}`,
-        pws: loc.pws_id
-          ? `https://www.wunderground.com/dashboard/pws/${encodeURIComponent(loc.pws_id)}`
-          : null,
-        pollen: pollenHealth.pollen,
-        pollen_zip: pollenHealth.pollen_zip,
-        pollen_city: pollenHealth.pollen_city,
-        nab_links: pollenHealth.nab_links,
-        purpleair_map: 'https://map.purpleair.com/',
-        airnow: 'https://www.airnow.gov/',
-        coagmet: ag?.url ?? 'https://coagmet.colostate.edu/',
-        aviation: av?.url ?? 'https://aviationweather.gov/',
-        rainviewer: 'https://www.rainviewer.com/map.html',
-        usgs: gauge?.url ?? 'https://waterdata.usgs.gov/nwis/rt',
-        snotel: snow?.url ?? 'https://www.nrcs.usda.gov/wps/portal/wcc/home/',
-        cotrip: 'https://maps.cotrip.org/',
-        webcam_links: webcamLinks,
-      },
-    };
-
-    await writeFile(
-      path.join(DATA_DIR, 'locations', `${loc.slug}.json`),
-      JSON.stringify(payload),
-      'utf8',
-    );
-
-    index.push({
-      slug: loc.slug,
-      name: loc.name,
-      lat: loc.lat,
-      lon: loc.lon,
-      region: loc.region,
-      county: loc.county,
-      elevation_ft: loc.elevation_ft,
-      temp_f: current?.temp_f ?? null,
-      condition: current?.condition ?? null,
-      humidity: current?.humidity ?? null,
-      wind_speed_mph: current?.wind_speed_mph ?? null,
-      uv_index: current?.uv_index ?? null,
-      aqi: an?.aqi ?? pa?.aqi_pm25 ?? omaq?.us_aqi ?? null,
-      nws_alert: alerts.length > 0,
-      forecast_stale: forecastStale,
-      updated_at: updatedAt,
-    });
   }
 
   await writeFile(
@@ -384,8 +397,17 @@ export async function runFetch() {
 
   try {
     await copyFile(ZIPS_SRC, ZIPS_DST);
-  } catch {
-    await writeFile(ZIPS_DST, '[]', 'utf8');
+  } catch (err) {
+    console.warn(
+      `fetch: could not copy co-zips.json — ${err instanceof Error ? err.message : String(err)}`,
+    );
+    try {
+      await access(ZIPS_DST);
+      console.warn('fetch: keeping prior public/data/co-zips.json');
+    } catch {
+      await writeFile(ZIPS_DST, '[]', 'utf8');
+      console.warn('fetch: wrote empty co-zips.json fallback (no prior file)');
+    }
   }
 
   const criticalOk =

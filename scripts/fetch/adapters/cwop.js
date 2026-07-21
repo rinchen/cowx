@@ -149,6 +149,8 @@ export async function fetchCwop(locations) {
   /** @type {Map<string, ReturnType<typeof parseNearbyStations>[0]>} */
   const byCall = new Map();
 
+  /** @type {string[]} */
+  const errors = [];
   try {
     for (const pt of SAMPLE_POINTS) {
       const url = `${NEARBY_URL}?lat=${pt.lat}&lon=${pt.lon}&radius=${GRID_RADIUS_MI}&limit=${GRID_LIMIT}&hours=6`;
@@ -158,8 +160,9 @@ export async function fetchCwop(locations) {
         for (const st of parseNearbyStations(raw)) {
           if (!byCall.has(st.callsign)) byCall.set(st.callsign, st);
         }
-      } catch {
+      } catch (err) {
         calls += 1;
+        errors.push(err instanceof Error ? err.message : String(err));
       }
       await new Promise((r) => setTimeout(r, 120));
     }
@@ -176,7 +179,7 @@ export async function fetchCwop(locations) {
         pwsBySlug,
         geojson: { type: 'FeatureCollection', features: [] },
         calls,
-        error: 'No CWOP/APRS stations returned from aprs.me',
+        error: errors.slice(0, 5).join('; ') || 'No CWOP/APRS stations returned from aprs.me',
       };
     }
 
@@ -236,12 +239,15 @@ export async function fetchCwop(locations) {
       }
     }
 
+    const gridPartial = errors.length > 0;
+    const status = matched === 0 || matched < locations.length || gridPartial ? 'partial' : 'ok';
     return {
-      status: matched === 0 ? 'partial' : matched < locations.length ? 'partial' : 'ok',
+      status,
       bySlug,
       pwsBySlug,
       geojson,
       calls,
+      error: gridPartial ? errors.slice(0, 5).join('; ') : undefined,
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

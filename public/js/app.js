@@ -395,6 +395,7 @@ async function renderResolveView() {
           placeholder="City, county, or ZIP"
           autocomplete="off"
           enterkeyhint="search"
+          maxlength="200"
         />
         <ul id="search-results" class="search-results" role="listbox" aria-label="Search results"></ul>
       </div>
@@ -506,24 +507,32 @@ function bindAddressPinForm(form) {
     safeVoid(
       (async () => {
         try {
-          const hit = await geocodeColoradoAddress(q);
-          if (!hit) {
-            if (statusEl) {
-              statusEl.textContent =
-                'No Colorado match found. Try a fuller address, or search by city/ZIP below.';
-            }
-            announce('No Colorado address match', 'assertive');
+          const result = await geocodeColoradoAddress(q);
+          if (!result.ok) {
+            const messages = {
+              invalid: 'Enter a longer Colorado address (3–200 characters).',
+              http: 'Address lookup failed (server error). Try again in a moment.',
+              timeout: 'Address lookup timed out. Try again, or search by city/ZIP below.',
+              network: 'Address lookup failed (network). Check your connection and try again.',
+              empty: 'No Colorado match found. Try a fuller address, or search by city/ZIP below.',
+            };
+            const msg = messages[result.reason] ?? messages.empty;
+            if (statusEl) statusEl.textContent = msg;
+            announce(
+              result.reason === 'empty' ? 'No Colorado address match' : 'Address lookup failed',
+              'assertive',
+            );
             return;
           }
           setHyperlocalPin({
-            lat: hit.lat,
-            lon: hit.lon,
+            lat: result.lat,
+            lon: result.lon,
             accuracy_m: null,
             at: new Date().toISOString(),
             source: 'address',
-            label: hit.label,
+            label: result.label,
           });
-          const nearest = findNearestLocation(hit.lat, hit.lon, locations);
+          const nearest = findNearestLocation(result.lat, result.lon, locations);
           if (!nearest) {
             if (statusEl) statusEl.textContent = 'Address found, but no catalog site nearby.';
             announce('Address found but no catalog site', 'assertive');

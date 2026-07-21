@@ -147,7 +147,8 @@ export async function fetchPinCurrent(pin) {
     if (!res.ok) return null;
     const json = await res.json();
     return mapOpenMeteoCurrent(json);
-  } catch {
+  } catch (err) {
+    console.warn('hyperlocal: pin current fetch failed', err);
     return null;
   } finally {
     clearTimeout(timer);
@@ -165,9 +166,18 @@ export async function buildHyperlocalOverlay(pin, opts = {}) {
   const out = { cameras: [], alerts: [], pws: null, current: null };
 
   const [camsRaw, alertsRaw, cwopRaw, current] = await Promise.all([
-    fetchGeoJsonCached(`${base}/cdot-cameras.geojson`).catch(() => null),
-    fetchGeoJsonCached(`${base}/cdot-alerts.geojson`).catch(() => null),
-    fetchGeoJsonCached(`${base}/cwop.geojson`).catch(() => null),
+    fetchGeoJsonCached(`${base}/cdot-cameras.geojson`).catch((err) => {
+      console.warn('hyperlocal: cameras geojson failed', err);
+      return null;
+    }),
+    fetchGeoJsonCached(`${base}/cdot-alerts.geojson`).catch((err) => {
+      console.warn('hyperlocal: alerts geojson failed', err);
+      return null;
+    }),
+    fetchGeoJsonCached(`${base}/cwop.geojson`).catch((err) => {
+      console.warn('hyperlocal: cwop geojson failed', err);
+      return null;
+    }),
     opts.skipOpenMeteo ? Promise.resolve(null) : fetchPinCurrent(pin),
   ]);
 
