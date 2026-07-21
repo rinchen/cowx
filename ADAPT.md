@@ -20,7 +20,7 @@ pnpm test
 npx serve public
 ```
 
-Point GitHub Pages at `public/` (see `.github/workflows/pages.yml`). Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
+Point GitHub Pages at the `gh-pages` branch (deployed from `public/` by `.github/workflows/pages.yml`). Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
 
 ---
 

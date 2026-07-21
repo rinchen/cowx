@@ -33,9 +33,18 @@ Without running `fetch`, only committed snapshot data in `public/data/` is avail
 
 ## GitHub Pages
 
-The site is deployed from the `public/` directory on pushes to `main` (see `.github/workflows/pages.yml`).
+The site is deployed from the `public/` directory to the `gh-pages` branch on pushes to `main` (see `.github/workflows/pages.yml`).
 
 **Live site:** https://rinchen.github.io/cowx/
+
+### PR previews
+
+Same-repo pull requests get a sticky comment with a live preview URL under `/pr-preview/pr-{N}/` (see `.github/workflows/preview.yml`). Previews use the PR’s committed `public/` tree (including weather JSON); they are removed when the PR closes. Fork PRs do not get automatic previews — use `npx serve public` locally.
+
+**One-time setup** (after the first `gh-pages` deploy succeeds):
+
+1. **Settings → Pages → Build and deployment → Source:** Deploy from a branch → `gh-pages` / `/` (not “GitHub Actions”).
+2. **Settings → Actions → General → Workflow permissions:** Read and write permissions.
 
 Weather data is refreshed on a **45-minute** schedule via `.github/workflows/update-weather.yml` (`*/45 * * * *` plus `workflow_dispatch`). Failures notify via `NOTIFY_WEBHOOK_URL` when set (no GitHub Issue). Committed JSON in `public/data/` is what visitors see between runs.
 

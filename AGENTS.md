@@ -45,7 +45,8 @@ cowx/   # repo directory (brand: COWX)
 │   └── fixtures/             # Recorded API responses for adapter/unit tests
 └── .github/workflows/
     ├── pr.yml                # Lint, test, validate locations on pull requests
-    ├── pages.yml             # Deploy public/ to GitHub Pages on push to main
+    ├── preview.yml           # PR preview sites under /pr-preview/pr-N/ on gh-pages
+    ├── pages.yml             # Deploy public/ to gh-pages branch on push to main
     └── update-weather.yml    # Scheduled fetch every 45 minutes + failure notify
 ```
 
