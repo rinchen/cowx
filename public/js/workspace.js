@@ -168,12 +168,12 @@ export async function renderWorkspace(root, data, options) {
     pin,
     hyperlocal,
     spaceWeather,
-    sources: options.sources ?? [],
   });
 
   const outlookApi = renderOutlook(outlookRoot, data, {
     onJump: jumpToSection,
     spaceWeather,
+    sources: options.sources ?? [],
   });
   destroyOutlook = outlookApi.destroy;
 

@@ -167,7 +167,6 @@ function scaleChip(letter, block) {
  *     current?: Record<string, unknown> | null,
  *   } | null,
  *   spaceWeather?: Record<string, unknown> | null,
- *   sources?: unknown[],
  * }} [options]
  * @returns {{ headline: string, destroy: () => void }}
  */
@@ -276,15 +275,6 @@ export function renderHero(root, data, options = {}) {
   const name = String(data.name ?? data.slug ?? 'Colorado');
   const locTitle = `${name}, CO`;
   const updatedAt = data.updatedAt ?? data.updated_at ?? null;
-  const chips = sourceStatusChips(options.sources ?? []);
-  const chipHtml = chips.length
-    ? `<ul class="source-chips" aria-label="Data source status">${chips
-        .map(
-          (c) =>
-            `<li><span class="source-chip source-chip--${escapeHtml(c.status)}" title="${escapeHtml(c.id)}: ${escapeHtml(c.status)}" aria-label="${escapeHtml(c.id)} ${escapeHtml(c.status)}">${escapeHtml(c.label)}</span></li>`,
-        )
-        .join('')}</ul>`
-    : '';
 
   root.innerHTML = `
     <section class="glass-panel glance-hero${usingPinNow ? ' glass-panel--pin-now' : ''}" aria-labelledby="glance-hero-heading">
@@ -501,10 +491,6 @@ export function renderHero(root, data, options = {}) {
             <button type="button" class="btn btn-link intel-jump" data-jump-to="aqi-heading">Air quality &amp; pollen detail</button>
           </div>`;
       })()}
-      <div class="glance-freshness">
-        <span class="glance-freshness__label">Sources</span>
-        ${chipHtml || '<span class="intel-muted">Status unavailable</span>'}
-      </div>
     </section>
   `;
 
@@ -542,6 +528,7 @@ export function renderHero(root, data, options = {}) {
  * @param {{
  *   onJump?: (id: string) => void,
  *   spaceWeather?: Record<string, unknown> | null,
+ *   sources?: unknown[],
  * }} [options]
  * @returns {{ destroy: () => void }}
  */
@@ -620,6 +607,16 @@ export function renderOutlook(root, data, options = {}) {
     afd?.snippet != null
       ? String(afd.snippet).slice(0, 220) + (String(afd.snippet).length > 220 ? '…' : '')
       : '';
+
+  const chips = sourceStatusChips(options.sources ?? []);
+  const chipHtml = chips.length
+    ? `<ul class="source-chips" aria-label="Data source status">${chips
+        .map(
+          (c) =>
+            `<li><span class="source-chip source-chip--${escapeHtml(c.status)}" title="${escapeHtml(c.id)}: ${escapeHtml(c.status)}" aria-label="${escapeHtml(c.id)} ${escapeHtml(c.status)}">${escapeHtml(c.label)}</span></li>`,
+        )
+        .join('')}</ul>`
+    : '';
 
   root.innerHTML = `
     <section class="glass-panel outlook-card" aria-labelledby="outlook-heading">
@@ -730,6 +727,12 @@ export function renderOutlook(root, data, options = {}) {
         </div>
       </section>
     </section>
+    <aside class="glass-panel workspace__sources" aria-label="Data sources">
+      <div class="glance-freshness">
+        <span class="glance-freshness__label">Sources</span>
+        ${chipHtml || '<span class="intel-muted">Status unavailable</span>'}
+      </div>
+    </aside>
   `;
 
   bindJumps(root, options.onJump);
