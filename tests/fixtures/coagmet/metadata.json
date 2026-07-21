@@ -1,0 +1,26 @@
+{
+  "ftc01": {
+    "name": "Fort Collins",
+    "lat": 40.59,
+    "lon": -105.14,
+    "active": "active"
+  },
+  "den01": {
+    "name": "Denver Metro",
+    "lat": 39.74,
+    "lon": -104.99,
+    "active": "active"
+  },
+  "far01": {
+    "name": "Wyoming Far",
+    "lat": 42.5,
+    "lon": -105.0,
+    "active": "active"
+  },
+  "off01": {
+    "name": "Inactive Station",
+    "lat": 39.5,
+    "lon": -105.0,
+    "active": "inactive"
+  }
+}

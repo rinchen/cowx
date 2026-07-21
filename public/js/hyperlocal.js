@@ -144,7 +144,10 @@ export async function fetchPinCurrent(pin) {
   const timer = setTimeout(() => controller.abort(), OM_TIMEOUT_MS);
   try {
     const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn('hyperlocal: pin current HTTP %s', res.status);
+      return null;
+    }
     const json = await res.json();
     return mapOpenMeteoCurrent(json);
   } catch (err) {

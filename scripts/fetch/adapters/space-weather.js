@@ -10,6 +10,7 @@ import {
   estimateHfConditions,
   xrayFluxToClass,
 } from '../../lib/hf-conditions.js';
+import { toFiniteNumber } from '../../lib/parse.js';
 
 const SWPC = 'https://services.swpc.noaa.gov';
 
@@ -19,16 +20,6 @@ export const SPACE_WEATHER_LINKS = {
   drap: 'https://www.swpc.noaa.gov/products/d-region-absorption-predictions-d-rap',
   prop: 'https://prop.kc2g.com/',
 };
-
-/**
- * @param {unknown} raw
- * @returns {number | null}
- */
-function num(raw) {
-  if (raw == null || raw === '') return null;
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : null;
-}
 
 /**
  * @param {unknown} raw
@@ -66,7 +57,7 @@ export function parseNoaaScales(data) {
     const block = /** @type {Record<string, unknown>} */ (entry)[key];
     if (!block || typeof block !== 'object') return { scale: null, text: null };
     const b = /** @type {Record<string, unknown>} */ (block);
-    const scale = num(b.Scale);
+    const scale = toFiniteNumber(b.Scale);
     return { scale, text: str(b.Text) };
   }
 
@@ -112,7 +103,8 @@ export function parseNoaaScales(data) {
 export function parsePlanetaryKp(data) {
   if (!Array.isArray(data) || data.length === 0) return null;
   const last = /** @type {Record<string, unknown>} */ (data[data.length - 1]);
-  const value = num(last.estimated_kp) ?? num(last.kp_index) ?? num(last.Kp);
+  const value =
+    toFiniteNumber(last.estimated_kp) ?? toFiniteNumber(last.kp_index) ?? toFiniteNumber(last.Kp);
   if (value == null) return null;
   return {
     value,
@@ -129,7 +121,8 @@ export function parsePlanetaryKp(data) {
 export function parseBoulderKp(data) {
   if (!Array.isArray(data) || data.length === 0) return null;
   const last = /** @type {Record<string, unknown>} */ (data[data.length - 1]);
-  const value = num(last.k_index) ?? num(last.kp_index) ?? num(last.Kp);
+  const value =
+    toFiniteNumber(last.k_index) ?? toFiniteNumber(last.kp_index) ?? toFiniteNumber(last.Kp);
   if (value == null) return null;
   return { value, observed: str(last.time_tag) };
 }
@@ -146,16 +139,18 @@ export function parseSolarFlux(data) {
   if (!rows.length) return null;
 
   const noon = rows.find(
-    (r) => String(r.reporting_schedule ?? '') === 'Noon' && num(r.flux) != null,
+    (r) => String(r.reporting_schedule ?? '') === 'Noon' && toFiniteNumber(r.flux) != null,
   );
   const pick = noon ?? rows[0];
-  const value = num(pick.flux);
+  const value = toFiniteNumber(pick.flux);
   if (value == null) return null;
   return {
     value: Math.round(value),
     observed: str(pick.time_tag),
     ninety_day_mean:
-      num(pick.ninety_day_mean) != null ? Math.round(Number(pick.ninety_day_mean)) : null,
+      toFiniteNumber(pick.ninety_day_mean) != null
+        ? Math.round(Number(pick.ninety_day_mean))
+        : null,
   };
 }
 
@@ -174,7 +169,7 @@ export function parseGoesXray(data) {
   );
   const rows = longChannel.length ? longChannel : data;
   const last = /** @type {Record<string, unknown>} */ (rows[rows.length - 1]);
-  const flux = num(last.flux);
+  const flux = toFiniteNumber(last.flux);
   if (flux == null) return null;
   return {
     class: xrayFluxToClass(flux),

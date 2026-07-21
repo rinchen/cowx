@@ -6,6 +6,7 @@
 
 import { fetchJson } from '../../lib/http.js';
 import { haversineKm, nearestPoint, nearestPoints } from '../../lib/geo.js';
+import { toFiniteNumber } from '../../lib/parse.js';
 
 const CAMERAS_URL = 'https://cotg.carsprogram.org/cameras_v1/api/cameras';
 const RWIS_ARCGIS =
@@ -32,16 +33,6 @@ const CHAIN_RE = /\bchain\b/i;
 const CLOSURE_RE = /\b(closure|closed|roadway.?closure)\b/i;
 
 /**
- * @param {unknown} v
- * @returns {number | null}
- */
-function num(v) {
-  if (v == null || v === '') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-/**
  * @param {unknown} raw
  * @returns {{ id: string, name: string, lat: number, lon: number, imageUrl: string | null, pageUrl: string }[]}
  */
@@ -51,8 +42,8 @@ export function parseCameras(raw) {
   for (const cam of raw) {
     if (!cam || typeof cam !== 'object') continue;
     if (cam.public === false || cam.active === false) continue;
-    const lat = num(cam.location?.latitude);
-    const lon = num(cam.location?.longitude);
+    const lat = toFiniteNumber(cam.location?.latitude);
+    const lon = toFiniteNumber(cam.location?.longitude);
     if (lat == null || lon == null) continue;
     const views = Array.isArray(cam.views) ? cam.views : [];
     const view = views.find((v) => v?.videoPreviewUrl) ?? views[0] ?? null;
@@ -81,14 +72,17 @@ export function parseRwisGeoJson(raw) {
   const out = [];
   for (const f of features) {
     const p = f?.properties ?? {};
-    const lat = num(p.ws_latitude) ?? num(f?.geometry?.coordinates?.[1]);
-    const lon = num(p.ws_longitude) ?? num(f?.geometry?.coordinates?.[0]);
+    const lat = toFiniteNumber(p.ws_latitude) ?? toFiniteNumber(f?.geometry?.coordinates?.[1]);
+    const lon = toFiniteNumber(p.ws_longitude) ?? toFiniteNumber(f?.geometry?.coordinates?.[0]);
     if (lat == null || lon == null) continue;
     const id = String(p.ws_deviceid ?? p.ws_weatherstationid ?? p.objectid ?? '');
     if (!id) continue;
 
     let observed = null;
-    const ts = num(p.ws_devicecollectiondt) ?? num(p.ws_lastupdatedate) ?? num(p.last_edited_date);
+    const ts =
+      toFiniteNumber(p.ws_devicecollectiondt) ??
+      toFiniteNumber(p.ws_lastupdatedate) ??
+      toFiniteNumber(p.last_edited_date);
     if (ts != null) {
       observed = new Date(ts > 1e12 ? ts : ts * 1000).toISOString();
     }
@@ -98,15 +92,15 @@ export function parseRwisGeoJson(raw) {
       name: String(p.ws_commonname ?? id),
       lat,
       lon,
-      air_temp_f: num(p.ws_essairtemp),
-      surface_temp_f: num(p.surfacesensor_esssurfacetempera),
+      air_temp_f: toFiniteNumber(p.ws_essairtemp),
+      surface_temp_f: toFiniteNumber(p.surfacesensor_esssurfacetempera),
       surface_status: p.surfacesensor_rwissurfacestatus
         ? String(p.surfacesensor_rwissurfacestatus)
         : null,
-      humidity: num(p.ws_essrelhumidty),
-      wind_speed_mph: num(p.ws_essavgwindspeed),
+      humidity: toFiniteNumber(p.ws_essrelhumidty),
+      wind_speed_mph: toFiniteNumber(p.ws_essavgwindspeed),
       wind_gust_mph: null,
-      visibility_mi: num(p.ws_essvisibility),
+      visibility_mi: toFiniteNumber(p.ws_essvisibility),
       road: p.ws_roadname ? String(p.ws_roadname) : null,
       observed,
     });
@@ -120,7 +114,7 @@ export function parseRwisGeoJson(raw) {
  * @returns {string | null}
  */
 function arcgisDate(v) {
-  const n = num(v);
+  const n = toFiniteNumber(v);
   if (n != null) return new Date(n > 1e12 ? n : n * 1000).toISOString();
   if (typeof v === 'string' && v.trim()) {
     const d = new Date(v);
@@ -146,15 +140,15 @@ export function geometryMidpoint(geometry) {
       if (Array.isArray(part)) coords.push(.../** @type {number[][]} */ (part));
     }
   } else if (g.type === 'Point' && Array.isArray(g.coordinates)) {
-    const lon = num(g.coordinates[0]);
-    const lat = num(g.coordinates[1]);
+    const lon = toFiniteNumber(g.coordinates[0]);
+    const lat = toFiniteNumber(g.coordinates[1]);
     if (lat != null && lon != null) return { lat, lon };
     return null;
   }
   if (coords.length === 0) return null;
   const mid = coords[Math.floor(coords.length / 2)];
-  const lon = num(mid?.[0]);
-  const lat = num(mid?.[1]);
+  const lon = toFiniteNumber(mid?.[0]);
+  const lat = toFiniteNumber(mid?.[1]);
   if (lat == null || lon == null) return null;
   return { lat, lon };
 }
@@ -170,8 +164,8 @@ export function parseAlertsGeoJson(raw, source = 'point') {
   const out = [];
   for (const f of features) {
     const p = f?.properties ?? {};
-    let lat = num(p.startlatitude) ?? num(f?.geometry?.coordinates?.[1]);
-    let lon = num(p.startlongitude) ?? num(f?.geometry?.coordinates?.[0]);
+    let lat = toFiniteNumber(p.startlatitude) ?? toFiniteNumber(f?.geometry?.coordinates?.[1]);
+    let lon = toFiniteNumber(p.startlongitude) ?? toFiniteNumber(f?.geometry?.coordinates?.[0]);
     if ((lat == null || lon == null) && source === 'polyline') {
       const mid = geometryMidpoint(f?.geometry);
       if (mid) {
@@ -180,8 +174,8 @@ export function parseAlertsGeoJson(raw, source = 'point') {
       }
     }
     if (lat == null || lon == null) {
-      lat = num(p.endlocationlatitude);
-      lon = num(p.endlocationlongitude);
+      lat = toFiniteNumber(p.endlocationlatitude);
+      lon = toFiniteNumber(p.endlocationlongitude);
     }
     if (lat == null || lon == null) continue;
 

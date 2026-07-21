@@ -20,7 +20,14 @@ pnpm test
 npx serve public
 ```
 
-Point GitHub Pages at the `gh-pages` branch (deployed from `public/` by `.github/workflows/pages.yml`). Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
+Point GitHub Pages at the `gh-pages` branch (deployed from `public/` by `.github/workflows/pages.yml`). Keep `clean-exclude: pr-preview` if you use PR previews. Leave `public/.nojekyll` in place so GitHub Pages does not run Jekyll over the static tree. Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
+
+### GitHub Pages / PR previews
+
+1. **Settings → Pages → Source:** Deploy from a branch → `gh-pages` / `/` (not “GitHub Actions”).
+2. **Settings → Actions → Workflow permissions:** Read and write.
+3. Same-repo PRs publish under `/pr-preview/pr-N/` via `.github/workflows/preview.yml` (fork PRs are skipped). Treat preview URLs as **untrusted** — they share the production `*.github.io` origin.
+4. Do not remove `clean-exclude: pr-preview` from `pages.yml` or production deploys will wipe open PR previews.
 
 ---
 
@@ -41,15 +48,15 @@ Point GitHub Pages at the `gh-pages` branch (deployed from `public/` by `.github
 
 Replace every entry with sites in your state. Each object needs at least:
 
-| Field          | Notes                                                          |
-| -------------- | -------------------------------------------------------------- |
-| `slug`         | Stable kebab-case, unique (`denver`, `pueblo`)                 |
-| `name`         | Display name                                                   |
-| `lat`, `lon`   | WGS84 (must fall in your target state bbox in the validator)   |
-| `region`       | Must match `schemas/location.schema.json` enums (update those) |
-| `county`       | County name                                                    |
-| `wfo`          | NWS office id (e.g. `BOU`) — update schema enum                |
-| `elevation_ft` | Elevation                                                      |
+| Field          | Notes                                                                                                                                                                                                                              |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slug`         | Stable kebab-case, unique (`denver`, `pueblo`)                                                                                                                                                                                     |
+| `name`         | Display name                                                                                                                                                                                                                       |
+| `lat`, `lon`   | WGS84 (must fall in your target state bbox in the validator)                                                                                                                                                                       |
+| `region`       | Kebab-case region string; update `schemas/location.schema.json` enums for contracts. `pnpm validate:locations` does **not** enforce region/wfo enums — only required fields, slug shape, CO (or your) bbox, and webcam link rules. |
+| `county`       | County name                                                                                                                                                                                                                        |
+| `wfo`          | NWS office id (e.g. `BOU`) — update schema enum for documentation; CI validator does not check the enum                                                                                                                            |
+| `elevation_ft` | Elevation                                                                                                                                                                                                                          |
 
 Useful optional fields: `icao`, `pws_id` (WU dashboard link only), `coagmet_id`,
 `webcam_links` (municipal/ski/NWS camera **portals** as new-tab links — do not scrape or hotlink stills).
@@ -177,7 +184,7 @@ Keep this file (`ADAPT.md`) and adjust examples to your brand once stable.
 
 - Client routing (`#/`, `#/search`, `#/refine`, `#/l/{slug}`), favorites UX, forecast tables
 - Generic haversine helpers (`scripts/lib/geo.js`, `public/js/geo.js`)
-- Pages / PR workflows (paths), unless you rename scripts
+- Pages / PR workflows (paths), unless you rename scripts — keep `preview.yml`, `pages.yml` `clean-exclude: pr-preview`, and `public/.nojekyll`
 - RainViewer / Leaflet map plumbing (re-center only)
 
 Hash routes: `#/` home/resolve, `#/search` find-location (no auto-redirect), `#/refine` pin refine flow, `#/l/{slug}` locality workspace.

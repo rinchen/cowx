@@ -7,6 +7,10 @@
       name="description"
       content="How COWX resolves your location and loads Colorado weather data."
     />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    />
     <title>How it works — COWX</title>
     <link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -145,10 +149,10 @@
       </ul>
       <p>
         If a non-critical source fails, the site still publishes. If critical sources all fail, the
-        Action fails and operators are notified.
+        weather fetch step fails and operators can be notified.
       </p>
 
-      <h2>Dashboards</h2>
+      <h2>Workspace</h2>
       <p>
         Each location opens a dual-pane <strong>workspace</strong>: an animated RainViewer radar
         loop beside an <strong>At a Glance</strong> hero (plain-English bottom-line headline, now
@@ -174,10 +178,10 @@
 
       <h2>Failure notifications</h2>
       <p>
-        When the scheduled update workflow fails, GitHub Actions can post to a Discord webhook
-        configured as the repository secret <code>NOTIFY_WEBHOOK_URL</code> with a link to the
-        failed run. It does not open a GitHub Issue. Secret values are never committed to the
-        repository.
+        When the scheduled <strong>weather fetch step</strong> fails (not install or push races
+        after a successful fetch), GitHub Actions can post to a Discord webhook configured as the
+        repository secret <code>NOTIFY_WEBHOOK_URL</code> with a link to the failed run. It does not
+        open a GitHub Issue. Secret values are never committed to the repository.
       </p>
 
       <h2 id="ad-blockers">Ad blockers</h2>

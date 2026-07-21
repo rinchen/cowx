@@ -1,5 +1,7 @@
 /**
- * Open-Meteo / WMO weather code → English label (single source of truth).
+ * Open-Meteo / WMO weather code → English label.
+ * Dual copy with public/js/wmo.js (static Pages has no bundler; public/ cannot import scripts/).
+ * Keep labels in sync — tests/dom-aqi.test.js asserts parity.
  */
 
 const WMO = {

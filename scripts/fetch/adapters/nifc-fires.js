@@ -6,6 +6,7 @@
 
 import { fetchJson } from '../../lib/http.js';
 import { haversineKm } from '../../lib/geo.js';
+import { toFiniteNumber } from '../../lib/parse.js';
 
 const MAX_DISTANCE_KM = 80;
 const MAX_INCIDENTS = 3;
@@ -18,21 +19,11 @@ const QUERY_URL =
   '&returnGeometry=true&outSR=4326&f=geojson';
 
 /**
- * @param {unknown} v
- * @returns {number | null}
- */
-function num(v) {
-  if (v == null || v === '') return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-/**
  * @param {unknown} epochMs
  * @returns {string | null}
  */
 function epochToIso(epochMs) {
-  const n = num(epochMs);
+  const n = toFiniteNumber(epochMs);
   if (n == null) return null;
   try {
     return new Date(n).toISOString();
@@ -55,24 +46,24 @@ export function parseNifcIncidents(fc) {
   for (const f of features) {
     const props = /** @type {Record<string, unknown>} */ (f?.properties ?? {});
     const geom = /** @type {{ type?: string, coordinates?: number[] }} */ (f?.geometry ?? {});
-    let lat = num(props.InitialLatitude);
-    let lon = num(props.InitialLongitude);
+    let lat = toFiniteNumber(props.InitialLatitude);
+    let lon = toFiniteNumber(props.InitialLongitude);
     if (
       (lat == null || lon == null) &&
       geom.type === 'Point' &&
       Array.isArray(geom.coordinates) &&
       geom.coordinates.length >= 2
     ) {
-      lon = num(geom.coordinates[0]);
-      lat = num(geom.coordinates[1]);
+      lon = toFiniteNumber(geom.coordinates[0]);
+      lat = toFiniteNumber(geom.coordinates[1]);
     }
     if (lat == null || lon == null) continue;
     const name = String(props.IncidentName ?? '').trim() || 'Unnamed incident';
     const irwin = props.IrwinID ? String(props.IrwinID) : null;
     out.push({
       name,
-      acres: num(props.IncidentSize),
-      percentContained: num(props.PercentContained),
+      acres: toFiniteNumber(props.IncidentSize),
+      percentContained: toFiniteNumber(props.PercentContained),
       lat,
       lon,
       updated: epochToIso(props.FireDiscoveryDateTime),

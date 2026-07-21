@@ -8,15 +8,38 @@ const CHUNK = 40;
 const DELAY_MS = 8000;
 
 /**
- * @param {import('../../lib/types.js').Location[]} locations
+ * Map one Open-Meteo air-quality `current` block onto payload fields.
+ * @param {Record<string, unknown> | null | undefined} cur
+ * @returns {object | null}
  */
-export async function fetchOpenMeteoAq(locations) {
+export function mapOpenMeteoAqCurrent(cur) {
+  if (!cur || typeof cur !== 'object') return null;
+  return {
+    pm25: cur.pm2_5 ?? null,
+    pm10: cur.pm10 ?? null,
+    co: cur.carbon_monoxide ?? null,
+    no2: cur.nitrogen_dioxide ?? null,
+    so2: cur.sulphur_dioxide ?? null,
+    o3: cur.ozone ?? null,
+    european_aqi: cur.european_aqi ?? null,
+    us_aqi: cur.us_aqi ?? null,
+    time: cur.time ?? null,
+  };
+}
+
+/**
+ * @param {import('../../lib/types.js').Location[]} locations
+ * @param {{ delayMs?: number, rateLimitDelayMs?: number }} [opts]
+ */
+export async function fetchOpenMeteoAq(locations, opts = {}) {
+  const delayMs = opts.delayMs ?? DELAY_MS;
+  const rateLimitDelayMs = opts.rateLimitDelayMs ?? 60_000;
   const bySlug = new Map();
   let calls = 0;
   const errors = [];
 
   for (let i = 0; i < locations.length; i += CHUNK) {
-    if (i > 0) await sleep(DELAY_MS);
+    if (i > 0) await sleep(delayMs);
     const chunk = locations.slice(i, i + CHUNK);
     const lats = chunk.map((l) => l.lat).join(',');
     const lons = chunk.map((l) => l.lon).join(',');
@@ -31,23 +54,13 @@ export async function fetchOpenMeteoAq(locations) {
       for (let j = 0; j < chunk.length; j += 1) {
         const loc = chunk[j];
         const r = results[j];
-        const cur = r?.current;
-        if (!cur) continue;
-        bySlug.set(loc.slug, {
-          pm25: cur.pm2_5 ?? null,
-          pm10: cur.pm10 ?? null,
-          co: cur.carbon_monoxide ?? null,
-          no2: cur.nitrogen_dioxide ?? null,
-          so2: cur.sulphur_dioxide ?? null,
-          o3: cur.ozone ?? null,
-          european_aqi: cur.european_aqi ?? null,
-          us_aqi: cur.us_aqi ?? null,
-          time: cur.time ?? null,
-        });
+        const mapped = mapOpenMeteoAqCurrent(r?.current);
+        if (!mapped) continue;
+        bySlug.set(loc.slug, mapped);
       }
     } catch (err) {
       errors.push(err instanceof Error ? err.message : String(err));
-      if (String(err).includes('429')) await sleep(60_000);
+      if (String(err).includes('429')) await sleep(rateLimitDelayMs);
     }
   }
 

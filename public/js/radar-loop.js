@@ -124,7 +124,8 @@ export class RadarLoopController {
         window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
       if (this._autoplay && !reduced) this.play();
       return true;
-    } catch {
+    } catch (err) {
+      console.warn('RadarLoopController.load failed', err);
       this.destroy();
       return false;
     } finally {

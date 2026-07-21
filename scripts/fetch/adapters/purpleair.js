@@ -5,13 +5,9 @@
  */
 
 import { fetchJson } from '../../lib/http.js';
-import { nearestPoint } from '../../lib/geo.js';
-
-// Rough Colorado bbox
-const NWLAT = 41.0;
-const SELAT = 37.0;
-const NWLNG = -109.1;
-const SELNG = -102.0;
+import { assignNearestWithin, roundKm } from '../../lib/geo.js';
+import { CO_BBOX } from '../../lib/colorado.js';
+import { toFiniteNumber } from '../../lib/parse.js';
 
 /**
  * @param {import('../../lib/types.js').Location[]} locations
@@ -30,7 +26,7 @@ export async function fetchPurpleAir(locations, env = process.env) {
     const fields = 'name,latitude,longitude,pm2.5_10minute,humidity,temperature';
     const url =
       `https://api.purpleair.com/v1/sensors?fields=${encodeURIComponent(fields)}` +
-      `&nwlat=${NWLAT}&selat=${SELAT}&nwlng=${NWLNG}&selng=${SELNG}&max_age=3600`;
+      `&nwlat=${CO_BBOX.north}&selat=${CO_BBOX.south}&nwlng=${CO_BBOX.west}&selng=${CO_BBOX.east}&max_age=3600`;
 
     const data = await fetchJson(url, {
       headers: { 'X-API-Key': key },
@@ -45,34 +41,33 @@ export async function fetchPurpleAir(locations, env = process.env) {
         for (let i = 0; i < fieldNames.length; i += 1) {
           obj[fieldNames[i]] = row[i];
         }
-        const lat = Number(obj.latitude);
-        const lon = Number(obj.longitude);
-        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+        const lat = toFiniteNumber(obj.latitude);
+        const lon = toFiniteNumber(obj.longitude);
+        if (lat == null || lon == null) return null;
         return {
           lat,
           lon,
           name: obj.name ?? 'PurpleAir',
-          pm25: obj['pm2.5_10minute'] != null ? Number(obj['pm2.5_10minute']) : null,
-          humidity: obj.humidity != null ? Number(obj.humidity) : null,
-          temperature_f: obj.temperature != null ? Number(obj.temperature) : null,
+          pm25: toFiniteNumber(obj['pm2.5_10minute']),
+          humidity: toFiniteNumber(obj.humidity),
+          temperature_f: toFiniteNumber(obj.temperature),
         };
       })
       .filter(Boolean);
 
-    for (const loc of locations) {
-      const n = nearestPoint({ lat: loc.lat, lon: loc.lon }, sensors);
-      if (!n || n.distanceKm > 25) continue;
-      const s = n.point;
-      bySlug.set(loc.slug, {
+    const assigned = assignNearestWithin(locations, sensors, 25, (nearest) => {
+      const s = nearest.point;
+      return {
         name: s.name,
-        distance_km: Math.round(n.distanceKm * 10) / 10,
+        distance_km: roundKm(nearest.distanceKm),
         pm25: s.pm25,
         humidity: s.humidity,
         temperature_f: s.temperature_f,
         aqi_pm25: pm25ToAqi(s.pm25),
         url: 'https://map.purpleair.com/',
-      });
-    }
+      };
+    });
+    for (const [slug, row] of assigned) bySlug.set(slug, row);
 
     return {
       status: bySlug.size > 0 ? 'ok' : 'partial',

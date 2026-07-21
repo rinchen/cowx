@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cowx.local/schemas/space-weather.schema.json",
+  "$id": "https://cowx.dev/schemas/space-weather.schema.json",
   "title": "COWX space weather snapshot",
   "description": "Statewide NOAA SWPC planetary snapshot written to public/data/space-weather.json (not per-location).",
   "type": "object",

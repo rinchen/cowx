@@ -1,6 +1,34 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { alertsForLocation, pointInGeometry, pointInRing } from '../scripts/fetch/adapters/nws.js';
+import {
+  alertsForLocation,
+  pointInGeometry,
+  pointInRing,
+  resolveNwsProductUrl,
+} from '../scripts/fetch/adapters/nws.js';
+
+describe('resolveNwsProductUrl', () => {
+  it('builds https product URL from a relative id', () => {
+    assert.equal(
+      resolveNwsProductUrl('abc-123-uuid'),
+      'https://api.weather.gov/products/abc-123-uuid',
+    );
+  });
+
+  it('allows a full api.weather.gov HTTPS URL', () => {
+    const url = 'https://api.weather.gov/products/abc-123-uuid';
+    assert.equal(resolveNwsProductUrl(url), url);
+  });
+
+  it('rejects http, other hosts, and path tricks', () => {
+    assert.equal(resolveNwsProductUrl('http://api.weather.gov/products/x'), null);
+    assert.equal(resolveNwsProductUrl('https://evil.example/products/x'), null);
+    assert.equal(resolveNwsProductUrl('../etc/passwd'), null);
+    assert.equal(resolveNwsProductUrl('foo/bar'), null);
+    assert.equal(resolveNwsProductUrl(''), null);
+    assert.equal(resolveNwsProductUrl(null), null);
+  });
+});
 
 describe('nws geometry alerts', () => {
   const square = [

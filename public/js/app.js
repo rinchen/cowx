@@ -40,6 +40,25 @@ let dataPollTimer = null;
 let refreshInFlight = false;
 /** Bumps on each route change so stale async renders no-op. */
 let routeGeneration = 0;
+/** Clears hero clock / outlook scrubber / map from the prior workspace. */
+/** @type {(() => void) | null} */
+let workspaceCleanup = null;
+/** Bumps when leaving or re-entering the resolve view so stale IP/locate work no-ops. */
+let resolveGeneration = 0;
+
+/**
+ * Tear down the active workspace (timers, map) before navigating away.
+ */
+function clearWorkspace() {
+  if (workspaceCleanup) {
+    try {
+      workspaceCleanup();
+    } catch (err) {
+      console.warn('workspace cleanup failed', err);
+    }
+    workspaceCleanup = null;
+  }
+}
 
 const els = {
   status: /** @type {HTMLElement | null} */ (null),
@@ -134,7 +153,8 @@ async function loadCoreData(opts = {}) {
     meta = /** @type {Record<string, unknown>} */ (
       await fetchJson('meta.json', { bustCache: bust })
     );
-  } catch {
+  } catch (err) {
+    console.warn('loadCoreData: meta.json failed', err);
     errors.push('Could not load data freshness metadata.');
     meta = null;
   }
@@ -147,7 +167,8 @@ async function loadCoreData(opts = {}) {
     if (index.updated_at && meta) {
       meta.updated_at = index.updated_at;
     }
-  } catch {
+  } catch (err) {
+    console.warn('loadCoreData: index.json failed', err);
     errors.push('Could not load location index — search and geo lookup unavailable.');
     locations = [];
   }
@@ -157,7 +178,8 @@ async function loadCoreData(opts = {}) {
     zipTable = Array.isArray(zipsRaw)
       ? /** @type {ZipEntry[]} */ (zipsRaw)
       : /** @type {Record<string, ZipEntry>} */ (zipsRaw);
-  } catch {
+  } catch (err) {
+    console.warn('loadCoreData: co-zips.json failed', err);
     errors.push('ZIP lookup table unavailable — search by ZIP disabled.');
     zipTable = [];
   }
@@ -177,7 +199,8 @@ async function peekRemoteDataVersion() {
       await fetchJson('meta.json', { bustCache: true })
     );
     return dataVersionFromMeta(remote);
-  } catch {
+  } catch (err) {
+    console.warn('peekRemoteDataVersion: meta.json failed', err);
     return null;
   }
 }
@@ -347,8 +370,10 @@ function formatTimestamp(iso) {
  */
 async function renderResolveView() {
   if (!els.main) return;
+  clearWorkspace();
   destroyMap();
   document.body.classList.remove('workspace-active');
+  const resolveGen = ++resolveGeneration;
 
   const preferred = getPreferredSlug();
   const preferredLoc = preferred ? findLocation(preferred) : null;
@@ -422,11 +447,13 @@ async function renderResolveView() {
   document.getElementById('btn-locate')?.addEventListener('click', () => {
     if (locateInFlight) return;
     locateInFlight = true;
+    const locateGen = ++resolveGeneration;
     safeVoid(
       (async () => {
         if (statusEl) statusEl.textContent = 'Requesting precise device location…';
         announce('Requesting precise device location');
         const coords = await resolveBrowserGeolocation({ highAccuracy: true });
+        if (locateGen !== resolveGeneration) return;
         if (coords && isInColorado(coords.lat, coords.lon)) {
           setHyperlocalPin({
             lat: coords.lat,
@@ -457,8 +484,9 @@ async function renderResolveView() {
           }
           announce('Location outside Colorado', 'assertive');
         }
+        if (locateGen !== resolveGeneration) return;
         if (statusEl) statusEl.textContent = 'Device location unavailable. Trying IP geolocation…';
-        await suggestFromIp(statusEl);
+        await suggestFromIp(statusEl, locateGen);
       })().finally(() => {
         locateInFlight = false;
       }),
@@ -470,7 +498,7 @@ async function renderResolveView() {
   } else if (hash === '#/search') {
     document.getElementById('location-search')?.focus();
   } else {
-    safeVoid(suggestFromIp(statusEl));
+    safeVoid(suggestFromIp(statusEl, resolveGen));
   }
 }
 
@@ -498,6 +526,7 @@ function bindAddressPinForm(form) {
       return;
     }
     inFlight = true;
+    const submitGen = ++resolveGeneration;
     const submitBtn = /** @type {HTMLButtonElement | null} */ (
       form.querySelector('#btn-address-pin')
     );
@@ -508,6 +537,7 @@ function bindAddressPinForm(form) {
       (async () => {
         try {
           const result = await geocodeColoradoAddress(q);
+          if (submitGen !== resolveGeneration) return;
           if (!result.ok) {
             const messages = {
               invalid: 'Enter a longer Colorado address (3–200 characters).',
@@ -555,11 +585,13 @@ function bindAddressPinForm(form) {
 /**
  * Suggest a nearby site from IP without leaving the main page.
  * @param {HTMLElement | null} statusEl
+ * @param {number} [expectedGeneration] when set, ignore result if resolve view moved on
  */
-async function suggestFromIp(statusEl) {
+async function suggestFromIp(statusEl, expectedGeneration = resolveGeneration) {
   if (statusEl) statusEl.textContent = 'Detecting region from network…';
   announce('Detecting region');
   const ip = await resolveIpGeolocation();
+  if (expectedGeneration !== resolveGeneration) return;
   if (ip) {
     const nearest = findNearestLocation(ip.lat, ip.lon, locations);
     if (nearest) {
@@ -676,6 +708,9 @@ function renderErrorCard(title, message, linkLabel) {
 async function renderLocationView(slug, opts = {}, generation = ++routeGeneration) {
   if (!els.main) return;
 
+  clearWorkspace();
+  resolveGeneration += 1;
+
   const indexEntry = findLocation(slug);
   if (!indexEntry) {
     if (generation !== routeGeneration) return;
@@ -692,7 +727,8 @@ async function renderLocationView(slug, opts = {}, generation = ++routeGeneratio
   let payload;
   try {
     payload = await fetchJson(`locations/${slug}.json`, { bustCache: Boolean(opts.bustCache) });
-  } catch {
+  } catch (err) {
+    console.warn('renderLocationView: locations/%s.json failed', slug, err);
     if (generation !== routeGeneration) return;
     document.body.classList.remove('workspace-active');
     renderErrorCard(
@@ -714,7 +750,7 @@ async function renderLocationView(slug, opts = {}, generation = ++routeGeneratio
   document.body.classList.add('workspace-active');
 
   try {
-    const { headline } = await renderWorkspace(
+    const { headline, destroy } = await renderWorkspace(
       wsRoot,
       /** @type {Record<string, unknown>} */ (payload),
       {
@@ -729,10 +765,16 @@ async function renderLocationView(slug, opts = {}, generation = ++routeGeneratio
         onAnnounce: announce,
         dataBase: DATA_BASE,
         pin: getHyperlocalPin(),
+        routeGeneration: generation,
+        isCurrent: () => generation === routeGeneration,
       },
     );
 
-    if (generation !== routeGeneration) return;
+    if (generation !== routeGeneration) {
+      destroy();
+      return;
+    }
+    workspaceCleanup = destroy;
     announce(`Showing weather for ${indexEntry.name}. ${headline}`);
     document.title = `${indexEntry.name} — COWX`;
   } catch (err) {
