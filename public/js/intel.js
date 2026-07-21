@@ -16,11 +16,14 @@ import {
 import {
   bindMeteogramScrubber,
   detectPressureDip,
+  formatMeteogramAxisTicks,
   formatMeteogramHour,
+  formatSeriesRangeLabel,
   mbToInHg,
   meteogramHtml,
   meteogramTimeAxisHtml,
   miniBarChartHtml,
+  seriesRange,
 } from './sparkline.js';
 import { windCompassHtml, windDirLabel } from './wind.js';
 
@@ -320,7 +323,6 @@ export function renderHero(root, data, options = {}) {
         <button type="button" class="aqi-ring ${cat.className}" data-jump-to="aqi-heading" aria-label="${escapeHtml(`Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}. Open air quality details.`)}">
           <span class="aqi-ring__value">${aq.aqi != null ? Math.round(aq.aqi) : '—'}</span>
           <span class="aqi-ring__label">AQI</span>
-          <span class="aqi-ring__cat">${escapeHtml(cat.label)}</span>
         </button>
       </div>
       ${pinNowNote}
@@ -570,6 +572,12 @@ export function renderOutlook(root, data, options = {}) {
     sliceStart,
     sliceEnd,
   );
+  const axisTicks = formatMeteogramAxisTicks(chartTimes);
+  const gridPcts = axisTicks.map((t) => t.pct);
+  const tempRange = formatSeriesRangeLabel(seriesRange(temps));
+  const precipRange = formatSeriesRangeLabel(null, { fixedMin: 0, fixedMax: 100, suffix: '%' });
+  const pressureRange = formatSeriesRangeLabel(seriesRange(pressureIn), { digits: 2 });
+  const windRange = formatSeriesRangeLabel(seriesRange(winds, gusts));
 
   const hourCards = compact
     .map((row) => {
@@ -642,26 +650,31 @@ export function renderOutlook(root, data, options = {}) {
             Drag the marker across the charts to inspect each hour.
           </p>
           <div class="meteogram-stack__body">
-            <div class="meteogram-row">
-              <span class="meteogram-row__label">Temp °F</span>
-              <div class="meteogram-row__chart">
-                <div class="meteogram-plot">
-                  ${meteogramHtml(temps, { color: '#0369a1', label: 'Temperature trend Fahrenheit', fill: true }) || '<p class="empty-state">No temperature series</p>'}
+            <div class="meteogram-plots" data-meteogram-plots>
+              <div class="meteogram-band">
+                <div class="meteogram-band__head">
+                  <span class="meteogram-band__title">Temp °F</span>
+                  ${tempRange ? `<span class="meteogram-band__range">${escapeHtml(tempRange)}</span>` : ''}
+                </div>
+                <div class="meteogram-band__plot">
+                  ${meteogramHtml(temps, { color: '#0369a1', label: 'Temperature trend Fahrenheit', fill: true, gridPcts }) || '<p class="empty-state">No temperature series</p>'}
                 </div>
               </div>
-            </div>
-            <div class="meteogram-row">
-              <span class="meteogram-row__label">Precip chance</span>
-              <div class="meteogram-row__chart">
-                <div class="meteogram-plot">
-                  ${miniBarChartHtml(probs, { color: '#0284c7' }) || '<p class="empty-state">No precip probability</p>'}
+              <div class="meteogram-band">
+                <div class="meteogram-band__head">
+                  <span class="meteogram-band__title">Precip chance</span>
+                  <span class="meteogram-band__range">${escapeHtml(precipRange)}</span>
+                </div>
+                <div class="meteogram-band__plot">
+                  ${miniBarChartHtml(probs, { color: '#0284c7', gridPcts }) || '<p class="empty-state">No precip probability</p>'}
                 </div>
               </div>
-            </div>
-            <div class="meteogram-row">
-              <span class="meteogram-row__label">Pressure inHg${dip.dip ? ' · front dip' : ''}</span>
-              <div class="meteogram-row__chart">
-                <div class="meteogram-plot">
+              <div class="meteogram-band">
+                <div class="meteogram-band__head">
+                  <span class="meteogram-band__title">Pressure inHg${dip.dip ? ' · front dip' : ''}</span>
+                  ${pressureRange ? `<span class="meteogram-band__range">${escapeHtml(pressureRange)}</span>` : ''}
+                </div>
+                <div class="meteogram-band__plot">
                   ${
                     meteogramHtml(pressureIn, {
                       color: dip.dip ? '#a16207' : '#4338ca',
@@ -670,15 +683,17 @@ export function renderOutlook(root, data, options = {}) {
                         : 'Barometric pressure trend inches of mercury',
                       highlightFrom: dip.dip ? dip.index : undefined,
                       fill: true,
+                      gridPcts,
                     }) || '<p class="empty-state">No pressure series</p>'
                   }
                 </div>
               </div>
-            </div>
-            <div class="meteogram-row">
-              <span class="meteogram-row__label">Wind / gust mph</span>
-              <div class="meteogram-row__chart">
-                <div class="meteogram-plot">
+              <div class="meteogram-band">
+                <div class="meteogram-band__head">
+                  <span class="meteogram-band__title">Wind / gust mph</span>
+                  ${windRange ? `<span class="meteogram-band__range">${escapeHtml(windRange)}</span>` : ''}
+                </div>
+                <div class="meteogram-band__plot">
                   ${
                     meteogramHtml(winds, {
                       color: '#166534',
@@ -686,27 +701,28 @@ export function renderOutlook(root, data, options = {}) {
                       secondaryColor: '#c2410c',
                       label: 'Wind speed and gusts miles per hour',
                       fill: false,
+                      gridPcts,
                     }) || '<p class="empty-state">No wind series</p>'
                   }
-                  ${meteogramTimeAxisHtml(chartTimes)}
+                </div>
+              </div>
+              <div class="meteogram-scrub-layer" data-meteogram-scrub-layer>
+                <div class="meteogram-scrubber" data-meteogram-scrubber style="left: 0%">
+                  <div class="meteogram-scrubber__line" aria-hidden="true"></div>
+                  <button
+                    type="button"
+                    class="meteogram-scrubber__handle"
+                    data-meteogram-handle
+                    role="slider"
+                    aria-label="Forecast hour marker"
+                    aria-valuemin="0"
+                    aria-valuemax="${Math.max(0, chartTimes.length - 1)}"
+                    aria-valuenow="0"
+                  ></button>
                 </div>
               </div>
             </div>
-            <div class="meteogram-scrub-layer" data-meteogram-scrub-layer>
-              <div class="meteogram-scrubber" data-meteogram-scrubber style="left: 0%">
-                <div class="meteogram-scrubber__line" aria-hidden="true"></div>
-                <button
-                  type="button"
-                  class="meteogram-scrubber__handle"
-                  data-meteogram-handle
-                  role="slider"
-                  aria-label="Forecast hour marker"
-                  aria-valuemin="0"
-                  aria-valuemax="${Math.max(0, chartTimes.length - 1)}"
-                  aria-valuenow="0"
-                ></button>
-              </div>
-            </div>
+            ${meteogramTimeAxisHtml(chartTimes)}
           </div>
         </div>
       </section>
@@ -715,6 +731,8 @@ export function renderOutlook(root, data, options = {}) {
 
   bindJumps(root, options.onJump);
 
+  /** @type {(() => void) | null} */
+  let scrubCleanup = null;
   const stack = /** @type {HTMLElement | null} */ (root.querySelector('[data-meteogram-stack]'));
   if (stack && chartTimes.length) {
     /**
@@ -728,7 +746,7 @@ export function renderOutlook(root, data, options = {}) {
       return `${digits > 0 ? n.toFixed(digits) : Math.round(n)}${unit}`;
     }
 
-    bindMeteogramScrubber(stack, {
+    scrubCleanup = bindMeteogramScrubber(stack, {
       times: chartTimes,
       initialIndex: 0,
       formatReadout(i) {
@@ -748,7 +766,10 @@ export function renderOutlook(root, data, options = {}) {
   }
 
   return {
-    destroy: () => {},
+    destroy: () => {
+      scrubCleanup?.();
+      scrubCleanup = null;
+    },
   };
 }
 

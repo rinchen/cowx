@@ -5,11 +5,13 @@ import {
   formatMeteogramHour,
   formatMeteogramAxisTicks,
   formatMeteogramTimeLabels,
+  formatSeriesRangeLabel,
   mbToInHg,
   meteogramHtml,
   meteogramIndexFromX,
   meteogramScrubPercent,
   meteogramTimeAxisHtml,
+  seriesRange,
   sparklineHtml,
 } from '../public/js/sparkline.js';
 import { selectRadarFrames, radarTileUrl, safeRadarPath } from '../public/js/radar-loop.js';
@@ -35,6 +37,17 @@ describe('sparkline / meteogram', () => {
     assert.ok(Math.abs(mbToInHg(1013.25) - 29.92) < 0.05);
   });
 
+  it('computes series range and labels', () => {
+    assert.deepEqual(seriesRange([72, null, 97, 80]), { min: 72, max: 97 });
+    assert.equal(formatSeriesRangeLabel(seriesRange([72, 97])), '72–97');
+    assert.equal(formatSeriesRangeLabel(seriesRange([29.9, 30.12]), { digits: 2 }), '29.90–30.12');
+    assert.equal(
+      formatSeriesRangeLabel(null, { fixedMin: 0, fixedMax: 100, suffix: '%' }),
+      '0–100%',
+    );
+    assert.equal(formatSeriesRangeLabel(null), '');
+  });
+
   it('builds meteogram with secondary series', () => {
     const html = meteogramHtml([5, 8, 12, 10], {
       secondary: [10, 14, 20, 18],
@@ -47,6 +60,15 @@ describe('sparkline / meteogram', () => {
   it('keeps aligned length when values include null gaps', () => {
     const html = meteogramHtml([30.1, null, 30.0, 29.9], { label: 'Pressure' });
     assert.match(html, /viewBox="0 0 320/);
+  });
+
+  it('draws vertical gridlines when gridPcts are provided', () => {
+    const html = meteogramHtml([60, 62, 64, 66], {
+      label: 'Temp',
+      gridPcts: [0, 50, 100],
+    });
+    assert.match(html, /class="meteogram-grid"/);
+    assert.equal((html.match(/class="meteogram-grid"/g) || []).length, 3);
   });
 
   it('renders shared time axis labels', () => {
@@ -65,6 +87,11 @@ describe('sparkline / meteogram', () => {
     assert.ok(ticks.length >= 8);
     assert.equal(ticks[0].pct, 0);
     assert.equal(ticks[ticks.length - 1].pct, 100);
+    assert.match(ticks[0].label, /\b\d{1,2}\s?(AM|PM)\b/i);
+    const midnight = ticks.find((t) => t.index === 0 || /12\s?AM/i.test(t.label));
+    assert.ok(midnight);
+    // First tick includes weekday context.
+    assert.match(ticks[0].label, /^[A-Z][a-z]{2}\s/);
     const axis = meteogramTimeAxisHtml(times);
     assert.match(axis, /meteogram-axis/);
     assert.match(axis, /meteogram-axis__labels/);
@@ -72,6 +99,20 @@ describe('sparkline / meteogram', () => {
     assert.match(axis, /meteogram-axis__label--end/);
     assert.match(axis, /style="left:0/);
     assert.match(axis, /<line/);
+  });
+
+  it('labels midnight ticks with weekday when series crosses midnight', () => {
+    const times = [];
+    for (let h = 18; h < 24; h += 1) {
+      times.push(`2026-07-20T${String(h).padStart(2, '0')}:00:00`);
+    }
+    for (let h = 0; h <= 12; h += 1) {
+      times.push(`2026-07-21T${String(h).padStart(2, '0')}:00:00`);
+    }
+    const ticks = formatMeteogramAxisTicks(times, { stepHours: 3 });
+    const midnight = ticks.find((t) => t.index === 6);
+    assert.ok(midnight);
+    assert.match(midnight.label, /^[A-Z][a-z]{2}\s/);
   });
 
   it('maps pointer X to hour index and scrub percent', () => {

@@ -2582,7 +2582,8 @@ body.workspace-active #main-content {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0.15rem;
+  padding: 0.2rem;
+  gap: 0.05rem;
   margin: 0;
   background: transparent;
   cursor: pointer;
@@ -2591,26 +2592,17 @@ body.workspace-active #main-content {
 }
 
 .aqi-ring__value {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 1;
 }
 
 .aqi-ring__label {
-  font-size: 0.52rem;
+  font-size: 0.55rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  margin-top: 0.05rem;
-}
-
-.aqi-ring__cat {
-  font-size: 0.5rem;
-  line-height: 1.1;
-  max-width: 3rem;
-  color: var(--glass-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1;
+  font-weight: 600;
 }
 
 .aqi-ring--good {
@@ -2638,7 +2630,7 @@ body.workspace-active #main-content {
 .meteogram-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.55rem;
   width: 100%;
 }
 
@@ -2648,58 +2640,80 @@ body.workspace-active #main-content {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--glass-text);
+  font-variant-numeric: tabular-nums;
 }
 
 .meteogram-stack__body {
-  --meteogram-label-w: 7.5rem;
-  --meteogram-gap: 0.65rem;
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: 0.35rem;
   width: 100%;
 }
 
-.meteogram-row {
-  display: grid;
-  grid-template-columns: var(--meteogram-label-w) minmax(0, 1fr);
-  gap: var(--meteogram-gap);
-  align-items: center;
-  width: 100%;
-}
-
-.meteogram-row__label {
-  display: block;
-  font-size: 0.75rem;
-  color: var(--glass-muted);
-  line-height: 1.25;
-}
-
-.meteogram-row__chart {
-  min-width: 0;
-  width: 100%;
-}
-
-.meteogram-plot {
+.meteogram-plots {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.55rem;
   width: 100%;
+}
+
+.meteogram-band {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.meteogram-band__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.meteogram-band__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--glass-muted);
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.meteogram-band__range {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--glass-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.meteogram-band__plot {
+  width: 100%;
+  min-width: 0;
+  border-radius: 0.35rem;
+  background: rgb(232 241 248 / 55%);
+  border: 1px solid rgb(197 214 227 / 70%);
+  overflow: hidden;
 }
 
 .meteogram {
   display: block;
   width: 100%;
-  height: 80px;
+  height: 76px;
   color: var(--glass-muted);
 }
 
 .meteogram-axis {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.2rem;
   width: 100%;
-  margin-top: 0.2rem;
+  margin-top: 0.1rem;
   color: var(--glass-muted);
 }
 
@@ -2711,9 +2725,11 @@ body.workspace-active #main-content {
 
 .meteogram-axis__labels {
   position: relative;
-  height: 1.15rem;
-  font-size: 0.72rem;
+  height: 1.35rem;
+  font-size: 0.75rem;
   line-height: 1.2;
+  font-weight: 500;
+  color: var(--glass-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2732,12 +2748,17 @@ body.workspace-active #main-content {
   transform: translateX(-100%);
 }
 
+@media (max-width: 419px) {
+  .meteogram-axis__label:nth-child(even):not(.meteogram-axis__label--start):not(
+      .meteogram-axis__label--end
+    ) {
+    display: none;
+  }
+}
+
 .meteogram-scrub-layer {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(var(--meteogram-label-w) + var(--meteogram-gap));
-  right: 0;
+  inset: 0;
   z-index: 2;
   cursor: ew-resize;
   touch-action: none;
@@ -2759,10 +2780,11 @@ body.workspace-active #main-content {
   top: 0;
   bottom: 0;
   left: 50%;
-  width: 1px;
-  margin-left: -0.5px;
-  background: #0369a1;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 55%);
+  width: 2px;
+  margin-left: -1px;
+  background: var(--glass-accent, #0369a1);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 70%);
+  border-radius: 1px;
 }
 
 .meteogram-scrubber__handle {
@@ -2774,7 +2796,7 @@ body.workspace-active #main-content {
   width: 16px;
   height: 28px;
   padding: 0;
-  border: 1.5px solid #0369a1;
+  border: 1.5px solid var(--glass-accent, #0369a1);
   border-radius: 4px;
   background: #fff;
   box-shadow: 0 1px 4px rgb(26 43 60 / 25%);
@@ -2785,8 +2807,8 @@ body.workspace-active #main-content {
   content: '';
   position: absolute;
   inset: 6px 5px;
-  border-left: 1px solid #0369a1;
-  border-right: 1px solid #0369a1;
+  border-left: 1px solid var(--glass-accent, #0369a1);
+  border-right: 1px solid var(--glass-accent, #0369a1);
   opacity: 0.7;
 }
 

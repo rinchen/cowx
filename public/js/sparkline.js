@@ -38,9 +38,71 @@ export function sparklineHtml(values, opts = {}) {
 }
 
 /**
+ * Finite min/max for a series (nulls skipped). Used for band range headers.
+ * @param {(number | null | undefined)[]} values
+ * @param {(number | null | undefined)[]} [extra]
+ * @returns {{ min: number, max: number } | null}
+ */
+export function seriesRange(values, extra) {
+  /** @type {number[]} */
+  const nums = [];
+  /**
+   * @param {unknown} v
+   */
+  function pushFinite(v) {
+    if (v == null || v === '') return;
+    const n = Number(v);
+    if (Number.isFinite(n)) nums.push(n);
+  }
+  for (const v of Array.isArray(values) ? values : []) pushFinite(v);
+  if (Array.isArray(extra)) {
+    for (const v of extra) pushFinite(v);
+  }
+  if (!nums.length) return null;
+  return { min: Math.min(...nums), max: Math.max(...nums) };
+}
+
+/**
+ * Format a series range for band headers (e.g. "72–97" or "29.90–30.12").
+ * @param {{ min: number, max: number } | null} range
+ * @param {{ digits?: number, suffix?: string, fixedMin?: number, fixedMax?: number }} [opts]
+ * @returns {string}
+ */
+export function formatSeriesRangeLabel(range, opts = {}) {
+  const digits = opts.digits ?? 0;
+  const suffix = opts.suffix ?? '';
+  if (opts.fixedMin != null && opts.fixedMax != null) {
+    const a = digits > 0 ? opts.fixedMin.toFixed(digits) : String(Math.round(opts.fixedMin));
+    const b = digits > 0 ? opts.fixedMax.toFixed(digits) : String(Math.round(opts.fixedMax));
+    return `${a}–${b}${suffix}`;
+  }
+  if (!range) return '';
+  const a = digits > 0 ? range.min.toFixed(digits) : String(Math.round(range.min));
+  const b = digits > 0 ? range.max.toFixed(digits) : String(Math.round(range.max));
+  return `${a}–${b}${suffix}`;
+}
+
+/**
+ * Vertical hour guides shared across stacked plots.
+ * @param {number} width
+ * @param {number} height
+ * @param {number[]} [gridPcts]
+ * @returns {string}
+ */
+function meteogramGridHtml(width, height, gridPcts) {
+  if (!Array.isArray(gridPcts) || !gridPcts.length) return '';
+  return gridPcts
+    .map((pct) => {
+      const x = ((Number(pct) / 100) * width).toFixed(1);
+      return `<line class="meteogram-grid" x1="${x}" y1="0" x2="${x}" y2="${height}" stroke="currentColor" stroke-opacity="0.14" stroke-width="1"/>`;
+    })
+    .join('');
+}
+
+/**
  * Mini bar chart for probability-like values (0–100). Keeps slot count (null → empty).
  * @param {(number | null | undefined)[]} values
- * @param {{ width?: number, height?: number, color?: string }} [opts]
+ * @param {{ width?: number, height?: number, color?: string, gridPcts?: number[] }} [opts]
  * @returns {string} SVG HTML string
  */
 export function miniBarChartHtml(values, opts = {}) {
@@ -52,6 +114,7 @@ export function miniBarChartHtml(values, opts = {}) {
 
   const gap = 1;
   const barW = Math.max(1, (width - gap * (raw.length - 1)) / raw.length);
+  const grid = meteogramGridHtml(width, height, opts.gridPcts);
   const rects = raw
     .map((v, i) => {
       const n = Number(v);
@@ -62,7 +125,7 @@ export function miniBarChartHtml(values, opts = {}) {
       return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${color}" opacity="0.85"/>`;
     })
     .join('');
-  return `<svg class="meteogram mini-bars" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Precipitation chance" aria-hidden="false" focusable="false">${rects}</svg>`;
+  return `<svg class="meteogram mini-bars" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Precipitation chance" aria-hidden="false" focusable="false">${grid}${rects}</svg>`;
 }
 
 /**
@@ -97,21 +160,44 @@ export function detectPressureDip(inHgValues, opts = {}) {
 }
 
 /**
- * Format a single ISO local hour for the shared axis (e.g. "7 PM").
  * @param {string} iso
- * @returns {string}
+ * @returns {{ hour: number, weekday: string, hourLabel: string } | null}
  */
-function formatAxisHour(iso) {
-  if (!iso) return '';
+function parseAxisTime(iso) {
+  if (!iso) return null;
   try {
-    return new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).format(new Date(iso));
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return {
+      hour: d.getHours(),
+      weekday: new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(d),
+      hourLabel: new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).format(d),
+    };
   } catch {
-    return String(iso).slice(11, 16);
+    return null;
   }
 }
 
 /**
+ * Format a single ISO local hour for the shared axis (e.g. "7 PM").
+ * @param {string} iso
+ * @param {{ withWeekday?: boolean }} [opts]
+ * @returns {string}
+ */
+function formatAxisHour(iso, opts = {}) {
+  const parsed = parseAxisTime(iso);
+  if (!parsed) {
+    return iso ? String(iso).slice(11, 16) : '';
+  }
+  if (opts.withWeekday) {
+    return `${parsed.weekday} ${parsed.hourLabel}`;
+  }
+  return parsed.hourLabel;
+}
+
+/**
  * Hour ticks for the shared time axis, spaced for a ~24h series.
+ * Weekday is included on the first tick and any midnight tick.
  * @param {string[]} times
  * @param {{ stepHours?: number }} [opts]
  * @returns {{ index: number, label: string, pct: number }[]}
@@ -123,7 +209,9 @@ export function formatMeteogramAxisTicks(times, opts = {}) {
   /** @type {{ index: number, label: string, pct: number }[]} */
   const ticks = [];
   for (let i = 0; i < n; i += stepHours) {
-    const label = formatAxisHour(times[i]);
+    const parsed = parseAxisTime(times[i]);
+    const withWeekday = i === 0 || (parsed != null && parsed.hour === 0);
+    const label = formatAxisHour(times[i], { withWeekday });
     if (!label) continue;
     ticks.push({
       index: i,
@@ -133,7 +221,9 @@ export function formatMeteogramAxisTicks(times, opts = {}) {
   }
   const last = n - 1;
   if (!ticks.length || ticks[ticks.length - 1].index !== last) {
-    const label = formatAxisHour(times[last]);
+    const parsed = parseAxisTime(times[last]);
+    const withWeekday = parsed != null && parsed.hour === 0;
+    const label = formatAxisHour(times[last], { withWeekday });
     if (label) {
       ticks.push({ index: last, label, pct: 100 });
     }
@@ -187,7 +277,7 @@ export function meteogramTimeAxisHtml(times, opts = {}) {
   const tickLines = ticks
     .map((t) => {
       const x = ((t.pct / 100) * width).toFixed(1);
-      return `<line x1="${x}" y1="2" x2="${x}" y2="7" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>`;
+      return `<line x1="${x}" y1="2" x2="${x}" y2="7" stroke="currentColor" stroke-opacity="0.5" stroke-width="1"/>`;
     })
     .join('');
   const labelSpans = ticks
@@ -203,7 +293,7 @@ export function meteogramTimeAxisHtml(times, opts = {}) {
     .join('');
   return `<div class="meteogram-axis">
     <svg class="meteogram-axis__ticks" viewBox="0 0 ${width} 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-      <line x1="0" y1="2" x2="${width}" y2="2" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
+      <line x1="0" y1="2" x2="${width}" y2="2" stroke="currentColor" stroke-opacity="0.4" stroke-width="1"/>
       ${tickLines}
     </svg>
     <div class="meteogram-axis__labels" aria-hidden="true">${labelSpans}</div>
@@ -417,6 +507,7 @@ function polylineSegments(nums, width, height, min, span) {
  *   secondaryColor?: string,
  *   highlightFrom?: number,
  *   label?: string,
+ *   gridPcts?: number[],
  * }} [opts]
  * @returns {string}
  */
@@ -446,11 +537,13 @@ export function meteogramHtml(values, opts = {}) {
   const span = max - min || 1;
   const step = width / (primary.length - 1);
 
+  const grid = meteogramGridHtml(width, height, opts.gridPcts);
+
   const segs = polylineSegments(primary, width, height, min, span);
   const linePolys = segs
     .map(
       (pts) =>
-        `<polyline fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${pts}"/>`,
+        `<polyline fill="none" stroke="${color}" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" points="${pts}"/>`,
     )
     .join('');
 
@@ -458,7 +551,7 @@ export function meteogramHtml(values, opts = {}) {
   if (fill && segs.length) {
     // Fill under first contiguous segment only (visual cue, not critical).
     const first = segs[0];
-    area = `<path d="M${first.split(' ')[0].split(',')[0]},${height} L${first} L${first.split(' ').at(-1)?.split(',')[0] ?? width},${height} Z" fill="${color}" fill-opacity="0.15"/>`;
+    area = `<path d="M${first.split(' ')[0].split(',')[0]},${height} L${first} L${first.split(' ').at(-1)?.split(',')[0] ?? width},${height} Z" fill="${color}" fill-opacity="0.12"/>`;
   }
 
   const highlight =
@@ -470,9 +563,9 @@ export function meteogramHtml(values, opts = {}) {
   const sec = secSegs
     .map(
       (pts) =>
-        `<polyline fill="none" stroke="${opts.secondaryColor ?? '#c2410c'}" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 2" points="${pts}"/>`,
+        `<polyline fill="none" stroke="${opts.secondaryColor ?? '#c2410c'}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4 3" points="${pts}"/>`,
     )
     .join('');
 
-  return `<svg class="meteogram" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${escapeXml(label)}">${area}${highlight}${linePolys}${sec}</svg>`;
+  return `<svg class="meteogram" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${escapeXml(label)}">${grid}${area}${highlight}${linePolys}${sec}</svg>`;
 }
