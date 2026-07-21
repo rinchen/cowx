@@ -8,7 +8,12 @@ on:
       - synchronize
       - closed
 
-concurrency: preview-${{ github.ref }}
+# Share with pages.yml so all writers to gh-pages run one at a time.
+# Do not cancel in-progress deploys — a cancelled mid-push can leave
+# gh-pages inconsistent and pile up GitHub Pages builds.
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
 
 permissions:
   contents: write

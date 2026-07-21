@@ -8,9 +8,11 @@ on:
 permissions:
   contents: write
 
+# Share with preview.yml so production + PR previews never push to
+# gh-pages in parallel (avoids Pages build queue stampede / idle jobs).
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: gh-pages
+  cancel-in-progress: false
 
 jobs:
   deploy:
