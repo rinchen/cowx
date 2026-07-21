@@ -1534,9 +1534,120 @@ body.workspace-active #main-content {
 
 .workspace__specialty {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.55rem;
   grid-template-columns: 1fr;
   margin-top: 0.25rem;
+  align-items: start;
+}
+
+.workspace__specialty > .glass-panel {
+  padding: 0.55rem 0.7rem 0.65rem;
+}
+
+.workspace__specialty .glass-panel__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+}
+
+.workspace__specialty .glass-panel__subtitle {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.78rem;
+}
+
+.workspace__specialty .metric-list--compact {
+  gap: 0.1rem 0.55rem;
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.workspace__specialty .intel-muted {
+  margin: 0.15rem 0;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+
+.workspace__specialty .intel-alert-list {
+  margin: 0 0 0.25rem;
+}
+
+.workspace__specialty .intel-alert-list li {
+  margin: 0;
+}
+
+.workspace__specialty .btn {
+  margin-top: 0.25rem;
+}
+
+.workspace__specialty .btn-link {
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+}
+
+.workspace__specialty .cdot-cam {
+  max-height: 140px;
+  margin: 0.25rem 0;
+}
+
+.workspace__specialty .cdot-cam-strip {
+  gap: 0.45rem;
+}
+
+.workspace__specialty .cdot-cam-more {
+  margin: 0.35rem 0 0;
+}
+
+.workspace__specialty .cdot-cam-more .cdot-cam-strip--more {
+  margin-top: 0.35rem;
+}
+
+.workspace__specialty .link-list--compact {
+  margin: 0.1rem 0 0.2rem;
+  line-height: 1.35;
+}
+
+.workspace__specialty .rf-badge {
+  gap: 0.1rem;
+  padding: 0.4rem 0.5rem;
+  margin: 0.35rem 0 0.25rem;
+}
+
+.workspace__specialty .rf-badge__detail {
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.workspace__specialty .sw-scales {
+  gap: 0.3rem;
+  margin: 0 0 0.35rem;
+}
+
+.workspace__specialty .sw-scale {
+  min-width: 2.75rem;
+  padding: 0.25rem 0.4rem;
+}
+
+.workspace__specialty .sw-aurora {
+  margin: 0.25rem 0;
+  padding: 0.35rem 0.45rem;
+  line-height: 1.3;
+}
+
+.workspace__specialty .sw-hf-summary {
+  margin: 0.25rem 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.workspace__specialty .intel-nav {
+  gap: 0.2rem 0.65rem;
+}
+
+.workspace__specialty p {
+  margin: 0.2rem 0;
+}
+
+.workspace__specialty .metric-list {
+  margin: 0;
 }
 
 @media (min-width: 960px) {
