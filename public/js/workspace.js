@@ -1,12 +1,13 @@
 /**
- * Dual-pane locality workspace (Option D).
+ * Dual-pane locality workspace: sticky radar | Hero + Short-Term,
+ * then full-width specialty intel, then deep forecast.
  */
 
 import { renderDeepForecast } from './dashboard.js';
 import { escapeHtml, jumpToSection } from './dom.js';
 import { getHyperlocalPin, pinDistanceKm } from './geo.js';
 import { buildHyperlocalOverlay } from './hyperlocal.js';
-import { renderIntel } from './intel.js';
+import { renderHero, renderOutlook, renderSpecialtyIntel } from './intel.js';
 import { bindRadarLoopControls, destroyMap, initStateMap, setAqiLayer } from './map.js';
 
 /**
@@ -138,23 +139,57 @@ export async function renderWorkspace(root, data, options) {
                 Air quality
               </label>
             </div>
-            <div id="map-container" class="map-container map-container--workspace"></div>
+            <div id="map-container" class="map-container map-container--workspace" tabindex="-1"></div>
             <p id="radar-status" class="intel-muted" hidden></p>
           </details>
         </div>
-        <div class="workspace__intel" id="workspace-intel"></div>
+        <div class="workspace__primary" id="workspace-primary">
+          <div id="workspace-hero"></div>
+          <div id="workspace-outlook"></div>
+        </div>
       </div>
+      <div class="workspace__specialty" id="workspace-specialty"></div>
       <div class="workspace__deep glass-panel glass-panel--deep" id="workspace-deep"></div>
     </div>
   `;
 
-  const intelRoot = /** @type {HTMLElement} */ (root.querySelector('#workspace-intel'));
+  const heroRoot = /** @type {HTMLElement} */ (root.querySelector('#workspace-hero'));
+  const outlookRoot = /** @type {HTMLElement} */ (root.querySelector('#workspace-outlook'));
+  const specialtyRoot = /** @type {HTMLElement} */ (root.querySelector('#workspace-specialty'));
   const deepRoot = /** @type {HTMLElement} */ (root.querySelector('#workspace-deep'));
   const mapContainer = /** @type {HTMLElement} */ (root.querySelector('#map-container'));
   const radarControls = /** @type {HTMLElement} */ (root.querySelector('#radar-controls'));
 
-  const { headline } = renderIntel(intelRoot, data, {
-    onJump: jumpToSection,
+  /** @type {(() => void) | null} */
+  let openHourlyModal = null;
+
+  /**
+   * @param {string} id
+   */
+  function onJump(id) {
+    if (id === 'hourly-heading') {
+      openHourlyModal?.();
+      return;
+    }
+    jumpToSection(id);
+  }
+
+  const { headline, destroy: destroyHero } = renderHero(heroRoot, data, {
+    onJump,
+    pin,
+    hyperlocal,
+    spaceWeather,
+    sources: options.sources ?? [],
+  });
+
+  const outlookApi = renderOutlook(outlookRoot, data, {
+    onJump,
+    spaceWeather,
+  });
+  openHourlyModal = outlookApi.openHourlyModal;
+
+  renderSpecialtyIntel(specialtyRoot, data, {
+    onJump,
     pin,
     hyperlocal,
     spaceWeather,
@@ -164,6 +199,9 @@ export async function renderWorkspace(root, data, options) {
     sources: options.sources ?? [],
     includeMapSlot: false,
     spaceWeather,
+    omitHourlyTable: true,
+    dailyCollapsed: true,
+    onOpenHourly: () => openHourlyModal?.(),
   });
 
   const favBtn = /** @type {HTMLButtonElement | null} */ (root.querySelector('#btn-favorite'));
@@ -221,6 +259,8 @@ export async function renderWorkspace(root, data, options) {
   return {
     headline,
     destroy: () => {
+      destroyHero();
+      outlookApi.destroy();
       destroyMap();
     },
   };

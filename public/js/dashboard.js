@@ -921,7 +921,14 @@ function buildDailyTable(daily) {
  * Hourly/daily tables + collapsible detail sections (no summary header or map).
  * @param {HTMLElement} root
  * @param {Record<string, unknown>} data
- * @param {{ sources?: unknown[], includeMapSlot?: boolean, spaceWeather?: Record<string, unknown> | null }} [options]
+ * @param {{
+ *   sources?: unknown[],
+ *   includeMapSlot?: boolean,
+ *   spaceWeather?: Record<string, unknown> | null,
+ *   omitHourlyTable?: boolean,
+ *   dailyCollapsed?: boolean,
+ *   onOpenHourly?: () => void,
+ * }} [options]
  */
 export function renderDeepForecast(root, data, options = {}) {
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
@@ -941,6 +948,9 @@ export function renderDeepForecast(root, data, options = {}) {
     links,
     includeMapSlot: options.includeMapSlot === true,
     spaceWeather: options.spaceWeather ?? null,
+    omitHourlyTable: options.omitHourlyTable === true,
+    dailyCollapsed: options.dailyCollapsed === true,
+    onOpenHourly: options.onOpenHourly,
   });
 }
 
@@ -955,30 +965,55 @@ export function renderDeepForecast(root, data, options = {}) {
  *   links: Record<string, string | null>,
  *   includeMapSlot?: boolean,
  *   spaceWeather?: Record<string, unknown> | null,
+ *   omitHourlyTable?: boolean,
+ *   dailyCollapsed?: boolean,
+ *   onOpenHourly?: () => void,
  * }} ctx
  */
 function appendDeepForecast(root, data, ctx) {
-  const { sunrises, sunsets, elevationFt, links, sources: metaSources, spaceWeather = null } = ctx;
+  const {
+    sunrises,
+    sunsets,
+    elevationFt,
+    links,
+    sources: metaSources,
+    spaceWeather = null,
+    omitHourlyTable = false,
+    dailyCollapsed = false,
+    onOpenHourly,
+  } = ctx;
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
 
-  if (!hourly?.time || !Array.isArray(hourly.time) || hourly.time.length === 0) {
-    const empty = document.createElement('div');
-    renderEmpty(
-      empty,
-      'No hourly data',
-      data.forecastStale
-        ? 'Prior forecast also lacked hourly rows.'
-        : 'Forecast temporarily unavailable (source rate-limited or failed this run).',
-    );
-    renderForecastCard(root, 'hourly-heading', 'Hourly forecast (48h)', empty);
-  } else {
-    renderForecastCard(
-      root,
-      'hourly-heading',
-      'Hourly forecast (48h)',
-      buildHourlyTable(hourly, sunrises, sunsets, { elevationFt }),
-    );
+  if (!omitHourlyTable) {
+    if (!hourly?.time || !Array.isArray(hourly.time) || hourly.time.length === 0) {
+      const empty = document.createElement('div');
+      renderEmpty(
+        empty,
+        'No hourly data',
+        data.forecastStale
+          ? 'Prior forecast also lacked hourly rows.'
+          : 'Forecast temporarily unavailable (source rate-limited or failed this run).',
+      );
+      renderForecastCard(root, 'hourly-heading', 'Hourly forecast (48h)', empty);
+    } else {
+      renderForecastCard(
+        root,
+        'hourly-heading',
+        'Hourly forecast (48h)',
+        buildHourlyTable(hourly, sunrises, sunsets, { elevationFt }),
+      );
+    }
+  } else if (typeof onOpenHourly === 'function') {
+    const teaser = document.createElement('section');
+    teaser.className = 'forecast-card forecast-card--hourly-teaser';
+    teaser.innerHTML = `
+      <h2 class="sr-only">Hourly forecast</h2>
+      <p class="intel-muted">Full 48-hour hourly table opens in a dialog from Short-Term Outlook.</p>
+      <button type="button" class="btn outlook-hourly-cta" id="deep-open-hourly">View Full 48-Hour Hourly Forecast</button>
+    `;
+    teaser.querySelector('#deep-open-hourly')?.addEventListener('click', () => onOpenHourly());
+    root.appendChild(teaser);
   }
 
   const dailyTimes = /** @type {string[]} */ (daily?.time ?? []);
@@ -989,7 +1024,21 @@ function appendDeepForecast(root, data, ctx) {
       'No daily forecast',
       'Forecast temporarily unavailable (source rate-limited or failed this run).',
     );
-    renderForecastCard(root, 'daily-heading', 'Daily forecast (10 day)', empty);
+    if (dailyCollapsed) {
+      renderCollapsibleSection(root, 'daily-heading', 'Daily forecast (10 day)', () => empty, {
+        open: false,
+      });
+    } else {
+      renderForecastCard(root, 'daily-heading', 'Daily forecast (10 day)', empty);
+    }
+  } else if (dailyCollapsed) {
+    renderCollapsibleSection(
+      root,
+      'daily-heading',
+      'Daily forecast (10 day)',
+      () => buildDailyTable(/** @type {Record<string, unknown>} */ (daily)),
+      { open: false },
+    );
   } else {
     renderForecastCard(
       root,

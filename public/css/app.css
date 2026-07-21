@@ -1441,7 +1441,9 @@ body.workspace-active #main-content {
   -webkit-backdrop-filter: blur(12px);
   color: var(--glass-text);
   padding: 1rem 1.1rem;
-  box-shadow: 0 1px 3px rgb(26 43 60 / 8%), 0 4px 16px rgb(26 43 60 / 6%);
+  box-shadow:
+    0 1px 3px rgb(26 43 60 / 8%),
+    0 4px 16px rgb(26 43 60 / 6%);
 }
 
 .glass-panel__title {
@@ -1506,6 +1508,20 @@ body.workspace-active #main-content {
   align-items: start;
 }
 
+.workspace__primary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.workspace__specialty {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+  margin-top: 0.25rem;
+}
+
 @media (min-width: 960px) {
   .workspace__grid {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
@@ -1517,6 +1533,16 @@ body.workspace-active #main-content {
     top: calc(var(--header-height) + 0.75rem);
     max-height: calc(100vh - var(--header-height) - 1.5rem);
     overflow: auto;
+  }
+
+  .workspace__specialty {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .workspace__specialty {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -1565,6 +1591,411 @@ body.workspace-active #main-content {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+/* —— At a Glance hero —— */
+.glance-hero {
+  padding: 0.75rem 0.9rem 1rem;
+}
+
+.glance-hero__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.glance-hero__title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--glass-muted);
+}
+
+.glance-hero__place {
+  margin: 0.15rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--glass-text);
+  line-height: 1.2;
+}
+
+.glance-hero__meta {
+  margin: 0.25rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  font-size: 0.8125rem;
+  color: var(--glass-muted);
+}
+
+.glance-hero__clock {
+  font-variant-numeric: tabular-nums;
+}
+
+.glance-hero__headline {
+  margin: 0.35rem 0 0.55rem;
+}
+
+.glance-alert-banners {
+  list-style: none;
+  margin: 0 0 0.65rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.glance-alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: #fff;
+  background: #57534e;
+}
+
+.glance-alert-banner:focus-visible {
+  outline: 3px solid var(--glass-accent);
+  outline-offset: 2px;
+}
+
+.glance-alert-banner--extreme {
+  background: #7f1d1d;
+}
+
+.glance-alert-banner--severe {
+  background: #b91c1c;
+}
+
+.glance-alert-banner--moderate {
+  background: #c2410c;
+}
+
+.glance-alert-banner--minor {
+  background: #a16207;
+}
+
+.glance-alert-banner__sev {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.95;
+}
+
+.glance-alert-banner__event {
+  font-weight: 600;
+}
+
+.intel-feels,
+.intel-range {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--glass-muted);
+}
+
+.glance-hero__previews {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 0.65rem;
+}
+
+.glance-preview-cam {
+  margin: 0;
+  flex: 1 1 10rem;
+  max-width: 14rem;
+}
+
+.glance-preview-cam .cdot-cam {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+}
+
+.glance-ducting {
+  flex: 1 1 10rem;
+  text-align: left;
+  cursor: pointer;
+  border: 0;
+  font: inherit;
+}
+
+.glance-ducting:focus-visible {
+  outline: 3px solid var(--glass-accent);
+  outline-offset: 2px;
+}
+
+.glance-freshness {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.65rem;
+  margin-top: 0.75rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.glance-freshness__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--glass-muted);
+}
+
+.source-chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.source-chip {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.source-chip--ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.source-chip--partial {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.source-chip--error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.source-chip--skipped,
+.source-chip--unknown {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+/* —— Short-Term Outlook —— */
+.outlook-card {
+  padding: 0.75rem 0.9rem 1rem;
+}
+
+.outlook-subtitle {
+  margin: 0.75rem 0 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--glass-text);
+}
+
+.outlook-hours-wrap .outlook-subtitle:first-child {
+  margin-top: 0;
+}
+
+.outlook-hours {
+  list-style: none;
+  margin: 0;
+  padding: 0.15rem 0 0.5rem;
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.outlook-hour-card {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 4.5rem;
+  padding: 0.45rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.45);
+  font-size: 0.75rem;
+  color: var(--glass-text);
+}
+
+.outlook-hour-card__time {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.outlook-hour-card__temp {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.outlook-hour-card__feels,
+.outlook-hour-card__precip,
+.outlook-hour-card__wind {
+  color: var(--glass-muted);
+  font-size: 0.7rem;
+}
+
+.outlook-hourly-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--glass-accent, #0369a1);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.outlook-hourly-cta:hover {
+  filter: brightness(1.05);
+}
+
+.outlook-hourly-cta:focus-visible {
+  outline: 3px solid var(--glass-accent);
+  outline-offset: 2px;
+}
+
+.outlook-periods {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+@media (min-width: 520px) {
+  .outlook-periods {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.outlook-period {
+  padding: 0.5rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.outlook-period__title {
+  margin: 0 0 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.outlook-period__body {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--glass-text);
+}
+
+.outlook-afd {
+  margin: 0.65rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--glass-text);
+}
+
+.outlook-highlights {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.outlook-more-charts {
+  margin: 0.5rem 0;
+}
+
+.outlook-more-charts > summary {
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--glass-muted);
+}
+
+/* —— Hourly modal —— */
+.hourly-modal {
+  border: 0;
+  padding: 0;
+  max-width: min(960px, 96vw);
+  width: 96vw;
+  max-height: min(90vh, 900px);
+  border-radius: 12px;
+  background: var(--surface, #f8fafc);
+  color: var(--glass-text);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28);
+}
+
+.hourly-modal::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.hourly-modal__panel {
+  display: flex;
+  flex-direction: column;
+  max-height: min(90vh, 900px);
+}
+
+.hourly-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--glass-border, #e2e8f0);
+  flex-shrink: 0;
+}
+
+.hourly-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.hourly-modal__body {
+  padding: 0.75rem 1rem 1rem;
+  overflow: auto;
+}
+
+.hourly-modal__scroll {
+  max-width: 100%;
+}
+
+.hourly-modal__table {
+  width: 100%;
+  min-width: 36rem;
+}
+
+.forecast-card--hourly-teaser {
+  margin-bottom: 0.75rem;
 }
 
 .bottom-line {
@@ -2395,6 +2826,10 @@ body.workspace-active #main-content {
 @media (max-width: 959px) {
   .workspace__map {
     order: 2;
+  }
+
+  .workspace__primary {
+    order: 1;
   }
 
   .workspace__intel {
