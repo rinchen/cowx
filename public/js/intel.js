@@ -657,7 +657,6 @@ export function renderOutlook(root, data, options = {}) {
               <div class="meteogram-row__chart">
                 <div class="meteogram-plot">
                   ${meteogramHtml(temps, { color: '#0369a1', label: 'Temperature trend Fahrenheit', fill: true }) || '<p class="empty-state">No temperature series</p>'}
-                  ${meteogramTimeAxisHtml(chartTimes)}
                 </div>
               </div>
             </div>
@@ -666,48 +665,43 @@ export function renderOutlook(root, data, options = {}) {
               <div class="meteogram-row__chart">
                 <div class="meteogram-plot">
                   ${miniBarChartHtml(probs, { color: '#0284c7' }) || '<p class="empty-state">No precip probability</p>'}
+                </div>
+              </div>
+            </div>
+            <div class="meteogram-row">
+              <span class="meteogram-row__label">Pressure inHg${dip.dip ? ' · front dip' : ''}</span>
+              <div class="meteogram-row__chart">
+                <div class="meteogram-plot">
+                  ${
+                    meteogramHtml(pressureIn, {
+                      color: dip.dip ? '#a16207' : '#4338ca',
+                      label: dip.dip
+                        ? `Pressure trend with rapid dip of ${dip.delta.toFixed(2)} inches`
+                        : 'Barometric pressure trend inches of mercury',
+                      highlightFrom: dip.dip ? dip.index : undefined,
+                      fill: true,
+                    }) || '<p class="empty-state">No pressure series</p>'
+                  }
+                </div>
+              </div>
+            </div>
+            <div class="meteogram-row">
+              <span class="meteogram-row__label">Wind / gust mph</span>
+              <div class="meteogram-row__chart">
+                <div class="meteogram-plot">
+                  ${
+                    meteogramHtml(winds, {
+                      color: '#166534',
+                      secondary: gusts,
+                      secondaryColor: '#c2410c',
+                      label: 'Wind speed and gusts miles per hour',
+                      fill: false,
+                    }) || '<p class="empty-state">No wind series</p>'
+                  }
                   ${meteogramTimeAxisHtml(chartTimes)}
                 </div>
               </div>
             </div>
-            <details class="outlook-more-charts">
-              <summary>More charts (pressure &amp; wind)</summary>
-              <div class="meteogram-row">
-                <span class="meteogram-row__label">Pressure inHg${dip.dip ? ' · front dip' : ''}</span>
-                <div class="meteogram-row__chart">
-                  <div class="meteogram-plot">
-                    ${
-                      meteogramHtml(pressureIn, {
-                        color: dip.dip ? '#a16207' : '#4338ca',
-                        label: dip.dip
-                          ? `Pressure trend with rapid dip of ${dip.delta.toFixed(2)} inches`
-                          : 'Barometric pressure trend inches of mercury',
-                        highlightFrom: dip.dip ? dip.index : undefined,
-                        fill: true,
-                      }) || '<p class="empty-state">No pressure series</p>'
-                    }
-                    ${meteogramTimeAxisHtml(chartTimes)}
-                  </div>
-                </div>
-              </div>
-              <div class="meteogram-row">
-                <span class="meteogram-row__label">Wind / gust mph</span>
-                <div class="meteogram-row__chart">
-                  <div class="meteogram-plot">
-                    ${
-                      meteogramHtml(winds, {
-                        color: '#166534',
-                        secondary: gusts,
-                        secondaryColor: '#c2410c',
-                        label: 'Wind speed and gusts miles per hour',
-                        fill: false,
-                      }) || '<p class="empty-state">No wind series</p>'
-                    }
-                    ${meteogramTimeAxisHtml(chartTimes)}
-                  </div>
-                </div>
-              </div>
-            </details>
             <div class="meteogram-scrub-layer" data-meteogram-scrub-layer>
               <div class="meteogram-scrubber" data-meteogram-scrubber style="left: 0%">
                 <div class="meteogram-scrubber__line" aria-hidden="true"></div>

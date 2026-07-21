@@ -61,7 +61,8 @@ describe('sparkline / meteogram', () => {
       '2026-07-20T18:00',
       '2026-07-21T01:00',
     ]);
-    assert.match(axis, /meteogram--axis/);
+    assert.match(axis, /meteogram-axis/);
+    assert.match(axis, /meteogram-axis__labels/);
     assert.match(axis, /<line/);
   });
 

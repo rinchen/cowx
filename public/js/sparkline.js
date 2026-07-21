@@ -133,6 +133,7 @@ export function formatMeteogramHour(iso) {
 
 /**
  * Shared time-axis row under aligned meteograms.
+ * Labels are HTML (not SVG text) so they are not squashed by preserveAspectRatio=none.
  * @param {string[]} times
  * @param {{ width?: number }} [opts]
  * @returns {string}
@@ -141,16 +142,19 @@ export function meteogramTimeAxisHtml(times, opts = {}) {
   const width = opts.width ?? METEOGRAM_WIDTH;
   const labels = formatMeteogramTimeLabels(times);
   if (!labels.start) return '';
-  const h = 18;
-  return `<svg class="meteogram meteogram--axis" viewBox="0 0 ${width} ${h}" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-    <line x1="0" y1="2" x2="${width}" y2="2" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
-    <line x1="0" y1="2" x2="0" y2="6" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
-    <line x1="${width / 2}" y1="2" x2="${width / 2}" y2="6" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
-    <line x1="${width}" y1="2" x2="${width}" y2="6" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
-    <text x="0" y="15" font-size="10" fill="currentColor">${escapeXml(labels.start)}</text>
-    <text x="${width / 2}" y="15" font-size="10" fill="currentColor" text-anchor="middle">${escapeXml(labels.mid)}</text>
-    <text x="${width}" y="15" font-size="10" fill="currentColor" text-anchor="end">${escapeXml(labels.end)}</text>
-  </svg>`;
+  return `<div class="meteogram-axis">
+    <svg class="meteogram-axis__ticks" viewBox="0 0 ${width} 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <line x1="0" y1="2" x2="${width}" y2="2" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
+      <line x1="0" y1="2" x2="0" y2="7" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
+      <line x1="${width / 2}" y1="2" x2="${width / 2}" y2="7" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
+      <line x1="${width}" y1="2" x2="${width}" y2="7" stroke="currentColor" stroke-opacity="0.45" stroke-width="1"/>
+    </svg>
+    <div class="meteogram-axis__labels" aria-hidden="true">
+      <span>${escapeXml(labels.start)}</span>
+      <span>${escapeXml(labels.mid)}</span>
+      <span>${escapeXml(labels.end)}</span>
+    </div>
+  </div>`;
 }
 
 /**
