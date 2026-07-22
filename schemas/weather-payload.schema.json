@@ -118,18 +118,13 @@
         "pageUrl": { "type": "string" }
       }
     },
-    "cdot_rwis": {
-      "type": ["object", "null"],
-      "additionalProperties": true
-    },
     "cdot_roads": {
       "type": ["object", "null"],
       "additionalProperties": true,
       "properties": {
         "updatedAt": { "type": "string" },
         "alerts": { "type": "array" },
-        "cameras": { "type": "array" },
-        "rwis": { "type": ["object", "null"] }
+        "cameras": { "type": "array" }
       }
     },
     "cwop": {

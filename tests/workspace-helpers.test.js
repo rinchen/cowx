@@ -16,14 +16,8 @@ import {
 } from '../public/js/sparkline.js';
 import { selectRadarFrames, radarTileUrl, safeRadarPath } from '../public/js/radar-loop.js';
 import { estimateRfComms } from '../scripts/lib/rf-comms.js';
-import {
-  applyRwisFreshness,
-  isRwisObservationFresh,
-  parseCameras,
-  parseRwisGeoJson,
-} from '../scripts/fetch/adapters/cdot.js';
+import { parseCameras } from '../scripts/fetch/adapters/cdot.js';
 import { parseNearbyStations } from '../scripts/fetch/adapters/cwop.js';
-import { rwisLiveReadings } from '../public/js/rwis.js';
 
 describe('sparkline / meteogram', () => {
   it('renders a sparkline for finite series', () => {
@@ -182,122 +176,6 @@ describe('cdot parsers', () => {
     ]);
     assert.equal(cams.length, 1);
     assert.equal(cams[0].imageUrl, 'https://example.com/cam.jpg');
-  });
-
-  it('parses RWIS geojson features and keeps fresh readings', () => {
-    const nowMs = Date.parse('2026-07-21T18:00:00Z');
-    const stations = parseRwisGeoJson(
-      {
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [-105.2, 39.9] },
-            properties: {
-              ws_deviceid: '8278',
-              ws_commonname: 'Test RWIS',
-              ws_latitude: 39.9,
-              ws_longitude: -105.2,
-              ws_essairtemp: 47,
-              surfacesensor_esssurfacetempera: 57,
-              surfacesensor_rwissurfacestatus: 'Dry',
-              ws_devicecollectiondt: nowMs - 60_000,
-            },
-          },
-        ],
-      },
-      { nowMs },
-    );
-    assert.equal(stations.length, 1);
-    assert.equal(stations[0].air_temp_f, 47);
-    assert.equal(stations[0].surface_status, 'Dry');
-    assert.equal(stations[0].readings_stale, false);
-  });
-
-  it('nulls RWIS weather fields when the observation is stale', () => {
-    const nowMs = Date.parse('2026-07-21T18:00:00Z');
-    const stations = parseRwisGeoJson(
-      {
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [-105.2, 39.9] },
-            properties: {
-              ws_deviceid: '8278',
-              ws_commonname: 'Frozen RWIS',
-              ws_latitude: 39.9,
-              ws_longitude: -105.2,
-              ws_essairtemp: 59,
-              surfacesensor_esssurfacetempera: 59,
-              surfacesensor_rwissurfacestatus: 'Dry',
-              // CDOT public “Live” layer has been stuck near this epoch
-              ws_devicecollectiondt: Date.parse('2021-09-30T03:00:01Z'),
-            },
-          },
-        ],
-      },
-      { nowMs },
-    );
-    assert.equal(stations.length, 1);
-    assert.equal(stations[0].name, 'Frozen RWIS');
-    assert.equal(stations[0].air_temp_f, null);
-    assert.equal(stations[0].surface_temp_f, null);
-    assert.equal(stations[0].surface_status, null);
-    assert.equal(stations[0].readings_stale, true);
-    assert.equal(stations[0].observed, '2021-09-30T03:00:01.000Z');
-  });
-
-  it('treats missing RWIS timestamps as not fresh', () => {
-    assert.equal(isRwisObservationFresh(null), false);
-    assert.equal(isRwisObservationFresh(''), false);
-    const scrubbed = applyRwisFreshness({
-      id: 'x',
-      name: 'No stamp',
-      lat: 39,
-      lon: -105,
-      air_temp_f: 70,
-      surface_temp_f: 80,
-      surface_status: 'Dry',
-      humidity: 20,
-      wind_speed_mph: 5,
-      wind_gust_mph: null,
-      visibility_mi: null,
-      road: null,
-      observed: null,
-    });
-    assert.equal(scrubbed.air_temp_f, null);
-    assert.equal(scrubbed.readings_stale, true);
-  });
-
-  it('hides stale RWIS readings on the client even if payload still has temps', () => {
-    const nowMs = Date.parse('2026-07-21T18:00:00Z');
-    const live = rwisLiveReadings(
-      {
-        name: 'Legacy payload',
-        air_temp_f: 50,
-        surface_temp_f: 59,
-        surface_status: 'Dry',
-        wind_speed_mph: 7,
-        observed: '2021-09-30T03:04:01.000Z',
-      },
-      nowMs,
-    );
-    assert.equal(live.fresh, false);
-    assert.equal(live.air_temp_f, null);
-    assert.equal(live.surface_temp_f, null);
-
-    const fresh = rwisLiveReadings(
-      {
-        air_temp_f: 95,
-        surface_temp_f: 110,
-        surface_status: 'Dry',
-        observed: new Date(nowMs - 30_000).toISOString(),
-      },
-      nowMs,
-    );
-    assert.equal(fresh.fresh, true);
-    assert.equal(fresh.air_temp_f, 95);
   });
 });
 

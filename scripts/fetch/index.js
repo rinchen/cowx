@@ -301,7 +301,6 @@ export async function runFetch() {
         usgs: gauge,
         snotel: snow,
         cdot_camera: cdotRec?.camera ?? null,
-        cdot_rwis: cdotRec?.rwis ?? null,
         cdot_roads: cdotRec?.cdot_roads ?? null,
         cwop: cwopRec,
         pws: pwsRec,
