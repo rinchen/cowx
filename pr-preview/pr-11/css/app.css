@@ -2019,6 +2019,32 @@ body.workspace-active #main-content {
   color: var(--glass-muted);
 }
 
+.outlook-hour-card__vs {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+  line-height: 1.1;
+}
+
+.outlook-period__badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  letter-spacing: 0.01em;
+}
+
+.outlook-period__range {
+  margin: 0.25rem 0 0.15rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--glass-text, var(--color-text));
+}
+
 .vs-typical-cell {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -2301,8 +2327,9 @@ button.glance-aqi-bar__source.intel-jump {
 .outlook-period__title {
   margin: 0 0 0.25rem;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.35rem 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
 }
