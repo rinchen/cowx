@@ -9,6 +9,8 @@ import {
   accumulateDailyIntoDoy,
   finalizeDoyAccumulators,
   fetchOpenMeteoClimatology,
+  era5CellKey,
+  selectEra5CellTargets,
   yearSlices,
   CLIMATOLOGY_MAX_AGE_MS,
 } from '../scripts/fetch/adapters/openmeteo-climatology.js';
@@ -16,6 +18,7 @@ import {
   compareDailyToNormal,
   deltaVsNormal,
   formatTempDelta,
+  formatTodayRangeWithDeltas,
   formatTodayVsTypical,
   formatVsTypicalShort,
   normalForDate,
@@ -107,6 +110,53 @@ describe('climatologyIsFresh', () => {
   });
 });
 
+describe('ERA5 cell targeting', () => {
+  it('shares one cell key across nearby points', () => {
+    assert.equal(era5CellKey(39.74, -104.99), era5CellKey(39.76, -105.01));
+    assert.notEqual(era5CellKey(39.74, -104.99), era5CellKey(40.5, -105.0));
+  });
+
+  it('caps unique cells and maps all slugs in those cells', () => {
+    const locs = [
+      {
+        slug: 'a',
+        name: 'A',
+        lat: 39.7,
+        lon: -105.0,
+        region: 'x',
+        county: 'y',
+        wfo: 'BOU',
+        elevation_ft: 1,
+      },
+      {
+        slug: 'b',
+        name: 'B',
+        lat: 39.72,
+        lon: -105.02,
+        region: 'x',
+        county: 'y',
+        wfo: 'BOU',
+        elevation_ft: 1,
+      },
+      {
+        slug: 'c',
+        name: 'C',
+        lat: 38.0,
+        lon: -108.0,
+        region: 'x',
+        county: 'y',
+        wfo: 'GJT',
+        elevation_ft: 1,
+      },
+    ];
+    const { reps, cellToSlugs, slugCount } = selectEra5CellTargets(locs, 1);
+    assert.equal(reps.length, 1);
+    assert.equal(slugCount, 2);
+    const slugs = [...cellToSlugs.values()][0];
+    assert.deepEqual(slugs, ['a', 'b']);
+  });
+});
+
 describe('fetchOpenMeteoClimatology', () => {
   it('maps mocked archive responses into climatology payloads', async () => {
     const locs = [
@@ -155,6 +205,59 @@ describe('fetchOpenMeteoClimatology', () => {
     assert.equal(climo?.doy.temperature_2m_max.length, 366);
     assert.ok(climo?.doy.temperature_2m_max[0] != null);
   });
+
+  it('fans one cell fetch out to every slug in that cell', async () => {
+    const locs = [
+      {
+        slug: 'denver',
+        name: 'Denver',
+        lat: 39.74,
+        lon: -104.99,
+        region: 'front-range',
+        county: 'Denver',
+        wfo: 'BOU',
+        elevation_ft: 5280,
+      },
+      {
+        slug: 'commerce-city',
+        name: 'Commerce City',
+        lat: 39.8,
+        lon: -104.93,
+        region: 'front-range',
+        county: 'Adams',
+        wfo: 'BOU',
+        elevation_ft: 5160,
+      },
+    ];
+    const time = [];
+    const temperature_2m_max = [];
+    const temperature_2m_min = [];
+    const precipitation_sum = [];
+    for (let i = 0; i < 366; i += 1) {
+      const d = new Date(Date.UTC(2020, 0, 1 + i));
+      time.push(d.toISOString().slice(0, 10));
+      temperature_2m_max.push(70);
+      temperature_2m_min.push(40);
+      precipitation_sum.push(0);
+    }
+    let calls = 0;
+    const result = await fetchOpenMeteoClimatology(locs, {
+      maxLocs: 1,
+      periodStart: '2020-01-01',
+      periodEnd: '2020-12-31',
+      sleepFn: async () => {},
+      fetchJsonFn: async () => {
+        calls += 1;
+        return {
+          daily: { time, temperature_2m_max, temperature_2m_min, precipitation_sum },
+        };
+      },
+    });
+    assert.equal(calls, 1);
+    assert.equal(result.bySlug.size, 2);
+    assert.ok(result.bySlug.has('denver'));
+    assert.ok(result.bySlug.has('commerce-city'));
+  });
 });
 
 describe('client compare helpers', () => {
@@ -177,6 +280,7 @@ describe('client compare helpers', () => {
     assert.equal(formatTempDelta(-3.2), '−3°');
     assert.equal(formatVsTypicalShort(0.5), 'near typical');
     assert.equal(formatTodayVsTypical(88, 58, n), 'High +6° · Low +3° vs typical');
+    assert.equal(formatTodayRangeWithDeltas(88, 58, n), 'High 88° (+6°) · Low 58° (+3°)');
   });
 
   it('compareDailyToNormal returns labels', () => {

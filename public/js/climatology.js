@@ -129,6 +129,28 @@ export function formatTodayVsTypical(hi, lo, normal) {
 }
 
 /**
+ * Today’s high/low with inline deltas: "High 96° (+9°) · Low 70° (+10°)".
+ * @param {number | null | undefined} hi
+ * @param {number | null | undefined} lo
+ * @param {{ tmax: number | null, tmin: number | null } | null} [normal]
+ * @returns {string | null}
+ */
+export function formatTodayRangeWithDeltas(hi, lo, normal = null) {
+  const h = numOrNull(hi);
+  const l = numOrNull(lo);
+  if (h == null || l == null) return null;
+  const dHi = normal ? deltaVsNormal(h, normal.tmax) : null;
+  const dLo = normal ? deltaVsNormal(l, normal.tmin) : null;
+  const hiDelta = formatTempDelta(dHi);
+  const loDelta = formatTempDelta(dLo);
+  const hiBit =
+    hiDelta && hiDelta !== '0°' ? `High ${Math.round(h)}° (${hiDelta})` : `High ${Math.round(h)}°`;
+  const loBit =
+    loDelta && loDelta !== '0°' ? `Low ${Math.round(l)}° (${loDelta})` : `Low ${Math.round(l)}°`;
+  return `${hiBit} · ${loBit}`;
+}
+
+/**
  * Precip vs typical: wetter / drier / near.
  * @param {number | null | undefined} forecastIn
  * @param {number | null | undefined} normalIn

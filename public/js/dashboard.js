@@ -3,6 +3,7 @@ import { aqiBarHtml } from './aqi.js';
 import { climatologyPeriodLabel, compareDailyToNormal, formatTempDelta } from './climatology.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
+import { rwisLiveReadings } from './rwis.js';
 import { windCellHtml } from './wind.js';
 
 const COL_PREF_KEY = 'cowx:tableColumns';
@@ -779,7 +780,7 @@ function buildDailyTable(daily, climatology = null) {
   const showSunshine = seriesHasValues(daily.sunshine_duration);
   const showDaylight = seriesHasValues(daily.daylight_duration);
   const showEt0 = seriesHasValues(daily.et0_fao_evapotranspiration);
-  const showVsTypical = Boolean(climatology?.doy);
+  const showVsTypical = true;
 
   /** @type {{ key: string, label: string, optional?: boolean }[]} */
   const cols = [
@@ -1294,14 +1295,33 @@ function appendDeepForecast(root, data, ctx) {
         wrap.appendChild(ul);
       }
       if (rwis) {
+        const live = rwisLiveReadings(/** @type {Record<string, unknown>} */ (rwis));
         const dl = document.createElement('dl');
         dl.className = 'metric-list';
-        dl.innerHTML = `
-          <dt>RWIS</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${rwis.distance_km != null ? ` (${rwis.distance_km} km)` : ''}</dd>
-          ${rwis.air_temp_f != null ? `<dt>Air</dt><dd>${Math.round(Number(rwis.air_temp_f))}°F</dd>` : ''}
-          ${rwis.surface_temp_f != null ? `<dt>Pavement</dt><dd>${Math.round(Number(rwis.surface_temp_f))}°F</dd>` : ''}
-          ${rwis.surface_status ? `<dt>Surface</dt><dd>${escapeHtml(String(rwis.surface_status))}</dd>` : ''}
-        `;
+        const rows = [
+          `<dt>RWIS</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${rwis.distance_km != null ? ` (${rwis.distance_km} km)` : ''}</dd>`,
+        ];
+        if (live.fresh) {
+          if (live.air_temp_f != null && Number.isFinite(live.air_temp_f)) {
+            rows.push(`<dt>Air</dt><dd>${Math.round(live.air_temp_f)}°F</dd>`);
+          }
+          if (live.surface_temp_f != null && Number.isFinite(live.surface_temp_f)) {
+            rows.push(`<dt>Pavement</dt><dd>${Math.round(live.surface_temp_f)}°F</dd>`);
+          }
+          if (live.surface_status) {
+            rows.push(`<dt>Surface</dt><dd>${escapeHtml(live.surface_status)}</dd>`);
+          }
+          if (live.observed) {
+            rows.push(
+              `<dt>Observed</dt><dd>${escapeHtml(fmtDateTime(String(live.observed)))}</dd>`,
+            );
+          }
+        } else {
+          rows.push(
+            `<dt>Readings</dt><dd>Unavailable — CDOT’s public RWIS feed is not updating${live.observed ? ` (last report ${escapeHtml(fmtDateTime(String(live.observed)))})` : ''}. Check COtrip for live road conditions.</dd>`,
+          );
+        }
+        dl.innerHTML = rows.join('');
         wrap.appendChild(dl);
       }
       if (cams.length) {

@@ -15,13 +15,38 @@ export const CLIMATOLOGY_SOURCE = 'open-meteo-era5';
 export const CLIMATOLOGY_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 const CHUNK = 1;
-const CHUNK_DELAY_MS = 12_000;
-const RETRY_BACKOFF_MS = 65_000;
-const SLICE_DELAY_MS = 3_000;
-/** Cap per orchestrator run so cold-start does not monopolize a 45-min job. */
-export const DEFAULT_MAX_LOCS_PER_RUN = 12;
+const CHUNK_DELAY_MS = 18_000;
+const RETRY_BACKOFF_MS = 90_000;
+const SLICE_DELAY_MS = 4_000;
+/** Cap unique ERA5 cells per orchestrator run (cold-start; ~45-min job). */
+export const DEFAULT_MAX_LOCS_PER_RUN = 16;
+/** ERA5 native grid ~0.25° — share one archive fetch across nearby catalog points. */
+export const ERA5_CELL_STEP = 0.25;
 /** Year span per archive request (longer = fewer calls, heavier weight). */
 const YEARS_PER_SLICE = 10;
+
+/**
+ * Snap lat/lon to an ERA5-sized cell key (shared normals within the cell).
+ * @param {number} lat
+ * @param {number} lon
+ * @param {number} [step]
+ * @returns {string}
+ */
+export function era5CellKey(lat, lon, step = ERA5_CELL_STEP) {
+  const snap = (v) => Math.round(Number(v) / step) * step;
+  return `${snap(lat).toFixed(2)},${snap(lon).toFixed(2)}`;
+}
+
+/**
+ * Cell-center coordinates for archive requests.
+ * @param {string} key
+ * @returns {{ lat: number, lon: number } | null}
+ */
+export function era5CellCenter(key) {
+  const m = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.exec(String(key));
+  if (!m) return null;
+  return { lat: Number(m[1]), lon: Number(m[2]) };
+}
 
 /** Leap-year cumulative days before each month (Jan=0). */
 const LEAP_CUM_BEFORE_MONTH = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
@@ -300,6 +325,43 @@ export function buildClimatologyPayload(doy, fetchedAt = new Date().toISOString(
 }
 
 /**
+ * Pick unique ERA5 cells (up to maxCells) and map each cell → catalog slugs.
+ * @param {import('../../lib/types.js').Location[]} locations
+ * @param {number} maxCells
+ * @returns {{
+ *   reps: import('../../lib/types.js').Location[],
+ *   cellToSlugs: Map<string, string[]>,
+ *   slugCount: number,
+ * }}
+ */
+export function selectEra5CellTargets(locations, maxCells) {
+  /** @type {import('../../lib/types.js').Location[]} */
+  const reps = [];
+  /** @type {Map<string, string[]>} */
+  const cellToSlugs = new Map();
+  const cap = Math.max(0, maxCells);
+  for (const loc of locations) {
+    const key = era5CellKey(loc.lat, loc.lon);
+    const existing = cellToSlugs.get(key);
+    if (existing) {
+      existing.push(loc.slug);
+      continue;
+    }
+    if (reps.length >= cap) continue;
+    const center = era5CellCenter(key);
+    reps.push({
+      ...loc,
+      lat: center?.lat ?? loc.lat,
+      lon: center?.lon ?? loc.lon,
+    });
+    cellToSlugs.set(key, [loc.slug]);
+  }
+  let slugCount = 0;
+  for (const slugs of cellToSlugs.values()) slugCount += slugs.length;
+  return { reps, cellToSlugs, slugCount };
+}
+
+/**
  * @param {import('../../lib/types.js').Location[]} locations
  * @param {{
  *   maxLocs?: number,
@@ -326,12 +388,16 @@ export async function fetchOpenMeteoClimatology(locations, opts = {}) {
     return { status: 'skipped', bySlug: new Map(), calls: 0 };
   }
 
-  const targets = locations.slice(0, Math.max(0, maxLocs));
+  const {
+    reps: targets,
+    cellToSlugs,
+    slugCount,
+  } = selectEra5CellTargets(locations, Math.max(0, maxLocs));
   const slices = yearSlices(periodStart, periodEnd, YEARS_PER_SLICE);
   /** @type {Map<string, ReturnType<typeof createDoyAccumulators>>} */
-  const accBySlug = new Map();
+  const accByCell = new Map();
   for (const loc of targets) {
-    accBySlug.set(loc.slug, createDoyAccumulators());
+    accByCell.set(era5CellKey(loc.lat, loc.lon), createDoyAccumulators());
   }
 
   let calls = 0;
@@ -342,7 +408,8 @@ export async function fetchOpenMeteoClimatology(locations, opts = {}) {
     if (i > 0) await sleepFn(CHUNK_DELAY_MS);
     const chunk = targets.slice(i, i + CHUNK);
     console.log(
-      `openmeteo-climatology: ${i + 1}–${Math.min(i + CHUNK, targets.length)}/${targets.length} (${chunk.map((l) => l.slug).join(', ')})`,
+      `openmeteo-climatology: cell ${i + 1}–${Math.min(i + CHUNK, targets.length)}/${targets.length}` +
+        ` (${chunk.map((l) => l.slug).join(', ')}; ${slugCount} locs in batch)`,
     );
     for (let s = 0; s < slices.length; s += 1) {
       if (s > 0) await sleepFn(SLICE_DELAY_MS);
@@ -357,7 +424,7 @@ export async function fetchOpenMeteoClimatology(locations, opts = {}) {
           const loc = chunk[j];
           const r = results[j];
           const daily = r?.daily;
-          const acc = accBySlug.get(loc.slug);
+          const acc = accByCell.get(era5CellKey(loc.lat, loc.lon));
           if (!daily || !acc) continue;
           accumulateDailyIntoDoy(acc, daily);
         }
@@ -378,7 +445,7 @@ export async function fetchOpenMeteoClimatology(locations, opts = {}) {
               const loc = chunk[j];
               const r = results[j];
               const daily = r?.daily;
-              const acc = accBySlug.get(loc.slug);
+              const acc = accByCell.get(era5CellKey(loc.lat, loc.lon));
               if (!daily || !acc) continue;
               accumulateDailyIntoDoy(acc, daily);
             }
@@ -399,18 +466,22 @@ export async function fetchOpenMeteoClimatology(locations, opts = {}) {
   const bySlug = new Map();
   const fetchedAt = new Date().toISOString();
   for (const loc of targets) {
-    const acc = accBySlug.get(loc.slug);
+    const key = era5CellKey(loc.lat, loc.lon);
+    const acc = accByCell.get(key);
     if (!acc) continue;
     const doy = finalizeDoyAccumulators(acc);
     const filled = doy.temperature_2m_max.filter((v) => v != null).length;
     if (filled < 300) continue;
-    bySlug.set(loc.slug, buildClimatologyPayload(doy, fetchedAt));
+    const payload = buildClimatologyPayload(doy, fetchedAt);
+    for (const slug of cellToSlugs.get(key) ?? [loc.slug]) {
+      bySlug.set(slug, payload);
+    }
   }
 
-  const coverage = bySlug.size / Math.max(targets.length, 1);
+  const coverage = bySlug.size / Math.max(slugCount, 1);
   console.log(
-    `openmeteo-climatology: coverage ${bySlug.size}/${targets.length}` +
-      ` (${(coverage * 100).toFixed(1)}%), ${calls} calls`,
+    `openmeteo-climatology: coverage ${bySlug.size}/${slugCount} locs` +
+      ` via ${targets.length} cells (${(coverage * 100).toFixed(1)}%), ${calls} calls`,
   );
 
   if (bySlug.size === 0) {
@@ -421,15 +492,16 @@ export async function fetchOpenMeteoClimatology(locations, opts = {}) {
       error: errors.join('; ') || 'no climatology rows',
     };
   }
-  if (errors.length > 0 || coverage < 0.95 || targets.length < locations.length) {
+  const cellsCapped = targets.length < selectEra5CellTargets(locations, Infinity).reps.length;
+  if (errors.length > 0 || coverage < 0.95 || cellsCapped) {
     return {
       status: 'partial',
       bySlug,
       calls,
       error:
         errors.join('; ') ||
-        (targets.length < locations.length
-          ? `refreshed ${targets.length}/${locations.length} (cap ${maxLocs})`
+        (cellsCapped
+          ? `refreshed ${targets.length} cells / ${bySlug.size} locs (cap ${maxLocs} cells)`
           : `coverage ${(coverage * 100).toFixed(1)}%`),
     };
   }

@@ -22,6 +22,8 @@ const ALERTS_POLYLINE_ARCGIS =
 const MAX_CAMERA_KM = 40;
 const MAX_CAMERAS = 3;
 const MAX_RWIS_KM = 40;
+/** Drop RWIS weather readings older than this (CDOT public layer has been frozen since 2021). */
+export const RWIS_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const MAX_ALERT_POINT_KM = 75;
 const MAX_ALERT_POLY_KM = 50;
 const MAX_ALERTS = 5;
@@ -63,10 +65,50 @@ export function parseCameras(raw) {
 }
 
 /**
+ * Whether an RWIS `observed` ISO timestamp is fresh enough to show as live conditions.
+ * @param {string | null | undefined} observed
+ * @param {number} [nowMs]
+ * @param {number} [maxAgeMs]
+ * @returns {boolean}
+ */
+export function isRwisObservationFresh(observed, nowMs = Date.now(), maxAgeMs = RWIS_MAX_AGE_MS) {
+  if (typeof observed !== 'string' || !observed) return false;
+  const t = Date.parse(observed);
+  if (!Number.isFinite(t)) return false;
+  return nowMs - t <= maxAgeMs;
+}
+
+/**
+ * Null out weather readings when the station observation is stale.
+ * Keeps station identity + `observed` so the UI can explain the gap.
+ * @param {ReturnType<typeof parseRwisGeoJson>[0]} station
+ * @param {number} [nowMs]
+ */
+export function applyRwisFreshness(station, nowMs = Date.now()) {
+  if (!station) return station;
+  if (isRwisObservationFresh(station.observed, nowMs)) {
+    return { ...station, readings_stale: false };
+  }
+  return {
+    ...station,
+    air_temp_f: null,
+    surface_temp_f: null,
+    surface_status: null,
+    humidity: null,
+    wind_speed_mph: null,
+    wind_gust_mph: null,
+    visibility_mi: null,
+    readings_stale: true,
+  };
+}
+
+/**
  * Parse ArcGIS GeoJSON RWIS features (may include stale timestamps — still useful for identity).
  * @param {unknown} raw
+ * @param {{ nowMs?: number }} [opts]
  */
-export function parseRwisGeoJson(raw) {
+export function parseRwisGeoJson(raw, opts = {}) {
+  const nowMs = opts.nowMs ?? Date.now();
   const features =
     raw && typeof raw === 'object' && Array.isArray(raw.features) ? raw.features : [];
   const out = [];
@@ -87,23 +129,28 @@ export function parseRwisGeoJson(raw) {
       observed = new Date(ts > 1e12 ? ts : ts * 1000).toISOString();
     }
 
-    out.push({
-      id,
-      name: String(p.ws_commonname ?? id),
-      lat,
-      lon,
-      air_temp_f: toFiniteNumber(p.ws_essairtemp),
-      surface_temp_f: toFiniteNumber(p.surfacesensor_esssurfacetempera),
-      surface_status: p.surfacesensor_rwissurfacestatus
-        ? String(p.surfacesensor_rwissurfacestatus)
-        : null,
-      humidity: toFiniteNumber(p.ws_essrelhumidty),
-      wind_speed_mph: toFiniteNumber(p.ws_essavgwindspeed),
-      wind_gust_mph: null,
-      visibility_mi: toFiniteNumber(p.ws_essvisibility),
-      road: p.ws_roadname ? String(p.ws_roadname) : null,
-      observed,
-    });
+    out.push(
+      applyRwisFreshness(
+        {
+          id,
+          name: String(p.ws_commonname ?? id),
+          lat,
+          lon,
+          air_temp_f: toFiniteNumber(p.ws_essairtemp),
+          surface_temp_f: toFiniteNumber(p.surfacesensor_esssurfacetempera),
+          surface_status: p.surfacesensor_rwissurfacestatus
+            ? String(p.surfacesensor_rwissurfacestatus)
+            : null,
+          humidity: toFiniteNumber(p.ws_essrelhumidty),
+          wind_speed_mph: toFiniteNumber(p.ws_essavgwindspeed),
+          wind_gust_mph: null,
+          visibility_mi: toFiniteNumber(p.ws_essvisibility),
+          road: p.ws_roadname ? String(p.ws_roadname) : null,
+          observed,
+        },
+        nowMs,
+      ),
+    );
   }
   return out;
 }

@@ -122,11 +122,14 @@
         The <code>pnpm fetch:data</code> orchestrator calls independent adapters (Open-Meteo
         forecast and air quality, Open-Meteo ERA5 climatology refreshed about monthly for
         forecast-vs-typical comparisons, NWS alerts/AFD/HWO, CoAgMET, Aviation Weather METAR/TAF,
-        USGS gauges, SNOTEL, CDOT cameras/RWIS/road alerts, CWOP/APRS neighborhood PWS, NOAA HMS
-        smoke, SPC fire weather outlooks, NIFC nearby wildfire locations, Colorado burn-restriction
-        status/links, NOAA SWPC space weather, and optional PurpleAir and AirNow). Each location
-        payload also gets locally computed astronomy and nearest-ZIP pollen offsite links (no pollen
-        API key). Each source can succeed or fail on its own. Results are merged into:
+        USGS gauges, SNOTEL, CDOT cameras/road alerts plus nearest RWIS station identity, CWOP/APRS
+        neighborhood PWS, NOAA HMS smoke, SPC fire weather outlooks, NIFC nearby wildfire locations,
+        Colorado burn-restriction status/links, NOAA SWPC space weather, and optional PurpleAir and
+        AirNow). CDOT’s public “Live” RWIS ArcGIS layer has not updated weather readings since 2021,
+        so pavement/air temps from that feed are treated as stale and hidden; cameras and travel
+        alerts still refresh. Use COtrip for live road conditions. Each location payload also gets
+        locally computed astronomy and nearest-ZIP pollen offsite links (no pollen API key). Each
+        source can succeed or fail on its own. Results are merged into:
       </p>
       <ul>
         <li><code>index.json</code> — slim list for search and the map</li>
@@ -160,18 +163,20 @@
         conditions, AQI, and optional pin “At your location” strip). Below that, a full-width
         <strong>Short-Term Outlook</strong> shows compact next-hours cards and scrubbable 24-hour
         meteograms (keyboard-accessible handle with a live readout). A specialty band covers CDOT
-        cameras/RWIS/road alerts when nearby (re-ranked from your saved pin when Locate or an
-        address pin was used), local city webcam links (new tab), nearby PWS and other local
-        observations, astronomy (computed sunrise/sunset, twilight, moon phase), fire weather (SPC
-        Day 1–2 outlooks, HMS smoke, nearby wildfires, burn-restriction status and verify links),
-        and ham radio context (NOAA SWPC R/S/G scales, SFI/Kp, Colorado aurora chance, heuristic HF
-        band cues, and model-derived VHF/UHF ducting). Collapsed deep panels hold expandable 48-hour
-        hourly and 10-day daily tables (with vs-typical deltas when ERA5 climatology is present), a
-        <strong>Compared to typical</strong> section (1991–2020 ERA5 day-of-year means — not
-        official NCEI normals), air quality &amp; pollen offsite links (nearest ZIP Pollen.com
-        forecast plus AAAAI NAB map — live pollen indexes are not redistributed here), and a
-        <strong>Live data sources</strong> footer listing fetch/observation times. Use
-        <strong>Refine location</strong> on a locality page to set a new pin.
+        cameras and road alerts when nearby (re-ranked from your saved pin when Locate or an address
+        pin was used), nearest RWIS station name when known (live pavement/air readings are omitted
+        while CDOT’s public RWIS feed is stale), local city webcam links (new tab), nearby PWS and
+        other local observations, astronomy (computed sunrise/sunset, twilight, moon phase), fire
+        weather (SPC Day 1–2 outlooks, HMS smoke, nearby wildfires, burn-restriction status and
+        verify links), and ham radio context (NOAA SWPC R/S/G scales, SFI/Kp, Colorado aurora
+        chance, heuristic HF band cues, and model-derived VHF/UHF ducting). Collapsed deep panels
+        hold expandable 48-hour hourly and 10-day daily tables (with vs-typical deltas when ERA5
+        climatology is present), a <strong>Compared to typical</strong> section (1991–2020 ERA5
+        day-of-year means — not official NCEI normals), air quality &amp; pollen offsite links
+        (nearest ZIP Pollen.com forecast plus AAAAI NAB map — live pollen indexes are not
+        redistributed here), and a <strong>Live data sources</strong> footer listing
+        fetch/observation times. Use <strong>Refine location</strong> on a locality page to set a
+        new pin.
       </p>
       <p>
         NWS alert polygons draw on the locality map. Links to NOAA radar, CSU CIRA satellite, and
