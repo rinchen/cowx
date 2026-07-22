@@ -20,7 +20,7 @@ pnpm test
 npx serve public
 ```
 
-Point GitHub Pages at the `gh-pages` branch (deployed from `public/` by `.github/workflows/pages.yml`). Keep `clean-exclude: pr-preview` if you use PR previews. Leave `public/.nojekyll` in place so GitHub Pages does not run Jekyll over the static tree. Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
+Point GitHub Pages at the `gh-pages` branch (deployed from `public/` by `.github/workflows/pages.yml`). Keep `clean-exclude: pr-preview` if you use PR previews. Leave `public/.nojekyll` in place so GitHub Pages does not run Jekyll over the static tree. Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `COTRIP_API_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
 
 ### GitHub Pages / PR previews
 
@@ -83,7 +83,7 @@ Also update state filters in adapters that hardcode Colorado:
 
 - `scripts/fetch/adapters/usgs.js` (`stateCd=CO`)
 - `scripts/fetch/adapters/snotel.js` (`stateCode === 'CO'`)
-- CDOT / CWOP adapters (Colorado-centric sources — replace or remove for other states)
+- CDOT / COtrip / CWOP adapters (Colorado-centric sources — replace or remove for other states)
 
 Rename the file if you want (e.g. `montana-locations.json`), then update paths in:
 

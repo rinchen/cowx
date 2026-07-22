@@ -206,7 +206,40 @@
           <a href="https://leafletjs.com/" rel="noopener noreferrer" target="_blank">Leaflet</a>
         </li>
         <li>
-          CDOT / COtrip cameras, traveler incidents, road conditions, and RWIS weather stations:
+          Animated radar loops:
+          <a href="https://www.rainviewer.com/" rel="noopener noreferrer" target="_blank"
+            >RainViewer</a
+          >
+        </li>
+        <li>
+          NOAA / NWS interactive radar:
+          <a href="https://radar.weather.gov/" rel="noopener noreferrer" target="_blank"
+            >radar.weather.gov</a
+          >
+        </li>
+        <li>
+          GOES satellite (CSU CIRA / RAMMB SLIDER):
+          <a
+            href="https://rammb-slider.cira.colostate.edu/"
+            rel="noopener noreferrer"
+            target="_blank"
+            >rammb-slider.cira.colostate.edu</a
+          >
+        </li>
+        <li>
+          Weather icons:
+          <a href="https://meteocons.com/" rel="noopener noreferrer" target="_blank">Meteocons</a>
+          by Bas Milius (MIT)
+        </li>
+        <li>Typeface: Outfit via Google Fonts</li>
+        <li>Client IP geolocation: third-party CORS geo APIs (see How it works)</li>
+      </ul>
+
+      <h2>Roads &amp; traveler information</h2>
+      <ul>
+        <li>
+          CDOT / COtrip cameras, traveler incidents, planned events, road conditions, and RWIS
+          weather stations:
           <a href="https://maps.cotrip.org/" rel="noopener noreferrer" target="_blank"
             >maps.cotrip.org</a
           >
@@ -214,8 +247,9 @@
           <a href="https://data.cotrip.org/" rel="noopener noreferrer" target="_blank"
             >data.cotrip.org</a
           >
-          (CARS Program camera API; keyed COtrip JSON for incidents, planned events, road
-          conditions, and weather stations; ArcGIS alerts as fallback)
+          — CARS Program camera API (no key); keyed COtrip JSON when
+          <code>COTRIP_API_KEY</code> is configured (incidents, planned events, road conditions,
+          weather stations); CDOT ArcGIS alerts as fallback when the keyed feed is skipped
         </li>
         <li>
           Municipal / county webcam portals (linked, not embedded) — e.g.
@@ -244,6 +278,10 @@
             >City of Colorado Springs</a
           >
         </li>
+      </ul>
+
+      <h2>Neighborhood weather, smoke &amp; fire</h2>
+      <ul>
         <li>
           CWOP / APRS weather packets via
           <a href="https://aprs.me/" rel="noopener noreferrer" target="_blank">aprs.me</a>
@@ -297,34 +335,6 @@
             >services.swpc.noaa.gov</a
           >
         </li>
-        <li>
-          Radar overlay:
-          <a href="https://www.rainviewer.com/" rel="noopener noreferrer" target="_blank"
-            >RainViewer</a
-          >
-        </li>
-        <li>
-          NOAA / NWS interactive radar:
-          <a href="https://radar.weather.gov/" rel="noopener noreferrer" target="_blank"
-            >radar.weather.gov</a
-          >
-        </li>
-        <li>
-          GOES satellite (CSU CIRA / RAMMB SLIDER):
-          <a
-            href="https://rammb-slider.cira.colostate.edu/"
-            rel="noopener noreferrer"
-            target="_blank"
-            >rammb-slider.cira.colostate.edu</a
-          >
-        </li>
-        <li>
-          Weather icons:
-          <a href="https://meteocons.com/" rel="noopener noreferrer" target="_blank">Meteocons</a>
-          by Bas Milius (MIT)
-        </li>
-        <li>Typeface: Outfit via Google Fonts</li>
-        <li>Client IP geolocation: third-party CORS geo APIs (see How it works)</li>
       </ul>
 
       <p>

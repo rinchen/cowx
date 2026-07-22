@@ -28,7 +28,7 @@ cowx/   # repo directory (brand: COWX)
 │   ├── how-it-works.html     # Architecture & privacy (user-facing)
 │   ├── credits.html          # Data provider attribution
 │   ├── css/app.css           # Shared styles
-│   ├── js/                   # Client modules (app, workspace, intel, outlook, sparkline, dashboard, hyperlocal, geocode, geo, wind, aqi, bottom-line, imagery, …)
+│   ├── js/                   # Client modules (app, workspace, intel, outlook, climatology, rwis, sparkline, dashboard, hyperlocal, geocode, geo, wind, aqi, bottom-line, imagery, …)
 │   └── data/                 # Generated JSON — committed after fetch runs
 │       ├── index.json        # Slim location index for search/geo
 │       ├── meta.json         # Build time + per-source status + apiCalls

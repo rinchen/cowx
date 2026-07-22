@@ -369,6 +369,19 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
     href: 'https://open-meteo.com/',
   });
 
+  const climatology = /** @type {Record<string, unknown> | null} */ (data.climatology ?? null);
+  const climoInfo = metaSourceInfo(metaSources, 'openmeteo_climatology');
+  if (climatology?.doy || climoInfo.status) {
+    const period = climatologyPeriodLabel(climatology);
+    rows.push({
+      title: 'Compared to typical (ERA5)',
+      body: climatology?.doy
+        ? `Open-Meteo ERA5 day-of-year normals (${period})${climatology.fetchedAt ? ` · built ${fmtDateTime(String(climatology.fetchedAt))}` : ''}${sourceStatusNote(climoInfo.status)}`
+        : `ERA5 normals not yet available for this location${sourceStatusNote(climoInfo.status)}`,
+      href: 'https://open-meteo.com/',
+    });
+  }
+
   const nwsInfo = metaSourceInfo(metaSources, 'nws');
   rows.push({
     title: 'Alerts & forecast discussion',

@@ -430,7 +430,7 @@ export function buildHourlyModalTableHtml(hourly, opts = {}) {
 }
 
 /**
- * @typedef {{ id: string, label: string, status: string }} SourceChip
+ * @typedef {{ id: string, label: string, status: string, title: string }} SourceChip
  */
 
 /**
@@ -477,36 +477,37 @@ export function sourceStatusLegendHtml() {
   </ul>`;
 }
 
+/** Short chip label + hover/aria title for footer Sources banner. */
+const SOURCE_CHIP_META = {
+  openmeteo: { label: 'OM', title: 'Open-Meteo forecast' },
+  openmeteo_aq: { label: 'AQ', title: 'Open-Meteo air quality' },
+  openmeteo_climatology: { label: 'Climo', title: 'Open-Meteo ERA5 climatology (vs typical)' },
+  nws: { label: 'NWS', title: 'National Weather Service alerts & discussions' },
+  airnow: { label: 'AirNow', title: 'EPA AirNow AQI' },
+  purpleair: { label: 'PA', title: 'PurpleAir sensors' },
+  coagmet: { label: 'CoAg', title: 'CoAgMET agriculture stations' },
+  aviation: { label: 'AV', title: 'Aviation Weather METAR/TAF' },
+  cwop: { label: 'CWOP', title: 'CWOP / APRS personal weather stations' },
+  cdot: { label: 'CDOT', title: 'CDOT cameras & ArcGIS road alerts' },
+  cotrip: { label: 'COtrip', title: 'COtrip RWIS, incidents, planned events & road conditions' },
+  snotel: { label: 'SNOTEL', title: 'NRCS SNOTEL snowpack' },
+  usgs: { label: 'USGS', title: 'USGS stream gauges' },
+  hms: { label: 'HMS', title: 'NOAA HMS smoke' },
+  spc: { label: 'SPC', title: 'SPC fire weather' },
+  spc_firewx: { label: 'SPC', title: 'SPC fire weather' },
+  nifc: { label: 'NIFC', title: 'NIFC nearby wildfires' },
+  nifc_fires: { label: 'NIFC', title: 'NIFC nearby wildfires' },
+  burn_restrictions: { label: 'Burn', title: 'Colorado burn restrictions' },
+  space_weather: { label: 'SWPC', title: 'NOAA SWPC space weather' },
+  swpc: { label: 'SWPC', title: 'NOAA SWPC space weather' },
+};
+
 /**
  * @param {unknown[]} sources
  * @returns {SourceChip[]}
  */
 export function sourceStatusChips(sources) {
   if (!Array.isArray(sources)) return [];
-  /** @type {Record<string, string>} */
-  const labels = {
-    openmeteo: 'OM',
-    openmeteo_aq: 'AQ',
-    openmeteo_climatology: 'Climo',
-    nws: 'NWS',
-    airnow: 'AirNow',
-    purpleair: 'PA',
-    coagmet: 'CoAg',
-    aviation: 'AV',
-    cwop: 'CWOP',
-    cdot: 'CDOT',
-    cotrip: 'COtrip',
-    snotel: 'SNOTEL',
-    usgs: 'USGS',
-    hms: 'HMS',
-    spc: 'SPC',
-    spc_firewx: 'SPC',
-    nifc: 'NIFC',
-    nifc_fires: 'NIFC',
-    burn_restrictions: 'Burn',
-    space_weather: 'SWPC',
-    swpc: 'SWPC',
-  };
   /** @type {SourceChip[]} */
   const chips = [];
   for (const raw of sources) {
@@ -515,11 +516,10 @@ export function sourceStatusChips(sources) {
     const id = s.id != null ? String(s.id) : '';
     if (!id) continue;
     const status = s.status != null ? String(s.status) : 'unknown';
-    chips.push({
-      id,
-      label: labels[id] ?? id.slice(0, 6).toUpperCase(),
-      status,
-    });
+    const meta = SOURCE_CHIP_META[id];
+    const label = meta?.label ?? id.slice(0, 6).toUpperCase();
+    const title = meta?.title ?? id;
+    chips.push({ id, label, status, title });
   }
   return chips;
 }

@@ -23,13 +23,14 @@ Without running `pnpm run fetch:data`, only committed snapshot data in `public/d
 
 ## Scripts
 
-| Command                   | Description                                                   |
-| ------------------------- | ------------------------------------------------------------- |
-| `pnpm fetch:data`         | Run the fetch orchestrator; write/update `public/data/*.json` |
-| `pnpm test`               | Unit tests (fixtures only — no live API calls)                |
-| `pnpm lint`               | ESLint                                                        |
-| `pnpm validate:locations` | Validate `scripts/locations/colorado-locations.json`          |
-| `pnpm format`             | Prettier                                                      |
+| Command                      | Description                                                                   |
+| ---------------------------- | ----------------------------------------------------------------------------- |
+| `pnpm fetch:data`            | Run the fetch orchestrator; write/update `public/data/*.json`                 |
+| `pnpm run fetch:climatology` | Rebuild ERA5 day-of-year normals only (slow; optional `CLIMATOLOGY_MAX_LOCS`) |
+| `pnpm test`                  | Unit tests (fixtures only — no live API calls)                                |
+| `pnpm lint`                  | ESLint                                                                        |
+| `pnpm validate:locations`    | Validate `scripts/locations/colorado-locations.json`                          |
+| `pnpm format`                | Prettier                                                                      |
 
 ## GitHub Pages
 
