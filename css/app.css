@@ -3133,7 +3133,30 @@ button.glance-aqi-bar__source.intel-jump {
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--glass-muted);
-  list-style-position: outside;
+  list-style: none;
+}
+
+.cdot-cam-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.cdot-cam-more > summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 1em;
+  margin-right: 0.35rem;
+  color: var(--glass-muted);
+  transition: transform 0.15s ease;
+}
+
+.cdot-cam-more[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cdot-cam-more > summary::before {
+    transition: none;
+  }
 }
 
 .cdot-cam-more > summary:focus-visible {
