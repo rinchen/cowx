@@ -1,8 +1,10 @@
 import { escapeHtml, safeHttpsUrl, safeExternalUrl } from './dom.js';
 import { aqiBarHtml } from './aqi.js';
+import { climatologyPeriodLabel, compareDailyToNormal, formatTempDelta } from './climatology.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
 import { windCellHtml } from './wind.js';
+import { rwisLiveReadings } from './rwis.js';
 
 const COL_PREF_KEY = 'cowx:tableColumns';
 
@@ -367,6 +369,19 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
     href: 'https://open-meteo.com/',
   });
 
+  const climatology = /** @type {Record<string, unknown> | null} */ (data.climatology ?? null);
+  const climoInfo = metaSourceInfo(metaSources, 'openmeteo_climatology');
+  if (climatology?.doy || climoInfo.status) {
+    const period = climatologyPeriodLabel(climatology);
+    rows.push({
+      title: 'Compared to typical (ERA5)',
+      body: climatology?.doy
+        ? `Open-Meteo ERA5 day-of-year normals (${period})${climatology.fetchedAt ? ` · built ${fmtDateTime(String(climatology.fetchedAt))}` : ''}${sourceStatusNote(climoInfo.status)}`
+        : `ERA5 normals not yet available for this location${sourceStatusNote(climoInfo.status)}`,
+      href: 'https://open-meteo.com/',
+    });
+  }
+
   const nwsInfo = metaSourceInfo(metaSources, 'nws');
   rows.push({
     title: 'Alerts & forecast discussion',
@@ -476,10 +491,19 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
   );
   if (cdotCam || cdotRoads) {
     const cdotInfo = metaSourceInfo(metaSources, 'cdot');
+    const cotripInfo = metaSourceInfo(metaSources, 'cotrip');
     const camCount = Array.isArray(cdotRoads?.cameras) ? cdotRoads.cameras.length : cdotCam ? 1 : 0;
+    const liveBits = [];
+    if (cdotRoads?.rwis) liveBits.push('RWIS');
+    if (cdotRoads?.road_condition) liveBits.push('road conditions');
+    const fetchedAt = cotripInfo.fetchedAt || cdotInfo.fetchedAt;
+    const statusNote =
+      cotripInfo.status && cotripInfo.status !== 'skipped'
+        ? sourceStatusNote(cotripInfo.status)
+        : sourceStatusNote(cdotInfo.status);
     rows.push({
       title: 'Roads & cameras (CDOT / COtrip)',
-      body: `${camCount ? `${camCount} nearby camera${camCount === 1 ? '' : 's'}` : 'Road network'}${cdotCam?.name ? ` · ${cdotCam.name}` : ''}${cdotInfo.fetchedAt ? ` · fetched ${fmtDateTime(cdotInfo.fetchedAt)}` : ''}${sourceStatusNote(cdotInfo.status)}`,
+      body: `${camCount ? `${camCount} nearby camera${camCount === 1 ? '' : 's'}` : 'Road network'}${liveBits.length ? ` · ${liveBits.join(' · ')}` : ''}${cdotCam?.name ? ` · ${cdotCam.name}` : ''}${fetchedAt ? ` · fetched ${fmtDateTime(fetchedAt)}` : ''}${statusNote}`,
       href: links.cotrip || 'https://maps.cotrip.org/',
     });
   }
@@ -582,7 +606,7 @@ function renderForecastCard(parent, headingId, title, body) {
  * @param {string} headingId
  * @param {string} title
  * @param {() => (Node | null)} renderBody
- * @param {{ open?: boolean, actionsHtml?: string }} [opts]
+ * @param {{ open?: boolean, actionsHtml?: string }} [opts] — `open: true` expands; default collapsed
  */
 function renderCollapsibleSection(parent, headingId, title, renderBody, opts = {}) {
   const body = renderBody();
@@ -590,7 +614,6 @@ function renderCollapsibleSection(parent, headingId, title, renderBody, opts = {
 
   const details = document.createElement('details');
   details.className = 'dash-section';
-  details.open = opts.open !== false;
   const summary = document.createElement('summary');
   summary.id = headingId;
   const actionsHtml = opts.actionsHtml ?? '';
@@ -606,6 +629,8 @@ function renderCollapsibleSection(parent, headingId, title, renderBody, opts = {
   content.appendChild(body);
   details.appendChild(content);
   parent.appendChild(details);
+  // Set after mount so engines that ignore pre-connect `open` stay collapsed by default.
+  details.open = opts.open === true;
 }
 
 /**
@@ -756,9 +781,10 @@ function buildHourlyTable(hourly, sunrises, sunsets, opts = {}) {
 
 /**
  * @param {Record<string, unknown>} daily
+ * @param {Record<string, unknown> | null} [climatology]
  * @returns {HTMLElement}
  */
-function buildDailyTable(daily) {
+function buildDailyTable(daily, climatology = null) {
   const times = /** @type {string[]} */ (daily.time ?? []);
   const showFeels =
     seriesHasValues(daily.apparent_temperature_max) ||
@@ -776,6 +802,7 @@ function buildDailyTable(daily) {
   const showSunshine = seriesHasValues(daily.sunshine_duration);
   const showDaylight = seriesHasValues(daily.daylight_duration);
   const showEt0 = seriesHasValues(daily.et0_fao_evapotranspiration);
+  const showVsTypical = true;
 
   /** @type {{ key: string, label: string, optional?: boolean }[]} */
   const cols = [
@@ -784,6 +811,7 @@ function buildDailyTable(daily) {
     { key: 'high', label: 'High' },
     { key: 'low', label: 'Low' },
   ];
+  if (showVsTypical) cols.push({ key: 'vsTypical', label: 'Vs typical' });
   if (showFeels) cols.push({ key: 'feels', label: 'Feels' });
   cols.push({ key: 'precipPct', label: 'Precip %' }, { key: 'precipIn', label: 'Precip in' });
   if (showSnow) cols.push({ key: 'snow', label: 'Snow', optional: true });
@@ -848,6 +876,11 @@ function buildDailyTable(daily) {
     const code = /** @type {number[]} */ (daily.weather_code ?? [])[i];
     const rise = /** @type {string[]} */ (daily.sunrise ?? [])[i];
     const set = /** @type {string[]} */ (daily.sunset ?? [])[i];
+    const iso = String(times[i]).slice(0, 10);
+    const cmp = compareDailyToNormal(climatology, iso, hi, lo, precipSum);
+    const vsHi = formatTempDelta(cmp.deltaHi);
+    const vsLo = formatTempDelta(cmp.deltaLo);
+    const vsLabel = vsHi && vsLo ? `${vsHi} / ${vsLo}` : vsHi || vsLo || '—';
     const feelsLabel =
       feelsHi != null && feelsLo != null
         ? `${Math.round(feelsHi)}° / ${Math.round(feelsLo)}°`
@@ -878,6 +911,7 @@ function buildDailyTable(daily) {
       cond: `<td class="cond-cell col-cond" data-col="cond">${weatherIconHtml(code, { isDay: true, size: 28, className: 'weather-icon weather-icon--sm', alt: wmoLabel(code) })} <span>${escapeHtml(wmoLabel(code))}</span></td>`,
       high: `<td class="col-high" data-col="high">${hi != null ? `${Math.round(hi)}°F` : '—'}</td>`,
       low: `<td class="col-low" data-col="low">${lo != null ? `${Math.round(lo)}°F` : '—'}</td>`,
+      vsTypical: `<td class="col-vsTypical" data-col="vsTypical"><span class="vs-typical-cell">${escapeHtml(vsLabel)}</span></td>`,
       feels: `<td class="col-feels" data-col="feels">${feelsLabel}</td>`,
       precipPct: `<td class="col-precipPct" data-col="precipPct">${precipPct != null ? `${precipPct}%` : '—'}</td>`,
       precipIn: `<td class="col-precipIn" data-col="precipIn">${precipSum != null ? `${Number(precipSum).toFixed(2)}` : '—'}</td>`,
@@ -904,6 +938,84 @@ function buildDailyTable(daily) {
   table.appendChild(tbody);
   wrap.appendChild(table);
   attachColumnToggles(wrap, cols);
+  return wrap;
+}
+
+/**
+ * Collapsed comparison detail under the 10-day forecast.
+ * @param {Record<string, unknown> | null} daily
+ * @param {Record<string, unknown> | null} climatology
+ * @returns {HTMLElement}
+ */
+function buildClimatologyCompareSection(daily, climatology) {
+  const wrap = document.createElement('div');
+  wrap.className = 'climatology-compare';
+  if (!climatology?.doy) {
+    renderEmpty(
+      wrap,
+      'Climatology unavailable',
+      'Typical conditions for this date are still loading. ERA5 day-of-year normals refresh about monthly (pnpm run fetch:climatology).',
+    );
+    return wrap;
+  }
+
+  const period = climatologyPeriodLabel(climatology);
+  const lead = document.createElement('p');
+  lead.className = 'climatology-compare__lead';
+  lead.textContent = `Forecast highs and lows compared with typical values for each calendar date from ERA5 reanalysis (${period}). This is not an official NOAA/NCEI climate normal.`;
+  wrap.appendChild(lead);
+
+  const times = /** @type {string[]} */ (daily?.time ?? []);
+  if (!times.length) {
+    renderEmpty(wrap, 'No daily forecast', 'Cannot compare without a 10-day forecast.');
+    return wrap;
+  }
+
+  const tableWrap = document.createElement('div');
+  tableWrap.className = 'table-scroll';
+  const table = document.createElement('table');
+  table.className = 'data-table data-table--dense';
+  table.innerHTML = `
+    <caption class="sr-only">Forecast compared to typical conditions</caption>
+    <thead>
+      <tr>
+        <th scope="col">Day</th>
+        <th scope="col">Forecast high / low</th>
+        <th scope="col">Typical high / low</th>
+        <th scope="col">Δ high / low</th>
+        <th scope="col">Precip vs typical</th>
+      </tr>
+    </thead>
+  `;
+  const tbody = document.createElement('tbody');
+  for (let i = 0; i < Math.min(10, times.length); i += 1) {
+    const iso = String(times[i]).slice(0, 10);
+    const hi = /** @type {(number | null)[]} */ (daily?.temperature_2m_max ?? [])[i];
+    const lo = /** @type {(number | null)[]} */ (daily?.temperature_2m_min ?? [])[i];
+    const precip = /** @type {(number | null)[]} */ (daily?.precipitation_sum ?? [])[i];
+    const cmp = compareDailyToNormal(climatology, iso, hi, lo, precip);
+    const fc =
+      hi != null && lo != null ? `${Math.round(Number(hi))}° / ${Math.round(Number(lo))}°` : '—';
+    const typ =
+      cmp.normal?.tmax != null && cmp.normal?.tmin != null
+        ? `${Math.round(cmp.normal.tmax)}° / ${Math.round(cmp.normal.tmin)}°`
+        : '—';
+    const dHi = formatTempDelta(cmp.deltaHi);
+    const dLo = formatTempDelta(cmp.deltaLo);
+    const delta = dHi && dLo ? `${dHi} / ${dLo}` : dHi || dLo || '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${fmtDate(times[i])}</td>
+      <td>${escapeHtml(fc)}</td>
+      <td>${escapeHtml(typ)}</td>
+      <td><span class="vs-typical-cell">${escapeHtml(delta)}</span></td>
+      <td>${escapeHtml(cmp.precipLabel ?? '—')}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  tableWrap.appendChild(table);
+  wrap.appendChild(tableWrap);
   return wrap;
 }
 
@@ -970,6 +1082,7 @@ function appendDeepForecast(root, data, ctx) {
   } = ctx;
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
   const daily = /** @type {Record<string, unknown> | null} */ (data.daily ?? null);
+  const climatology = /** @type {Record<string, unknown> | null} */ (data.climatology ?? null);
 
   if (!hourly?.time || !Array.isArray(hourly.time) || hourly.time.length === 0) {
     const empty = document.createElement('div');
@@ -1024,7 +1137,7 @@ function appendDeepForecast(root, data, ctx) {
       root,
       'daily-heading',
       'Daily forecast (10 day)',
-      () => buildDailyTable(/** @type {Record<string, unknown>} */ (daily)),
+      () => buildDailyTable(/** @type {Record<string, unknown>} */ (daily), climatology),
       { open: false },
     );
   } else {
@@ -1032,9 +1145,17 @@ function appendDeepForecast(root, data, ctx) {
       root,
       'daily-heading',
       'Daily forecast (10 day)',
-      buildDailyTable(/** @type {Record<string, unknown>} */ (daily)),
+      buildDailyTable(/** @type {Record<string, unknown>} */ (daily), climatology),
     );
   }
+
+  renderCollapsibleSection(
+    root,
+    'climatology-heading',
+    'Compared to typical',
+    () => buildClimatologyCompareSection(daily, climatology),
+    { open: false },
+  );
 
   if (ctx.includeMapSlot) {
     const mapSlot = document.createElement('div');
@@ -1166,8 +1287,14 @@ function appendDeepForecast(root, data, ctx) {
       const rwis = /** @type {Record<string, unknown> | null} */ (
         roads?.rwis ?? data.cdot_rwis ?? null
       );
+      const roadCondition = /** @type {Record<string, unknown> | null} */ (
+        roads?.road_condition ?? null
+      );
+      const liveRwis = rwisLiveReadings(
+        rwis && typeof rwis === 'object' ? /** @type {Record<string, unknown>} */ (rwis) : null,
+      );
       const wrap = document.createDocumentFragment();
-      if (!roadAlerts.length && !cams.length && !rwis) {
+      if (!roadAlerts.length && !cams.length && !liveRwis.fresh && !roadCondition) {
         renderEmpty(wrap, 'No CDOT road data', 'for this location right now.');
         return wrap;
       }
@@ -1195,15 +1322,50 @@ function appendDeepForecast(root, data, ctx) {
         });
         wrap.appendChild(ul);
       }
-      if (rwis) {
+      if (roadCondition) {
         const dl = document.createElement('dl');
         dl.className = 'metric-list';
-        dl.innerHTML = `
-          <dt>RWIS</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${rwis.distance_km != null ? ` (${rwis.distance_km} km)` : ''}</dd>
-          ${rwis.air_temp_f != null ? `<dt>Air</dt><dd>${Math.round(Number(rwis.air_temp_f))}°F</dd>` : ''}
-          ${rwis.surface_temp_f != null ? `<dt>Pavement</dt><dd>${Math.round(Number(rwis.surface_temp_f))}°F</dd>` : ''}
-          ${rwis.surface_status ? `<dt>Surface</dt><dd>${escapeHtml(String(rwis.surface_status))}</dd>` : ''}
-        `;
+        const rows = [
+          `<dt>Road segment</dt><dd>${escapeHtml(String(roadCondition.name ?? roadCondition.routeName ?? ''))}${roadCondition.distance_km != null ? ` (${roadCondition.distance_km} km)` : ''}</dd>`,
+        ];
+        if (roadCondition.condition) {
+          rows.push(`<dt>Condition</dt><dd>${escapeHtml(String(roadCondition.condition))}</dd>`);
+        }
+        if (roadCondition.forecast_text) {
+          rows.push(`<dt>Forecast</dt><dd>${escapeHtml(String(roadCondition.forecast_text))}</dd>`);
+        }
+        if (roadCondition.observed) {
+          rows.push(
+            `<dt>Updated</dt><dd>${escapeHtml(fmtDateTime(String(roadCondition.observed)))}</dd>`,
+          );
+        }
+        dl.innerHTML = rows.join('');
+        wrap.appendChild(dl);
+      }
+      if (liveRwis.fresh && rwis) {
+        const dl = document.createElement('dl');
+        dl.className = 'metric-list';
+        const rows = [
+          `<dt>RWIS</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${rwis.distance_km != null ? ` (${rwis.distance_km} km)` : ''}</dd>`,
+        ];
+        if (liveRwis.air_temp_f != null && Number.isFinite(liveRwis.air_temp_f)) {
+          rows.push(`<dt>Air</dt><dd>${Math.round(liveRwis.air_temp_f)}°F</dd>`);
+        }
+        if (liveRwis.surface_temp_f != null && Number.isFinite(liveRwis.surface_temp_f)) {
+          rows.push(`<dt>Pavement</dt><dd>${Math.round(liveRwis.surface_temp_f)}°F</dd>`);
+        }
+        if (liveRwis.surface_status) {
+          rows.push(`<dt>Surface</dt><dd>${escapeHtml(liveRwis.surface_status)}</dd>`);
+        }
+        if (liveRwis.wind_speed_mph != null && Number.isFinite(liveRwis.wind_speed_mph)) {
+          rows.push(`<dt>Wind</dt><dd>${Math.round(liveRwis.wind_speed_mph)} mph</dd>`);
+        }
+        if (liveRwis.observed) {
+          rows.push(
+            `<dt>Observed</dt><dd>${escapeHtml(fmtDateTime(String(liveRwis.observed)))}</dd>`,
+          );
+        }
+        dl.innerHTML = rows.join('');
         wrap.appendChild(dl);
       }
       if (cams.length) {

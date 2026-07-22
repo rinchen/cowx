@@ -1,17 +1,17 @@
 /**
- * CDOT / COtrip cameras (CARS) + RWIS + live alerts (ArcGIS) — no token.
+ * CDOT / COtrip cameras (CARS) + live alerts (ArcGIS) — no token.
  * Failure point: upstream timeout / schema drift.
- * Fallback: status error/partial; payloads get null camera/rwis/alerts.
+ * Fallback: status error/partial; payloads get null camera/alerts.
+ *
+ * Public RWIS ArcGIS weather stations have been frozen since 2021; live road
+ * weather needs the keyed data.cotrip.org API, so we do not fetch RWIS.
  */
 
 import { fetchJson } from '../../lib/http.js';
-import { haversineKm, nearestPoint, nearestPoints } from '../../lib/geo.js';
+import { haversineKm, nearestPoints } from '../../lib/geo.js';
 import { toFiniteNumber } from '../../lib/parse.js';
 
 const CAMERAS_URL = 'https://cotg.carsprogram.org/cameras_v1/api/cameras';
-const RWIS_ARCGIS =
-  'https://maps.codot.gov/server/rest/services/Hosted/CoTrip_Weather_Stations_(Live)_Public_View/FeatureServer/0/query' +
-  '?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson';
 const ALERTS_POINTS_ARCGIS =
   'https://maps.codot.gov/server/rest/services/Hosted/CoTrip_Alerts_Points_(Live)_Public_View/FeatureServer/0/query' +
   '?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson';
@@ -21,7 +21,6 @@ const ALERTS_POLYLINE_ARCGIS =
 
 const MAX_CAMERA_KM = 40;
 const MAX_CAMERAS = 3;
-const MAX_RWIS_KM = 40;
 const MAX_ALERT_POINT_KM = 75;
 const MAX_ALERT_POLY_KM = 50;
 const MAX_ALERTS = 5;
@@ -57,52 +56,6 @@ export function parseCameras(raw) {
       lon,
       imageUrl,
       pageUrl: `${COTRIP_MAP}/?lat=${lat}&lon=${lon}&zoom=12`,
-    });
-  }
-  return out;
-}
-
-/**
- * Parse ArcGIS GeoJSON RWIS features (may include stale timestamps — still useful for identity).
- * @param {unknown} raw
- */
-export function parseRwisGeoJson(raw) {
-  const features =
-    raw && typeof raw === 'object' && Array.isArray(raw.features) ? raw.features : [];
-  const out = [];
-  for (const f of features) {
-    const p = f?.properties ?? {};
-    const lat = toFiniteNumber(p.ws_latitude) ?? toFiniteNumber(f?.geometry?.coordinates?.[1]);
-    const lon = toFiniteNumber(p.ws_longitude) ?? toFiniteNumber(f?.geometry?.coordinates?.[0]);
-    if (lat == null || lon == null) continue;
-    const id = String(p.ws_deviceid ?? p.ws_weatherstationid ?? p.objectid ?? '');
-    if (!id) continue;
-
-    let observed = null;
-    const ts =
-      toFiniteNumber(p.ws_devicecollectiondt) ??
-      toFiniteNumber(p.ws_lastupdatedate) ??
-      toFiniteNumber(p.last_edited_date);
-    if (ts != null) {
-      observed = new Date(ts > 1e12 ? ts : ts * 1000).toISOString();
-    }
-
-    out.push({
-      id,
-      name: String(p.ws_commonname ?? id),
-      lat,
-      lon,
-      air_temp_f: toFiniteNumber(p.ws_essairtemp),
-      surface_temp_f: toFiniteNumber(p.surfacesensor_esssurfacetempera),
-      surface_status: p.surfacesensor_rwissurfacestatus
-        ? String(p.surfacesensor_rwissurfacestatus)
-        : null,
-      humidity: toFiniteNumber(p.ws_essrelhumidty),
-      wind_speed_mph: toFiniteNumber(p.ws_essavgwindspeed),
-      wind_gust_mph: null,
-      visibility_mi: toFiniteNumber(p.ws_essvisibility),
-      road: p.ws_roadname ? String(p.ws_roadname) : null,
-      observed,
     });
   }
   return out;
@@ -269,7 +222,7 @@ export function assignCamerasForLocation(loc, cameras) {
  * @param {import('../../lib/types.js').Location[]} locations
  */
 export async function fetchCdot(locations) {
-  /** @type {Map<string, { camera: object | null, cameras: object[], rwis: object | null, alerts: object[], cdot_roads: object }>} */
+  /** @type {Map<string, { camera: object | null, cameras: object[], alerts: object[], cdot_roads: object }>} */
   const bySlug = new Map();
   let calls = 0;
   /** @type {{ type: string, features: object[] }} */
@@ -280,7 +233,6 @@ export async function fetchCdot(locations) {
   const updatedAt = new Date().toISOString();
 
   let cameras = [];
-  let rwis = [];
   /** @type {ReturnType<typeof parseAlertsGeoJson>} */
   let alerts = [];
 
@@ -288,14 +240,6 @@ export async function fetchCdot(locations) {
     const camerasRaw = await fetchJson(CAMERAS_URL, { timeoutMs: 45_000 });
     calls += 1;
     cameras = parseCameras(camerasRaw);
-  } catch (err) {
-    errors.push(err instanceof Error ? err.message : String(err));
-  }
-
-  try {
-    const rwisRaw = await fetchJson(RWIS_ARCGIS, { timeoutMs: 45_000 });
-    calls += 1;
-    rwis = parseRwisGeoJson(rwisRaw);
   } catch (err) {
     errors.push(err instanceof Error ? err.message : String(err));
   }
@@ -355,19 +299,17 @@ export async function fetchCdot(locations) {
     })),
   };
 
-  if (!cameras.length && !rwis.length && !alerts.length) {
+  if (!cameras.length && !alerts.length) {
     for (const loc of locations) {
       const emptyRoads = {
         updatedAt,
         alerts: [],
         cameras: [],
-        rwis: null,
         links: { cotrip: COTRIP_MAP },
       };
       bySlug.set(loc.slug, {
         camera: null,
         cameras: [],
-        rwis: null,
         alerts: [],
         cdot_roads: emptyRoads,
       });
@@ -378,30 +320,17 @@ export async function fetchCdot(locations) {
       camerasGeoJson,
       alertsGeoJson,
       calls,
-      error: (errors.join('; ') || 'CDOT cameras, RWIS, and alerts unavailable').slice(0, 500),
+      error: (errors.join('; ') || 'CDOT cameras and alerts unavailable').slice(0, 500),
     };
   }
 
   let matchedCam = 0;
-  let matchedRwis = 0;
   let matchedAlerts = 0;
 
   for (const loc of locations) {
     const camList = assignCamerasForLocation({ lat: loc.lat, lon: loc.lon }, cameras);
     if (camList.length) matchedCam += 1;
     const camera = camList[0] ?? null;
-
-    const rwisHit = nearestPoint({ lat: loc.lat, lon: loc.lon }, rwis);
-    let rwisRec = null;
-    if (rwisHit && rwisHit.distanceKm <= MAX_RWIS_KM) {
-      matchedRwis += 1;
-      const p = /** @type {ReturnType<typeof parseRwisGeoJson>[0]} */ (rwisHit.point);
-      rwisRec = {
-        ...p,
-        distance_km: Math.round(rwisHit.distanceKm * 10) / 10,
-        url: COTRIP_MAP,
-      };
-    }
 
     const locAlerts = assignAlertsForLocation({ lat: loc.lat, lon: loc.lon }, alerts);
     if (locAlerts.length) matchedAlerts += 1;
@@ -410,25 +339,19 @@ export async function fetchCdot(locations) {
       updatedAt,
       alerts: locAlerts,
       cameras: camList,
-      rwis: rwisRec,
       links: { cotrip: COTRIP_MAP },
     };
 
     bySlug.set(loc.slug, {
       camera,
       cameras: camList,
-      rwis: rwisRec,
       alerts: locAlerts,
       cdot_roads,
     });
   }
 
   const status =
-    matchedCam === 0 && matchedRwis === 0 && matchedAlerts === 0
-      ? 'partial'
-      : errors.length
-        ? 'partial'
-        : 'ok';
+    matchedCam === 0 && matchedAlerts === 0 ? 'partial' : errors.length ? 'partial' : 'ok';
 
   return {
     status,

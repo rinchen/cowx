@@ -36,6 +36,7 @@ jobs:
         env:
           PURPLEAIR_API_KEY: ${{ secrets.PURPLEAIR_API_KEY }}
           AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
+          COTRIP_API_KEY: ${{ secrets.COTRIP_API_KEY }}
         # Must use `pnpm run fetch` / `fetch:data` — bare `pnpm fetch` is pnpm's
         # lockfile package-download builtin and never runs the weather orchestrator.
         run: pnpm run fetch:data

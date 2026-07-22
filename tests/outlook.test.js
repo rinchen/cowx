@@ -267,15 +267,22 @@ describe('sourceStatusChips', () => {
       { id: 'openmeteo', status: 'ok' },
       { id: 'nws', status: 'partial' },
       { id: 'airnow', status: 'error' },
+      { id: 'cotrip', status: 'ok' },
+      { id: 'openmeteo_climatology', status: 'partial' },
       { id: 'mystery_source', status: 'skipped' },
       null,
       { status: 'ok' },
     ]);
-    assert.equal(chips.length, 4);
+    assert.equal(chips.length, 6);
     assert.equal(chips[0].label, 'OM');
     assert.equal(chips[0].status, 'ok');
+    assert.match(chips[0].title, /Open-Meteo forecast/i);
     assert.equal(chips[1].label, 'NWS');
-    assert.equal(chips[3].label, 'MYSTER');
+    assert.equal(chips[3].label, 'COtrip');
+    assert.match(chips[3].title, /RWIS/i);
+    assert.equal(chips[4].label, 'Climo');
+    assert.match(chips[4].title, /ERA5/i);
+    assert.equal(chips[5].label, 'MYSTER');
   });
 
   it('returns empty for non-arrays', () => {

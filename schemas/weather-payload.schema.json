@@ -129,7 +129,10 @@
         "updatedAt": { "type": "string" },
         "alerts": { "type": "array" },
         "cameras": { "type": "array" },
-        "rwis": { "type": ["object", "null"] }
+        "rwis": { "type": ["object", "null"] },
+        "road_condition": { "type": ["object", "null"] },
+        "incidents": { "type": "array" },
+        "planned_events": { "type": "array" }
       }
     },
     "cwop": {

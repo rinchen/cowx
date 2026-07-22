@@ -16,7 +16,7 @@ import {
 } from '../public/js/sparkline.js';
 import { selectRadarFrames, radarTileUrl, safeRadarPath } from '../public/js/radar-loop.js';
 import { estimateRfComms } from '../scripts/lib/rf-comms.js';
-import { parseCameras, parseRwisGeoJson } from '../scripts/fetch/adapters/cdot.js';
+import { parseCameras } from '../scripts/fetch/adapters/cdot.js';
 import { parseNearbyStations } from '../scripts/fetch/adapters/cwop.js';
 
 describe('sparkline / meteogram', () => {
@@ -176,30 +176,6 @@ describe('cdot parsers', () => {
     ]);
     assert.equal(cams.length, 1);
     assert.equal(cams[0].imageUrl, 'https://example.com/cam.jpg');
-  });
-
-  it('parses RWIS geojson features', () => {
-    const stations = parseRwisGeoJson({
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          geometry: { type: 'Point', coordinates: [-105.2, 39.9] },
-          properties: {
-            ws_deviceid: '8278',
-            ws_commonname: 'Test RWIS',
-            ws_latitude: 39.9,
-            ws_longitude: -105.2,
-            ws_essairtemp: 47,
-            surfacesensor_esssurfacetempera: 57,
-            surfacesensor_rwissurfacestatus: 'Dry',
-          },
-        },
-      ],
-    });
-    assert.equal(stations.length, 1);
-    assert.equal(stations[0].air_temp_f, 47);
-    assert.equal(stations[0].surface_status, 'Dry');
   });
 });
 

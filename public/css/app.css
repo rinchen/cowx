@@ -890,6 +890,11 @@ main {
   box-shadow: var(--shadow);
 }
 
+/* Belt-and-suspenders: some engines still lay out flex-summary details bodies when closed. */
+.dash-section:not([open]) > .dash-section-body {
+  display: none;
+}
+
 .dash-section > summary {
   display: flex;
   flex-wrap: wrap;
@@ -904,6 +909,25 @@ main {
 
 .dash-section > summary::-webkit-details-marker {
   display: none;
+}
+
+.dash-section > summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 1em;
+  flex: 0 0 auto;
+  color: var(--color-muted, var(--glass-muted));
+  transition: transform 0.15s ease;
+}
+
+.dash-section[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-section > summary::before {
+    transition: none;
+  }
 }
 
 .dash-section-title {
@@ -1950,12 +1974,89 @@ body.workspace-active #main-content {
   font-weight: 600;
 }
 
-.intel-feels,
-.intel-range {
+.intel-feels {
   display: block;
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--glass-muted);
+}
+
+.intel-range {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--glass-text, inherit);
+}
+
+.intel-vs-typical {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  margin-top: 0.15rem;
+}
+
+.outlook-period__vs,
+.outlook-vs-typical {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.outlook-vs-typical--pending {
+  color: var(--glass-muted);
+  font-weight: 500;
+}
+
+.outlook-vs-typical__label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.15rem;
+  color: var(--glass-muted);
+}
+
+.outlook-hour-card__vs {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+  line-height: 1.1;
+}
+
+.outlook-period__badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  letter-spacing: 0.01em;
+}
+
+.outlook-period__range {
+  margin: 0.25rem 0 0.15rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--glass-text, var(--color-text));
+}
+
+.vs-typical-cell {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.climatology-compare__lead {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-muted, var(--glass-muted));
+  max-width: 42rem;
 }
 
 .glance-aqi-bars {
@@ -2226,8 +2327,9 @@ button.glance-aqi-bar__source.intel-jump {
 .outlook-period__title {
   margin: 0 0 0.25rem;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.35rem 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
 }
