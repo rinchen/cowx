@@ -1,93 +1,103 @@
 {
-  "generatedAt": "2026-07-21T20:19:50.503Z",
+  "generatedAt": "2026-07-22T01:22:25.255Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-21T20:15:59.622Z",
-      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-22T01:17:47.140Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-21T20:17:47.610Z",
-      "error": "fetch failed; fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-22T01:19:25.746Z",
+      "error": "fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:17:48.812Z"
+      "fetchedAt": "2026-07-22T01:19:27.517Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:17:49.396Z"
+      "fetchedAt": "2026-07-22T01:19:27.900Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:17:51.878Z"
+      "fetchedAt": "2026-07-22T01:19:46.635Z"
     },
     {
       "id": "purpleair",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:17:52.390Z"
+      "fetchedAt": "2026-07-22T01:19:47.015Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:19:25.029Z"
+      "fetchedAt": "2026-07-22T01:21:24.487Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:19:26.431Z"
+      "fetchedAt": "2026-07-22T01:21:26.056Z"
     },
     {
       "id": "snotel",
-      "status": "error",
-      "fetchedAt": "2026-07-21T20:19:36.885Z",
-      "error": "fetch failed"
+      "status": "ok",
+      "fetchedAt": "2026-07-22T01:22:06.867Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:19:37.741Z"
+      "fetchedAt": "2026-07-22T01:22:07.898Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-21T20:19:48.783Z"
+      "fetchedAt": "2026-07-22T01:22:17.488Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:19:49.222Z"
+      "fetchedAt": "2026-07-22T01:22:17.899Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:19:49.708Z"
+      "fetchedAt": "2026-07-22T01:22:24.583Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:19:49.981Z"
+      "fetchedAt": "2026-07-22T01:22:24.807Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:19:50.273Z"
+      "fetchedAt": "2026-07-22T01:22:25.051Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-07-21T20:19:50.503Z"
+      "fetchedAt": "2026-07-22T01:22:25.255Z"
+    },
+    {
+      "id": "openmeteo_climatology",
+      "status": "partial",
+      "fetchedAt": "2026-07-22T00:46:43.759Z",
+      "error": "golden/1991-01-01…2000-12-31: HTTP 429 for https://archive-api.open-meteo.com/v1/archive?latitude=39.75&longitude=-105.25&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver: {\"reason\":\"Hourly API request limit exceeded. Please try again in the next hour.\",\"error\":true}; retry golden/1991-01-01: HTTP 429 for https://archive-api.open-meteo.com/v1/archive?latitude=39.75"
+    },
+    {
+      "id": "cotrip",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T01:18:28.571Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 336,
-  "forecastStaleCount": 85,
-  "openmeteoCoverage": 253
+  "apiCalls": 502,
+  "forecastStaleCount": 68,
+  "openmeteoCoverage": 270
 }

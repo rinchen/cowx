@@ -338,7 +338,7 @@ function updateFooterTimestamp() {
   const chipHtml = `<ul class="source-chips" aria-label="Data source status">${chips
     .map(
       (c) =>
-        `<li><span class="source-chip source-chip--${escapeHtml(c.status)}" aria-label="${escapeHtml(c.label)}: ${escapeHtml(c.status)}">${escapeHtml(c.label)}</span></li>`,
+        `<li><span class="source-chip source-chip--${escapeHtml(c.status)}" title="${escapeHtml(c.title)}: ${escapeHtml(c.status)}" aria-label="${escapeHtml(c.title)}: ${escapeHtml(c.status)}">${escapeHtml(c.label)}</span></li>`,
     )
     .join('')}</ul>`;
   els.dataSources.innerHTML = `<div class="site-footer__sources-head">
