@@ -5,7 +5,9 @@ import {
   buildOutlookHighlights,
   buildPeriodSummaries,
   nearestHourIndex,
+  pickNowCurrent,
   pickNowSky,
+  resolveCatalogNow,
   sliceCompactHours,
   sourceStatusChips,
   sourceStatusLabel,
@@ -115,6 +117,53 @@ describe('pickNowSky', () => {
     assert.equal(sky.weather_code, null);
     assert.equal(sky.condition, '—');
     assert.equal(sky.is_day, false);
+  });
+});
+
+describe('pickNowCurrent / resolveCatalogNow', () => {
+  it('uses nearest-hour temp instead of the fetch-time snapshot', () => {
+    const hourly = {
+      time: ['2026-07-21T19:00:00', '2026-07-22T06:00:00', '2026-07-22T07:00:00'],
+      temperature_2m: [93.4, 67.4, 70.1],
+      apparent_temperature: [88.1, 68.9, 71.7],
+      weather_code: [0, 3, 3],
+      relative_humidity_2m: [25, 55, 50],
+      wind_speed_10m: [14.1, 4.2, 5.0],
+      wind_direction_10m: [105, 220, 230],
+      wind_gusts_10m: [21.3, 8.0, 9.0],
+      cloud_cover: [0, 100, 90],
+      is_day: [1, 1, 1],
+    };
+    const snapshot = {
+      temp_f: 93.4,
+      feels_like_f: 88.1,
+      condition: 'Clear',
+      weather_code: 0,
+      precip_today_in: 0.12,
+      surface_pressure_mb: 850.2,
+    };
+    const nowMs = new Date('2026-07-22T06:16:00').getTime();
+    const fromHour = pickNowCurrent(hourly, nowMs);
+    assert.ok(fromHour);
+    assert.equal(fromHour.temp_f, 67.4);
+    assert.equal(fromHour.feels_like_f, 68.9);
+    assert.equal(fromHour.condition, 'Overcast');
+    assert.equal(fromHour.cloud_cover, 100);
+
+    const merged = resolveCatalogNow(snapshot, hourly, nowMs);
+    assert.ok(merged);
+    assert.equal(merged.temp_f, 67.4);
+    assert.equal(merged.condition, 'Overcast');
+    // Cumulative / current-only fields stay from the snapshot.
+    assert.equal(merged.precip_today_in, 0.12);
+    assert.equal(merged.surface_pressure_mb, 850.2);
+  });
+
+  it('falls back to the snapshot when hourly is empty', () => {
+    const snapshot = { temp_f: 72, precip_today_in: 0 };
+    assert.deepEqual(resolveCatalogNow(snapshot, null), snapshot);
+    assert.deepEqual(resolveCatalogNow(snapshot, { time: [] }), snapshot);
+    assert.equal(resolveCatalogNow(null, null), null);
   });
 });
 

@@ -34,17 +34,72 @@ export function nearestHourIndex(times, nowMs = Date.now()) {
  * @returns {{ weather_code: number | null, condition: string, is_day: boolean } | null}
  */
 export function pickNowSky(hourly, nowMs = Date.now()) {
+  const now = pickNowCurrent(hourly, nowMs);
+  if (!now) return null;
+  return {
+    weather_code: /** @type {number | null} */ (now.weather_code),
+    condition: String(now.condition ?? '—'),
+    // Missing is_day defaults to daytime (same as prior pickNowSky behavior).
+    is_day: now.is_day !== 0,
+  };
+}
+
+/**
+ * Full "now" conditions from the nearest hourly slot (UI `current` shape).
+ * Used so At a Glance temp/wind/humidity track the wall clock between fetches,
+ * instead of freezing on the Open-Meteo `current` snapshot from fetch time.
+ * @param {Record<string, unknown> | null | undefined} hourly
+ * @param {number} [nowMs]
+ * @returns {Record<string, unknown> | null}
+ */
+export function pickNowCurrent(hourly, nowMs = Date.now()) {
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   if (!times.length) return null;
   const hi = nearestHourIndex(times, nowMs);
   const weather_code = numOrNull(/** @type {(number | null)[]} */ (hourly?.weather_code ?? [])[hi]);
   const dayFlag = /** @type {(number | null)[]} */ (hourly?.is_day ?? [])[hi];
-  const is_day = dayFlag === 0 || dayFlag === 1 ? dayFlag === 1 : true;
+  const is_day = dayFlag === 0 || dayFlag === 1 ? dayFlag : null;
   return {
+    temp_f: numOrNull(/** @type {(number | null)[]} */ (hourly?.temperature_2m ?? [])[hi]),
+    feels_like_f: numOrNull(
+      /** @type {(number | null)[]} */ (hourly?.apparent_temperature ?? [])[hi],
+    ),
+    humidity: numOrNull(/** @type {(number | null)[]} */ (hourly?.relative_humidity_2m ?? [])[hi]),
+    dewpoint_f: numOrNull(/** @type {(number | null)[]} */ (hourly?.dewpoint_2m ?? [])[hi]),
     weather_code,
     condition: wmoLabel(weather_code),
+    cloud_cover: numOrNull(/** @type {(number | null)[]} */ (hourly?.cloud_cover ?? [])[hi]),
+    pressure_mb: numOrNull(/** @type {(number | null)[]} */ (hourly?.pressure_msl ?? [])[hi]),
     is_day,
+    wind_speed_mph: numOrNull(/** @type {(number | null)[]} */ (hourly?.wind_speed_10m ?? [])[hi]),
+    wind_dir_deg: numOrNull(
+      /** @type {(number | null)[]} */ (hourly?.wind_direction_10m ?? [])[hi],
+    ),
+    wind_gust_mph: numOrNull(/** @type {(number | null)[]} */ (hourly?.wind_gusts_10m ?? [])[hi]),
+    precip_in: numOrNull(/** @type {(number | null)[]} */ (hourly?.precipitation ?? [])[hi]),
+    visibility_m: numOrNull(/** @type {(number | null)[]} */ (hourly?.visibility ?? [])[hi]),
+    uv_index: numOrNull(/** @type {(number | null)[]} */ (hourly?.uv_index ?? [])[hi]),
+    thunderstorm_probability: numOrNull(
+      /** @type {(number | null)[]} */ (hourly?.thunderstorm_probability ?? [])[hi],
+    ),
+    time: times[hi],
   };
+}
+
+/**
+ * Catalog path "now": nearest-hour fields overlaid on the fetch-time snapshot.
+ * Snapshot keeps cumulative / current-only fields (e.g. precip_today_in, surface_pressure_mb).
+ * @param {Record<string, unknown> | null | undefined} snapshot
+ * @param {Record<string, unknown> | null | undefined} hourly
+ * @param {number} [nowMs]
+ * @returns {Record<string, unknown> | null}
+ */
+export function resolveCatalogNow(snapshot, hourly, nowMs = Date.now()) {
+  const fromHour = pickNowCurrent(hourly, nowMs);
+  if (!fromHour && !snapshot) return null;
+  if (!fromHour) return /** @type {Record<string, unknown>} */ (snapshot);
+  if (!snapshot) return fromHour;
+  return { ...snapshot, ...fromHour };
 }
 
 /**

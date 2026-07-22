@@ -4,7 +4,7 @@
  */
 
 import { pickAqi } from './aqi.js';
-import { pickNowSky } from './outlook.js';
+import { pickNowSky, resolveCatalogNow } from './outlook.js';
 
 /**
  * @param {unknown} s
@@ -172,8 +172,12 @@ export function synthesizeBottomLine(data, options = {}) {
     return { ...line, jumpTo: bottomLineJumpTarget(line.priority) };
   }
 
-  const current = /** @type {Record<string, unknown> | null} */ (data.current ?? null);
   const hourly = /** @type {Record<string, unknown> | null} */ (data.hourly ?? null);
+  const current =
+    resolveCatalogNow(
+      /** @type {Record<string, unknown> | null} */ (data.current ?? null),
+      hourly,
+    ) ?? /** @type {Record<string, unknown> | null} */ (data.current ?? null);
   const alerts = /** @type {Record<string, unknown>[]} */ (data.alerts ?? []);
   const elev = num(data.elevation_ft);
   const region = str(data.region).toLowerCase();
