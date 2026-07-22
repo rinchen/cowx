@@ -1,103 +1,104 @@
 {
-  "generatedAt": "2026-07-22T01:22:25.255Z",
+  "generatedAt": "2026-07-22T10:36:26.402Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-22T01:17:47.140Z",
-      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-22T10:16:59.202Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-22T01:19:25.746Z",
-      "error": "fetch failed; fetch failed; fetch failed"
-    },
-    {
-      "id": "nws",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:19:27.517Z"
-    },
-    {
-      "id": "coagmet",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:19:27.900Z"
-    },
-    {
-      "id": "aviation",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:19:46.635Z"
-    },
-    {
-      "id": "purpleair",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:19:47.015Z"
-    },
-    {
-      "id": "airnow",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:21:24.487Z"
-    },
-    {
-      "id": "usgs",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:21:26.056Z"
-    },
-    {
-      "id": "snotel",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:22:06.867Z"
-    },
-    {
-      "id": "cdot",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:22:07.898Z"
-    },
-    {
-      "id": "cwop",
-      "status": "partial",
-      "fetchedAt": "2026-07-22T01:22:17.488Z"
-    },
-    {
-      "id": "hms",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:22:17.899Z"
-    },
-    {
-      "id": "spc_firewx",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:22:24.583Z"
-    },
-    {
-      "id": "nifc_fires",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:22:24.807Z"
-    },
-    {
-      "id": "burn_restrictions",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:22:25.051Z"
-    },
-    {
-      "id": "space_weather",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T01:22:25.255Z"
+      "fetchedAt": "2026-07-22T10:18:47.266Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_climatology",
       "status": "partial",
-      "fetchedAt": "2026-07-22T00:46:43.759Z",
-      "error": "golden/1991-01-01…2000-12-31: HTTP 429 for https://archive-api.open-meteo.com/v1/archive?latitude=39.75&longitude=-105.25&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver: {\"reason\":\"Hourly API request limit exceeded. Please try again in the next hour.\",\"error\":true}; retry golden/1991-01-01: HTTP 429 for https://archive-api.open-meteo.com/v1/archive?latitude=39.75"
+      "fetchedAt": "2026-07-22T10:32:14.696Z",
+      "error": "delta/1991-01-01…2000-12-31: fetch failed; delta/2001-01-01…2010-12-31: fetch failed; delta/2011-01-01…2020-12-31: fetch failed; naturita/1991-01-01…2000-12-31: fetch failed; naturita/2001-01-01…2010-12-31: fetch failed; naturita/2011-01-01…2020-12-31: fetch failed; telluride/1991-01-01…2000-12-31: fetch failed; telluride/2001-01-01…2010-12-31: fetch failed; telluride/2011-01-01…2020-12-31: fetch failed; ridgway/2011-01-01…2020-12-31: fetch failed; silverton/1991-01-01…2000-12-31: fetch failed; "
+    },
+    {
+      "id": "nws",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:32:15.457Z"
+    },
+    {
+      "id": "coagmet",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:32:18.791Z"
+    },
+    {
+      "id": "aviation",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:32:19.314Z"
+    },
+    {
+      "id": "purpleair",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:32:19.649Z"
+    },
+    {
+      "id": "airnow",
+      "status": "partial",
+      "fetchedAt": "2026-07-22T10:35:06.034Z",
+      "error": "This operation was aborted; This operation was aborted"
+    },
+    {
+      "id": "usgs",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:35:07.315Z"
+    },
+    {
+      "id": "snotel",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:35:47.488Z"
+    },
+    {
+      "id": "cdot",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:35:48.505Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-07-22T01:18:28.571Z"
+      "fetchedAt": "2026-07-22T10:36:13.790Z"
+    },
+    {
+      "id": "cwop",
+      "status": "partial",
+      "fetchedAt": "2026-07-22T10:36:25.012Z"
+    },
+    {
+      "id": "hms",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:36:25.559Z"
+    },
+    {
+      "id": "spc_firewx",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:36:25.802Z"
+    },
+    {
+      "id": "nifc_fires",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:36:25.989Z"
+    },
+    {
+      "id": "burn_restrictions",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:36:26.176Z"
+    },
+    {
+      "id": "space_weather",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T10:36:26.402Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 502,
-  "forecastStaleCount": 68,
-  "openmeteoCoverage": 270
+  "apiCalls": 405,
+  "forecastStaleCount": 85,
+  "openmeteoCoverage": 253
 }

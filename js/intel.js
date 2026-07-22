@@ -20,6 +20,7 @@ import {
   formatCompactHourLabel,
   nearestHourIndex,
   pickNowSky,
+  resolveCatalogNow,
   sliceCompactHours,
 } from './outlook.js';
 import {
@@ -196,7 +197,10 @@ export function renderHero(root, data, options = {}) {
   const pinCurrent =
     hyperlocal?.current && typeof hyperlocal.current === 'object' ? hyperlocal.current : null;
   const usingPinNow = Boolean(pin && pinCurrent?.temp_f != null);
-  const current = usingPinNow ? pinCurrent : catalogCurrent;
+  // Catalog path: nearest hourly "now" (not the frozen fetch-time current snapshot).
+  const current = usingPinNow
+    ? pinCurrent
+    : (resolveCatalogNow(catalogCurrent, hourly) ?? catalogCurrent);
 
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   const hi = times.length ? nearestHourIndex(times) : 0;
