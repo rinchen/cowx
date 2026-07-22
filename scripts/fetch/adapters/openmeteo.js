@@ -9,8 +9,9 @@ import { buildAstronomy } from '../../lib/astronomy.js';
 import { fetchJson, sleep } from '../../lib/http.js';
 import { estimateRfComms } from '../../lib/rf-comms.js';
 import { wmoLabel } from '../../lib/wmo.js';
+import { precipTodayInches } from '../../../public/js/denver-time.js';
 
-export { wmoLabel };
+export { wmoLabel, precipTodayInches };
 
 const CHUNK = 20;
 const CHUNK_DELAY_MS = 10_000;
@@ -118,66 +119,6 @@ export function nearestThunderstormPct(times, pct, nowMs = Date.now()) {
   });
   const v = pct[best];
   return v == null || Number.isNaN(Number(v)) ? null : Number(v);
-}
-
-/**
- * Sum hourly precipitation from America/Denver local midnight through the nearest hour ≤ now.
- * @param {string[]} times
- * @param {(number | null | undefined)[]} precip
- * @param {number} [nowMs]
- * @returns {number | null}
- */
-export function precipTodayInches(times, precip, nowMs = Date.now()) {
-  if (!Array.isArray(times) || !Array.isArray(precip) || times.length === 0) return null;
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Denver',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  const parts = fmt.formatToParts(new Date(nowMs));
-  /** @type {Record<string, string>} */
-  const map = {};
-  for (const p of parts) {
-    if (p.type !== 'literal') map[p.type] = p.value;
-  }
-  const today = `${map.year}-${map.month}-${map.day}`;
-  const hourKey = fmtHourKey(nowMs);
-  let sum = 0;
-  let any = false;
-  for (let i = 0; i < times.length; i += 1) {
-    const t = String(times[i]);
-    if (!t.startsWith(today)) continue;
-    // Local ISO without offset from Open-Meteo (America/Denver)
-    if (t.slice(0, 13) > hourKey) continue;
-    const v = precip[i];
-    if (v == null || Number.isNaN(Number(v))) continue;
-    sum += Number(v);
-    any = true;
-  }
-  return any ? Math.round(sum * 1000) / 1000 : null;
-}
-
-/**
- * @param {number} nowMs
- * @returns {string} YYYY-MM-DDTHH in Denver
- */
-function fmtHourKey(nowMs) {
-  const f = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Denver',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    hourCycle: 'h23',
-  });
-  const parts = f.formatToParts(new Date(nowMs));
-  /** @type {Record<string, string>} */
-  const map = {};
-  for (const p of parts) {
-    if (p.type !== 'literal') map[p.type] = p.value;
-  }
-  return `${map.year}-${map.month}-${map.day}T${map.hour}`;
 }
 
 /**

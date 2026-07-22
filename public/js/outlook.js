@@ -2,9 +2,12 @@
  * Pure helpers for Short-Term Outlook / hourly modal (testable, no DOM).
  */
 
+import { dailyIndexForNow, precipTodayInches } from './denver-time.js';
 import { escapeHtml } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { windDirLabel } from './wind.js';
+
+export { dailyIndexForNow, precipTodayInches } from './denver-time.js';
 
 /**
  * @param {string[]} times
@@ -88,7 +91,8 @@ export function pickNowCurrent(hourly, nowMs = Date.now()) {
 
 /**
  * Catalog path "now": nearest-hour fields overlaid on the fetch-time snapshot.
- * Snapshot keeps cumulative / current-only fields (e.g. precip_today_in, surface_pressure_mb).
+ * Recomputes precip_today_in from hourly so rainfall tracks the wall clock / calendar day.
+ * Snapshot keeps current-only fields such as surface_pressure_mb when hourly omits them.
  * @param {Record<string, unknown> | null | undefined} snapshot
  * @param {Record<string, unknown> | null | undefined} hourly
  * @param {number} [nowMs]
@@ -96,10 +100,25 @@ export function pickNowCurrent(hourly, nowMs = Date.now()) {
  */
 export function resolveCatalogNow(snapshot, hourly, nowMs = Date.now()) {
   const fromHour = pickNowCurrent(hourly, nowMs);
-  if (!fromHour && !snapshot) return null;
-  if (!fromHour) return /** @type {Record<string, unknown>} */ (snapshot);
-  if (!snapshot) return fromHour;
-  return { ...snapshot, ...fromHour };
+  const times = /** @type {string[]} */ (hourly?.time ?? []);
+  const precipSeries = /** @type {(number | null)[]} */ (hourly?.precipitation ?? []);
+  const precipToday =
+    times.length && precipSeries.length ? precipTodayInches(times, precipSeries, nowMs) : null;
+
+  if (!fromHour && !snapshot) {
+    return precipToday != null ? { precip_today_in: precipToday } : null;
+  }
+  if (!fromHour) {
+    const base = /** @type {Record<string, unknown>} */ ({ ...snapshot });
+    if (precipToday != null) base.precip_today_in = precipToday;
+    return base;
+  }
+  if (!snapshot) {
+    return precipToday != null ? { ...fromHour, precip_today_in: precipToday } : fromHour;
+  }
+  const merged = { ...snapshot, ...fromHour };
+  if (precipToday != null) merged.precip_today_in = precipToday;
+  return merged;
 }
 
 /**
@@ -186,12 +205,16 @@ export function buildPeriodSummaries(hourly, daily, opts = {}) {
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   if (!times.length) return [];
 
+  const nowMs = opts.nowMs ?? Date.now();
+  const di = dailyIndexForNow(daily, nowMs);
+  const dayIdx = di >= 0 ? di : 0;
+
   const sunrise0 =
-    daily?.sunrise != null ? String(/** @type {string[]} */ (daily.sunrise)[0] ?? '') : '';
+    daily?.sunrise != null ? String(/** @type {string[]} */ (daily.sunrise)[dayIdx] ?? '') : '';
   const sunset0 =
-    daily?.sunset != null ? String(/** @type {string[]} */ (daily.sunset)[0] ?? '') : '';
+    daily?.sunset != null ? String(/** @type {string[]} */ (daily.sunset)[dayIdx] ?? '') : '';
   const sunrise1 =
-    daily?.sunrise != null ? String(/** @type {string[]} */ (daily.sunrise)[1] ?? '') : '';
+    daily?.sunrise != null ? String(/** @type {string[]} */ (daily.sunrise)[dayIdx + 1] ?? '') : '';
 
   const sunrises = /** @type {string[]} */ (daily?.sunrise ?? []);
   const sunsets = /** @type {string[]} */ (daily?.sunset ?? []);
@@ -228,7 +251,6 @@ export function buildPeriodSummaries(hourly, daily, opts = {}) {
   });
 
   // Prefer remaining hours from now for "today" when we're mid-day
-  const nowMs = opts.nowMs ?? Date.now();
   const todayFromNow = todayIdx.filter((i) => new Date(times[i]).getTime() >= nowMs - 30 * 60_000);
   const tonightFromNow = tonightIdx.filter(
     (i) => new Date(times[i]).getTime() >= nowMs - 30 * 60_000,
@@ -240,8 +262,10 @@ export function buildPeriodSummaries(hourly, daily, opts = {}) {
     id: 'today',
     label: 'Today',
     is_day: true,
-    dailyHigh: numOrNull(/** @type {(number | null)[]} */ (daily?.temperature_2m_max ?? [])[0]),
-    dailyLow: numOrNull(/** @type {(number | null)[]} */ (daily?.temperature_2m_min ?? [])[0]),
+    dailyHigh: numOrNull(
+      /** @type {(number | null)[]} */ (daily?.temperature_2m_max ?? [])[dayIdx],
+    ),
+    dailyLow: numOrNull(/** @type {(number | null)[]} */ (daily?.temperature_2m_min ?? [])[dayIdx]),
   });
   if (today) out.push(today);
 

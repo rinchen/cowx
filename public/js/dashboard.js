@@ -3,6 +3,7 @@ import { aqiBarHtml } from './aqi.js';
 import { climatologyPeriodLabel, compareDailyToNormal, formatTempDelta } from './climatology.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
+import { resolveAstronomy, resolveCatalogNow, resolveRfComms } from './live.js';
 import { windCellHtml } from './wind.js';
 import { rwisLiveReadings } from './rwis.js';
 
@@ -1691,7 +1692,7 @@ function appendDeepForecast(root, data, ctx) {
     'astronomy-heading',
     'Astronomy',
     () => {
-      const astro = /** @type {Record<string, unknown> | null} */ (data.astronomy ?? null);
+      const astro = resolveAstronomy(data);
       if (!astro) {
         const frag = document.createDocumentFragment();
         renderEmpty(
@@ -2100,7 +2101,15 @@ function appendDeepForecast(root, data, ctx) {
     'Ham radio & space weather',
     () => {
       const sw = spaceWeather;
-      const rf = /** @type {Record<string, unknown> | null} */ (data.rf_comms ?? null);
+      const rf = resolveRfComms(
+        resolveCatalogNow(
+          /** @type {Record<string, unknown> | null} */ (data.current ?? null),
+          /** @type {Record<string, unknown> | null} */ (data.hourly ?? null),
+        ),
+        /** @type {Record<string, unknown> | null} */ (data.hourly ?? null),
+        data.elevation_ft != null ? Number(data.elevation_ft) : null,
+        /** @type {Record<string, unknown> | null} */ (data.rf_comms ?? null),
+      );
       const pws = /** @type {Record<string, unknown> | null} */ (data.pws ?? null);
       const pwsLinks = /** @type {Record<string, unknown>} */ (pws?.links ?? {});
       const wrap = document.createDocumentFragment();

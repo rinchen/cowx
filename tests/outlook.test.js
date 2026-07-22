@@ -154,9 +154,32 @@ describe('pickNowCurrent / resolveCatalogNow', () => {
     assert.ok(merged);
     assert.equal(merged.temp_f, 67.4);
     assert.equal(merged.condition, 'Overcast');
-    // Cumulative / current-only fields stay from the snapshot.
-    assert.equal(merged.precip_today_in, 0.12);
+    // surface_pressure stays from the snapshot (not in hourly).
     assert.equal(merged.surface_pressure_mb, 850.2);
+  });
+
+  it('recomputes precip_today_in from hourly for the Denver calendar day', () => {
+    const hourly = {
+      time: [
+        '2026-07-21T20:00',
+        '2026-07-22T06:00',
+        '2026-07-22T07:00',
+        '2026-07-22T12:00',
+        '2026-07-22T18:00',
+      ],
+      temperature_2m: [90, 67, 70, 85, 88],
+      precipitation: [0.4, 0.1, 0.05, 0.2, 0.3],
+      weather_code: [0, 3, 3, 0, 0],
+      is_day: [1, 1, 1, 1, 1],
+    };
+    const snapshot = { temp_f: 90, precip_today_in: 9.99 };
+    // 12:16 MDT = 18:16Z on Jul 22
+    const nowMs = new Date('2026-07-22T18:16:00Z').getTime();
+    const merged = resolveCatalogNow(snapshot, hourly, nowMs);
+    assert.ok(merged);
+    // Includes hours ≤ 12 local: 06 + 07 + 12 = 0.1 + 0.05 + 0.2
+    assert.equal(merged.precip_today_in, 0.35);
+    assert.equal(merged.temp_f, 85);
   });
 
   it('falls back to the snapshot when hourly is empty', () => {
