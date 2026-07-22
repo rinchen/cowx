@@ -3,7 +3,6 @@ import { aqiBarHtml } from './aqi.js';
 import { climatologyPeriodLabel, compareDailyToNormal, formatTempDelta } from './climatology.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
-import { rwisLiveReadings } from './rwis.js';
 import { windCellHtml } from './wind.js';
 
 const COL_PREF_KEY = 'cowx:tableColumns';
@@ -1262,14 +1261,8 @@ function appendDeepForecast(root, data, ctx) {
       const cams = /** @type {Record<string, unknown>[]} */ (
         roads?.cameras ?? (data.cdot_camera ? [data.cdot_camera] : [])
       );
-      const rwis = /** @type {Record<string, unknown> | null} */ (
-        roads?.rwis ?? data.cdot_rwis ?? null
-      );
-      const liveRwis = rwisLiveReadings(
-        rwis && typeof rwis === 'object' ? /** @type {Record<string, unknown>} */ (rwis) : null,
-      );
       const wrap = document.createDocumentFragment();
-      if (!roadAlerts.length && !cams.length && !liveRwis.fresh) {
+      if (!roadAlerts.length && !cams.length) {
         renderEmpty(wrap, 'No CDOT road data', 'for this location right now.');
         return wrap;
       }
@@ -1296,29 +1289,6 @@ function appendDeepForecast(root, data, ctx) {
           ul.appendChild(li);
         });
         wrap.appendChild(ul);
-      }
-      if (liveRwis.fresh && rwis) {
-        const dl = document.createElement('dl');
-        dl.className = 'metric-list';
-        const rows = [
-          `<dt>RWIS</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${rwis.distance_km != null ? ` (${rwis.distance_km} km)` : ''}</dd>`,
-        ];
-        if (liveRwis.air_temp_f != null && Number.isFinite(liveRwis.air_temp_f)) {
-          rows.push(`<dt>Air</dt><dd>${Math.round(liveRwis.air_temp_f)}°F</dd>`);
-        }
-        if (liveRwis.surface_temp_f != null && Number.isFinite(liveRwis.surface_temp_f)) {
-          rows.push(`<dt>Pavement</dt><dd>${Math.round(liveRwis.surface_temp_f)}°F</dd>`);
-        }
-        if (liveRwis.surface_status) {
-          rows.push(`<dt>Surface</dt><dd>${escapeHtml(liveRwis.surface_status)}</dd>`);
-        }
-        if (liveRwis.observed) {
-          rows.push(
-            `<dt>Observed</dt><dd>${escapeHtml(fmtDateTime(String(liveRwis.observed)))}</dd>`,
-          );
-        }
-        dl.innerHTML = rows.join('');
-        wrap.appendChild(dl);
       }
       if (cams.length) {
         const p = document.createElement('p');
