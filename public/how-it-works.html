@@ -122,11 +122,12 @@
         The <code>pnpm fetch:data</code> orchestrator calls independent adapters (Open-Meteo
         forecast and air quality, Open-Meteo ERA5 climatology refreshed about monthly for
         forecast-vs-typical comparisons, NWS alerts/AFD/HWO, CoAgMET, Aviation Weather METAR/TAF,
-        USGS gauges, SNOTEL, CDOT cameras/road alerts, CWOP/APRS neighborhood PWS, NOAA HMS smoke,
-        SPC fire weather outlooks, NIFC nearby wildfire locations, Colorado burn-restriction
-        status/links, NOAA SWPC space weather, and optional PurpleAir and AirNow). Each location
-        payload also gets locally computed astronomy and nearest-ZIP pollen offsite links (no pollen
-        API key). Each source can succeed or fail on its own. Results are merged into:
+        USGS gauges, SNOTEL, CDOT cameras plus keyed COtrip incidents/RWIS/road conditions,
+        CWOP/APRS neighborhood PWS, NOAA HMS smoke, SPC fire weather outlooks, NIFC nearby wildfire
+        locations, Colorado burn-restriction status/links, NOAA SWPC space weather, and optional
+        PurpleAir and AirNow). Each location payload also gets locally computed astronomy and
+        nearest-ZIP pollen offsite links (no pollen API key). Each source can succeed or fail on its
+        own. Results are merged into:
       </p>
       <ul>
         <li><code>index.json</code> — slim list for search and the map</li>

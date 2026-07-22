@@ -29,6 +29,7 @@ import { fetchAirNow } from './adapters/airnow.js';
 import { fetchUsgs } from './adapters/usgs.js';
 import { fetchSnotel } from './adapters/snotel.js';
 import { fetchCdot } from './adapters/cdot.js';
+import { fetchCotrip } from './adapters/cotrip.js';
 import { fetchCwop } from './adapters/cwop.js';
 import { fetchHms } from './adapters/hms.js';
 import { fetchSpcFireWx } from './adapters/spc-firewx.js';
@@ -164,6 +165,14 @@ export async function runFetch() {
     () => fetchCdot(locations),
     () => '',
   );
+  const cotrip = await runAdapter(
+    'cotrip',
+    () => fetchCotrip(locations),
+    (r) =>
+      r.coverage
+        ? `(stations ${r.coverage.stations ?? 0}, incidents ${r.coverage.incidents ?? 0}, conditions ${r.coverage.roadConditions ?? 0})`
+        : '',
+  );
   const cwop = await runAdapter(
     'cwop',
     () => fetchCwop(locations),
@@ -261,6 +270,25 @@ export async function runFetch() {
       const gauge = usgs.bySlug.get(loc.slug) ?? null;
       const snow = snotel.bySlug.get(loc.slug) ?? null;
       const cdotRec = cdot.bySlug.get(loc.slug) ?? null;
+      const cotripRec = /** @type {{
+        rwis?: object | null,
+        road_condition?: object | null,
+        alerts?: object[],
+        incidents?: object[],
+        planned_events?: object[],
+      } | null} */ (cotrip.bySlug.get(loc.slug) ?? null);
+      const baseRoads =
+        cdotRec?.cdot_roads && typeof cdotRec.cdot_roads === 'object' ? cdotRec.cdot_roads : {};
+      const cotripAlerts = Array.isArray(cotripRec?.alerts) ? cotripRec.alerts : [];
+      const cdot_roads = {
+        ...baseRoads,
+        rwis: cotripRec?.rwis ?? null,
+        road_condition: cotripRec?.road_condition ?? null,
+        // Prefer keyed COtrip traveler events when present; keep ArcGIS alerts as fallback.
+        alerts: cotripAlerts.length ? cotripAlerts : (baseRoads.alerts ?? []),
+        incidents: cotripRec?.incidents ?? [],
+        planned_events: cotripRec?.planned_events ?? [],
+      };
       const cwopRec = cwop.bySlug.get(loc.slug) ?? null;
       const pwsRec = cwop.pwsBySlug?.get(loc.slug) ?? null;
       const hmsRec = hms.bySlug.get(loc.slug) ?? null;
@@ -301,7 +329,8 @@ export async function runFetch() {
         usgs: gauge,
         snotel: snow,
         cdot_camera: cdotRec?.camera ?? null,
-        cdot_roads: cdotRec?.cdot_roads ?? null,
+        cdot_rwis: cotripRec?.rwis ?? null,
+        cdot_roads,
         cwop: cwopRec,
         pws: pwsRec,
         hms_smoke: hmsRec,
@@ -376,7 +405,11 @@ export async function runFetch() {
 
   await writeFile(
     path.join(DATA_DIR, 'cdot-alerts.geojson'),
-    JSON.stringify(cdot.alertsGeoJson ?? { type: 'FeatureCollection', features: [] }),
+    JSON.stringify(
+      cotrip.alertsGeoJson?.features?.length
+        ? cotrip.alertsGeoJson
+        : (cdot.alertsGeoJson ?? { type: 'FeatureCollection', features: [] }),
+    ),
     'utf8',
   );
 

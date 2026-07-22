@@ -162,12 +162,13 @@ export async function fetchExample(locations, env = process.env) {
 
 **Optional secrets** (read from `process.env` / GitHub Actions secrets — names only, never commit values):
 
-| Env var             | Adapter                       |
-| ------------------- | ----------------------------- |
-| `PURPLEAIR_API_KEY` | PurpleAir inline sensor data  |
-| `AIRNOW_API_KEY`    | EPA AirNow AQI / observations |
+| Env var             | Adapter                                   |
+| ------------------- | ----------------------------------------- |
+| `PURPLEAIR_API_KEY` | PurpleAir inline sensor data              |
+| `AIRNOW_API_KEY`    | EPA AirNow AQI / observations             |
+| `COTRIP_API_KEY`    | COtrip RWIS / incidents / road conditions |
 
-If unset, PurpleAir and AirNow adapters should skip gracefully; the UI falls back to offsite links or other PWS sources.
+If unset, PurpleAir, AirNow, and COtrip adapters should skip gracefully; the UI falls back to offsite links, cameras, and ArcGIS alerts where available.
 
 ---
 
@@ -175,11 +176,12 @@ If unset, PurpleAir and AirNow adapters should skip gracefully; the UI falls bac
 
 Configure in **GitHub Actions → Secrets** (repository settings) or a local `.env` file (gitignored):
 
-| Secret name          | Purpose                                                               |
-| -------------------- | --------------------------------------------------------------------- |
-| `PURPLEAIR_API_KEY`  | PurpleAir API access for build-time sensor snapshots                  |
-| `AIRNOW_API_KEY`     | AirNow API access for official AQI near locations                     |
-| `NOTIFY_WEBHOOK_URL` | Discord (or compatible) webhook URL for fetch/workflow failure alerts |
+| Secret name          | Purpose                                                                 |
+| -------------------- | ----------------------------------------------------------------------- |
+| `PURPLEAIR_API_KEY`  | PurpleAir API access for build-time sensor snapshots                    |
+| `AIRNOW_API_KEY`     | AirNow API access for official AQI near locations                       |
+| `COTRIP_API_KEY`     | COtrip JSON feed (weather stations, incidents, events, road conditions) |
+| `NOTIFY_WEBHOOK_URL` | Discord (or compatible) webhook URL for fetch/workflow failure alerts   |
 
 **Never** commit secret values to git, docs, issues, logs, or test fixtures. Reference secret **names** only.
 
@@ -193,26 +195,27 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):
 
-| Source                      | Calls / run (approx @ ~340 locs)                                        | Auth                |
-| --------------------------- | ----------------------------------------------------------------------- | ------------------- |
-| Open-Meteo Forecast         | ~34+ (chunk 20 + NBM per chunk)                                         | None                |
-| Open-Meteo Air Quality      | ~9 (chunk 40)                                                           | None                |
-| Open-Meteo ERA5 climatology | ~0 most runs; ~monthly / cold-start (capped ~24 locs/run × year slices) | None                |
-| NWS alerts + AFD/HWO        | ~7–13 (alerts + AFD/HWO per office)                                     | User-Agent header   |
-| CoAgMET                     | 1–2                                                                     | None                |
-| Aviation Weather METAR/TAF  | 1–3 batched                                                             | None                |
-| USGS NWIS                   | 1                                                                       | None                |
-| SNOTEL                      | 1–2                                                                     | None                |
-| CDOT cameras + alerts       | 3                                                                       | None                |
-| CWOP / APRS (aprs.me grid)  | ~35–40                                                                  | None                |
-| NOAA HMS smoke              | 1–3 (zip download)                                                      | None                |
-| SPC fire weather (Day 1–2)  | 4 (Wind/RH + DryT GeoJSON)                                              | None                |
-| NIFC WFIGS nearby fires     | 1 (CO incidents)                                                        | None                |
-| COEM burn restrictions      | 1 (HTML status + curated links)                                         | None                |
-| NOAA SWPC space weather     | ~5 (scales, Kp, Boulder K, SFI, X-ray)                                  | None                |
-| PurpleAir                   | 1–2 (only if key set)                                                   | `PURPLEAIR_API_KEY` |
-| AirNow                      | ~200–220 grid points when keyed (@0.2°)                                 | `AIRNOW_API_KEY`    |
-| Catalog `webcam_links`      | 0 (copied into payloads)                                                | None                |
+| Source                                        | Calls / run (approx @ ~340 locs)                                        | Auth                |
+| --------------------------------------------- | ----------------------------------------------------------------------- | ------------------- |
+| Open-Meteo Forecast                           | ~34+ (chunk 20 + NBM per chunk)                                         | None                |
+| Open-Meteo Air Quality                        | ~9 (chunk 40)                                                           | None                |
+| Open-Meteo ERA5 climatology                   | ~0 most runs; ~monthly / cold-start (capped ~24 locs/run × year slices) | None                |
+| NWS alerts + AFD/HWO                          | ~7–13 (alerts + AFD/HWO per office)                                     | User-Agent header   |
+| CoAgMET                                       | 1–2                                                                     | None                |
+| Aviation Weather METAR/TAF                    | 1–3 batched                                                             | None                |
+| USGS NWIS                                     | 1                                                                       | None                |
+| SNOTEL                                        | 1–2                                                                     | None                |
+| CDOT cameras + ArcGIS alerts                  | 3                                                                       | None                |
+| COtrip (stations/incidents/events/conditions) | ~10–40 pages when keyed                                                 | `COTRIP_API_KEY`    |
+| CWOP / APRS (aprs.me grid)                    | ~35–40                                                                  | None                |
+| NOAA HMS smoke                                | 1–3 (zip download)                                                      | None                |
+| SPC fire weather (Day 1–2)                    | 4 (Wind/RH + DryT GeoJSON)                                              | None                |
+| NIFC WFIGS nearby fires                       | 1 (CO incidents)                                                        | None                |
+| COEM burn restrictions                        | 1 (HTML status + curated links)                                         | None                |
+| NOAA SWPC space weather                       | ~5 (scales, Kp, Boulder K, SFI, X-ray)                                  | None                |
+| PurpleAir                                     | 1–2 (only if key set)                                                   | `PURPLEAIR_API_KEY` |
+| AirNow                                        | ~200–220 grid points when keyed (@0.2°)                                 | `AIRNOW_API_KEY`    |
+| Catalog `webcam_links`                        | 0 (copied into payloads)                                                | None                |
 
 Partial adapter failure is acceptable; total failure (zero locations written or all critical adapters down) should fail the workflow so notifications fire.
 
@@ -222,7 +225,7 @@ Partial adapter failure is acceptable; total failure (zero locations written or 
 
 Citizen, pilot, farmer, firefighter, and ham radio operator needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, road alerts, NOAA SWPC space weather / HF cues, etc.). The public workspace shows **all** available sections for every location — there is no persona filter bar.
 
-Locality pages open a dual-pane **workspace**: RainViewer radar map beside an **At a Glance** hero (bottom-line headline, now conditions, AQI, optional pin “At your location” strip), then full-width **Short-Term Outlook** (compact hours + scrubbable 24h meteograms), a specialty band (CDOT cameras/road alerts, local webcam **new-tab links**, nearby PWS/CoAgMET/SNOTEL, astronomy, fire weather cues, ham radio / RF), and collapsed deep panels (48h hourly, 10-day daily, alert text + `alerts.geojson` polygons, air quality & pollen **offsite links**, NOAA/NWS and CSU CIRA imagery). Planetary space weather is written once to `public/data/space-weather.json` (not duplicated per location).
+Locality pages open a dual-pane **workspace**: RainViewer radar map beside an **At a Glance** hero (bottom-line headline, now conditions, AQI, optional pin “At your location” strip), then full-width **Short-Term Outlook** (compact hours + scrubbable 24h meteograms), a specialty band (CDOT cameras/RWIS/road alerts & conditions, local webcam **new-tab links**, nearby PWS/CoAgMET/SNOTEL, astronomy, fire weather cues, ham radio / RF), and collapsed deep panels (48h hourly, 10-day daily, alert text + `alerts.geojson` polygons, air quality & pollen **offsite links**, NOAA/NWS and CSU CIRA imagery). Planetary space weather is written once to `public/data/space-weather.json` (not duplicated per location).
 
 **Hyperlocal pin (client, no API keys):** Locate (high-accuracy GPS), IP “Go to”, or Colorado street-address Set pin (`public/js/geocode.js` → Nominatim, CO-bounded, submit-only) stores a browser-persistent pin (`localStorage` `cowx:hyperlocalPin`; migrates any legacy `sessionStorage` value). Survives refresh and new tabs; cleared when the user searches a catalog city or clears site data. Always force-refresh the workspace after setting a pin even if the catalog slug is unchanged. The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip (fallback status if that fails). Searching a city clears the pin. Do not add client API **keys**; keep address geocode user-triggered and Colorado-bounded.
 
