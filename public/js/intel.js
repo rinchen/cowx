@@ -4,12 +4,12 @@
 
 import { synthesizeBottomLine } from './bottom-line.js';
 import {
-  climatologyPeriodLabel,
-  compareDailyToNormal,
+  formatCompactVsTypical,
   formatTodayRangeWithDeltas,
   formatTodayVsTypical,
-  formatVsTypicalShort,
+  localHourFromIso,
   normalForDate,
+  typicalDiurnalTemp,
 } from './climatology.js';
 import { aqiBarHtml, aqiCategory, pickAqi } from './aqi.js';
 import { escapeHtml, safeHttpsUrl } from './dom.js';
@@ -557,27 +557,7 @@ export function renderOutlook(root, data, options = {}) {
   const highlights = buildOutlookHighlights(hourly, { hours: 48 });
   const climatology = /** @type {Record<string, unknown> | null} */ (data.climatology ?? null);
   const dailyTimes = /** @type {string[]} */ (daily?.time ?? []);
-  /** @type {string[]} */
-  const shortTermVs = [];
-  for (let i = 0; i < Math.min(3, dailyTimes.length); i += 1) {
-    const iso = String(dailyTimes[i]).slice(0, 10);
-    const hi = /** @type {(number | null)[]} */ (daily?.temperature_2m_max ?? [])[i];
-    const lo = /** @type {(number | null)[]} */ (daily?.temperature_2m_min ?? [])[i];
-    const cmp = compareDailyToNormal(climatology, iso, hi, lo, null);
-    const label = formatVsTypicalShort(cmp.deltaHi);
-    if (!label) continue;
-    let dayLabel = iso;
-    try {
-      dayLabel = new Intl.DateTimeFormat(undefined, {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-      }).format(new Date(`${iso}T12:00:00`));
-    } catch {
-      /* keep iso */
-    }
-    shortTermVs.push(`${dayLabel}: ${label}`);
-  }
+  const todayIso = dailyTimes[0] != null ? String(dailyTimes[0]).slice(0, 10) : null;
 
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   const hi = times.length ? nearestHourIndex(times) : 0;
@@ -618,10 +598,16 @@ export function renderOutlook(root, data, options = {}) {
   const hourCards = compact
     .map((row) => {
       const windBit = row.wind_mph != null ? `${Math.round(row.wind_mph)} mph` : '—';
+      const iso = row.time != null ? String(row.time).slice(0, 10) : todayIso;
+      const normal = iso ? normalForDate(climatology, iso) : null;
+      const hour = localHourFromIso(row.time != null ? String(row.time) : null);
+      const typical = hour != null ? typicalDiurnalTemp(normal, hour) : null;
+      const vs = formatCompactVsTypical(row.temp_f, typical);
       return `<li class="outlook-hour-card">
         <span class="outlook-hour-card__time">${escapeHtml(formatCompactHourLabel(row.time))}</span>
         ${weatherIconHtml(row.weather_code, { isDay: row.is_day, size: 32, className: 'weather-icon weather-icon--sm', alt: wmoLabel(row.weather_code) })}
         <span class="outlook-hour-card__temp">${row.temp_f != null ? `${Math.round(row.temp_f)}°` : '—'}</span>
+        ${vs ? `<span class="outlook-hour-card__vs" title="Versus typical for this date and hour">${escapeHtml(vs)}</span>` : ''}
         <span class="outlook-hour-card__feels">${row.feels_like_f != null ? `Feels ${Math.round(row.feels_like_f)}°` : ''}</span>
         <span class="outlook-hour-card__precip">${row.precip_pct != null ? `${Math.round(row.precip_pct)}%` : '—'}</span>
         <span class="outlook-hour-card__wind">${escapeHtml(windBit)}</span>
@@ -631,42 +617,36 @@ export function renderOutlook(root, data, options = {}) {
 
   const periodHtml = periods
     .map((p) => {
-      let vsLine = '';
-      if (p.id === 'today' && dailyTimes[0]) {
-        const cmp = compareDailyToNormal(
-          climatology,
-          String(dailyTimes[0]).slice(0, 10),
-          p.temp_high_f,
-          p.temp_low_f,
-          null,
-        );
-        const vs = formatTodayVsTypical(p.temp_high_f, p.temp_low_f, cmp.normal);
-        if (vs) {
-          vsLine = `<p class="outlook-period__vs">${escapeHtml(vs)}</p>`;
+      const iso = todayIso;
+      const normal = iso ? normalForDate(climatology, iso) : null;
+      /** @type {string | null} */
+      let rangeLine = null;
+      /** @type {string | null} */
+      let vsLine = null;
+      if (normal && p.id === 'today') {
+        rangeLine = formatTodayRangeWithDeltas(p.temp_high_f, p.temp_low_f, normal);
+        vsLine = formatTodayVsTypical(p.temp_high_f, p.temp_low_f, normal);
+      } else if (normal && p.id === 'tonight') {
+        const lowDelta = formatCompactVsTypical(p.temp_low_f, normal.tmin);
+        if (p.temp_low_f != null) {
+          rangeLine =
+            lowDelta != null
+              ? `Low ${Math.round(Number(p.temp_low_f))}° (${lowDelta})`
+              : `Low ${Math.round(Number(p.temp_low_f))}°`;
         }
+        vsLine = lowDelta != null ? `${lowDelta} vs typical low` : null;
       }
       return `<article class="outlook-period" aria-labelledby="outlook-period-${p.id}">
         <h3 id="outlook-period-${p.id}" class="outlook-period__title">
           ${weatherIconHtml(p.weather_code, { isDay: p.is_day, size: 28, className: 'weather-icon weather-icon--sm', alt: '' })}
           ${escapeHtml(p.label)}
+          ${vsLine ? `<span class="outlook-period__badge">${escapeHtml(vsLine)}</span>` : ''}
         </h3>
+        ${rangeLine ? `<p class="outlook-period__range">${escapeHtml(rangeLine)}</p>` : ''}
         <p class="outlook-period__body">${escapeHtml(p.summary)}</p>
-        ${vsLine}
       </article>`;
     })
     .join('');
-
-  const shortTermVsHtml = shortTermVs.length
-    ? `<p class="outlook-vs-typical" role="note">
-        <span class="outlook-vs-typical__label">Vs typical (${escapeHtml(climatologyPeriodLabel(climatology))} ERA5)</span>
-        ${escapeHtml(shortTermVs.join(' · '))}
-      </p>`
-    : climatology?.doy
-      ? ''
-      : `<p class="outlook-vs-typical outlook-vs-typical--pending" role="note">
-        <span class="outlook-vs-typical__label">Vs typical</span>
-        Day-of-year normals for this location are still loading.
-      </p>`;
 
   const highlightHtml = highlights.length
     ? `<ul class="outlook-highlights">${highlights
@@ -696,7 +676,6 @@ export function renderOutlook(root, data, options = {}) {
       <div class="outlook-periods" aria-label="Today and tonight">
         ${periodHtml || '<p class="intel-muted">Period summaries unavailable.</p>'}
       </div>
-      ${shortTermVsHtml}
       ${
         afdSnippet
           ? `<p class="outlook-afd"><strong>NWS discussion:</strong> ${escapeHtml(afdSnippet)}
@@ -934,7 +913,10 @@ export function renderSpecialtyIntel(root, data, options = {}) {
   }
 
   const topAlert = roadAlerts[0];
-  const showRoadsPanel = Boolean(topAlert || cams.length || rwis || webcamLinks.length);
+  const liveRwis = rwisLiveReadings(
+    rwis && typeof rwis === 'object' ? /** @type {Record<string, unknown>} */ (rwis) : null,
+  );
+  const showRoadsPanel = Boolean(topAlert || cams.length || liveRwis.fresh || webcamLinks.length);
   if (showRoadsPanel) {
     const alertBits = roadAlerts
       .slice(0, 3)
@@ -967,9 +949,6 @@ export function renderSpecialtyIntel(root, data, options = {}) {
           `<li><a href="${escapeHtml(String(safeHttpsUrl(l.url)))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(String(l.name ?? 'Webcam'))} (opens in new tab)">${escapeHtml(String(l.name ?? 'Local webcam'))}</a></li>`,
       )
       .join('');
-    const liveRwis = rwisLiveReadings(
-      rwis && typeof rwis === 'object' ? /** @type {Record<string, unknown>} */ (rwis) : null,
-    );
     const rwisBits = [];
     if (liveRwis.fresh) {
       if (liveRwis.air_temp_f != null && Number.isFinite(liveRwis.air_temp_f)) {
@@ -983,8 +962,6 @@ export function renderSpecialtyIntel(root, data, options = {}) {
       if (liveRwis.wind_speed_mph != null && Number.isFinite(liveRwis.wind_speed_mph)) {
         rwisBits.push(`Wind ${Math.round(liveRwis.wind_speed_mph)} mph`);
       }
-    } else if (rwis) {
-      rwisBits.push('Readings unavailable (stale CDOT feed)');
     }
 
     parts.push(`<section class="glass-panel specialty-card" aria-labelledby="roads-intel-heading" id="cdot-camera-panel">
@@ -997,7 +974,7 @@ export function renderSpecialtyIntel(root, data, options = {}) {
                 : `<p class="intel-muted">No nearby CDOT travel alerts.</p>`
             }
             ${
-              rwis
+              liveRwis.fresh && rwis
                 ? `<p class="specialty-inline"><span class="specialty-inline__label">RWIS</span> ${escapeHtml(String(rwis.name ?? ''))}${distanceLabel(/** @type {number | null} */ (rwis.distance_km), false)}${rwisBits.length ? ` · ${escapeHtml(rwisBits.join(' · '))}` : ''}</p>`
                 : ''
             }

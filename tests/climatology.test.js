@@ -17,11 +17,14 @@ import {
 import {
   compareDailyToNormal,
   deltaVsNormal,
+  formatCompactVsTypical,
   formatTempDelta,
   formatTodayRangeWithDeltas,
   formatTodayVsTypical,
   formatVsTypicalShort,
+  localHourFromIso,
   normalForDate,
+  typicalDiurnalTemp,
   climateDoyIndex as clientDoyIndex,
 } from '../public/js/climatology.js';
 
@@ -281,6 +284,11 @@ describe('client compare helpers', () => {
     assert.equal(formatVsTypicalShort(0.5), 'near typical');
     assert.equal(formatTodayVsTypical(88, 58, n), 'High +6° · Low +3° vs typical');
     assert.equal(formatTodayRangeWithDeltas(88, 58, n), 'High 88° (+6°) · Low 58° (+3°)');
+    assert.equal(Math.round(typicalDiurnalTemp(n, 15) ?? 0), 82);
+    assert.equal(Math.round(typicalDiurnalTemp(n, 3) ?? 0), 55);
+    assert.equal(formatCompactVsTypical(90, 82), '+8°');
+    assert.equal(formatCompactVsTypical(83, 82), null);
+    assert.equal(localHourFromIso('2026-07-21T15:00'), 15);
   });
 
   it('compareDailyToNormal returns labels', () => {

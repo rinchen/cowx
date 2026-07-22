@@ -151,6 +151,54 @@ export function formatTodayRangeWithDeltas(hi, lo, normal = null) {
 }
 
 /**
+ * Rough typical air temp (°F) for a local clock hour from daily tmax/tmin.
+ * Peaks near 15:00, trough near 03:00 (simple cosine diurnal).
+ * @param {{ tmax: number | null, tmin: number | null } | null | undefined} normal
+ * @param {number} localHour 0–23
+ * @returns {number | null}
+ */
+export function typicalDiurnalTemp(normal, localHour) {
+  const tmax = numOrNull(normal?.tmax);
+  const tmin = numOrNull(normal?.tmin);
+  if (tmax == null || tmin == null) return null;
+  const hour = Number(localHour);
+  if (!Number.isFinite(hour)) return null;
+  const h = ((hour % 24) + 24) % 24;
+  const mean = (tmax + tmin) / 2;
+  const amp = (tmax - tmin) / 2;
+  const hourPeak = 15;
+  return mean + amp * Math.cos(((h - hourPeak) / 24) * 2 * Math.PI);
+}
+
+/**
+ * Compact signed delta for hour/period chips ("+9°"), null when near typical.
+ * @param {number | null | undefined} forecast
+ * @param {number | null | undefined} typical
+ * @param {{ nearF?: number }} [opts]
+ * @returns {string | null}
+ */
+export function formatCompactVsTypical(forecast, typical, opts = {}) {
+  const near = opts.nearF ?? NEAR_TYPICAL_F;
+  const d = deltaVsNormal(forecast, typical);
+  if (d == null || Math.abs(d) < near) return null;
+  return formatTempDelta(d);
+}
+
+/**
+ * Local hour (0–23) from an ISO-like timestamp (prefers embedded `THh`).
+ * @param {string | null | undefined} iso
+ * @returns {number | null}
+ */
+export function localHourFromIso(iso) {
+  if (typeof iso !== 'string' || !iso) return null;
+  const m = /T(\d{2})/.exec(iso);
+  if (m) return Number(m[1]);
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return null;
+  return new Date(t).getHours();
+}
+
+/**
  * Precip vs typical: wetter / drier / near.
  * @param {number | null | undefined} forecastIn
  * @param {number | null | undefined} normalIn
