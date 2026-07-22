@@ -623,18 +623,21 @@ export function renderOutlook(root, data, options = {}) {
       let rangeLine = null;
       /** @type {string | null} */
       let vsLine = null;
-      if (normal && p.id === 'today') {
-        rangeLine = formatTodayRangeWithDeltas(p.temp_high_f, p.temp_low_f, normal);
-        vsLine = formatTodayVsTypical(p.temp_high_f, p.temp_low_f, normal);
-      } else if (normal && p.id === 'tonight') {
-        const lowDelta = formatCompactVsTypical(p.temp_low_f, normal.tmin);
+      if (p.id === 'today') {
+        const hi = p.temp_high_f != null ? Math.round(Number(p.temp_high_f)) : null;
+        const lo = p.temp_low_f != null ? Math.round(Number(p.temp_low_f)) : null;
+        if (hi != null && lo != null) rangeLine = `High ${hi}° · Low ${lo}°`;
+        else if (hi != null) rangeLine = `High ${hi}°`;
+        else if (lo != null) rangeLine = `Low ${lo}°`;
+        if (normal) vsLine = formatTodayVsTypical(p.temp_high_f, p.temp_low_f, normal);
+      } else if (p.id === 'tonight') {
         if (p.temp_low_f != null) {
-          rangeLine =
-            lowDelta != null
-              ? `Low ${Math.round(Number(p.temp_low_f))}° (${lowDelta})`
-              : `Low ${Math.round(Number(p.temp_low_f))}°`;
+          rangeLine = `Low ${Math.round(Number(p.temp_low_f))}°`;
         }
-        vsLine = lowDelta != null ? `${lowDelta} vs typical low` : null;
+        if (normal) {
+          const lowDelta = formatCompactVsTypical(p.temp_low_f, normal.tmin);
+          vsLine = lowDelta != null ? `${lowDelta} vs typical low` : null;
+        }
       }
       return `<article class="outlook-period" aria-labelledby="outlook-period-${p.id}">
         <h3 id="outlook-period-${p.id}" class="outlook-period__title">
