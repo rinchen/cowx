@@ -23,6 +23,7 @@ import {
   resolveCatalogNow,
   sliceCompactHours,
 } from './outlook.js';
+import { dailyIndexForNow, resolveAstronomy, resolveRfComms } from './live.js';
 import {
   bindMeteogramScrubber,
   detectPressureDip,
@@ -204,12 +205,15 @@ export function renderHero(root, data, options = {}) {
 
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   const hi = times.length ? nearestHourIndex(times) : 0;
-  const todayHi = /** @type {number[]} */ (daily?.temperature_2m_max ?? [])[0];
-  const todayLo = /** @type {number[]} */ (daily?.temperature_2m_min ?? [])[0];
+  const dayIdx = dailyIndexForNow(daily);
+  const todayHi =
+    dayIdx >= 0 ? /** @type {number[]} */ (daily?.temperature_2m_max ?? [])[dayIdx] : null;
+  const todayLo =
+    dayIdx >= 0 ? /** @type {number[]} */ (daily?.temperature_2m_min ?? [])[dayIdx] : null;
   const climatology = /** @type {Record<string, unknown> | null} */ (data.climatology ?? null);
   const todayIso =
-    /** @type {string[]} */ (daily?.time ?? [])[0] != null
-      ? String(/** @type {string[]} */ (daily.time)[0]).slice(0, 10)
+    dayIdx >= 0 && /** @type {string[]} */ (daily?.time ?? [])[dayIdx] != null
+      ? String(/** @type {string[]} */ (daily.time)[dayIdx]).slice(0, 10)
       : null;
   const todayNormal = todayIso ? normalForDate(climatology, todayIso) : null;
   const vsTypicalToday = formatTodayVsTypical(todayHi, todayLo, todayNormal);
@@ -560,8 +564,10 @@ export function renderOutlook(root, data, options = {}) {
   const periods = buildPeriodSummaries(hourly, daily);
   const highlights = buildOutlookHighlights(hourly, { hours: 48 });
   const climatology = /** @type {Record<string, unknown> | null} */ (data.climatology ?? null);
+  const dayIdx = dailyIndexForNow(daily);
   const dailyTimes = /** @type {string[]} */ (daily?.time ?? []);
-  const todayIso = dailyTimes[0] != null ? String(dailyTimes[0]).slice(0, 10) : null;
+  const todayIso =
+    dayIdx >= 0 && dailyTimes[dayIdx] != null ? String(dailyTimes[dayIdx]).slice(0, 10) : null;
 
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   const hi = times.length ? nearestHourIndex(times) : 0;
@@ -871,7 +877,15 @@ export function renderSpecialtyIntel(root, data, options = {}) {
       : {};
   const webcamLinks = /** @type {{ name?: string, url?: string }[]} */ (links.webcam_links ?? []);
 
-  let rf = /** @type {Record<string, unknown> | null} */ (data.rf_comms ?? null);
+  let rf = resolveRfComms(
+    resolveCatalogNow(
+      /** @type {Record<string, unknown> | null} */ (data.current ?? null),
+      /** @type {Record<string, unknown> | null} */ (data.hourly ?? null),
+    ),
+    /** @type {Record<string, unknown> | null} */ (data.hourly ?? null),
+    data.elevation_ft != null ? Number(data.elevation_ft) : null,
+    /** @type {Record<string, unknown> | null} */ (data.rf_comms ?? null),
+  );
   const rfClass =
     rf?.status === 'ducting_likely'
       ? 'rf-badge--ducting'
@@ -1070,7 +1084,7 @@ export function renderSpecialtyIntel(root, data, options = {}) {
   }
 
   {
-    const astro = /** @type {Record<string, unknown> | null} */ (data.astronomy ?? null);
+    const astro = resolveAstronomy(data);
     const moon = /** @type {Record<string, unknown> | null} */ (astro?.moon ?? null);
     const showSnow = Boolean(snotel && Number(data.elevation_ft) >= 7000);
     const showLocal = Boolean(pwsPrimary || cwop || coag || astro || showSnow);
