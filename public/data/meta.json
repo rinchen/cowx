@@ -1,104 +1,105 @@
 {
-  "generatedAt": "2026-07-22T12:42:28.848Z",
+  "generatedAt": "2026-07-22T15:12:39.349Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-22T12:24:30.961Z",
-      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-22T14:55:47.410Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-22T12:26:20.122Z",
-      "error": "fetch failed; fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-22T14:57:26.113Z",
+      "error": "fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_climatology",
       "status": "partial",
-      "fetchedAt": "2026-07-22T12:39:15.283Z",
-      "error": "naturita/1991-01-01…2000-12-31: fetch failed; naturita/2001-01-01…2010-12-31: fetch failed; naturita/2011-01-01…2020-12-31: fetch failed; telluride/2011-01-01…2020-12-31: fetch failed; pagosa-springs/1991-01-01…2000-12-31: fetch failed; pagosa-springs/2001-01-01…2010-12-31: fetch failed; arboles/1991-01-01…2000-12-31: fetch failed; cortez/1991-01-01…2000-12-31: fetch failed; cortez/2001-01-01…2010-12-31: fetch failed; dolores/1991-01-01…2000-12-31: fetch failed; mancos/1991-01-01…2000-12-31: fet"
+      "fetchedAt": "2026-07-22T15:09:54.920Z",
+      "error": "center/1991-01-01…2000-12-31: fetch failed; center/2001-01-01…2010-12-31: fetch failed; antonito/1991-01-01…2000-12-31: fetch failed; la-jara/1991-01-01…2000-12-31: fetch failed; san-luis/1991-01-01…2000-12-31: fetch failed; fort-garland/1991-01-01…2000-12-31: fetch failed; walsenburg/1991-01-01…2000-12-31: fetch failed; walsenburg/2001-01-01…2010-12-31: fetch failed; la-veta/2001-01-01…2010-12-31: fetch failed; la-veta/2011-01-01…2020-12-31: fetch failed; raton-pass/1991-01-01…2000-12-31: fetch"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:39:16.605Z"
+      "fetchedAt": "2026-07-22T15:09:58.112Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:39:17.173Z"
+      "fetchedAt": "2026-07-22T15:10:07.194Z"
     },
     {
       "id": "aviation",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T12:39:37.565Z"
+      "status": "error",
+      "fetchedAt": "2026-07-22T15:10:07.322Z",
+      "error": "METAR HTTP 502"
     },
     {
       "id": "purpleair",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:39:37.809Z"
+      "fetchedAt": "2026-07-22T15:10:07.739Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:41:28.562Z"
+      "fetchedAt": "2026-07-22T15:11:46.384Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:41:30.075Z"
+      "fetchedAt": "2026-07-22T15:11:48.256Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:41:46.914Z"
+      "fetchedAt": "2026-07-22T15:12:00.784Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:41:47.897Z"
+      "fetchedAt": "2026-07-22T15:12:01.510Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:42:13.710Z"
+      "fetchedAt": "2026-07-22T15:12:25.555Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-22T12:42:26.248Z"
+      "fetchedAt": "2026-07-22T15:12:37.415Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-07-22T12:42:26.784Z",
+      "fetchedAt": "2026-07-22T15:12:37.672Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:42:27.899Z"
+      "fetchedAt": "2026-07-22T15:12:38.234Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:42:28.483Z"
+      "fetchedAt": "2026-07-22T15:12:38.467Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:42:28.641Z"
+      "fetchedAt": "2026-07-22T15:12:38.769Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-07-22T12:42:28.848Z"
+      "fetchedAt": "2026-07-22T15:12:39.349Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 404,
-  "forecastStaleCount": 85,
-  "openmeteoCoverage": 253
+  "apiCalls": 405,
+  "forecastStaleCount": 45,
+  "openmeteoCoverage": 293
 }
