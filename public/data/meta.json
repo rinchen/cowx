@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-21T23:14:49.365Z",
+  "generatedAt": "2026-07-22T01:18:28.571Z",
   "version": "1.2.0",
   "sources": [
     {
@@ -89,10 +89,15 @@
       "status": "partial",
       "fetchedAt": "2026-07-22T00:46:43.759Z",
       "error": "golden/1991-01-01…2000-12-31: HTTP 429 for https://archive-api.open-meteo.com/v1/archive?latitude=39.75&longitude=-105.25&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver: {\"reason\":\"Hourly API request limit exceeded. Please try again in the next hour.\",\"error\":true}; retry golden/1991-01-01: HTTP 429 for https://archive-api.open-meteo.com/v1/archive?latitude=39.75"
+    },
+    {
+      "id": "cotrip",
+      "status": "ok",
+      "fetchedAt": "2026-07-22T01:18:28.571Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 482,
+  "apiCalls": 502,
   "forecastStaleCount": 75,
   "openmeteoCoverage": 263
 }
