@@ -83,10 +83,16 @@
       "id": "space_weather",
       "status": "ok",
       "fetchedAt": "2026-07-21T23:14:49.365Z"
+    },
+    {
+      "id": "openmeteo_climatology",
+      "status": "partial",
+      "fetchedAt": "2026-07-22T00:09:55.099Z",
+      "error": "refreshed 20/338 (cap 20)"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 338,
+  "apiCalls": 398,
   "forecastStaleCount": 75,
   "openmeteoCoverage": 263
 }
