@@ -6,6 +6,7 @@ import { synthesizeBottomLine } from './bottom-line.js';
 import {
   climatologyPeriodLabel,
   compareDailyToNormal,
+  formatTodayRangeWithDeltas,
   formatTodayVsTypical,
   formatVsTypicalShort,
   normalForDate,
@@ -34,6 +35,7 @@ import {
   seriesRange,
 } from './sparkline.js';
 import { windCompassHtml, windDirLabel } from './wind.js';
+import { rwisLiveReadings } from './rwis.js';
 
 export { aqiCategory };
 
@@ -364,7 +366,7 @@ export function renderHero(root, data, options = {}) {
                   }
                   ${
                     todayHi != null && todayLo != null
-                      ? `<span class="intel-range">High ${Math.round(todayHi)}° · Low ${Math.round(todayLo)}°</span>`
+                      ? `<span class="intel-range">${escapeHtml(formatTodayRangeWithDeltas(todayHi, todayLo, todayNormal) ?? `High ${Math.round(todayHi)}° · Low ${Math.round(todayLo)}°`)}</span>`
                       : ''
                   }
                   ${
@@ -396,9 +398,10 @@ export function renderHero(root, data, options = {}) {
         )}
         ${metricRow(
           'Today’s range',
-          todayHi != null && todayLo != null
-            ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F`
-            : null,
+          formatTodayRangeWithDeltas(todayHi, todayLo, todayNormal) ??
+            (todayHi != null && todayLo != null
+              ? `High ${Math.round(todayHi)}°F · Low ${Math.round(todayLo)}°F`
+              : null),
           'daily-heading',
         )}
         ${metricRow('Vs typical', vsTypicalToday, 'climatology-heading')}
@@ -658,7 +661,12 @@ export function renderOutlook(root, data, options = {}) {
         <span class="outlook-vs-typical__label">Vs typical (${escapeHtml(climatologyPeriodLabel(climatology))} ERA5)</span>
         ${escapeHtml(shortTermVs.join(' · '))}
       </p>`
-    : '';
+    : climatology?.doy
+      ? ''
+      : `<p class="outlook-vs-typical outlook-vs-typical--pending" role="note">
+        <span class="outlook-vs-typical__label">Vs typical</span>
+        Day-of-year normals for this location are still loading.
+      </p>`;
 
   const highlightHtml = highlights.length
     ? `<ul class="outlook-highlights">${highlights
@@ -959,15 +967,24 @@ export function renderSpecialtyIntel(root, data, options = {}) {
           `<li><a href="${escapeHtml(String(safeHttpsUrl(l.url)))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(String(l.name ?? 'Webcam'))} (opens in new tab)">${escapeHtml(String(l.name ?? 'Local webcam'))}</a></li>`,
       )
       .join('');
+    const liveRwis = rwisLiveReadings(
+      rwis && typeof rwis === 'object' ? /** @type {Record<string, unknown>} */ (rwis) : null,
+    );
     const rwisBits = [];
-    if (rwis?.air_temp_f != null) rwisBits.push(`Air ${Math.round(Number(rwis.air_temp_f))}°F`);
-    if (rwis?.surface_temp_f != null) {
-      rwisBits.push(
-        `Pavement ${Math.round(Number(rwis.surface_temp_f))}°F${rwis.surface_status ? ` · ${String(rwis.surface_status)}` : ''}`,
-      );
-    }
-    if (rwis?.wind_speed_mph != null) {
-      rwisBits.push(`Wind ${Math.round(Number(rwis.wind_speed_mph))} mph`);
+    if (liveRwis.fresh) {
+      if (liveRwis.air_temp_f != null && Number.isFinite(liveRwis.air_temp_f)) {
+        rwisBits.push(`Air ${Math.round(liveRwis.air_temp_f)}°F`);
+      }
+      if (liveRwis.surface_temp_f != null && Number.isFinite(liveRwis.surface_temp_f)) {
+        rwisBits.push(
+          `Pavement ${Math.round(liveRwis.surface_temp_f)}°F${liveRwis.surface_status ? ` · ${liveRwis.surface_status}` : ''}`,
+        );
+      }
+      if (liveRwis.wind_speed_mph != null && Number.isFinite(liveRwis.wind_speed_mph)) {
+        rwisBits.push(`Wind ${Math.round(liveRwis.wind_speed_mph)} mph`);
+      }
+    } else if (rwis) {
+      rwisBits.push('Readings unavailable (stale CDOT feed)');
     }
 
     parts.push(`<section class="glass-panel specialty-card" aria-labelledby="roads-intel-heading" id="cdot-camera-panel">

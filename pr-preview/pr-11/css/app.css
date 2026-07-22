@@ -1974,16 +1974,25 @@ body.workspace-active #main-content {
   font-weight: 600;
 }
 
-.intel-feels,
-.intel-range,
-.intel-vs-typical {
+.intel-feels {
   display: block;
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--glass-muted);
 }
 
+.intel-range {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--glass-text, inherit);
+}
+
 .intel-vs-typical {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-accent);
   margin-top: 0.15rem;
 }
 
@@ -1991,7 +2000,13 @@ body.workspace-active #main-content {
 .outlook-vs-typical {
   margin: 0.35rem 0 0;
   font-size: 0.8125rem;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.outlook-vs-typical--pending {
   color: var(--glass-muted);
+  font-weight: 500;
 }
 
 .outlook-vs-typical__label {
@@ -2001,11 +2016,14 @@ body.workspace-active #main-content {
   text-transform: uppercase;
   letter-spacing: 0.03em;
   margin-bottom: 0.15rem;
+  color: var(--glass-muted);
 }
 
 .vs-typical-cell {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-accent);
 }
 
 .climatology-compare__lead {
