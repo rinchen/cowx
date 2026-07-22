@@ -931,7 +931,7 @@ function buildClimatologyCompareSection(daily, climatology) {
     renderEmpty(
       wrap,
       'Climatology unavailable',
-      'Typical conditions for this date have not been loaded yet (ERA5 normals refresh about monthly).',
+      'Typical conditions for this date are still loading. ERA5 day-of-year normals refresh about monthly (pnpm run fetch:climatology).',
     );
     return wrap;
   }

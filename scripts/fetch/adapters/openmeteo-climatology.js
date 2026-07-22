@@ -14,11 +14,14 @@ export const CLIMATOLOGY_SOURCE = 'open-meteo-era5';
 /** Refresh when older than this (monthly gate). */
 export const CLIMATOLOGY_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
-const CHUNK = 8;
-const CHUNK_DELAY_MS = 8_000;
+const CHUNK = 1;
+const CHUNK_DELAY_MS = 12_000;
 const RETRY_BACKOFF_MS = 65_000;
+const SLICE_DELAY_MS = 3_000;
 /** Cap per orchestrator run so cold-start does not monopolize a 45-min job. */
-export const DEFAULT_MAX_LOCS_PER_RUN = 24;
+export const DEFAULT_MAX_LOCS_PER_RUN = 12;
+/** Year span per archive request (longer = fewer calls, heavier weight). */
+const YEARS_PER_SLICE = 10;
 
 /** Leap-year cumulative days before each month (Jan=0). */
 const LEAP_CUM_BEFORE_MONTH = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
@@ -324,7 +327,7 @@ export async function fetchOpenMeteoClimatology(locations, opts = {}) {
   }
 
   const targets = locations.slice(0, Math.max(0, maxLocs));
-  const slices = yearSlices(periodStart, periodEnd, 5);
+  const slices = yearSlices(periodStart, periodEnd, YEARS_PER_SLICE);
   /** @type {Map<string, ReturnType<typeof createDoyAccumulators>>} */
   const accBySlug = new Map();
   for (const loc of targets) {
@@ -338,8 +341,11 @@ export async function fetchOpenMeteoClimatology(locations, opts = {}) {
   for (let i = 0; i < targets.length; i += CHUNK) {
     if (i > 0) await sleepFn(CHUNK_DELAY_MS);
     const chunk = targets.slice(i, i + CHUNK);
+    console.log(
+      `openmeteo-climatology: ${i + 1}–${Math.min(i + CHUNK, targets.length)}/${targets.length} (${chunk.map((l) => l.slug).join(', ')})`,
+    );
     for (let s = 0; s < slices.length; s += 1) {
-      if (s > 0) await sleepFn(2_000);
+      if (s > 0) await sleepFn(SLICE_DELAY_MS);
       const { start, end } = slices[s];
       try {
         calls += 1;
@@ -357,10 +363,31 @@ export async function fetchOpenMeteoClimatology(locations, opts = {}) {
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        errors.push(`${start}…${end}: ${msg}`);
+        errors.push(`${chunk.map((l) => l.slug).join(',')}/${start}…${end}: ${msg}`);
         if (msg.includes('429')) {
           console.warn('openmeteo-climatology: 429 — backing off 65s');
           await sleepFn(RETRY_BACKOFF_MS);
+          // Retry this slice once after backoff
+          try {
+            calls += 1;
+            const data = await fetchJsonFn(buildArchiveUrl(chunk, start, end), {
+              timeoutMs: 120_000,
+            });
+            const results = Array.isArray(data) ? data : [data];
+            for (let j = 0; j < chunk.length; j += 1) {
+              const loc = chunk[j];
+              const r = results[j];
+              const daily = r?.daily;
+              const acc = accBySlug.get(loc.slug);
+              if (!daily || !acc) continue;
+              accumulateDailyIntoDoy(acc, daily);
+            }
+          } catch (err2) {
+            errors.push(
+              `retry ${chunk.map((l) => l.slug).join(',')}/${start}: ${err2 instanceof Error ? err2.message : String(err2)}`,
+            );
+            await sleepFn(RETRY_BACKOFF_MS);
+          }
         } else {
           await sleepFn(5_000);
         }

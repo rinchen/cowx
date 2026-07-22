@@ -73,13 +73,13 @@ describe('doy accumulators', () => {
 });
 
 describe('yearSlices', () => {
-  it('splits the normals window into 5-year chunks', () => {
-    const slices = yearSlices('1991-01-01', '2020-12-31', 5);
+  it('splits the normals window into decade chunks', () => {
+    const slices = yearSlices('1991-01-01', '2020-12-31', 10);
     assert.equal(slices[0].start, '1991-01-01');
-    assert.equal(slices[0].end, '1995-12-31');
-    assert.equal(slices.at(-1)?.start, '2016-01-01');
+    assert.equal(slices[0].end, '2000-12-31');
+    assert.equal(slices.at(-1)?.start, '2011-01-01');
     assert.equal(slices.at(-1)?.end, '2020-12-31');
-    assert.equal(slices.length, 6);
+    assert.equal(slices.length, 3);
   });
 });
 

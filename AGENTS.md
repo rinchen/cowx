@@ -292,6 +292,7 @@ When the **weather fetch step** in `update-weather.yml` fails (`weather_fetch`),
 pnpm install
 pnpm validate:locations
 pnpm run fetch:data   # writes public/data/ (requires network). Prefer `pnpm run` — bare `pnpm fetch` is a pnpm builtin.
+pnpm run fetch:climatology  # ERA5 DOY normals only (slow; optional CLIMATOLOGY_MAX_LOCS=N)
 pnpm test
 pnpm lint
 pnpm format           # Prettier
