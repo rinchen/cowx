@@ -495,6 +495,7 @@ export function sourceStatusChips(sources) {
     aviation: 'AV',
     cwop: 'CWOP',
     cdot: 'CDOT',
+    cotrip: 'COtrip',
     snotel: 'SNOTEL',
     usgs: 'USGS',
     hms: 'HMS',

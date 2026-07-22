@@ -35,6 +35,7 @@ import {
   seriesRange,
 } from './sparkline.js';
 import { windCompassHtml, windDirLabel } from './wind.js';
+import { rwisLiveReadings } from './rwis.js';
 
 export { aqiCategory };
 
@@ -842,6 +843,12 @@ export function renderSpecialtyIntel(root, data, options = {}) {
     roads?.cameras ?? (data.cdot_camera ? [data.cdot_camera] : [])
   );
   const cams = hyperlocal?.cameras?.length ? hyperlocal.cameras : catalogCams;
+  const rwis = /** @type {Record<string, unknown> | null} */ (
+    roads?.rwis ?? data.cdot_rwis ?? null
+  );
+  const roadCondition = /** @type {Record<string, unknown> | null} */ (
+    roads?.road_condition ?? null
+  );
   const catalogRoadAlerts = /** @type {Record<string, unknown>[]} */ (roads?.alerts ?? []);
   const roadAlerts = hyperlocal?.alerts?.length ? hyperlocal.alerts : catalogRoadAlerts;
   const catalogPws = /** @type {Record<string, unknown> | null} */ (data.pws ?? null);
@@ -909,7 +916,12 @@ export function renderSpecialtyIntel(root, data, options = {}) {
   }
 
   const topAlert = roadAlerts[0];
-  const showRoadsPanel = Boolean(topAlert || cams.length || webcamLinks.length);
+  const liveRwis = rwisLiveReadings(
+    rwis && typeof rwis === 'object' ? /** @type {Record<string, unknown>} */ (rwis) : null,
+  );
+  const showRoadsPanel = Boolean(
+    topAlert || cams.length || liveRwis.fresh || roadCondition || webcamLinks.length,
+  );
   if (showRoadsPanel) {
     const alertBits = roadAlerts
       .slice(0, 3)
@@ -942,6 +954,25 @@ export function renderSpecialtyIntel(root, data, options = {}) {
           `<li><a href="${escapeHtml(String(safeHttpsUrl(l.url)))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(String(l.name ?? 'Webcam'))} (opens in new tab)">${escapeHtml(String(l.name ?? 'Local webcam'))}</a></li>`,
       )
       .join('');
+    const rwisBits = [];
+    if (liveRwis.fresh) {
+      if (liveRwis.air_temp_f != null && Number.isFinite(liveRwis.air_temp_f)) {
+        rwisBits.push(`Air ${Math.round(liveRwis.air_temp_f)}°F`);
+      }
+      if (liveRwis.surface_temp_f != null && Number.isFinite(liveRwis.surface_temp_f)) {
+        rwisBits.push(
+          `Pavement ${Math.round(liveRwis.surface_temp_f)}°F${liveRwis.surface_status ? ` · ${liveRwis.surface_status}` : ''}`,
+        );
+      }
+      if (liveRwis.wind_speed_mph != null && Number.isFinite(liveRwis.wind_speed_mph)) {
+        rwisBits.push(`Wind ${Math.round(liveRwis.wind_speed_mph)} mph`);
+      }
+    }
+    const conditionBits = [];
+    if (roadCondition?.condition) conditionBits.push(String(roadCondition.condition));
+    if (roadCondition?.name || roadCondition?.routeName) {
+      conditionBits.unshift(String(roadCondition.name ?? roadCondition.routeName));
+    }
 
     parts.push(`<section class="glass-panel specialty-card" aria-labelledby="roads-intel-heading" id="cdot-camera-panel">
           <h2 id="roads-intel-heading" class="glass-panel__title">Roads &amp; cameras</h2>
@@ -951,6 +982,16 @@ export function renderSpecialtyIntel(root, data, options = {}) {
                 ? `<ul class="intel-alert-list">${alertBits}</ul>
                    <button type="button" class="btn btn-link intel-jump" data-jump-to="roads-heading">All road alerts</button>`
                 : `<p class="intel-muted">No nearby CDOT travel alerts.</p>`
+            }
+            ${
+              roadCondition && conditionBits.length
+                ? `<p class="specialty-inline"><span class="specialty-inline__label">Road</span> ${escapeHtml(conditionBits.join(' · '))}${distanceLabel(/** @type {number | null} */ (roadCondition.distance_km), false)}</p>`
+                : ''
+            }
+            ${
+              liveRwis.fresh && rwis
+                ? `<p class="specialty-inline"><span class="specialty-inline__label">RWIS</span> ${escapeHtml(String(rwis.name ?? ''))}${distanceLabel(/** @type {number | null} */ (rwis.distance_km), false)}${rwisBits.length ? ` · ${escapeHtml(rwisBits.join(' · '))}` : ''}</p>`
+                : ''
             }
             <p class="specialty-actions"><a class="btn btn-secondary btn-sm" href="https://maps.cotrip.org/" target="_blank" rel="noopener noreferrer" aria-label="Open COtrip map (opens in new tab)">Open COtrip</a></p>
           </div>
