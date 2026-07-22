@@ -1,104 +1,102 @@
 {
-  "generatedAt": "2026-07-22T22:35:43.489Z",
+  "generatedAt": "2026-07-22T23:57:07.041Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-22T22:18:08.116Z",
-      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-22T23:52:31.282Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-22T22:19:47.195Z",
-      "error": "fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-22T23:54:20.467Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_climatology",
-      "status": "partial",
-      "fetchedAt": "2026-07-22T22:29:20.054Z",
-      "error": "campo/2011-01-01…2020-12-31: fetch failed; two-buttes/1991-01-01…2000-12-31: fetch failed; pritchett/1991-01-01…2000-12-31: fetch failed; rand/1991-01-01…2000-12-31: fetch failed; mcclure-pass/1991-01-01…2000-12-31: fetch failed; mcclure-pass/2001-01-01…2010-12-31: fetch failed; cottonwood-pass/1991-01-01…2000-12-31: fetch failed; cochetopa-pass/1991-01-01…2000-12-31: fetch failed; cochetopa-pass/2001-01-01…2010-12-31: fetch failed; spring-creek-pass/1991-01-01…2000-12-31: fetch failed; muddy-pa"
+      "status": "skipped",
+      "fetchedAt": "2026-07-22T23:54:20.633Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:29:21.836Z"
+      "fetchedAt": "2026-07-22T23:54:22.243Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:29:22.474Z"
+      "fetchedAt": "2026-07-22T23:54:22.966Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:29:33.357Z"
+      "fetchedAt": "2026-07-22T23:54:23.717Z"
     },
     {
       "id": "purpleair",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:29:33.618Z"
+      "fetchedAt": "2026-07-22T23:54:23.972Z"
     },
     {
       "id": "airnow",
-      "status": "partial",
-      "fetchedAt": "2026-07-22T22:34:21.938Z",
-      "error": "This operation was aborted; This operation was aborted; This operation was aborted; This operation was aborted; This operation was aborted"
+      "status": "ok",
+      "fetchedAt": "2026-07-22T23:56:06.624Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:34:22.775Z"
+      "fetchedAt": "2026-07-22T23:56:07.304Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:34:45.773Z"
+      "fetchedAt": "2026-07-22T23:56:25.315Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:34:59.961Z"
+      "fetchedAt": "2026-07-22T23:56:26.748Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:35:27.111Z"
+      "fetchedAt": "2026-07-22T23:56:52.953Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-22T22:35:39.890Z"
+      "fetchedAt": "2026-07-22T23:57:05.267Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:35:40.366Z"
+      "fetchedAt": "2026-07-22T23:57:05.808Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:35:42.611Z"
+      "fetchedAt": "2026-07-22T23:57:06.451Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:35:42.917Z"
+      "fetchedAt": "2026-07-22T23:57:06.775Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:35:43.113Z"
+      "fetchedAt": "2026-07-22T23:57:06.938Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-07-22T22:35:43.489Z"
+      "fetchedAt": "2026-07-22T23:57:07.041Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 392,
-  "forecastStaleCount": 85,
-  "openmeteoCoverage": 253
+  "apiCalls": 357,
+  "forecastStaleCount": 75,
+  "openmeteoCoverage": 263
 }
