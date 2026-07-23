@@ -1,103 +1,103 @@
 {
-  "generatedAt": "2026-07-22T21:13:03.625Z",
+  "generatedAt": "2026-07-23T15:08:22.709Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-22T20:55:59.919Z",
-      "error": "fetch failed; fetch failed; nbm thunderstorm: HTTP 429 for https://api.open-meteo.com/v1/gfs?latitude=37.2692,37.0208,37.3489,37.4742,37.3447,37.2044,37.4694,37.5792,37.6789,37.6697,37.8492,38.0872,37.7531,37.7458,37.0892,37.275,37.2008,37.4278,37.4381,37.6239&longitude=-107.0098,-107.4194,-108.5859,-108.5028,-108.2892,-108.7278,-105.87,-106.1481,-106.3534,-106.6398,-106.9264,-106.142,-106.1086,-105.8772,-106.0089,-105.9603,-105.4239,-105.4331,-105.5628,-104.7803&hourly=thunderstorm_probability&"
+      "fetchedAt": "2026-07-23T15:03:24.302Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-22T20:57:38.136Z",
-      "error": "fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-23T15:05:12.801Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_climatology",
-      "status": "partial",
-      "fetchedAt": "2026-07-22T21:10:03.277Z",
-      "error": "pawnee-national-grassland/1991-01-01…2000-12-31: fetch failed; pawnee-national-grassland/2001-01-01…2010-12-31: fetch failed; tarryall/1991-01-01…2000-12-31: fetch failed; deckers/1991-01-01…2000-12-31: fetch failed; larkspur/1991-01-01…2000-12-31: fetch failed; coaldale/1991-01-01…2000-12-31: fetch failed; westcliffe/1991-01-01…2000-12-31: fetch failed; cotopaxi/1991-01-01…2000-12-31: fetch failed; cotopaxi/2001-01-01…2010-12-31: fetch failed; howard/1991-01-01…2000-12-31: fetch failed; rocky-f"
+      "status": "skipped",
+      "fetchedAt": "2026-07-23T15:05:12.963Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:10:06.443Z"
+      "fetchedAt": "2026-07-23T15:05:14.937Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:10:11.971Z"
+      "fetchedAt": "2026-07-23T15:05:17.116Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:10:12.301Z"
+      "fetchedAt": "2026-07-23T15:05:20.296Z"
     },
     {
       "id": "purpleair",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:10:12.902Z"
+      "fetchedAt": "2026-07-23T15:05:20.687Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:11:46.166Z"
+      "fetchedAt": "2026-07-23T15:06:54.232Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:11:47.553Z"
+      "fetchedAt": "2026-07-23T15:06:55.521Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:12:24.702Z"
+      "fetchedAt": "2026-07-23T15:07:39.102Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:12:25.640Z"
+      "fetchedAt": "2026-07-23T15:07:40.659Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:12:51.363Z"
+      "fetchedAt": "2026-07-23T15:08:04.705Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-22T21:13:02.529Z"
+      "fetchedAt": "2026-07-23T15:08:16.966Z"
     },
     {
       "id": "hms",
-      "status": "ok",
-      "fetchedAt": "2026-07-22T21:13:02.701Z"
+      "status": "partial",
+      "fetchedAt": "2026-07-23T15:08:17.150Z",
+      "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:13:03.024Z"
+      "fetchedAt": "2026-07-23T15:08:21.868Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:13:03.245Z"
+      "fetchedAt": "2026-07-23T15:08:22.181Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:13:03.483Z"
+      "fetchedAt": "2026-07-23T15:08:22.540Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-07-22T21:13:03.625Z"
+      "fetchedAt": "2026-07-23T15:08:22.709Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 405,
-  "forecastStaleCount": 48,
-  "openmeteoCoverage": 290
+  "apiCalls": 356,
+  "forecastStaleCount": 85,
+  "openmeteoCoverage": 253
 }
