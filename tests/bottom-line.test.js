@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { bottomLineJumpTarget, synthesizeBottomLine } from '../public/js/bottom-line.js';
+import { denverHourKey } from '../public/js/denver-time.js';
 
 describe('synthesizeBottomLine', () => {
   it('prioritizes severe NWS warnings', () => {
@@ -134,19 +135,14 @@ describe('synthesizeBottomLine', () => {
   });
 
   it('uses nearest-hour sky when current snapshot is still Clear', () => {
-    const now = new Date();
-    const y = now.getFullYear();
-    const mo = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const h = now.getHours();
-    /** @param {number} hour */
-    const localHour = (hour) =>
-      `${y}-${mo}-${day}T${String(((hour % 24) + 24) % 24).padStart(2, '0')}:00`;
+    const nowMs = Date.now();
+    /** @param {number} hourOffset */
+    const denverHour = (hourOffset) => `${denverHourKey(nowMs + hourOffset * 3600_000)}:00`;
     const { headline, priority } = synthesizeBottomLine({
       current: { wind_speed_mph: 4, condition: 'Clear', humidity: 35, temp_f: 72, weather_code: 0 },
       alerts: [],
       hourly: {
-        time: [localHour(h - 1), localHour(h), localHour(h + 1)],
+        time: [denverHour(-1), denverHour(0), denverHour(1)],
         weather_code: [0, 3, 3],
         is_day: [1, 1, 1],
       },

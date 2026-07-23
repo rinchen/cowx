@@ -4,7 +4,7 @@
  */
 
 import { pickAqi } from './aqi.js';
-import { pickNowSky, resolveCatalogNow } from './outlook.js';
+import { nearestHourIndex, pickNowSky, resolveCatalogNow } from './outlook.js';
 
 /**
  * @param {unknown} s
@@ -282,18 +282,7 @@ export function synthesizeBottomLine(data, options = {}) {
 
   // Hourly index near now
   const times = /** @type {string[]} */ (hourly?.time ?? []);
-  let hi = 0;
-  if (times.length) {
-    const now = Date.now();
-    let bestDiff = Infinity;
-    times.forEach((t, i) => {
-      const d = Math.abs(new Date(t).getTime() - now);
-      if (d < bestDiff) {
-        bestDiff = d;
-        hi = i;
-      }
-    });
-  }
+  const hi = times.length ? nearestHourIndex(times) : 0;
 
   // 3. Precip & temp trends
   const precip = nextPrecip(hourly, hi);

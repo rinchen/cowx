@@ -152,7 +152,7 @@ describe('resolveRfComms', () => {
     };
     const hotCurrent = { temp_f: 93, wind_speed_mph: 5, wind_gust_mph: 8 };
     const coolCurrent = { temp_f: 55, wind_speed_mph: 5, wind_gust_mph: 8 };
-    const nowMs = new Date('2026-07-22T12:16:00').getTime();
+    const nowMs = new Date('2026-07-22T12:16:00Z').getTime(); // 06:16 MDT
 
     const hotRf = resolveRfComms(hotCurrent, hourly, 5000, null, nowMs);
     assert.ok(hotRf);
