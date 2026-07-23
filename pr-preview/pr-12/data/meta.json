@@ -1,0 +1,103 @@
+{
+  "generatedAt": "2026-07-23T15:08:22.709Z",
+  "version": "1.2.0",
+  "sources": [
+    {
+      "id": "openmeteo",
+      "status": "partial",
+      "fetchedAt": "2026-07-23T15:03:24.302Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
+    },
+    {
+      "id": "openmeteo_aq",
+      "status": "partial",
+      "fetchedAt": "2026-07-23T15:05:12.801Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed"
+    },
+    {
+      "id": "openmeteo_climatology",
+      "status": "skipped",
+      "fetchedAt": "2026-07-23T15:05:12.963Z"
+    },
+    {
+      "id": "nws",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:05:14.937Z"
+    },
+    {
+      "id": "coagmet",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:05:17.116Z"
+    },
+    {
+      "id": "aviation",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:05:20.296Z"
+    },
+    {
+      "id": "purpleair",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:05:20.687Z"
+    },
+    {
+      "id": "airnow",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:06:54.232Z"
+    },
+    {
+      "id": "usgs",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:06:55.521Z"
+    },
+    {
+      "id": "snotel",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:07:39.102Z"
+    },
+    {
+      "id": "cdot",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:07:40.659Z"
+    },
+    {
+      "id": "cotrip",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:08:04.705Z"
+    },
+    {
+      "id": "cwop",
+      "status": "partial",
+      "fetchedAt": "2026-07-23T15:08:16.966Z"
+    },
+    {
+      "id": "hms",
+      "status": "partial",
+      "fetchedAt": "2026-07-23T15:08:17.150Z",
+      "error": "no HMS polygons near Colorado"
+    },
+    {
+      "id": "spc_firewx",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:08:21.868Z"
+    },
+    {
+      "id": "nifc_fires",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:08:22.181Z"
+    },
+    {
+      "id": "burn_restrictions",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:08:22.540Z"
+    },
+    {
+      "id": "space_weather",
+      "status": "ok",
+      "fetchedAt": "2026-07-23T15:08:22.709Z"
+    }
+  ],
+  "locationCount": 338,
+  "apiCalls": 356,
+  "forecastStaleCount": 85,
+  "openmeteoCoverage": 253
+}
