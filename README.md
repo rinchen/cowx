@@ -34,7 +34,7 @@ Without running `pnpm run fetch:data`, only committed snapshot data in `public/d
 
 ## GitHub Pages
 
-The site is deployed from the `public/` directory to the `gh-pages` branch on pushes to `main` (see `.github/workflows/pages.yml`).
+The site is deployed from the `public/` directory to the `gh-pages` branch on code pushes to `main` (`.github/workflows/pages.yml`) and again after each scheduled weather fetch (`.github/workflows/update-weather.yml`). Bot data commits alone do not trigger `pages.yml` (`GITHUB_TOKEN` recursion guard).
 
 **Live site:** https://rinchen.github.io/cowx/
 

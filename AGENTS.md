@@ -46,8 +46,8 @@ cowx/   # repo directory (brand: COWX)
 └── .github/workflows/
     ├── pr.yml                # Lint, test, validate locations on pull requests
     ├── preview.yml           # PR preview sites under /pr-preview/pr-N/ on gh-pages
-    ├── pages.yml             # Deploy public/ to gh-pages branch on push to main
-    └── update-weather.yml    # Scheduled fetch every 45 minutes + failure notify
+    ├── pages.yml             # Deploy public/ to gh-pages on human/code pushes to main
+    └── update-weather.yml    # Scheduled fetch every 45 min + deploy to gh-pages + failure notify
 ```
 
 ### Key artifacts
@@ -61,7 +61,7 @@ cowx/   # repo directory (brand: COWX)
 | `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)                                                                            |
 | `schemas/*.schema.json`                     | Reference contracts (`location`, `locations-array`, `weather-payload`, `meta`, `index-entry`, `space-weather`); not yet enforced in CI |
 
-**PR previews / Pages:** Production deploys `public/` to the `gh-pages` branch (`pages.yml`, with `clean-exclude: pr-preview`). Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
+**PR previews / Pages:** Production deploys `public/` to the `gh-pages` branch (`pages.yml` on code pushes; `update-weather.yml` after scheduled fetches — bot commits with `GITHUB_TOKEN` do not trigger `pages.yml`). Both share the `gh-pages` concurrency group (`clean-exclude: pr-preview`). Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
 
 **Language:** The public UI is English-only. There is no i18n catalog or translation check script.
 
@@ -229,7 +229,7 @@ Locality pages open a dual-pane **workspace**: RainViewer radar map beside an **
 
 **Hyperlocal pin (client, no API keys):** Locate (high-accuracy GPS), IP “Go to”, or Colorado street-address Set pin (`public/js/geocode.js` → Nominatim, CO-bounded, submit-only) stores a browser-persistent pin (`localStorage` `cowx:hyperlocalPin`; migrates any legacy `sessionStorage` value). Survives refresh and new tabs; cleared when the user searches a catalog city or clears site data. Always force-refresh the workspace after setting a pin even if the catalog slug is unchanged. The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip (fallback status if that fails). Searching a city clears the pin. Do not add client API **keys**; keep address geocode user-triggered and Colorado-bounded.
 
-Scheduled data commits should **not** use `[skip ci]` — Pages must redeploy so the live site picks up fresh JSON. Code-only pushes still trigger Pages as usual.
+Scheduled fetches deploy `public/` to `gh-pages` in the same workflow (`deploy-pages` job). Do not rely on the data push alone to trigger `pages.yml` — `GITHUB_TOKEN` commits do not start new workflow runs. Code pushes to `main` still use `pages.yml` as usual.
 
 ---
 

@@ -8,8 +8,10 @@ on:
 permissions:
   contents: write
 
-# Share with preview.yml so production + PR previews never push to
-# gh-pages in parallel (avoids Pages build queue stampede / idle jobs).
+# Share with preview.yml and update-weather.yml deploy-pages so all writers
+# to gh-pages run one at a time (avoids Pages build queue stampede).
+# Scheduled weather data is deployed from update-weather.yml — GITHUB_TOKEN
+# bot pushes to main do not trigger this workflow.
 concurrency:
   group: gh-pages
   cancel-in-progress: false
