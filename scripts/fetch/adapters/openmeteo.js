@@ -9,7 +9,7 @@ import { buildAstronomy } from '../../lib/astronomy.js';
 import { fetchJson, sleep } from '../../lib/http.js';
 import { estimateRfComms } from '../../lib/rf-comms.js';
 import { wmoLabel } from '../../lib/wmo.js';
-import { precipTodayInches } from '../../../public/js/denver-time.js';
+import { nearestHourIndex, precipTodayInches } from '../../../public/js/denver-time.js';
 
 export { wmoLabel, precipTodayInches };
 
@@ -108,15 +108,7 @@ export function dailyMaxThunderstorm(hourTimes, hourPct, dayTimes) {
  */
 export function nearestThunderstormPct(times, pct, nowMs = Date.now()) {
   if (!times.length) return null;
-  let best = 0;
-  let bestDiff = Infinity;
-  times.forEach((t, i) => {
-    const diff = Math.abs(new Date(t).getTime() - nowMs);
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      best = i;
-    }
-  });
+  const best = nearestHourIndex(times, nowMs);
   const v = pct[best];
   return v == null || Number.isNaN(Number(v)) ? null : Number(v);
 }
@@ -258,16 +250,7 @@ export function attachRfComms(payload, elevationFt) {
   const series = payload.hourly?.temperature_850hPa ?? [];
   let t850 = null;
   if (times.length && series.length) {
-    const now = Date.now();
-    let best = 0;
-    let bestDiff = Infinity;
-    times.forEach((t, i) => {
-      const diff = Math.abs(new Date(String(t)).getTime() - now);
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        best = i;
-      }
-    });
+    const best = nearestHourIndex(/** @type {string[]} */ (times));
     const v = series[best];
     t850 = v == null || Number.isNaN(Number(v)) ? null : Number(v);
   }

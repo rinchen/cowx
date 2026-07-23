@@ -2,31 +2,12 @@
  * Pure helpers for Short-Term Outlook / hourly modal (testable, no DOM).
  */
 
-import { dailyIndexForNow, precipTodayInches } from './denver-time.js';
+import { dailyIndexForNow, nearestHourIndex, precipTodayInches } from './denver-time.js';
 import { escapeHtml } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { windDirLabel } from './wind.js';
 
-export { dailyIndexForNow, precipTodayInches } from './denver-time.js';
-
-/**
- * @param {string[]} times
- * @param {number} [nowMs]
- * @returns {number}
- */
-export function nearestHourIndex(times, nowMs = Date.now()) {
-  if (!Array.isArray(times) || times.length === 0) return 0;
-  let best = 0;
-  let bestDiff = Infinity;
-  times.forEach((t, i) => {
-    const d = Math.abs(new Date(t).getTime() - nowMs);
-    if (d < bestDiff) {
-      bestDiff = d;
-      best = i;
-    }
-  });
-  return best;
-}
+export { dailyIndexForNow, nearestHourIndex, precipTodayInches } from './denver-time.js';
 
 /**
  * Sky for "now" from the nearest hourly slot (same clock as Short-Term Outlook).

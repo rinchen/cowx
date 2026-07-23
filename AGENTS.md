@@ -46,8 +46,8 @@ cowx/   # repo directory (brand: COWX)
 └── .github/workflows/
     ├── pr.yml                # Lint, test, validate locations on pull requests
     ├── preview.yml           # PR preview sites under /pr-preview/pr-N/ on gh-pages
-    ├── pages.yml             # Deploy public/ to gh-pages branch on push to main
-    └── update-weather.yml    # Scheduled fetch every 45 minutes + failure notify
+    ├── pages.yml             # Deploy public/ to gh-pages on human/code pushes to main
+    └── update-weather.yml    # Scheduled fetch every 45 min + deploy to gh-pages + failure notify
 ```
 
 ### Key artifacts
@@ -61,7 +61,7 @@ cowx/   # repo directory (brand: COWX)
 | `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)                                                                            |
 | `schemas/*.schema.json`                     | Reference contracts (`location`, `locations-array`, `weather-payload`, `meta`, `index-entry`, `space-weather`); not yet enforced in CI |
 
-**PR previews / Pages:** Production deploys `public/` to the `gh-pages` branch (`pages.yml`, with `clean-exclude: pr-preview`). Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
+**PR previews / Pages:** Production deploys `public/` to the `gh-pages` branch (`pages.yml` on code pushes; `update-weather.yml` after scheduled fetches — bot commits with `GITHUB_TOKEN` do not trigger `pages.yml`). Both share the `gh-pages` concurrency group (`clean-exclude: pr-preview`). Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
 
 **Language:** The public UI is English-only. There is no i18n catalog or translation check script.
 
@@ -229,7 +229,7 @@ Locality pages open a dual-pane **workspace**: RainViewer radar map beside an **
 
 **Hyperlocal pin (client, no API keys):** Locate (high-accuracy GPS), IP “Go to”, or Colorado street-address Set pin (`public/js/geocode.js` → Nominatim, CO-bounded, submit-only) stores a browser-persistent pin (`localStorage` `cowx:hyperlocalPin`; migrates any legacy `sessionStorage` value). Survives refresh and new tabs; cleared when the user searches a catalog city or clears site data. Always force-refresh the workspace after setting a pin even if the catalog slug is unchanged. The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip (fallback status if that fails). Searching a city clears the pin. Do not add client API **keys**; keep address geocode user-triggered and Colorado-bounded.
 
-Scheduled data commits should **not** use `[skip ci]` — Pages must redeploy so the live site picks up fresh JSON. Code-only pushes still trigger Pages as usual.
+Scheduled fetches deploy `public/` to `gh-pages` in the same workflow (`deploy-pages` job). Do not rely on the data push alone to trigger `pages.yml` — `GITHUB_TOKEN` commits do not start new workflow runs. Code pushes to `main` still use `pages.yml` as usual.
 
 ---
 
@@ -250,7 +250,7 @@ Map layers must have a non-map alternative (list/table) for keyboard and screen-
 
 ## Testing
 
-- Run `pnpm test` — Node built-in test runner.
+- Run `pnpm test` — Node built-in test runner (**always under `TZ=UTC`** via the `test` script). Open-Meteo times are America/Denver local ISO without offset; never parse them with host-local `new Date(t)`. Coverage lives in `tests/denver-tz-invariant.test.js`.
 - **Do not hit live APIs in unit tests.** Use fixtures under `tests/fixtures/` and mock `fetch` / adapter inputs.
 - Adapter tests should assert merge behavior, error handling, and schema-shaped output.
 - `pnpm validate:locations` must pass before merging location catalog changes.
@@ -296,10 +296,12 @@ pnpm install
 pnpm validate:locations
 pnpm run fetch:data   # writes public/data/ (requires network). Prefer `pnpm run` — bare `pnpm fetch` is a pnpm builtin.
 pnpm run fetch:climatology  # ERA5 DOY normals only (slow; optional CLIMATOLOGY_MAX_LOCS=N)
-pnpm test
+pnpm test                 # always TZ=UTC (catches Denver local-ISO Date traps)
 pnpm lint
 pnpm format           # Prettier
 npx serve public      # local preview
 ```
 
 Use Node **20+** (see `.nvmrc`). For local adapter keys, copy `.env.example` to `.env` (gitignored). `NOTIFY_WEBHOOK_URL` is Actions-only.
+
+Open-Meteo forecast times use `timezone=America/Denver` and arrive as offset-less local ISO (`2026-07-22T12:00` = noon Mountain). Compare them with `nearestHourIndex` / `denverHourKey` / `precipTodayInches` from `public/js/denver-time.js` — never `new Date(t)` on those strings.

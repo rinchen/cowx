@@ -80,6 +80,13 @@ describe('nearestHourIndex', () => {
     assert.equal(nearestHourIndex(times, now), 2);
   });
 
+  it('treats offset-less Open-Meteo times as America/Denver', () => {
+    // 12:16 MDT = 18:16Z — must pick 12:00 local, not 18:00 (which UTC hosts mis-parse).
+    const nowMs = new Date('2026-07-22T18:16:00Z').getTime();
+    const times = ['2026-07-22T12:00', '2026-07-22T18:00'];
+    assert.equal(nearestHourIndex(times, nowMs), 0);
+  });
+
   it('returns 0 for empty series', () => {
     assert.equal(nearestHourIndex([]), 0);
   });
@@ -92,7 +99,7 @@ describe('pickNowSky', () => {
       weather_code: [0, 3, 3],
       is_day: [1, 1, 1],
     };
-    const nowMs = new Date('2026-07-21T07:36:00').getTime();
+    const nowMs = new Date('2026-07-21T13:36:00Z').getTime(); // 07:36 MDT
     const sky = pickNowSky(hourly, nowMs);
     assert.ok(sky);
     assert.equal(sky.weather_code, 3);
@@ -112,7 +119,7 @@ describe('pickNowSky', () => {
       weather_code: [null],
       is_day: [0],
     };
-    const sky = pickNowSky(hourly, new Date('2026-07-21T12:00:00').getTime());
+    const sky = pickNowSky(hourly, new Date('2026-07-21T18:00:00Z').getTime()); // 12:00 MDT
     assert.ok(sky);
     assert.equal(sky.weather_code, null);
     assert.equal(sky.condition, '—');
@@ -142,7 +149,7 @@ describe('pickNowCurrent / resolveCatalogNow', () => {
       precip_today_in: 0.12,
       surface_pressure_mb: 850.2,
     };
-    const nowMs = new Date('2026-07-22T06:16:00').getTime();
+    const nowMs = new Date('2026-07-22T12:16:00Z').getTime(); // 06:16 MDT
     const fromHour = pickNowCurrent(hourly, nowMs);
     assert.ok(fromHour);
     assert.equal(fromHour.temp_f, 67.4);

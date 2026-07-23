@@ -50,7 +50,6 @@ jobs:
             exit 0
           fi
           git add public/data
-          # Do not use [skip ci]: Pages must redeploy so the live site gets fresh JSON.
           git commit -m "chore: update weather data"
           # Concurrent pushes (code commits or overlapping schedules) can reject a
           # bare push; rebase onto remote main and retry a few times.
@@ -63,6 +62,29 @@ jobs:
           done
           echo "Failed to push data commit after retries"
           exit 1
+
+  # Commits made with GITHUB_TOKEN do not trigger pages.yml (GitHub recursion
+  # guard). Deploy public/ here so scheduled weather updates reach the live site.
+  deploy-pages:
+    needs: fetch
+    if: needs.fetch.result == 'success' && needs.fetch.outputs.fetch_failed != 'true'
+    runs-on: ubuntu-latest
+    # Serialize with pages.yml / preview.yml writers to gh-pages.
+    concurrency:
+      group: gh-pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
+        with:
+          branch: gh-pages
+          folder: public
+          clean: true
+          clean-exclude: pr-preview
 
   notify-on-failure:
     runs-on: ubuntu-latest
