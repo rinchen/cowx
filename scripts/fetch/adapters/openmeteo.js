@@ -250,16 +250,7 @@ export function attachRfComms(payload, elevationFt) {
   const series = payload.hourly?.temperature_850hPa ?? [];
   let t850 = null;
   if (times.length && series.length) {
-    const now = Date.now();
-    let best = 0;
-    let bestDiff = Infinity;
-    times.forEach((t, i) => {
-      const diff = Math.abs(new Date(String(t)).getTime() - now);
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        best = i;
-      }
-    });
+    const best = nearestHourIndex(/** @type {string[]} */ (times));
     const v = series[best];
     t850 = v == null || Number.isNaN(Number(v)) ? null : Number(v);
   }

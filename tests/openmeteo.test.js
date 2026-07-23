@@ -210,6 +210,17 @@ describe('thunderstorm merge helpers', () => {
     assert.equal(pct, 22);
   });
 
+  it('picks nearest Denver-local OM hour for current pct (not host TZ)', () => {
+    // 13:10 MDT = 19:10Z — offset-less times must not be parsed as UTC
+    const now = new Date('2026-07-20T19:10:00Z').getTime();
+    const pct = nearestThunderstormPct(
+      ['2026-07-20T12:00', '2026-07-20T13:00', '2026-07-20T19:00'],
+      [1, 22, 99],
+      now,
+    );
+    assert.equal(pct, 22);
+  });
+
   it('merges NBM into payload without dropping wind', () => {
     const payload = mapResult(
       {

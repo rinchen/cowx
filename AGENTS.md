@@ -250,7 +250,7 @@ Map layers must have a non-map alternative (list/table) for keyboard and screen-
 
 ## Testing
 
-- Run `pnpm test` — Node built-in test runner.
+- Run `pnpm test` — Node built-in test runner (**always under `TZ=UTC`** via the `test` script). Open-Meteo times are America/Denver local ISO without offset; never parse them with host-local `new Date(t)`. Coverage lives in `tests/denver-tz-invariant.test.js`.
 - **Do not hit live APIs in unit tests.** Use fixtures under `tests/fixtures/` and mock `fetch` / adapter inputs.
 - Adapter tests should assert merge behavior, error handling, and schema-shaped output.
 - `pnpm validate:locations` must pass before merging location catalog changes.
@@ -296,10 +296,12 @@ pnpm install
 pnpm validate:locations
 pnpm run fetch:data   # writes public/data/ (requires network). Prefer `pnpm run` — bare `pnpm fetch` is a pnpm builtin.
 pnpm run fetch:climatology  # ERA5 DOY normals only (slow; optional CLIMATOLOGY_MAX_LOCS=N)
-pnpm test
+pnpm test                 # always TZ=UTC (catches Denver local-ISO Date traps)
 pnpm lint
 pnpm format           # Prettier
 npx serve public      # local preview
 ```
 
 Use Node **20+** (see `.nvmrc`). For local adapter keys, copy `.env.example` to `.env` (gitignored). `NOTIFY_WEBHOOK_URL` is Actions-only.
+
+Open-Meteo forecast times use `timezone=America/Denver` and arrive as offset-less local ISO (`2026-07-22T12:00` = noon Mountain). Compare them with `nearestHourIndex` / `denverHourKey` / `precipTodayInches` from `public/js/denver-time.js` — never `new Date(t)` on those strings.

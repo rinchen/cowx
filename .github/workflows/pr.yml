@@ -27,7 +27,11 @@ jobs:
         run: pnpm lint
 
       - name: Test
+        # Force UTC so America/Denver Open-Meteo local-ISO traps fail here, not only
+        # for Mountain-time developers (see tests/denver-tz-invariant.test.js).
         run: pnpm test
+        env:
+          TZ: UTC
 
       - name: Validate locations
         run: pnpm validate:locations
