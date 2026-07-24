@@ -61,7 +61,7 @@ cowx/   # repo directory (brand: COWX)
 | `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)                                                                            |
 | `schemas/*.schema.json`                     | Reference contracts (`location`, `locations-array`, `weather-payload`, `meta`, `index-entry`, `space-weather`); not yet enforced in CI |
 
-**PR previews / Pages:** Production deploys `public/` to the `gh-pages` branch (`pages.yml` on code pushes; `update-weather.yml` after scheduled fetches — bot commits with `GITHUB_TOKEN` do not trigger `pages.yml`). Both share the `gh-pages` concurrency group (`clean-exclude: pr-preview`). Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Previews ship **UI only** (no duplicated `public/data/`) and read live JSON from production `/cowx/data` — legacy Pages builds fail on a full doubled tree. Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
+**PR previews / Pages:** Production deploys `public/` to the `gh-pages` branch (`pages.yml` on code pushes; `update-weather.yml` after scheduled fetches — bot commits with `GITHUB_TOKEN` do not trigger `pages.yml`). Both share the `gh-pages` concurrency group (`clean-exclude: pr-preview`). Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Previews ship **UI only** (no duplicated `public/data/`) and read live JSON from production `/cowx/data` — legacy Pages builds fail on a full doubled tree. Production deploys strip any leftover `pr-preview/*/data` and **fail the workflow** if the GitHub Pages build errors (so Actions cannot stay green while the CDN is frozen). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
 
 **Language:** The public UI is English-only. There is no i18n catalog or translation check script.
 
@@ -285,7 +285,7 @@ Include a detailed body for non-trivial changes: **what** changed and **why**. F
 
 ## Failure notifications
 
-When the **weather fetch step** in `update-weather.yml` fails (`weather_fetch`), a notify job POSTs a summary to `NOTIFY_WEBHOOK_URL` (if set). Install/push races after a successful fetch do **not** notify. It does **not** open a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
+When the **weather fetch step** in `update-weather.yml` fails (`weather_fetch`), or the **gh-pages deploy / Pages build verification** fails, a notify job POSTs a summary to `NOTIFY_WEBHOOK_URL` (if set). Install/push races after a successful fetch do **not** notify. It does **not** open a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
 
 ---
 

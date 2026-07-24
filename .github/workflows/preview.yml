@@ -18,6 +18,7 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
+  pages: write
 
 jobs:
   deploy-preview:
@@ -37,6 +38,10 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf public/data
+          if [[ -d public/data ]]; then
+            echo "::error::public/data still present after slim step"
+            exit 1
+          fi
           python3 - <<'PY'
           from pathlib import Path
           root = Path("public/js")
@@ -47,6 +52,7 @@ jobs:
               ("'data/alerts.geojson'", "'/cowx/data/alerts.geojson'"),
               ("'data/cwop.geojson'", "'/cowx/data/cwop.geojson'"),
           ]
+          patched = 0
           for path in root.rglob("*.js"):
               text = path.read_text()
               orig = text
@@ -54,7 +60,14 @@ jobs:
                   text = text.replace(old, new)
               if text != orig:
                   path.write_text(text)
+                  patched += 1
                   print(f"patched {path}")
+          if patched < 1:
+              raise SystemExit("expected to patch DATA_BASE in public/js/app.js")
+          app = (root / "app.js").read_text()
+          if "DATA_BASE = '/cowx/data'" not in app:
+              raise SystemExit("app.js DATA_BASE was not rewritten to /cowx/data")
+          print(f"slim ok ({patched} file(s) patched, public/data removed)")
           PY
 
       - name: Deploy preview
@@ -65,3 +78,13 @@ jobs:
           umbrella-dir: pr-preview
           action: auto
           qr-code: true
+
+      - name: Verify GitHub Pages build
+        if: github.event.action != 'closed'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          tip="$(git rev-parse origin/gh-pages)"
+          bash scripts/ci/wait-for-pages-build.sh "${tip}"
