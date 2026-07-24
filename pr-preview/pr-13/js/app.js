@@ -23,7 +23,7 @@ import { destroyMap } from './map.js';
 /** @typedef {{ slug: string; name: string; lat: number; lon: number; county?: string; aqi?: number | null }} IndexEntry */
 /** @typedef {{ city: string; county: string; slug: string }} ZipEntry */
 
-const DATA_BASE = 'data';
+const DATA_BASE = '/cowx/data';
 /** Poll interval for new fetch snapshots (scheduled fetch is ~45 min). */
 const DATA_POLL_MS = 90_000;
 

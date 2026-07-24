@@ -67,7 +67,7 @@ export async function renderWorkspace(root, data, options) {
 
   const pin = options.pin ?? getHyperlocalPin();
   const catalogDistKm = pinDistanceKm(pin, data);
-  const dataBase = options.dataBase ?? 'data';
+  const dataBase = options.dataBase ?? '/cowx/data';
 
   const [hyperlocalResult, spaceWeather] = await Promise.all([
     pin
@@ -223,7 +223,7 @@ export async function renderWorkspace(root, data, options) {
 
   initStateMap(mapContainer, options.locations, slug, () => {}, {
     loadAlerts: true,
-    alertsUrl: `${options.dataBase ?? 'data'}/alerts.geojson`,
+    alertsUrl: `${options.dataBase ?? '/cowx/data'}/alerts.geojson`,
     fixedView: false,
     showMarkers: false,
     onAlertsError: (msg) => options.onAnnounce?.(`Alert map unavailable: ${msg}`),

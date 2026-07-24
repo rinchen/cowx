@@ -144,7 +144,7 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
 
   if (options.loadAlerts) {
     void loadAlertPolygons(
-      options.alertsUrl ?? 'data/alerts.geojson',
+      options.alertsUrl ?? '/cowx/data/alerts.geojson',
       options.onAlertsError,
       generation,
     ).catch((err) => {
@@ -312,7 +312,7 @@ export function setAqiLayer(enabled, locations, activeSlug = null) {
  * @param {string} url
  * @returns {Promise<boolean>}
  */
-export async function setCwopLayer(enabled, url = 'data/cwop.geojson') {
+export async function setCwopLayer(enabled, url = '/cowx/data/cwop.geojson') {
   if (!stateMap || typeof L === 'undefined') return false;
 
   if (cwopLayer) {

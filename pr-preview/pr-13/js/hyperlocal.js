@@ -164,7 +164,7 @@ export async function fetchPinCurrent(pin) {
  * @param {{ dataBase?: string, skipOpenMeteo?: boolean }} [opts]
  */
 export async function buildHyperlocalOverlay(pin, opts = {}) {
-  const base = opts.dataBase ?? 'data';
+  const base = opts.dataBase ?? '/cowx/data';
   /** @type {{ cameras: object[], alerts: object[], pws: object | null, current: Record<string, unknown> | null }} */
   const out = { cameras: [], alerts: [], pws: null, current: null };
 
