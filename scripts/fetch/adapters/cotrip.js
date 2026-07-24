@@ -13,6 +13,7 @@ import {
 } from '../../lib/http.js';
 import { haversineKm, nearestPoint } from '../../lib/geo.js';
 import { toFiniteNumber } from '../../lib/parse.js';
+import { PASS_HINT_RE, CHAIN_RE, CLOSURE_RE } from '../../lib/road-alerts.js';
 
 const API_BASE = 'https://data.cotrip.org/';
 const COTRIP_MAP = 'https://maps.cotrip.org';
@@ -22,11 +23,6 @@ const MAX_RWIS_KM = 40;
 const MAX_CONDITION_KM = 35;
 const MAX_EVENT_POINT_KM = 75;
 const MAX_EVENTS = 5;
-
-const PASS_HINT_RE =
-  /\b(i-?70|us-?550|us-?40|us-?285|us-?160|us-?50|loveland|vail|eisenhower|monarch|wolf creek|red mountain|independence|cottonwood|hoosier|berthoud|rabbit ears|cameron|trail ridge|molas|coal bank)\b/i;
-const CHAIN_RE = /\bchain\b/i;
-const CLOSURE_RE = /\b(closure|closed|lane is closed|lanes? closed)\b/i;
 
 /**
  * NTCIP ESS road-surface status codes (also appear as “N - dry” in roadConditions).

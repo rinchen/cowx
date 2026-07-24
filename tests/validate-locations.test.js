@@ -8,7 +8,7 @@ const valid = {
   name: 'Denver',
   lat: 39.74,
   lon: -104.99,
-  region: 'Front Range',
+  region: 'front-range',
   county: 'Denver',
   wfo: 'BOU',
   elevation_ft: 5280,
@@ -41,5 +41,29 @@ describe('validateLocationsData', () => {
   it('rejects bad slug format', () => {
     const errors = validateLocationsData([{ ...valid, slug: 'Denver CO' }]);
     assert.ok(errors.some((e) => e.includes('kebab-case')));
+  });
+
+  it('rejects region outside the schema enum', () => {
+    const errors = validateLocationsData([{ ...valid, region: 'Front Range' }]);
+    assert.ok(errors.some((e) => e.includes('region must be one of')));
+  });
+
+  it('rejects wfo outside BOU/PUB/GJT', () => {
+    const errors = validateLocationsData([{ ...valid, wfo: 'GLD' }]);
+    assert.ok(errors.some((e) => e.includes('wfo must be one of')));
+  });
+
+  it('rejects whitespace-only name and county', () => {
+    const nameErrs = validateLocationsData([{ ...valid, name: '   ' }]);
+    assert.ok(nameErrs.some((e) => e.includes('name must be a non-empty string')));
+    const countyErrs = validateLocationsData([{ ...valid, county: '\t' }]);
+    assert.ok(countyErrs.some((e) => e.includes('county must be a non-empty string')));
+  });
+
+  it('rejects NaN and negative elevation_ft', () => {
+    const nanErrs = validateLocationsData([{ ...valid, elevation_ft: Number.NaN }]);
+    assert.ok(nanErrs.some((e) => e.includes('finite number')));
+    const negErrs = validateLocationsData([{ ...valid, elevation_ft: -100 }]);
+    assert.ok(negErrs.some((e) => e.includes('must be >= 0')));
   });
 });

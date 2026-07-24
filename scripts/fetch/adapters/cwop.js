@@ -4,7 +4,7 @@
  * Fallback: status skipped/error; payloads get cwop/pws null.
  */
 
-import { fetchJson } from '../../lib/http.js';
+import { fetchJson, sleep } from '../../lib/http.js';
 import { nearestPoints, roundKm } from '../../lib/geo.js';
 import { isInColorado } from '../../lib/colorado.js';
 import { toFiniteNumber } from '../../lib/parse.js';
@@ -14,8 +14,13 @@ const MAX_DISTANCE_KM = 60;
 const MAX_STATIONS = 2;
 const GRID_RADIUS_MI = 55;
 const GRID_LIMIT = 80;
+const GRID_DELAY_MS = 120;
 
-/** Denser Colorado sampling grid (Front Range + mountains + western slope + plains). */
+/**
+ * Fixed denser Colorado sampling grid (Front Range + mountains + western slope + plains).
+ * Hand-tuned spacing (~0.2–0.5°) to cover population centers and passes without
+ * generating a full CO_BBOX lattice (would blow the aprs.me call budget).
+ */
 const SAMPLE_POINTS = [
   { lat: 40.7, lon: -104.9 },
   { lat: 40.5, lon: -105.1 },
@@ -131,8 +136,14 @@ export function assignPwsFromStations(loc, stations, linkOpts = {}) {
 
 /**
  * @param {import('../../lib/types.js').Location[]} locations
+ * @param {{
+ *   sleepFn?: (ms: number) => Promise<void>,
+ *   samplePoints?: { lat: number, lon: number }[],
+ * }} [opts]
  */
-export async function fetchCwop(locations) {
+export async function fetchCwop(locations, opts = {}) {
+  const sleepFn = opts.sleepFn ?? sleep;
+  const samplePoints = opts.samplePoints ?? SAMPLE_POINTS;
   /** @type {Map<string, object | null>} */
   const bySlug = new Map();
   /** @type {Map<string, object | null>} */
@@ -144,7 +155,7 @@ export async function fetchCwop(locations) {
   /** @type {string[]} */
   const errors = [];
   try {
-    for (const pt of SAMPLE_POINTS) {
+    for (const pt of samplePoints) {
       const url = `${NEARBY_URL}?lat=${pt.lat}&lon=${pt.lon}&radius=${GRID_RADIUS_MI}&limit=${GRID_LIMIT}&hours=6`;
       try {
         const raw = await fetchJson(url, { timeoutMs: 20_000 });
@@ -156,7 +167,7 @@ export async function fetchCwop(locations) {
         calls += 1;
         errors.push(err instanceof Error ? err.message : String(err));
       }
-      await new Promise((r) => setTimeout(r, 120));
+      await sleepFn(GRID_DELAY_MS);
     }
 
     const stations = [...byCall.values()];

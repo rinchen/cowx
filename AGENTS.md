@@ -71,16 +71,16 @@ cowx/   # repo directory (brand: COWX)
 
 Edit `scripts/locations/colorado-locations.json` (JSON array). Each entry must include:
 
-| Field          | Type   | Notes                                                                                                     |
-| -------------- | ------ | --------------------------------------------------------------------------------------------------------- |
-| `slug`         | string | Lowercase kebab-case, unique, URL-safe (`^[a-z0-9]+(?:-[a-z0-9]+)*$`)                                     |
-| `name`         | string | Display name                                                                                              |
-| `lat`          | number | WGS84 latitude (must fall in Colorado bounds)                                                             |
-| `lon`          | number | WGS84 longitude (must fall in Colorado bounds)                                                            |
-| `region`       | string | Kebab-case region (`front-range`, …). Schema enum is reference; `validate:locations` does not enforce it. |
-| `county`       | string | County name                                                                                               |
-| `wfo`          | string | NWS office (`BOU`, `PUB`, `GJT`). Schema enum is reference; CI validator does not enforce it.             |
-| `elevation_ft` | number | Elevation in feet                                                                                         |
+| Field          | Type   | Notes                                                                                                                                       |
+| -------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slug`         | string | Lowercase kebab-case, unique, URL-safe (`^[a-z0-9]+(?:-[a-z0-9]+)*$`)                                                                       |
+| `name`         | string | Display name (non-empty after trim)                                                                                                         |
+| `lat`          | number | WGS84 latitude (must fall in Colorado bounds)                                                                                               |
+| `lon`          | number | WGS84 longitude (must fall in Colorado bounds)                                                                                              |
+| `region`       | string | Kebab-case enum: `front-range`, `mountains`, `western-slope`, `eastern-plains`, `southwest`, `northwest` (enforced by `validate:locations`) |
+| `county`       | string | County name (non-empty after trim)                                                                                                          |
+| `wfo`          | string | NWS office enum: `BOU`, `PUB`, or `GJT` (enforced by `validate:locations`)                                                                  |
+| `elevation_ft` | number | Elevation in feet (finite, `>= 0`)                                                                                                          |
 
 Optional fields used by adapters (add when known):
 
@@ -206,7 +206,7 @@ Approximate call budget per run (scales with catalog size; actual counts are wri
 | USGS NWIS                                     | 1                                                                       | None                |
 | SNOTEL                                        | 1–2                                                                     | None                |
 | CDOT cameras + ArcGIS alerts                  | 3                                                                       | None                |
-| COtrip (stations/incidents/events/conditions) | ~10–40 pages when keyed                                                 | `COTRIP_API_KEY`    |
+| COtrip (stations/incidents/events/conditions) | up to ~43 page calls total when keyed (8+10+10+15 across four feeds)    | `COTRIP_API_KEY`    |
 | CWOP / APRS (aprs.me grid)                    | ~35–40                                                                  | None                |
 | NOAA HMS smoke                                | 1–3 (zip download)                                                      | None                |
 | SPC fire weather (Day 1–2)                    | 4 (Wind/RH + DryT GeoJSON)                                              | None                |

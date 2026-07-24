@@ -10,6 +10,7 @@
 import { fetchJson } from '../../lib/http.js';
 import { haversineKm, nearestPoints } from '../../lib/geo.js';
 import { toFiniteNumber } from '../../lib/parse.js';
+import { PASS_HINT_RE, CHAIN_RE, CLOSURE_RE } from '../../lib/road-alerts.js';
 
 const CAMERAS_URL = 'https://cotg.carsprogram.org/cameras_v1/api/cameras';
 const ALERTS_POINTS_ARCGIS =
@@ -25,11 +26,6 @@ const MAX_ALERT_POINT_KM = 75;
 const MAX_ALERT_POLY_KM = 50;
 const MAX_ALERTS = 5;
 const COTRIP_MAP = 'https://maps.cotrip.org';
-
-const PASS_HINT_RE =
-  /\b(i-?70|us-?550|us-?40|us-?285|us-?160|us-?50|loveland|vail|eisenhower|monarch|wolf creek|red mountain|independence|cottonwood|hoosier|berthoud|rabbit ears|cameron|trail ridge|molas|coal bank)\b/i;
-const CHAIN_RE = /\bchain\b/i;
-const CLOSURE_RE = /\b(closure|closed|roadway.?closure)\b/i;
 
 /**
  * @param {unknown} raw
