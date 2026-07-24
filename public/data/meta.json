@@ -1,102 +1,103 @@
 {
-  "generatedAt": "2026-07-24T19:03:46.883Z",
+  "generatedAt": "2026-07-24T20:36:14.587Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-24T18:59:01.412Z",
-      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-24T20:27:24.560Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-24T19:00:50.607Z",
+      "fetchedAt": "2026-07-24T20:29:12.845Z",
       "error": "fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-07-24T19:00:50.744Z"
+      "fetchedAt": "2026-07-24T20:29:12.998Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:00:53.420Z"
+      "fetchedAt": "2026-07-24T20:29:13.968Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:01:00.556Z"
+      "fetchedAt": "2026-07-24T20:29:14.418Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:01:04.491Z"
+      "fetchedAt": "2026-07-24T20:29:16.596Z"
     },
     {
       "id": "purpleair",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:01:05.226Z"
+      "fetchedAt": "2026-07-24T20:29:17.012Z"
     },
     {
       "id": "airnow",
-      "status": "ok",
-      "fetchedAt": "2026-07-24T19:02:51.560Z"
+      "status": "partial",
+      "fetchedAt": "2026-07-24T20:35:20.893Z",
+      "error": "This operation was aborted; This operation was aborted; This operation was aborted; HTTP 502 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=37.800000000000004&longitude=-105.80000000000001&distance=50&API_KEY=[redacted] <html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n</body>\r\n</html>\r\n; This operation was aborted"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:02:53.111Z"
+      "fetchedAt": "2026-07-24T20:35:22.302Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:03:05.903Z"
+      "fetchedAt": "2026-07-24T20:35:36.717Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:03:06.884Z"
+      "fetchedAt": "2026-07-24T20:35:38.016Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:03:33.706Z"
+      "fetchedAt": "2026-07-24T20:36:02.087Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-24T19:03:44.999Z"
+      "fetchedAt": "2026-07-24T20:36:13.005Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:03:45.370Z"
+      "fetchedAt": "2026-07-24T20:36:13.338Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:03:45.900Z"
+      "fetchedAt": "2026-07-24T20:36:13.737Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:03:46.173Z"
+      "fetchedAt": "2026-07-24T20:36:14.168Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:03:46.363Z"
+      "fetchedAt": "2026-07-24T20:36:14.406Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-07-24T19:03:46.883Z"
+      "fetchedAt": "2026-07-24T20:36:14.587Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 357,
-  "forecastStaleCount": 70,
-  "openmeteoCoverage": 268
+  "apiCalls": 359,
+  "forecastStaleCount": 45,
+  "openmeteoCoverage": 293
 }
