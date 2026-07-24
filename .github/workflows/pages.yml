@@ -12,7 +12,8 @@ permissions:
 # Share with preview.yml and update-weather.yml deploy-pages so all writers
 # to gh-pages run one at a time (avoids Pages build queue stampede).
 # Scheduled weather data is deployed from update-weather.yml — GITHUB_TOKEN
-# bot pushes to main do not trigger this workflow.
+# bot pushes to main do not trigger this workflow. This workflow deploys UI
+# only and preserves gh-pages data/ so code pushes cannot roll back weather.
 concurrency:
   group: gh-pages
   cancel-in-progress: false
@@ -28,6 +29,18 @@ jobs:
       - name: Strip weather data from existing PR previews
         run: bash scripts/ci/ensure-slim-pr-previews.sh
 
+      # Weather JSON is owned by update-weather.yml. Drop it from this payload and
+      # clean-exclude data/ so JamesIves does not wipe or overwrite the live tree.
+      - name: Omit public/data from UI deploy
+        run: |
+          set -euo pipefail
+          rm -rf public/data
+          if [[ -d public/data ]]; then
+            echo "::error::public/data still present after omit step"
+            exit 1
+          fi
+          echo "pages.yml: public/data omitted (weather stays on gh-pages via clean-exclude)"
+
       - name: Deploy to gh-pages
         id: pages_deploy
         uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
@@ -35,7 +48,9 @@ jobs:
           branch: gh-pages
           folder: public
           clean: true
-          clean-exclude: pr-preview
+          clean-exclude: |
+            pr-preview
+            data
 
       - name: Verify GitHub Pages build
         env:

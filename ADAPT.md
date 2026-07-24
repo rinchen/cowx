@@ -20,14 +20,14 @@ pnpm test
 npx serve public
 ```
 
-Point GitHub Pages at the `gh-pages` branch (deployed from `public/` by `.github/workflows/pages.yml`). Keep `clean-exclude: pr-preview` if you use PR previews. Leave `public/.nojekyll` in place so GitHub Pages does not run Jekyll over the static tree. Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `COTRIP_API_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
+Point GitHub Pages at the `gh-pages` branch (UI from `.github/workflows/pages.yml`; weather JSON from `update-weather.yml`). Keep `clean-exclude` covering `pr-preview` and `data` on `pages.yml` if you use PR previews / UI-only code deploys. Leave `public/.nojekyll` in place so GitHub Pages does not run Jekyll over the static tree. Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `COTRIP_API_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
 
 ### GitHub Pages / PR previews
 
 1. **Settings → Pages → Source:** Deploy from a branch → `gh-pages` / `/` (not “GitHub Actions”).
 2. **Settings → Actions → Workflow permissions:** Read and write.
 3. Same-repo PRs publish under `/pr-preview/pr-N/` via `.github/workflows/preview.yml` (fork PRs are skipped). Treat preview URLs as **untrusted** — they share the production `*.github.io` origin.
-4. Do not remove `clean-exclude: pr-preview` from `pages.yml` or production deploys will wipe open PR previews.
+4. Do not remove `clean-exclude` entries for `pr-preview` or `data` from `pages.yml`, or production deploys will wipe open PR previews / roll back weather JSON.
 
 ---
 
@@ -185,7 +185,7 @@ Keep this file (`ADAPT.md`) and adjust examples to your brand once stable.
 
 - Client routing (`#/`, `#/search`, `#/refine`, `#/l/{slug}`), favorites UX, forecast tables
 - Generic haversine helpers (`scripts/lib/geo.js`, `public/js/geo.js`)
-- Pages / PR workflows (paths), unless you rename scripts — keep `preview.yml`, `pages.yml` `clean-exclude: pr-preview`, and `public/.nojekyll`
+- Pages / PR workflows (paths), unless you rename scripts — keep `preview.yml`, `pages.yml` `clean-exclude` for `pr-preview` and `data`, and `public/.nojekyll`
 - RainViewer / Leaflet map plumbing (re-center only)
 
 Hash routes: `#/` home/resolve, `#/search` find-location (no auto-redirect), `#/refine` pin refine flow, `#/l/{slug}` locality workspace.

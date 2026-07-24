@@ -1,0 +1,55 @@
+name: Check Stale Data
+
+# Alert-only watchdog: if production meta.json is older than 2 hours, fail the
+# run and POST to NOTIFY_WEBHOOK_URL (when set). Does not re-trigger fetch.
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-stale-data
+  cancel-in-progress: false
+
+env:
+  LIVE_META_URL: https://rinchen.github.io/cowx/data/meta.json
+  STALE_MINUTES: '120'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check live meta age
+        id: age
+        env:
+          LIVE_META_URL: ${{ env.LIVE_META_URL }}
+          STALE_MINUTES: ${{ env.STALE_MINUTES }}
+        run: bash scripts/ci/check-stale-live-meta.sh
+        continue-on-error: true
+
+      - name: Notify Discord if stale
+        if: steps.age.outcome == 'failure'
+        env:
+          NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+          GENERATED_AT: ${{ steps.age.outputs.generated_at }}
+          AGE_MINUTES: ${{ steps.age.outputs.age_minutes }}
+          LIVE_META_URL: ${{ env.LIVE_META_URL }}
+          STALE_MINUTES: ${{ env.STALE_MINUTES }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NOTIFY_WEBHOOK_URL}" ]; then
+            echo "NOTIFY_WEBHOOK_URL not configured, skipping Discord notification"
+          else
+            age_label="${AGE_MINUTES:-unknown}"
+            generated="${GENERATED_AT:-unknown}"
+            content="COWX production weather data stale (${age_label}m ≥ ${STALE_MINUTES}m). generatedAt=${generated}. Live: ${LIVE_META_URL}. Re-run Update Weather: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/update-weather.yml — this check: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            payload=$(jq -n --arg content "$content" '{content: $content}')
+            curl --max-time 15 -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_WEBHOOK_URL"
+          fi
+          # Fail the workflow so Actions shows red even when Discord is unset.
+          exit 1
