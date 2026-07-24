@@ -146,7 +146,7 @@ function fmtDate(dateStr) {
       day: 'numeric',
     }).format(new Date(`${dateStr}T12:00:00`));
   } catch {
-    return dateStr;
+    return String(dateStr);
   }
 }
 
@@ -161,7 +161,7 @@ function fmtDateTime(iso) {
       timeStyle: 'short',
     }).format(new Date(iso));
   } catch {
-    return iso;
+    return String(iso);
   }
 }
 
@@ -908,7 +908,7 @@ function buildDailyTable(daily, climatology = null) {
             : '—';
     /** @type {Record<string, string>} */
     const cellByKey = {
-      day: `<td class="sticky-col col-day" data-col="day">${fmtDate(times[i])}</td>`,
+      day: `<td class="sticky-col col-day" data-col="day">${escapeHtml(fmtDate(times[i]))}</td>`,
       cond: `<td class="cond-cell col-cond" data-col="cond">${weatherIconHtml(code, { isDay: true, size: 28, className: 'weather-icon weather-icon--sm', alt: wmoLabel(code) })} <span>${escapeHtml(wmoLabel(code))}</span></td>`,
       high: `<td class="col-high" data-col="high">${hi != null ? `${Math.round(hi)}°F` : '—'}</td>`,
       low: `<td class="col-low" data-col="low">${lo != null ? `${Math.round(lo)}°F` : '—'}</td>`,
@@ -930,8 +930,8 @@ function buildDailyTable(daily, climatology = null) {
       sunshine: `<td class="col-sunshine" data-col="sunshine">${fmtDurationSeconds(sunshine) ?? '—'}</td>`,
       daylight: `<td class="col-daylight" data-col="daylight">${fmtDurationSeconds(daylight) ?? '—'}</td>`,
       et0: `<td class="col-et0" data-col="et0">${et0 != null ? Number(et0).toFixed(2) : '—'}</td>`,
-      sunrise: `<td class="col-sunrise" data-col="sunrise">${fmtClock(rise)}</td>`,
-      sunset: `<td class="col-sunset" data-col="sunset">${fmtClock(set)}</td>`,
+      sunrise: `<td class="col-sunrise" data-col="sunrise">${escapeHtml(fmtClock(rise))}</td>`,
+      sunset: `<td class="col-sunset" data-col="sunset">${escapeHtml(fmtClock(set))}</td>`,
     };
     tr.innerHTML = cols.map((c) => cellByKey[c.key]).join('');
     tbody.appendChild(tr);
@@ -1006,7 +1006,7 @@ function buildClimatologyCompareSection(daily, climatology) {
     const delta = dHi && dLo ? `${dHi} / ${dLo}` : dHi || dLo || '—';
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${fmtDate(times[i])}</td>
+      <td>${escapeHtml(fmtDate(times[i]))}</td>
       <td>${escapeHtml(fc)}</td>
       <td>${escapeHtml(typ)}</td>
       <td><span class="vs-typical-cell">${escapeHtml(delta)}</span></td>
