@@ -61,7 +61,7 @@ cowx/   # repo directory (brand: COWX)
 | `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)                                                                            |
 | `schemas/*.schema.json`                     | Reference contracts (`location`, `locations-array`, `weather-payload`, `meta`, `index-entry`, `space-weather`); not yet enforced in CI |
 
-**PR previews / Pages:** Production deploys `public/` to the `gh-pages` branch (`pages.yml` on code pushes; `update-weather.yml` after scheduled fetches — bot commits with `GITHUB_TOKEN` do not trigger `pages.yml`). Both share the `gh-pages` concurrency group (`clean-exclude: pr-preview`). Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
+**PR previews / Pages:** Production deploys `public/` to the `gh-pages` branch (`pages.yml` on code pushes; `update-weather.yml` after scheduled fetches — bot commits with `GITHUB_TOKEN` do not trigger `pages.yml`). Both share the `gh-pages` concurrency group (`clean-exclude: pr-preview`). Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Previews ship **UI only** (no duplicated `public/data/`) and read live JSON from production `/cowx/data` — legacy Pages builds fail on a full doubled tree. Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
 
 **Language:** The public UI is English-only. There is no i18n catalog or translation check script.
 
