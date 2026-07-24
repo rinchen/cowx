@@ -218,10 +218,21 @@ export async function runFetch() {
     );
   }
 
+  /** Prefetch prior payloads once (avoids serial await-per-slug in the merge loop). */
+  /** @type {Map<string, object | null>} */
+  const priorBySlug = new Map(
+    await Promise.all(
+      locations.map(
+        async (loc) =>
+          /** @type {[string, object | null]} */ ([loc.slug, await readPrior(loc.slug)]),
+      ),
+    ),
+  );
+
   for (const loc of locations) {
     try {
       const om = openmeteo.bySlug.get(loc.slug);
-      const prior = await readPrior(loc.slug);
+      const prior = priorBySlug.get(loc.slug) ?? null;
       let current = om?.current ?? null;
       let hourly = om?.hourly ?? null;
       let daily = om?.daily ?? null;
@@ -517,10 +528,11 @@ async function runClimatologyAdapter(locations) {
 
   /** @type {import('../lib/types.js').Location[]} */
   const stale = [];
-  for (const loc of locations) {
-    const prior = await readPrior(loc.slug);
+  const priors = await Promise.all(locations.map((loc) => readPrior(loc.slug)));
+  for (let i = 0; i < locations.length; i += 1) {
+    const prior = priors[i];
     if (force || !climatologyIsFresh(prior?.climatology)) {
-      stale.push(loc);
+      stale.push(locations[i]);
     }
   }
 

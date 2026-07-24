@@ -61,7 +61,7 @@ cowx/   # repo directory (brand: COWX)
 | `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)                                                                            |
 | `schemas/*.schema.json`                     | Reference contracts (`location`, `locations-array`, `weather-payload`, `meta`, `index-entry`, `space-weather`); not yet enforced in CI |
 
-**PR previews / Pages:** Production deploys `public/` to the `gh-pages` branch (`pages.yml` on code pushes; `update-weather.yml` after scheduled fetches — bot commits with `GITHUB_TOKEN` do not trigger `pages.yml`). Both share the `gh-pages` concurrency group (`clean-exclude: pr-preview`). Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
+**PR previews / Pages:** Production deploys `public/` to the `gh-pages` branch (`pages.yml` on code pushes; `update-weather.yml` after scheduled fetches — bot commits with `GITHUB_TOKEN` do not trigger `pages.yml`). Both share the `gh-pages` concurrency group (`clean-exclude: pr-preview`). Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Previews ship **UI only** (no duplicated `public/data/`) and read live JSON from production `/cowx/data` — legacy Pages builds fail on a full doubled tree. Production deploys strip any leftover `pr-preview/*/data` and **fail the workflow** if the GitHub Pages build errors (so Actions cannot stay green while the CDN is frozen). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
 
 **Language:** The public UI is English-only. There is no i18n catalog or translation check script.
 
@@ -71,16 +71,16 @@ cowx/   # repo directory (brand: COWX)
 
 Edit `scripts/locations/colorado-locations.json` (JSON array). Each entry must include:
 
-| Field          | Type   | Notes                                                                                                     |
-| -------------- | ------ | --------------------------------------------------------------------------------------------------------- |
-| `slug`         | string | Lowercase kebab-case, unique, URL-safe (`^[a-z0-9]+(?:-[a-z0-9]+)*$`)                                     |
-| `name`         | string | Display name                                                                                              |
-| `lat`          | number | WGS84 latitude (must fall in Colorado bounds)                                                             |
-| `lon`          | number | WGS84 longitude (must fall in Colorado bounds)                                                            |
-| `region`       | string | Kebab-case region (`front-range`, …). Schema enum is reference; `validate:locations` does not enforce it. |
-| `county`       | string | County name                                                                                               |
-| `wfo`          | string | NWS office (`BOU`, `PUB`, `GJT`). Schema enum is reference; CI validator does not enforce it.             |
-| `elevation_ft` | number | Elevation in feet                                                                                         |
+| Field          | Type   | Notes                                                                                                                                       |
+| -------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slug`         | string | Lowercase kebab-case, unique, URL-safe (`^[a-z0-9]+(?:-[a-z0-9]+)*$`)                                                                       |
+| `name`         | string | Display name (non-empty after trim)                                                                                                         |
+| `lat`          | number | WGS84 latitude (must fall in Colorado bounds)                                                                                               |
+| `lon`          | number | WGS84 longitude (must fall in Colorado bounds)                                                                                              |
+| `region`       | string | Kebab-case enum: `front-range`, `mountains`, `western-slope`, `eastern-plains`, `southwest`, `northwest` (enforced by `validate:locations`) |
+| `county`       | string | County name (non-empty after trim)                                                                                                          |
+| `wfo`          | string | NWS office enum: `BOU`, `PUB`, or `GJT` (enforced by `validate:locations`)                                                                  |
+| `elevation_ft` | number | Elevation in feet (finite, `>= 0`)                                                                                                          |
 
 Optional fields used by adapters (add when known):
 
@@ -206,7 +206,7 @@ Approximate call budget per run (scales with catalog size; actual counts are wri
 | USGS NWIS                                     | 1                                                                       | None                |
 | SNOTEL                                        | 1–2                                                                     | None                |
 | CDOT cameras + ArcGIS alerts                  | 3                                                                       | None                |
-| COtrip (stations/incidents/events/conditions) | ~10–40 pages when keyed                                                 | `COTRIP_API_KEY`    |
+| COtrip (stations/incidents/events/conditions) | up to ~43 page calls total when keyed (8+10+10+15 across four feeds)    | `COTRIP_API_KEY`    |
 | CWOP / APRS (aprs.me grid)                    | ~35–40                                                                  | None                |
 | NOAA HMS smoke                                | 1–3 (zip download)                                                      | None                |
 | SPC fire weather (Day 1–2)                    | 4 (Wind/RH + DryT GeoJSON)                                              | None                |
@@ -285,7 +285,7 @@ Include a detailed body for non-trivial changes: **what** changed and **why**. F
 
 ## Failure notifications
 
-When the **weather fetch step** in `update-weather.yml` fails (`weather_fetch`), a notify job POSTs a summary to `NOTIFY_WEBHOOK_URL` (if set). Install/push races after a successful fetch do **not** notify. It does **not** open a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
+When the **weather fetch step** in `update-weather.yml` fails (`weather_fetch`), or the **gh-pages deploy / Pages build verification** fails, a notify job POSTs a summary to `NOTIFY_WEBHOOK_URL` (if set). Install/push races after a successful fetch do **not** notify. It does **not** open a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
 
 ---
 

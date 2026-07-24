@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pages: write
 
 concurrency:
   group: update-weather
@@ -77,6 +78,10 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: main
+          fetch-depth: 0
+
+      - name: Strip weather data from existing PR previews
+        run: bash scripts/ci/ensure-slim-pr-previews.sh
 
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
@@ -86,22 +91,44 @@ jobs:
           clean: true
           clean-exclude: pr-preview
 
+      - name: Verify GitHub Pages build
+        id: verify_pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          tip="$(git rev-parse origin/gh-pages)"
+          bash scripts/ci/wait-for-pages-build.sh "${tip}"
+
   notify-on-failure:
     runs-on: ubuntu-latest
-    needs: fetch
-    # Discord only when the weather data pull itself failed — not checkout,
-    # install, prettier hooks, or git push races after a successful fetch.
-    if: needs.fetch.outputs.fetch_failed == 'true'
+    needs: [fetch, deploy-pages]
+    # Discord when weather fetch fails OR Pages publish verification fails.
+    # Skip install/push races after a successful fetch (deploy-pages skipped).
+    if: |
+      always() && (
+        needs.fetch.outputs.fetch_failed == 'true' ||
+        needs.deploy-pages.result == 'failure'
+      )
     steps:
       - name: Post Discord notification
         env:
           NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+          FETCH_FAILED: ${{ needs.fetch.outputs.fetch_failed }}
+          DEPLOY_RESULT: ${{ needs.deploy-pages.result }}
         run: |
           if [ -z "$NOTIFY_WEBHOOK_URL" ]; then
             echo "NOTIFY_WEBHOOK_URL not configured, skipping Discord notification"
             exit 0
           fi
+          reason="unknown failure"
+          if [ "$FETCH_FAILED" = "true" ]; then
+            reason="weather fetch failed"
+          elif [ "$DEPLOY_RESULT" = "failure" ]; then
+            reason="gh-pages deploy or Pages build verification failed"
+          fi
           payload=$(jq -n \
-            --arg content "COWX weather fetch failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --arg content "COWX ${reason}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             '{content: $content}')
           curl --max-time 15 -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_WEBHOOK_URL"

@@ -40,7 +40,7 @@ The site is deployed from the `public/` directory to the `gh-pages` branch on co
 
 ### PR previews
 
-Same-repo pull requests get a sticky comment with a live preview URL under `/pr-preview/pr-{N}/` (see `.github/workflows/preview.yml`). Previews use the PR’s committed `public/` tree (including weather JSON); they are removed when the PR closes. Fork PRs do not get automatic previews — use `npx serve public` locally. Preview URLs share the production GitHub Pages origin — treat them as **untrusted** until you review the PR.
+Same-repo pull requests get a sticky comment with a live preview URL under `/pr-preview/pr-{N}/` (see `.github/workflows/preview.yml`). Previews deploy the PR’s UI from `public/` but **omit** `public/data/` and point the client at production `/cowx/data` (legacy GitHub Pages rejects a full duplicated data tree). They are removed when the PR closes. Fork PRs do not get automatic previews — use `npx serve public` locally. Preview URLs share the production GitHub Pages origin — treat them as **untrusted** until you review the PR.
 
 **One-time setup** (after the first `gh-pages` deploy succeeds):
 

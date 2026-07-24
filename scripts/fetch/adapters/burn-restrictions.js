@@ -12,6 +12,7 @@ import { fetchWithTimeout } from '../../lib/http.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LINKS_PATH = path.resolve(__dirname, '../../locations/co-fire-restriction-links.json');
 
+// COEM host has no usable HTTPS (TLS handshake fails); Node fetch is fine over HTTP.
 const COEM_URL = 'http://www.coemergency.com/p/fire-bans-danger.html';
 
 const DISCLAIMER = 'Verify with local sheriff / land manager before burning or campfires.';

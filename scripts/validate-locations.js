@@ -15,6 +15,19 @@ const CO_LAT_MAX = 41.1;
 const CO_LON_MIN = -109.15;
 const CO_LON_MAX = -102.0;
 
+/** Matches schemas/location.schema.json region enum. */
+const REGION_ENUM = new Set([
+  'front-range',
+  'mountains',
+  'western-slope',
+  'eastern-plains',
+  'southwest',
+  'northwest',
+]);
+
+/** Matches schemas/location.schema.json wfo enum. */
+const WFO_ENUM = new Set(['BOU', 'PUB', 'GJT']);
+
 /**
  * @param {unknown} value
  * @returns {value is Record<string, unknown>}
@@ -66,6 +79,32 @@ export function validateLocationsData(data) {
       }
     }
 
+    if ('name' in entry) {
+      if (typeof entry.name !== 'string' || !entry.name.trim()) {
+        errors.push(`${prefix}: name must be a non-empty string`);
+      }
+    }
+
+    if ('county' in entry) {
+      if (typeof entry.county !== 'string' || !entry.county.trim()) {
+        errors.push(`${prefix}: county must be a non-empty string`);
+      }
+    }
+
+    if ('region' in entry) {
+      if (typeof entry.region !== 'string' || !REGION_ENUM.has(entry.region)) {
+        errors.push(
+          `${prefix}: region must be one of ${[...REGION_ENUM].join(', ')} (got "${entry.region}")`,
+        );
+      }
+    }
+
+    if ('wfo' in entry) {
+      if (typeof entry.wfo !== 'string' || !WFO_ENUM.has(entry.wfo)) {
+        errors.push(`${prefix}: wfo must be one of BOU, PUB, GJT (got "${entry.wfo}")`);
+      }
+    }
+
     if ('lat' in entry) {
       if (typeof entry.lat !== 'number' || entry.lat < -90 || entry.lat > 90) {
         errors.push(`${prefix}: lat must be a number between -90 and 90`);
@@ -82,8 +121,12 @@ export function validateLocationsData(data) {
       }
     }
 
-    if ('elevation_ft' in entry && typeof entry.elevation_ft !== 'number') {
-      errors.push(`${prefix}: elevation_ft must be a number`);
+    if ('elevation_ft' in entry) {
+      if (typeof entry.elevation_ft !== 'number' || !Number.isFinite(entry.elevation_ft)) {
+        errors.push(`${prefix}: elevation_ft must be a finite number`);
+      } else if (entry.elevation_ft < 0) {
+        errors.push(`${prefix}: elevation_ft must be >= 0`);
+      }
     }
 
     if ('webcam_links' in entry && entry.webcam_links != null) {

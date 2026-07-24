@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pages: write
 
 # Share with preview.yml and update-weather.yml deploy-pages so all writers
 # to gh-pages run one at a time (avoids Pages build queue stampede).
@@ -21,11 +22,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Strip weather data from existing PR previews
+        run: bash scripts/ci/ensure-slim-pr-previews.sh
 
       - name: Deploy to gh-pages
+        id: pages_deploy
         uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
         with:
           branch: gh-pages
           folder: public
           clean: true
           clean-exclude: pr-preview
+
+      - name: Verify GitHub Pages build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages
+          tip="$(git rev-parse origin/gh-pages)"
+          bash scripts/ci/wait-for-pages-build.sh "${tip}"
