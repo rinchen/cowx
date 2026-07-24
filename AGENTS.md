@@ -46,8 +46,9 @@ cowx/   # repo directory (brand: COWX)
 └── .github/workflows/
     ├── pr.yml                # Lint, test, validate locations on pull requests
     ├── preview.yml           # PR preview sites under /pr-preview/pr-N/ on gh-pages
-    ├── pages.yml             # Deploy public/ to gh-pages on human/code pushes to main
-    └── update-weather.yml    # Scheduled fetch every 45 min + deploy to gh-pages + failure notify
+    ├── pages.yml             # Deploy UI to gh-pages on code pushes (preserves data/)
+    ├── update-weather.yml    # Scheduled fetch (~45m target) + deploy + failure notify
+    └── check-stale-data.yml  # Every 2h: Discord if live meta.json ≥ 2h old
 ```
 
 ### Key artifacts
@@ -61,7 +62,7 @@ cowx/   # repo directory (brand: COWX)
 | `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)                                                                            |
 | `schemas/*.schema.json`                     | Reference contracts (`location`, `locations-array`, `weather-payload`, `meta`, `index-entry`, `space-weather`); not yet enforced in CI |
 
-**PR previews / Pages:** Production deploys `public/` to the `gh-pages` branch (`pages.yml` on code pushes; `update-weather.yml` after scheduled fetches — bot commits with `GITHUB_TOKEN` do not trigger `pages.yml`). Both share the `gh-pages` concurrency group (`clean-exclude: pr-preview`). Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Previews ship **UI only** (no duplicated `public/data/`) and read live JSON from production `/cowx/data` — legacy Pages builds fail on a full doubled tree. Production deploys strip any leftover `pr-preview/*/data` and **fail the workflow** if the GitHub Pages build errors (so Actions cannot stay green while the CDN is frozen). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
+**PR previews / Pages:** Weather JSON is published only by `update-weather.yml`. Code pushes use `pages.yml` for **UI only** (`clean-exclude: pr-preview` + `data`, omits `public/data` from the payload) so merges cannot roll back live weather. Bot data commits with `GITHUB_TOKEN` do not trigger `pages.yml`. All writers share the `gh-pages` concurrency group. Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Previews ship **UI only** (no duplicated `public/data/`) and read live JSON from production `/cowx/data` — legacy Pages builds fail on a full doubled tree. Production deploys strip any leftover `pr-preview/*/data` and **fail the workflow** if the GitHub Pages build errors (so Actions cannot stay green while the CDN is frozen). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
 
 **Language:** The public UI is English-only. There is no i18n catalog or translation check script.
 
@@ -181,7 +182,7 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 | `PURPLEAIR_API_KEY`  | PurpleAir API access for build-time sensor snapshots                    |
 | `AIRNOW_API_KEY`     | AirNow API access for official AQI near locations                       |
 | `COTRIP_API_KEY`     | COtrip JSON feed (weather stations, incidents, events, road conditions) |
-| `NOTIFY_WEBHOOK_URL` | Discord (or compatible) webhook URL for fetch/workflow failure alerts   |
+| `NOTIFY_WEBHOOK_URL` | Discord webhook for fetch/Pages failure and stale live-data alerts      |
 
 **Never** commit secret values to git, docs, issues, logs, or test fixtures. Reference secret **names** only.
 
@@ -189,9 +190,9 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 ## Fetch cadence & API budget
 
-- **Schedule:** GitHub Actions runs `pnpm fetch:data` **every 45 minutes** (`*/45 * * * *`) plus manual `workflow_dispatch` (`.github/workflows/update-weather.yml`).
-- **Runs per day:** ~32 scheduled fetches.
-- **Design goal:** Stay within free-tier limits; do not poll faster than 45 minutes.
+- **Schedule:** `update-weather.yml` cron is `*/20 * * * *` plus `workflow_dispatch`. A decide job skips when live CDN `meta.json` is < 40 minutes old (target cadence ~45 minutes despite GitHub schedule delay); if live is stale but `main`’s `public/data/meta.json` is fresh, it deploy-only; otherwise it runs `pnpm fetch:data`.
+- **Stale watchdog:** `check-stale-data.yml` every 2 hours (`0 */2 * * *`) fails and Discord-alerts when production `generatedAt` is ≥ 2 hours old (alert-only; does not auto-fetch).
+- **Design goal:** Stay within free-tier limits; do not fetch more often than ~45 minutes when the CDN is already fresh.
 
 Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):
 
@@ -229,7 +230,7 @@ Locality pages open a dual-pane **workspace**: RainViewer radar map beside an **
 
 **Hyperlocal pin (client, no API keys):** Locate (high-accuracy GPS), IP “Go to”, or Colorado street-address Set pin (`public/js/geocode.js` → Nominatim, CO-bounded, submit-only) stores a browser-persistent pin (`localStorage` `cowx:hyperlocalPin`; migrates any legacy `sessionStorage` value). Survives refresh and new tabs; cleared when the user searches a catalog city or clears site data. Always force-refresh the workspace after setting a pin even if the catalog slug is unchanged. The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip (fallback status if that fails). Searching a city clears the pin. Do not add client API **keys**; keep address geocode user-triggered and Colorado-bounded.
 
-Scheduled fetches deploy `public/` to `gh-pages` in the same workflow (`deploy-pages` job). Do not rely on the data push alone to trigger `pages.yml` — `GITHUB_TOKEN` commits do not start new workflow runs. Code pushes to `main` still use `pages.yml` as usual.
+Scheduled fetches deploy `public/` (including `data/`) to `gh-pages` in the same workflow (`deploy-pages` job). Do not rely on the data push alone to trigger `pages.yml` — `GITHUB_TOKEN` commits do not start new workflow runs. Code pushes to `main` use `pages.yml` for UI only and leave `gh-pages` `data/` intact.
 
 ---
 
@@ -285,7 +286,7 @@ Include a detailed body for non-trivial changes: **what** changed and **why**. F
 
 ## Failure notifications
 
-When the **weather fetch step** in `update-weather.yml` fails (`weather_fetch`), or the **gh-pages deploy / Pages build verification** fails, a notify job POSTs a summary to `NOTIFY_WEBHOOK_URL` (if set). Install/push races after a successful fetch do **not** notify. It does **not** open a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
+When the **weather fetch step** in `update-weather.yml` fails (`weather_fetch`), or the **gh-pages deploy / Pages build verification** fails, a notify job POSTs a summary to `NOTIFY_WEBHOOK_URL` (if set). Install/push races after a successful fetch do **not** notify. Separately, `check-stale-data.yml` POSTs when live `meta.json` is ≥ 2 hours old. Neither opens a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
 
 ---
 

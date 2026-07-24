@@ -2,7 +2,8 @@ name: Update Weather
 
 on:
   schedule:
-    - cron: '*/45 * * * *'
+    # Fire often; decide job skips when live CDN meta is still fresh (< 40m).
+    - cron: '*/20 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -13,8 +14,28 @@ concurrency:
   group: update-weather
   cancel-in-progress: false
 
+env:
+  LIVE_META_URL: https://rinchen.github.io/cowx/data/meta.json
+  FRESH_MINUTES: '40'
+
 jobs:
+  decide:
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.gate.outputs.mode }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Decide skip / deploy-only / fetch
+        id: gate
+        env:
+          LIVE_META_URL: ${{ env.LIVE_META_URL }}
+          FRESH_MINUTES: ${{ env.FRESH_MINUTES }}
+        run: bash scripts/ci/decide-weather-mode.sh
+
   fetch:
+    needs: decide
+    if: needs.decide.outputs.mode == 'fetch'
     runs-on: ubuntu-latest
     outputs:
       # Only the weather orchestrator step — not install/commit/push races.
@@ -66,9 +87,21 @@ jobs:
 
   # Commits made with GITHUB_TOKEN do not trigger pages.yml (GitHub recursion
   # guard). Deploy public/ here so scheduled weather updates reach the live site.
+  # Also runs in deploy_only mode when main has fresh data but the CDN is stale.
   deploy-pages:
-    needs: fetch
-    if: needs.fetch.result == 'success' && needs.fetch.outputs.fetch_failed != 'true'
+    needs: [decide, fetch]
+    if: |
+      always() &&
+      needs.decide.result == 'success' &&
+      needs.decide.outputs.mode != 'skip' &&
+      (
+        needs.decide.outputs.mode == 'deploy_only' ||
+        (
+          needs.decide.outputs.mode == 'fetch' &&
+          needs.fetch.result == 'success' &&
+          needs.fetch.outputs.fetch_failed != 'true'
+        )
+      )
     runs-on: ubuntu-latest
     # Serialize with pages.yml / preview.yml writers to gh-pages.
     concurrency:
@@ -103,9 +136,9 @@ jobs:
 
   notify-on-failure:
     runs-on: ubuntu-latest
-    needs: [fetch, deploy-pages]
+    needs: [decide, fetch, deploy-pages]
     # Discord when weather fetch fails OR Pages publish verification fails.
-    # Skip install/push races after a successful fetch (deploy-pages skipped).
+    # Skip when decide chose skip, or install/push races after a successful fetch.
     if: |
       always() && (
         needs.fetch.outputs.fetch_failed == 'true' ||

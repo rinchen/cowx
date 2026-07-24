@@ -34,7 +34,7 @@ Without running `pnpm run fetch:data`, only committed snapshot data in `public/d
 
 ## GitHub Pages
 
-The site is deployed from the `public/` directory to the `gh-pages` branch on code pushes to `main` (`.github/workflows/pages.yml`) and again after each scheduled weather fetch (`.github/workflows/update-weather.yml`). Bot data commits alone do not trigger `pages.yml` (`GITHUB_TOKEN` recursion guard).
+The site is deployed to the `gh-pages` branch on code pushes to `main` (`.github/workflows/pages.yml`, **UI only** — preserves live `data/`) and again after each weather fetch (`.github/workflows/update-weather.yml`, full `public/` including weather JSON). Bot data commits alone do not trigger `pages.yml` (`GITHUB_TOKEN` recursion guard).
 
 **Live site:** https://rinchen.github.io/cowx/
 
@@ -47,18 +47,18 @@ Same-repo pull requests get a sticky comment with a live preview URL under `/pr-
 1. **Settings → Pages → Build and deployment → Source:** Deploy from a branch → `gh-pages` / `/` (not “GitHub Actions”).
 2. **Settings → Actions → General → Workflow permissions:** Read and write permissions.
 
-Weather data is refreshed on a **45-minute** schedule via `.github/workflows/update-weather.yml` (`*/45 * * * *` plus `workflow_dispatch`). When the **weather fetch step** fails, Actions can notify via `NOTIFY_WEBHOOK_URL` (if set; no GitHub Issue). Committed JSON in `public/data/` is what visitors see between runs. `public/.nojekyll` keeps GitHub Pages from running Jekyll on the static tree.
+Weather data targets a **~45-minute** cadence via `.github/workflows/update-weather.yml` (`*/20 * * * *` plus `workflow_dispatch`). GitHub may delay schedules; the workflow **skips** fetch/deploy when live CDN `meta.json` is still fresh (< 40 minutes), and can **deploy-only** when `main` is fresh but the CDN is stale. Every **2 hours**, `.github/workflows/check-stale-data.yml` fails and Discord-alerts (via `NOTIFY_WEBHOOK_URL`, if set) when production `generatedAt` is ≥ 2 hours old. Fetch/Pages verify failures also notify. Committed JSON in `public/data/` (published by the weather workflow) is what visitors see between runs. `public/.nojekyll` keeps GitHub Pages from running Jekyll on the static tree.
 
 ## GitHub Actions secrets
 
 Optional secrets improve inline sensor/AQI data and failure alerting. Configure under **Settings → Secrets and variables → Actions**. Use these **names** only — never commit values:
 
-| Secret name          | Purpose                                                                      |
-| -------------------- | ---------------------------------------------------------------------------- |
-| `PURPLEAIR_API_KEY`  | PurpleAir sensor readings at build time                                      |
-| `AIRNOW_API_KEY`     | EPA AirNow AQI near locations                                                |
-| `COTRIP_API_KEY`     | COtrip JSON feed (RWIS, incidents, planned events, road conditions)          |
-| `NOTIFY_WEBHOOK_URL` | Webhook for Discord (or compatible) alerts when the weather fetch step fails |
+| Secret name          | Purpose                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `PURPLEAIR_API_KEY`  | PurpleAir sensor readings at build time                                                     |
+| `AIRNOW_API_KEY`     | EPA AirNow AQI near locations                                                               |
+| `COTRIP_API_KEY`     | COtrip JSON feed (RWIS, incidents, planned events, road conditions)                         |
+| `NOTIFY_WEBHOOK_URL` | Webhook for Discord (or compatible) alerts on fetch/Pages failure or stale live data (≥ 2h) |
 
 The site works without these keys; affected sources degrade to skipped status in `meta.json` and offsite links in the UI. CDOT cameras, ArcGIS road alerts (fallback), CWOP PWS, HMS smoke, SPC fire weather, NIFC nearby fires, and burn-restriction links need no secrets. City webcam portals are catalog **links** (new tab), not embedded feeds. For local fetch testing, copy [`.env.example`](.env.example) to `.env` (gitignored); notify is Actions-only.
 
