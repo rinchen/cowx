@@ -1,103 +1,103 @@
 {
-  "generatedAt": "2026-07-24T20:36:14.587Z",
+  "generatedAt": "2026-07-24T21:47:01.398Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-24T20:27:24.560Z",
-      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-24T21:41:54.717Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-24T20:29:12.845Z",
+      "fetchedAt": "2026-07-24T21:43:43.545Z",
       "error": "fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-07-24T20:29:12.998Z"
+      "fetchedAt": "2026-07-24T21:43:43.690Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:29:13.968Z"
+      "fetchedAt": "2026-07-24T21:43:45.062Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:29:14.418Z"
+      "fetchedAt": "2026-07-24T21:43:45.372Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:29:16.596Z"
+      "fetchedAt": "2026-07-24T21:43:47.166Z"
     },
     {
       "id": "purpleair",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:29:17.012Z"
+      "fetchedAt": "2026-07-24T21:43:47.530Z"
     },
     {
       "id": "airnow",
-      "status": "partial",
-      "fetchedAt": "2026-07-24T20:35:20.893Z",
-      "error": "This operation was aborted; This operation was aborted; This operation was aborted; HTTP 502 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=37.800000000000004&longitude=-105.80000000000001&distance=50&API_KEY=[redacted] <html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n</body>\r\n</html>\r\n; This operation was aborted"
+      "status": "ok",
+      "fetchedAt": "2026-07-24T21:46:04.053Z"
     },
     {
       "id": "usgs",
-      "status": "ok",
-      "fetchedAt": "2026-07-24T20:35:22.302Z"
+      "status": "error",
+      "fetchedAt": "2026-07-24T21:46:06.298Z",
+      "error": "HTTP 503 for https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST: <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Error report</title><style type=\"te"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:35:36.717Z"
+      "fetchedAt": "2026-07-24T21:46:22.655Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:35:38.016Z"
+      "fetchedAt": "2026-07-24T21:46:23.847Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:36:02.087Z"
+      "fetchedAt": "2026-07-24T21:46:49.027Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-24T20:36:13.005Z"
+      "fetchedAt": "2026-07-24T21:46:59.785Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:36:13.338Z"
+      "fetchedAt": "2026-07-24T21:47:00.035Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:36:13.737Z"
+      "fetchedAt": "2026-07-24T21:47:00.480Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:36:14.168Z"
+      "fetchedAt": "2026-07-24T21:47:00.872Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:36:14.406Z"
+      "fetchedAt": "2026-07-24T21:47:01.208Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-07-24T20:36:14.587Z"
+      "fetchedAt": "2026-07-24T21:47:01.398Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 359,
-  "forecastStaleCount": 45,
-  "openmeteoCoverage": 293
+  "apiCalls": 356,
+  "forecastStaleCount": 85,
+  "openmeteoCoverage": 253
 }
