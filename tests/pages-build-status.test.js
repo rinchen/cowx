@@ -4,12 +4,55 @@ import { describe, it } from 'node:test';
 import {
   PagesBuildWaitError,
   classifyPagesBuild,
+  diagnosePagesFailureText,
+  parseInProgressDeploymentBlocker,
   waitForPagesBuild,
 } from '../scripts/ci/pages-build-status.js';
 
 const fixtures = JSON.parse(
   await readFile(new URL('./fixtures/pages-builds.json', import.meta.url), 'utf8'),
 );
+
+describe('parseInProgressDeploymentBlocker', () => {
+  it('extracts the blocking SHA from a deploy-pages conflict', () => {
+    const text =
+      'Error: Failed to create deployment (status: 400) with build version abc. ' +
+      'Responded with: Deployment request failed for 08174cf01bc0a893c1e7ab84844558056fde1a01 ' +
+      'due to in progress deployment. Please cancel 1c6d6fd1dc1d58d7f4cf4b39fe6c1cae75d5bbe6 first ' +
+      'or wait for it to complete.';
+    assert.equal(
+      parseInProgressDeploymentBlocker(text),
+      '1c6d6fd1dc1d58d7f4cf4b39fe6c1cae75d5bbe6',
+    );
+  });
+
+  it('returns null for unrelated failures', () => {
+    assert.equal(parseInProgressDeploymentBlocker('Page build failed.'), null);
+    assert.equal(parseInProgressDeploymentBlocker(''), null);
+  });
+});
+
+describe('diagnosePagesFailureText', () => {
+  it('marks lock conflicts as retryable with a blocker SHA', () => {
+    const text =
+      'due to in progress deployment. Please cancel 1c6d6fd1dc1d58d7f4cf4b39fe6c1cae75d5bbe6 first';
+    const d = diagnosePagesFailureText(text);
+    assert.equal(d.retryable, true);
+    assert.equal(d.blockingSha, '1c6d6fd1dc1d58d7f4cf4b39fe6c1cae75d5bbe6');
+  });
+
+  it('marks deploy-pages timeouts as retryable without a blocker SHA', () => {
+    const d = diagnosePagesFailureText('Timeout reached, aborting!\nTimeout reached, aborting!');
+    assert.equal(d.retryable, true);
+    assert.equal(d.blockingSha, null);
+    assert.match(d.detail, /timeout/i);
+  });
+
+  it('marks unrelated failures as non-retryable', () => {
+    const d = diagnosePagesFailureText('Page build failed.');
+    assert.equal(d.retryable, false);
+  });
+});
 
 describe('GitHub Pages build polling', () => {
   it('succeeds for the expected built commit', async () => {
@@ -44,6 +87,150 @@ describe('GitHub Pages build polling', () => {
       },
     );
     assert.equal(calls, 1);
+  });
+
+  it('clears the blocker, waits, re-runs, then succeeds', async () => {
+    const responses = [
+      [fixtures.transientFailure],
+      [fixtures.transientFailure],
+      [fixtures.rerunInProgress],
+      [fixtures.rerunSucceeded],
+    ];
+    let calls = 0;
+    /** @type {number[]} */
+    const rerunIds = [];
+    /** @type {string[]} */
+    const cleared = [];
+    /** @type {number[]} */
+    const sleeps = [];
+
+    const build = await waitForPagesBuild({
+      fetchBuilds: async () => responses[Math.min(calls++, responses.length - 1)],
+      expect: fixtures.expectedSha,
+      maxAttempts: 10,
+      maxReruns: 3,
+      rerunDelaySecs: 60,
+      diagnoseFailure: async () => ({
+        retryable: true,
+        blockingSha: '1c6d6fd1dc1d58d7f4cf4b39fe6c1cae75d5bbe6',
+        detail: 'in-progress deployment conflict',
+      }),
+      clearBlockingDeployment: async (sha) => {
+        cleared.push(sha);
+      },
+      rerunBuild: async (b) => {
+        rerunIds.push(b.id);
+      },
+      sleep: async (ms) => {
+        sleeps.push(ms);
+      },
+    });
+
+    assert.equal(build.conclusion, 'success');
+    assert.deepEqual(cleared, ['1c6d6fd1dc1d58d7f4cf4b39fe6c1cae75d5bbe6']);
+    assert.deepEqual(rerunIds, [fixtures.transientFailure.id]);
+    assert.ok(sleeps.includes(60_000), 'expected rerun delay before re-run');
+  });
+
+  it('on timeout, clears the tip SHA then re-runs', async () => {
+    const responses = [
+      [fixtures.transientFailure],
+      [fixtures.rerunInProgress],
+      [fixtures.rerunSucceeded],
+    ];
+    let calls = 0;
+    /** @type {string[]} */
+    const cleared = [];
+
+    const build = await waitForPagesBuild({
+      fetchBuilds: async () => responses[Math.min(calls++, responses.length - 1)],
+      expect: fixtures.expectedSha,
+      maxAttempts: 10,
+      maxReruns: 3,
+      rerunDelaySecs: 0,
+      diagnoseFailure: async () => ({
+        retryable: true,
+        blockingSha: null,
+        detail: 'deploy-pages timeout',
+      }),
+      clearBlockingDeployment: async (sha) => {
+        cleared.push(sha);
+      },
+      rerunBuild: async () => {},
+      sleep: async () => {},
+    });
+
+    assert.equal(build.conclusion, 'success');
+    // No blocker SHA from diagnosis → clear the failed tip itself.
+    assert.deepEqual(cleared, [fixtures.transientFailure.head_sha]);
+  });
+
+  it('fails immediately when diagnosis is not retryable', async () => {
+    let reruns = 0;
+    let clears = 0;
+
+    await assert.rejects(
+      () =>
+        waitForPagesBuild({
+          fetchBuilds: async () => [fixtures.transientFailure],
+          expect: fixtures.expectedSha,
+          maxAttempts: 10,
+          maxReruns: 3,
+          diagnoseFailure: async () => ({
+            retryable: false,
+            detail: 'content build error',
+          }),
+          clearBlockingDeployment: async () => {
+            clears += 1;
+          },
+          rerunBuild: async () => {
+            reruns += 1;
+          },
+          sleep: async () => {},
+        }),
+      (error) => {
+        assert.ok(error instanceof PagesBuildWaitError);
+        assert.match(error.message, /content build error/);
+        return true;
+      },
+    );
+    assert.equal(reruns, 0);
+    assert.equal(clears, 0);
+  });
+
+  it('fails when re-runs are exhausted', async () => {
+    let calls = 0;
+    let reruns = 0;
+
+    await assert.rejects(
+      () =>
+        waitForPagesBuild({
+          fetchBuilds: async () => {
+            calls += 1;
+            return [{ ...fixtures.transientFailure, run_attempt: calls }];
+          },
+          expect: fixtures.expectedSha,
+          maxAttempts: 10,
+          maxReruns: 2,
+          rerunDelaySecs: 0,
+          diagnoseFailure: async () => ({
+            retryable: true,
+            blockingSha: '1c6d6fd1dc1d58d7f4cf4b39fe6c1cae75d5bbe6',
+          }),
+          clearBlockingDeployment: async () => {},
+          rerunBuild: async () => {
+            reruns += 1;
+          },
+          sleep: async () => {},
+        }),
+      (error) => {
+        assert.ok(error instanceof PagesBuildWaitError);
+        assert.equal(error.code, 'build_error');
+        assert.match(error.message, /concluded failure/);
+        return true;
+      },
+    );
+    assert.equal(reruns, 2);
   });
 
   it('times out after the bounded number of building responses', async () => {

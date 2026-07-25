@@ -27,5 +27,29 @@
     "path": "dynamic/pages/pages-build-deployment",
     "status": "completed",
     "conclusion": "cancelled"
+  },
+  "transientFailure": {
+    "id": 30164665297,
+    "run_attempt": 1,
+    "head_sha": "25511e520d2c5c248e61ab471c65b8323c43e337",
+    "path": "dynamic/pages/pages-build-deployment",
+    "status": "completed",
+    "conclusion": "failure"
+  },
+  "rerunInProgress": {
+    "id": 30164665297,
+    "run_attempt": 2,
+    "head_sha": "25511e520d2c5c248e61ab471c65b8323c43e337",
+    "path": "dynamic/pages/pages-build-deployment",
+    "status": "in_progress",
+    "conclusion": null
+  },
+  "rerunSucceeded": {
+    "id": 30164665297,
+    "run_attempt": 2,
+    "head_sha": "25511e520d2c5c248e61ab471c65b8323c43e337",
+    "path": "dynamic/pages/pages-build-deployment",
+    "status": "completed",
+    "conclusion": "success"
   }
 }

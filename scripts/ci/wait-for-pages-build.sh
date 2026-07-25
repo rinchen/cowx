@@ -2,6 +2,9 @@
 # After a push to gh-pages, wait for GitHub's canonical Pages deployment workflow
 # and fail if it errors. The legacy /pages/builds endpoint can falsely report
 # "Page build failed" even when pages-build-deployment succeeds and publishes.
+#
+# Transient "due to in progress deployment" conflicts are self-healed: clear the
+# blocking deployment lock, wait, then re-run the failed Pages workflow.
 set -euo pipefail
 
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
@@ -9,33 +12,145 @@ TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN required}"
 EXPECT_SHA="${1:-}"
 MAX_ATTEMPTS="${PAGES_BUILD_MAX_ATTEMPTS:-180}" # ~15 minutes at 5s
 SLEEP_SECS="${PAGES_BUILD_POLL_SECS:-5}"
+MAX_RERUNS="${PAGES_BUILD_MAX_RERUNS:-5}"
+RERUN_DELAY_SECS="${PAGES_BUILD_RERUN_DELAY_SECS:-60}"
 
 echo "wait-for-pages-build: polling builds for ${REPO} (expect=${EXPECT_SHA:-any})"
 
-export REPO TOKEN EXPECT_SHA MAX_ATTEMPTS SLEEP_SECS
+export REPO TOKEN EXPECT_SHA MAX_ATTEMPTS SLEEP_SECS MAX_RERUNS RERUN_DELAY_SECS
 node --input-type=module <<'NODE'
-import { waitForPagesBuild } from './scripts/ci/pages-build-status.js';
+import {
+  diagnosePagesFailureText,
+  waitForPagesBuild,
+} from './scripts/ci/pages-build-status.js';
 
 const repo = process.env.REPO;
 const token = process.env.TOKEN;
 const expect = process.env.EXPECT_SHA || '';
 const maxAttempts = Number(process.env.MAX_ATTEMPTS || 180);
 const sleepSecs = Number(process.env.SLEEP_SECS || 5);
+const maxReruns = Number(process.env.MAX_RERUNS || 5);
+const rerunDelaySecs = Number(process.env.RERUN_DELAY_SECS || 60);
 
-async function api(path) {
+async function api(path, { method = 'GET', body, okStatuses = null } = {}) {
   const res = await fetch(`https://api.github.com${path}`, {
+    method,
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
       'User-Agent': 'cowx-wait-for-pages-build',
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
     },
+    body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`GitHub API ${res.status} ${path}: ${body.slice(0, 200)}`);
+  if (okStatuses && okStatuses.includes(res.status)) {
+    return res.status === 204 || res.status === 201 ? null : res.json().catch(() => null);
   }
-  return res.json();
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`GitHub API ${res.status} ${method} ${path}: ${text.slice(0, 200)}`);
+  }
+  // Re-run / cancel endpoints often return 201/204 with an empty body.
+  return res.status === 204 || res.status === 201 ? null : res.json();
+}
+
+/**
+ * Pull deploy-pages failure text from check-run annotations (preferred) or
+ * truncated job logs so we can detect the transient lock conflict.
+ * @param {Record<string, unknown>} build
+ */
+async function failureTextForBuild(build) {
+  const runId = build.id;
+  const attempt = build.run_attempt ?? 1;
+  const jobsPath =
+    attempt && Number(attempt) > 1
+      ? `/repos/${repo}/actions/runs/${runId}/attempts/${attempt}/jobs`
+      : `/repos/${repo}/actions/runs/${runId}/jobs`;
+  const jobsPayload = await api(jobsPath);
+  const jobs = jobsPayload?.jobs ?? [];
+  const failed =
+    jobs.find((j) => j.name === 'deploy' && j.conclusion === 'failure') ??
+    jobs.find((j) => j.conclusion === 'failure');
+  if (!failed) return '';
+
+  if (failed.check_run_url) {
+    try {
+      const checkPath = new URL(failed.check_run_url).pathname.replace(/^\/api\/v3/, '');
+      const annotations = await api(`${checkPath}/annotations`);
+      const joined = (annotations ?? [])
+        .map((a) => `${a.message ?? ''}\n${a.title ?? ''}`)
+        .join('\n');
+      if (joined.trim()) return joined;
+    } catch {
+      // Fall through to job logs.
+    }
+  }
+
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}/actions/jobs/${failed.id}/logs`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'cowx-wait-for-pages-build',
+      },
+      redirect: 'follow',
+    });
+    if (res.ok) {
+      const text = await res.text();
+      // Keep the tail — the deploy-pages error is near the end.
+      return text.slice(-8000);
+    }
+  } catch {
+    // ignore
+  }
+  return '';
+}
+
+/**
+ * Clear a wedged/prior Pages deployment lock so the tip can publish.
+ * @param {string} blockingSha
+ */
+async function clearBlockingDeployment(blockingSha) {
+  console.log(`  clearing Pages lock for blocker ${blockingSha.slice(0, 7)}…`);
+  // Official Pages cancel (no-op when already finished).
+  try {
+    await api(`/repos/${repo}/pages/deployments/${blockingSha}/cancel`, {
+      method: 'POST',
+      okStatuses: [204, 400],
+    });
+  } catch (err) {
+    console.log(`  pages cancel skipped: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  const deployments = await api(
+    `/repos/${repo}/deployments?sha=${blockingSha}&environment=github-pages&per_page=20`,
+  );
+  for (const dep of deployments ?? []) {
+    try {
+      await api(`/repos/${repo}/deployments/${dep.id}/statuses`, {
+        method: 'POST',
+        body: { state: 'inactive', description: 'Clear stuck Pages deploy lock' },
+        okStatuses: [201, 422],
+      });
+    } catch (err) {
+      console.log(
+        `  inactive ${dep.id} skipped: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+    try {
+      await api(`/repos/${repo}/deployments/${dep.id}`, {
+        method: 'DELETE',
+        okStatuses: [204, 422],
+      });
+      console.log(`  deleted deployment ${dep.id} (${blockingSha.slice(0, 7)})`);
+    } catch (err) {
+      console.log(
+        `  delete ${dep.id} skipped: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
 }
 
 try {
@@ -49,6 +164,23 @@ try {
     expect,
     maxAttempts,
     sleepSecs,
+    maxReruns,
+    rerunDelaySecs,
+    diagnoseFailure: async (build) => {
+      const text = await failureTextForBuild(build);
+      return diagnosePagesFailureText(text);
+    },
+    clearBlockingDeployment,
+    rerunBuild: async (build) => {
+      // GitHub reuses the run id and bumps run_attempt; a full re-run re-attempts
+      // both build and deploy once the blocking deployment has settled.
+      await api(`/repos/${repo}/actions/runs/${build.id}/rerun`, { method: 'POST' });
+    },
+    onRerun({ rerunsUsed, maxReruns: total, build, blockingSha, detail }) {
+      console.log(
+        `  re-run ${rerunsUsed}/${total}: run=${build.id ?? '-'} commit=${String(build.head_sha).slice(0, 7)} blocker=${blockingSha ? blockingSha.slice(0, 7) : '-'} delay=${rerunDelaySecs}s${detail ? ` (${detail})` : ''}`,
+      );
+    },
     onAttempt({ attempt, maxAttempts: total, status, error, build }) {
       if (!build) {
         console.log(`  attempt ${attempt}/${total}: no matching build yet`);
