@@ -1,9 +1,10 @@
 name: Check Stale Data
 
-# Watchdog: if production meta.json is older than STALE_MINUTES, dispatch
-# Update Weather (self-heal), Discord-alert when configured, and fail the run.
-# GitHub often delays */20 schedules by 1–3h; this catch-up path must not be
-# alert-only or the CDN stays frozen until a human notices.
+# Two-tier watchdog on production meta.json age:
+#   >= STALE_MINUTES  — dispatch Update Weather (self-heal) and stay green/quiet.
+#   >= NOTIFY_MINUTES — recovery did not work; Discord-alert and fail the run.
+# GitHub often delays weather crons by 1–3h, so the recoverable tier must not
+# page anyone; only a genuinely ≥2h-old CDN means the mitigations failed.
 on:
   schedule:
     # Frequent lightweight tick — GitHub may delay, but more chances than */2h.
@@ -20,8 +21,10 @@ concurrency:
 
 env:
   LIVE_META_URL: https://rinchen.github.io/cowx/data/meta.json
-  # Recover before the ~2h UX cliff; cron gaps of 90–220m are common.
+  # Recover early, alert late: cron gaps of 90–220m are common and self-heal
+  # plus a ~15m fetch clears them well before the 2h alert tier.
   STALE_MINUTES: '90'
+  NOTIFY_MINUTES: '120'
 
 jobs:
   check:
@@ -34,36 +37,46 @@ jobs:
         env:
           LIVE_META_URL: ${{ env.LIVE_META_URL }}
           STALE_MINUTES: ${{ env.STALE_MINUTES }}
+          NOTIFY_MINUTES: ${{ env.NOTIFY_MINUTES }}
         run: bash scripts/ci/check-stale-live-meta.sh
-        continue-on-error: true
 
       - name: Self-heal — dispatch Update Weather
-        if: steps.age.outcome == 'failure'
+        if: steps.age.outputs.stale == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          echo "Live meta stale; dispatching update-weather.yml on main"
+          echo "Live meta stale (${{ steps.age.outputs.age_minutes }}m); dispatching update-weather.yml on main"
           gh workflow run update-weather.yml --repo "${{ github.repository }}" --ref main
 
-      - name: Notify Discord if stale
-        if: steps.age.outcome == 'failure'
+      # Only fires once data is genuinely past NOTIFY_MINUTES (or the CDN copy is
+      # unreachable) — i.e. the self-heal dispatch above already failed to recover.
+      - name: Notify Discord — self-heal failed
+        if: steps.age.outputs.notify == 'true'
         env:
           NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
           GENERATED_AT: ${{ steps.age.outputs.generated_at }}
           AGE_MINUTES: ${{ steps.age.outputs.age_minutes }}
+          REACHABLE: ${{ steps.age.outputs.reachable }}
           LIVE_META_URL: ${{ env.LIVE_META_URL }}
-          STALE_MINUTES: ${{ env.STALE_MINUTES }}
+          NOTIFY_MINUTES: ${{ env.NOTIFY_MINUTES }}
         run: |
           set -euo pipefail
           if [ -z "${NOTIFY_WEBHOOK_URL}" ]; then
             echo "NOTIFY_WEBHOOK_URL not configured, skipping Discord notification"
-          else
-            age_label="${AGE_MINUTES:-unknown}"
-            generated="${GENERATED_AT:-unknown}"
-            content="COWX production weather data stale (${age_label}m ≥ ${STALE_MINUTES}m). Auto-dispatched Update Weather. generatedAt=${generated}. Live: ${LIVE_META_URL}. This check: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            payload=$(jq -n --arg content "$content" '{content: $content}')
-            curl --max-time 15 -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_WEBHOOK_URL"
+            exit 0
           fi
-          # Fail the workflow so Actions shows red even when Discord is unset.
-          exit 1
+          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [ "${REACHABLE}" != "true" ]; then
+            content="COWX production meta.json is unreachable or missing generatedAt. Live: ${LIVE_META_URL}. Update Weather was dispatched. This check: ${run_url}"
+          else
+            content="COWX production weather data is ${AGE_MINUTES}m old (≥ ${NOTIFY_MINUTES}m) — self-heal dispatch did not recover it. generatedAt=${GENERATED_AT}. Live: ${LIVE_META_URL}. This check: ${run_url}"
+          fi
+          payload=$(jq -n --arg content "$content" '{content: $content}')
+          curl --max-time 15 -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_WEBHOOK_URL"
+
+      - name: Fail run when self-heal failed
+        if: steps.age.outputs.notify == 'true'
+        # Red in Actions even when NOTIFY_WEBHOOK_URL is unset. The recoverable
+        # 90m tier stays green so routine cron delays do not send failure mail.
+        run: exit 1
