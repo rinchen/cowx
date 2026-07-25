@@ -357,6 +357,7 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
   const snotel = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
   const afd = /** @type {Record<string, unknown> | null} */ (data.afd ?? null);
   const hwo = /** @type {Record<string, unknown> | null} */ (data.hwo ?? null);
+  const fwf = /** @type {Record<string, unknown> | null} */ (data.fwf ?? null);
   const alerts = /** @type {unknown[]} */ (data.alerts ?? []);
 
   /** @type {{ title: string, body: string, href: string | null }[]} */
@@ -386,7 +387,7 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
   const nwsInfo = metaSourceInfo(metaSources, 'nws');
   rows.push({
     title: 'Alerts & forecast discussion',
-    body: `National Weather Service${alerts.length ? ` · ${alerts.length} active alert${alerts.length === 1 ? '' : 's'}` : ' · no active alerts'}${afd?.office ? ` · AFD ${afd.office}` : ''}${hwo?.office ? ` · HWO ${hwo.office}` : ''}${afd?.issued ? ` issued ${fmtDateTime(String(afd.issued))}` : ''}${nwsInfo.fetchedAt ? ` · fetched ${fmtDateTime(nwsInfo.fetchedAt)}` : ''}${sourceStatusNote(nwsInfo.status)}`,
+    body: `National Weather Service${alerts.length ? ` · ${alerts.length} active alert${alerts.length === 1 ? '' : 's'}` : ' · no active alerts'}${afd?.office ? ` · AFD ${afd.office}` : ''}${hwo?.office ? ` · HWO ${hwo.office}` : ''}${fwf?.office ? ` · FWF ${fwf.office}` : ''}${afd?.issued ? ` issued ${fmtDateTime(String(afd.issued))}` : ''}${nwsInfo.fetchedAt ? ` · fetched ${fmtDateTime(nwsInfo.fetchedAt)}` : ''}${sourceStatusNote(nwsInfo.status)}`,
     href: links.nws_forecast || 'https://www.weather.gov/',
   });
 
@@ -444,6 +445,31 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
       title: 'Hydrology (USGS)',
       body: `${usgs.station_name ?? usgs.station_id}${usgs.discharge_cfs != null ? ` · ${Math.round(Number(usgs.discharge_cfs))} cfs` : ''}${usgs.distance_km != null ? ` · ${usgs.distance_km} km` : ''}${usgsInfo.fetchedAt ? ` · fetched ${fmtDateTime(usgsInfo.fetchedAt)}` : ''}${sourceStatusNote(usgsInfo.status)}`,
       href: usgs.url ? String(usgs.url) : links.usgs || 'https://waterdata.usgs.gov/',
+    });
+  }
+
+  const cbrfc = /** @type {Record<string, unknown> | null} */ (data.cbrfc ?? null);
+  if (cbrfc?.name || metaSourceInfo(metaSources, 'cbrfc').status) {
+    const cbrfcInfo = metaSourceInfo(metaSources, 'cbrfc');
+    const pct =
+      cbrfc?.pctAvg != null && Number.isFinite(Number(cbrfc.pctAvg))
+        ? `${Math.round(Number(cbrfc.pctAvg))}% of average`
+        : 'no nearby point';
+    rows.push({
+      title: 'Water supply guidance (CBRFC)',
+      body: `${cbrfc?.name ?? 'Colorado Basin RFC'}${cbrfc?.period ? ` · ${cbrfc.period}` : ''}${cbrfc?.name ? ` · ${pct}` : ''}${cbrfcInfo.fetchedAt ? ` · fetched ${fmtDateTime(cbrfcInfo.fetchedAt)}` : ''}${sourceStatusNote(cbrfcInfo.status)}`,
+      href: cbrfc?.pointUrl ? String(cbrfc.pointUrl) : links.cbrfc || 'https://www.cbrfc.noaa.gov/',
+    });
+  }
+
+  const nearbyFirms = /** @type {Record<string, unknown> | null} */ (data.nearby_firms ?? null);
+  const firmsInfo = metaSourceInfo(metaSources, 'firms');
+  if (nearbyFirms || firmsInfo.status) {
+    const hotspots = /** @type {unknown[]} */ (nearbyFirms?.hotspots ?? []);
+    rows.push({
+      title: 'Satellite fire detections (FIRMS)',
+      body: `${hotspots.length ? `${hotspots.length} VIIRS hotspot${hotspots.length === 1 ? '' : 's'} within 80 km` : 'No nearby VIIRS hotspots'}${firmsInfo.fetchedAt ? ` · fetched ${fmtDateTime(firmsInfo.fetchedAt)}` : ''}${sourceStatusNote(firmsInfo.status)}`,
+      href: links.firms || 'https://firms.modaps.eosdis.nasa.gov/',
     });
   }
 
@@ -1270,6 +1296,19 @@ function appendDeepForecast(root, data, ctx) {
         `;
         wrap.appendChild(box);
       }
+
+      const fwf = /** @type {Record<string, unknown> | null} */ (data.fwf ?? null);
+      if (fwf?.snippet || fwf?.url) {
+        const box = document.createElement('div');
+        box.className = 'afd-box';
+        const issued = fwf.issued ? ` · issued ${fmtDateTime(String(fwf.issued))}` : '';
+        box.innerHTML = `
+          <p class="afd-snippet"><strong>NWS ${escapeHtml(String(fwf.office ?? ''))} fire weather planning forecast${escapeHtml(issued)}:</strong>
+            ${fwf.snippet ? escapeHtml(String(fwf.snippet)) : ''}</p>
+          ${fwf.url ? sourceLink(String(fwf.url), 'Full Fire Weather Planning Forecast', 'btn btn-secondary btn-sm') : ''}
+        `;
+        wrap.appendChild(box);
+      }
       return wrap;
     },
     { open: false },
@@ -1919,6 +1958,48 @@ function appendDeepForecast(root, data, ctx) {
       {
         const h = document.createElement('h3');
         h.className = 'dash-subheading';
+        h.textContent = 'Satellite fire detections (FIRMS)';
+        wrap.appendChild(h);
+        const firms = /** @type {Record<string, unknown> | null} */ (data.nearby_firms ?? null);
+        const hotspots = /** @type {Record<string, unknown>[]} */ (firms?.hotspots ?? []);
+        if (!firms || !hotspots.length) {
+          renderEmpty(
+            wrap,
+            'No VIIRS hotspots within 80 km',
+            'NASA FIRMS satellite thermal anomalies (not confirmed incidents). Requires FIRMS_MAP_KEY on the fetch job.',
+          );
+        } else {
+          const ul = document.createElement('ul');
+          ul.className = 'alert-list';
+          for (const hs of hotspots) {
+            const li = document.createElement('li');
+            const bits = ['VIIRS hotspot'];
+            if (hs.distance_km != null) bits.push(`${Number(hs.distance_km).toFixed(1)} km`);
+            if (hs.frp != null) bits.push(`FRP ${Math.round(Number(hs.frp))}`);
+            if (hs.confidence) bits.push(`conf ${String(hs.confidence)}`);
+            if (hs.observed) bits.push(fmtDateTime(String(hs.observed)));
+            li.textContent = bits.join(' · ');
+            ul.appendChild(li);
+          }
+          wrap.appendChild(ul);
+          const note = document.createElement('p');
+          note.className = 'table-hint';
+          note.textContent =
+            typeof firms.disclaimer === 'string'
+              ? String(firms.disclaimer)
+              : 'Satellite thermal anomalies — not confirmed wildfire incidents.';
+          wrap.appendChild(note);
+          if (firms.sourceUrl) {
+            const p = document.createElement('p');
+            p.innerHTML = sourceLink(String(firms.sourceUrl), 'NASA FIRMS');
+            wrap.appendChild(p);
+          }
+        }
+      }
+
+      {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
         h.textContent = 'Burn / fire restrictions';
         wrap.appendChild(h);
         if (!restrictions) {
@@ -1989,51 +2070,118 @@ function appendDeepForecast(root, data, ctx) {
   renderCollapsibleSection(
     sections,
     'hydrology-heading',
-    'Hydrology (USGS)',
+    'Hydrology',
     () => {
       const usgs = /** @type {Record<string, unknown> | null} */ (data.usgs ?? null);
-      if (!usgs) {
-        const frag = document.createDocumentFragment();
-        renderEmpty(frag, 'No nearby USGS gauge', 'within 30 km of this location.');
-        return frag;
-      }
+      const cbrfc = /** @type {Record<string, unknown> | null} */ (data.cbrfc ?? null);
       const wrap = document.createDocumentFragment();
-      const dl = document.createElement('dl');
-      dl.className = 'metric-list';
-      const rows = [
-        [
-          'Station',
-          `${usgs.station_name ?? usgs.station_id}${usgs.distance_km != null ? ` (${usgs.distance_km} km)` : ''}`,
-        ],
-        [
-          'Discharge',
-          usgs.discharge_cfs != null ? `${Math.round(Number(usgs.discharge_cfs))} cfs` : null,
-        ],
-        [
-          'Gauge height',
-          usgs.gauge_height_ft != null ? `${Number(usgs.gauge_height_ft).toFixed(2)} ft` : null,
-        ],
-        [
-          'Water temperature',
-          usgs.water_temp_f != null ? `${Math.round(Number(usgs.water_temp_f))}°F` : null,
-        ],
-        ['Observed', usgs.observed ? fmtDateTime(String(usgs.observed)) : null],
-      ].filter(([, v]) => v != null && v !== '');
-      dl.innerHTML = rows
-        .map(([k, v]) => `<dt>${escapeHtml(String(k))}</dt><dd>${escapeHtml(String(v))}</dd>`)
-        .join('');
-      wrap.appendChild(dl);
-      const p = document.createElement('p');
-      p.className = 'section-cta';
-      const linkBits = [];
-      if (usgs.url) {
-        linkBits.push(sourceLink(String(usgs.url), 'USGS gauge page', 'btn btn-secondary btn-sm'));
+
+      {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'USGS stream gauge';
+        wrap.appendChild(h);
+        if (!usgs) {
+          renderEmpty(wrap, 'No nearby USGS gauge', 'within 30 km of this location.');
+        } else {
+          const dl = document.createElement('dl');
+          dl.className = 'metric-list';
+          const rows = [
+            [
+              'Station',
+              `${usgs.station_name ?? usgs.station_id}${usgs.distance_km != null ? ` (${usgs.distance_km} km)` : ''}`,
+            ],
+            [
+              'Discharge',
+              usgs.discharge_cfs != null ? `${Math.round(Number(usgs.discharge_cfs))} cfs` : null,
+            ],
+            [
+              'Gauge height',
+              usgs.gauge_height_ft != null ? `${Number(usgs.gauge_height_ft).toFixed(2)} ft` : null,
+            ],
+            [
+              'Water temperature',
+              usgs.water_temp_f != null ? `${Math.round(Number(usgs.water_temp_f))}°F` : null,
+            ],
+            ['Observed', usgs.observed ? fmtDateTime(String(usgs.observed)) : null],
+          ].filter(([, v]) => v != null && v !== '');
+          dl.innerHTML = rows
+            .map(([k, v]) => `<dt>${escapeHtml(String(k))}</dt><dd>${escapeHtml(String(v))}</dd>`)
+            .join('');
+          wrap.appendChild(dl);
+          const p = document.createElement('p');
+          p.className = 'section-cta';
+          const linkBits = [];
+          if (usgs.url) {
+            linkBits.push(
+              sourceLink(String(usgs.url), 'USGS gauge page', 'btn btn-secondary btn-sm'),
+            );
+          }
+          linkBits.push(
+            sourceLink(
+              'https://waterwatch.usgs.gov/',
+              'USGS WaterWatch',
+              'btn btn-secondary btn-sm',
+            ),
+          );
+          p.innerHTML = linkBits.join(' ');
+          wrap.appendChild(p);
+        }
       }
-      linkBits.push(
-        sourceLink('https://waterwatch.usgs.gov/', 'USGS WaterWatch', 'btn btn-secondary btn-sm'),
-      );
-      p.innerHTML = linkBits.join(' ');
-      wrap.appendChild(p);
+
+      {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
+        h.textContent = 'CBRFC water-supply guidance';
+        wrap.appendChild(h);
+        if (!cbrfc?.name) {
+          renderEmpty(
+            wrap,
+            'No nearby CBRFC forecast point',
+            'Seasonal volume guidance is shown for river-corridor sites within ~60 km of a Colorado Basin RFC point.',
+          );
+        } else {
+          const dl = document.createElement('dl');
+          dl.className = 'metric-list';
+          const rows = [
+            [
+              'Point',
+              `${cbrfc.name}${cbrfc.distance_km != null ? ` (${cbrfc.distance_km} km)` : ''}`,
+            ],
+            ['River', cbrfc.river != null ? String(cbrfc.river) : null],
+            ['Period', cbrfc.period != null ? String(cbrfc.period) : null],
+            [
+              'Percent of average',
+              cbrfc.pctAvg != null ? `${Math.round(Number(cbrfc.pctAvg))}%` : null,
+            ],
+            [
+              'Most probable volume',
+              cbrfc.mostProbableKaf != null ? `${Number(cbrfc.mostProbableKaf)} kaf` : null,
+            ],
+            ['Guidance date', cbrfc.forecastDate != null ? String(cbrfc.forecastDate) : null],
+          ].filter(([, v]) => v != null && v !== '');
+          dl.innerHTML = rows
+            .map(([k, v]) => `<dt>${escapeHtml(String(k))}</dt><dd>${escapeHtml(String(v))}</dd>`)
+            .join('');
+          wrap.appendChild(dl);
+          const note = document.createElement('p');
+          note.className = 'table-hint';
+          note.textContent =
+            typeof cbrfc.disclaimer === 'string'
+              ? String(cbrfc.disclaimer)
+              : 'Unregulated seasonal volume guidance — not a day-to-day streamflow forecast.';
+          wrap.appendChild(note);
+          const p = document.createElement('p');
+          p.className = 'section-cta';
+          p.innerHTML = sourceLink(
+            String(cbrfc.pointUrl || cbrfc.sourceUrl || 'https://www.cbrfc.noaa.gov/'),
+            'CBRFC forecast point',
+            'btn btn-secondary btn-sm',
+          );
+          wrap.appendChild(p);
+        }
+      }
+
       return wrap;
     },
     { open: false },
@@ -2329,6 +2477,7 @@ function appendDeepForecast(root, data, ctx) {
     'links-heading',
     'External tools & sources',
     () => {
+      const caic = /** @type {{ name?: string, url?: string } | null} */ (links.caic ?? null);
       const entries = [
         ['NWS point forecast', links.nws_forecast || imgUrls.nwsForecast],
         ['NOAA / NWS radar', imgUrls.nwsRadar],
@@ -2341,8 +2490,11 @@ function appendDeepForecast(root, data, ctx) {
         ['CoAgMET', links.coagmet],
         ['Aviation Weather', links.aviation],
         ['USGS stream gauge', links.usgs],
+        ['CBRFC water supply', links.cbrfc || 'https://www.cbrfc.noaa.gov/'],
+        ['NASA FIRMS fire map', links.firms || 'https://firms.modaps.eosdis.nasa.gov/'],
         ['SNOTEL snowpack', links.snotel],
         ['COtrip traveler map', links.cotrip || 'https://maps.cotrip.org/'],
+        [caic?.name || 'CAIC avalanche forecasts', caic?.url || null],
       ].filter(([, url]) => Boolean(url));
 
       const webcamLinks = /** @type {{ name?: string, url?: string }[]} */ (

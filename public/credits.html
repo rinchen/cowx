@@ -106,8 +106,8 @@
           <a href="https://api.weather.gov/" rel="noopener noreferrer" target="_blank"
             >api.weather.gov</a
           >
-          — active alerts, Area Forecast Discussions (AFD), Hazardous Weather Outlooks (HWO),
-          point-forecast links
+          — active alerts, Area Forecast Discussions (AFD), Hazardous Weather Outlooks (HWO), Fire
+          Weather Planning Forecasts (FWF), point-forecast links
         </li>
       </ul>
 
@@ -165,6 +165,13 @@
             >USGS Water Data</a
           >
           — real-time streamflow, gauge height, and water temperature
+        </li>
+        <li>
+          <a href="https://www.cbrfc.noaa.gov/" rel="noopener noreferrer" target="_blank"
+            >Colorado Basin River Forecast Center (CBRFC)</a
+          >
+          — seasonal water-supply / ESP model guidance (unregulated volume percent of average;
+          guidance, not a day-to-day streamflow forecast)
         </li>
         <li>
           <a
@@ -311,6 +318,21 @@
           >
         </li>
         <li>
+          Satellite active-fire detections (VIIRS):
+          <a href="https://firms.modaps.eosdis.nasa.gov/" rel="noopener noreferrer" target="_blank"
+            >NASA FIRMS / LANCE</a
+          >
+          — thermal anomalies, not confirmed incidents; when redistributing, follow
+          <a
+            href="https://www.earthdata.nasa.gov/engage/open-data-services-and-software/data-and-information-policy"
+            rel="noopener noreferrer"
+            target="_blank"
+            >NASA ESDIS open-data guidance</a
+          >
+          and include the FIRMS disclaimer. Optional
+          <code>FIRMS_MAP_KEY</code> on the fetch job.
+        </li>
+        <li>
           County fire restriction status / links:
           <a
             href="http://www.coemergency.com/p/fire-bans-danger.html"
@@ -326,6 +348,17 @@
             >DFPC</a
           >
           (always verify with the issuing agency)
+        </li>
+        <li>
+          Avalanche forecasts (offsite links only):
+          <a
+            href="https://avalanche.state.co.us/forecasts"
+            rel="noopener noreferrer"
+            target="_blank"
+            >Colorado Avalanche Information Center (CAIC)</a
+          >
+          — mountain-region locations link to CAIC; COWX does not scrape or rehost CAIC data (CAIC
+          terms prohibit automated robots / data mining)
         </li>
         <li>
           NOAA Space Weather Prediction Center (Kp, F10.7 / SFI, R/S/G scales, GOES X-ray):

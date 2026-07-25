@@ -39,6 +39,7 @@ cowx/   # repo directory (brand: COWX)
 │       ├── cwop.geojson
 │       ├── hms-smoke.geojson
 │       ├── spc-firewx.geojson
+│       ├── firms-fires.geojson # NASA FIRMS VIIRS hotspots (when keyed)
 │       ├── space-weather.json # NOAA SWPC planetary snapshot (ham / HF)
 │       └── locations/{slug}.json   # Full per-location payload
 ├── tests/                    # Node test runner (`pnpm test`) — fixtures only, no live APIs
@@ -168,8 +169,9 @@ export async function fetchExample(locations, env = process.env) {
 | `PURPLEAIR_API_KEY` | PurpleAir inline sensor data              |
 | `AIRNOW_API_KEY`    | EPA AirNow AQI / observations             |
 | `COTRIP_API_KEY`    | COtrip RWIS / incidents / road conditions |
+| `FIRMS_MAP_KEY`     | NASA FIRMS VIIRS active-fire detections   |
 
-If unset, PurpleAir, AirNow, and COtrip adapters should skip gracefully; the UI falls back to offsite links, cameras, and ArcGIS alerts where available.
+If unset, PurpleAir, AirNow, COtrip, and FIRMS adapters should skip gracefully; the UI falls back to offsite links, cameras, and ArcGIS alerts where available.
 
 ---
 
@@ -182,6 +184,7 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 | `PURPLEAIR_API_KEY`  | PurpleAir API access for build-time sensor snapshots                    |
 | `AIRNOW_API_KEY`     | AirNow API access for official AQI near locations                       |
 | `COTRIP_API_KEY`     | COtrip JSON feed (weather stations, incidents, events, road conditions) |
+| `FIRMS_MAP_KEY`      | NASA FIRMS MAP_KEY for VIIRS active-fire detections (free registration) |
 | `NOTIFY_WEBHOOK_URL` | Discord webhook for fetch/Pages failure and stale live-data alerts      |
 
 **Never** commit secret values to git, docs, issues, logs, or test fixtures. Reference secret **names** only.
@@ -205,7 +208,7 @@ Approximate call budget per run (scales with catalog size; actual counts are wri
 | Open-Meteo Forecast                           | ~34+ (chunk 20 + NBM per chunk)                                         | None                |
 | Open-Meteo Air Quality                        | ~9 (chunk 40)                                                           | None                |
 | Open-Meteo ERA5 climatology                   | ~0 most runs; ~monthly / cold-start (capped ~24 locs/run × year slices) | None                |
-| NWS alerts + AFD/HWO                          | ~7–13 (alerts + AFD/HWO per office)                                     | User-Agent header   |
+| NWS alerts + AFD/HWO/FWF                      | ~13–19 (alerts + AFD/HWO/FWF per office)                                | User-Agent header   |
 | CoAgMET                                       | 1–2                                                                     | None                |
 | Aviation Weather METAR/TAF                    | 1–3 batched                                                             | None                |
 | USGS NWIS                                     | 1                                                                       | None                |
@@ -216,11 +219,13 @@ Approximate call budget per run (scales with catalog size; actual counts are wri
 | NOAA HMS smoke                                | 1–3 (zip download)                                                      | None                |
 | SPC fire weather (Day 1–2)                    | 4 (Wind/RH + DryT GeoJSON)                                              | None                |
 | NIFC WFIGS nearby fires                       | 1 (CO incidents)                                                        | None                |
+| NASA FIRMS VIIRS hotspots                     | 1 (CO bbox, only if key set)                                            | `FIRMS_MAP_KEY`     |
+| CBRFC water-supply guidance                   | 1 (ESP JSON, nearest CO point per location)                             | None                |
 | COEM burn restrictions                        | 1 (HTML status + curated links)                                         | None                |
 | NOAA SWPC space weather                       | ~5 (scales, Kp, Boulder K, SFI, X-ray)                                  | None                |
 | PurpleAir                                     | 1–2 (only if key set)                                                   | `PURPLEAIR_API_KEY` |
 | AirNow                                        | ~200–220 grid points when keyed (@0.2°)                                 | `AIRNOW_API_KEY`    |
-| Catalog `webcam_links`                        | 0 (copied into payloads)                                                | None                |
+| Catalog `webcam_links` / CAIC offsite links   | 0 (copied into payloads; no CAIC scrape)                                | None                |
 
 Partial adapter failure is acceptable; total failure (zero locations written or all critical adapters down) should fail the workflow so notifications fire.
 

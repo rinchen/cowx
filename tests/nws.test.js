@@ -5,7 +5,28 @@ import {
   pointInGeometry,
   pointInRing,
   resolveNwsProductUrl,
+  snippetFromNwsProduct,
 } from '../scripts/fetch/adapters/nws.js';
+
+describe('snippetFromNwsProduct', () => {
+  it('extracts AFD synopsis block', () => {
+    const text = `.SYNOPSIS...\nSunny skies today.\n\n.DISCUSSION...\nLonger text here.`;
+    const snip = snippetFromNwsProduct('AFD', text);
+    assert.match(snip, /SYNOPSIS/i);
+    assert.ok(!snip.includes('Longer text'));
+  });
+
+  it('prefers FWF discussion block when present', () => {
+    const text = `PRELIMINARY...\nIgnore\n\n.DISCUSSION...\nCritical fire weather expected east.\n\n.WINDS...\nGusty.`;
+    const snip = snippetFromNwsProduct('FWF', text);
+    assert.match(snip, /Critical fire weather/i);
+  });
+
+  it('falls back to trimmed text for HWO', () => {
+    const snip = snippetFromNwsProduct('HWO', '  Short outlook.  ');
+    assert.equal(snip, 'Short outlook.');
+  });
+});
 
 describe('resolveNwsProductUrl', () => {
   it('builds https product URL from a relative id', () => {

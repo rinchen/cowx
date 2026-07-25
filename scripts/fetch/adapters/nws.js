@@ -65,8 +65,30 @@ export function resolveNwsProductUrl(productId) {
 }
 
 /**
+ * Extract a short display snippet from an NWS text product.
+ * @param {'AFD' | 'HWO' | 'FWF'} productType
+ * @param {string} text
+ * @returns {string}
+ */
+export function snippetFromNwsProduct(productType, text) {
+  const raw = String(text ?? '');
+  if (productType === 'AFD') {
+    const synopsisMatch = raw.match(/\.SYNOPSIS[\s\S]*?(?=\n\.[A-Z]|\n\$\$|$)/i);
+    return (synopsisMatch?.[0] ?? raw).replace(/\s+/g, ' ').trim().slice(0, 400);
+  }
+  if (productType === 'FWF') {
+    // Prefer the discussion / overview block when present; else first ~400 chars.
+    const discussMatch = raw.match(
+      /\.(?:DISCUSSION|FIRE WEATHER DISCUSSION|OVERVIEW)[\s\S]*?(?=\n\.[A-Z]|\n\$\$|$)/i,
+    );
+    return (discussMatch?.[0] ?? raw).replace(/\s+/g, ' ').trim().slice(0, 400);
+  }
+  return raw.replace(/\s+/g, ' ').trim().slice(0, 400);
+}
+
+/**
  * @param {string} office
- * @param {'AFD' | 'HWO'} productType
+ * @param {'AFD' | 'HWO' | 'FWF'} productType
  * @returns {Promise<{ office: string, issued: string | null, snippet: string, url: string } | null>}
  */
 async function fetchOfficeProduct(office, productType) {
@@ -86,13 +108,7 @@ async function fetchOfficeProduct(office, productType) {
     timeoutMs: 45_000,
   });
   const text = String(product?.productText ?? '');
-  let snippet;
-  if (productType === 'AFD') {
-    const synopsisMatch = text.match(/\.SYNOPSIS[\s\S]*?(?=\n\.[A-Z]|\n\$\$|$)/i);
-    snippet = (synopsisMatch?.[0] ?? text).replace(/\s+/g, ' ').trim().slice(0, 400);
-  } else {
-    snippet = text.replace(/\s+/g, ' ').trim().slice(0, 400);
-  }
+  const snippet = snippetFromNwsProduct(productType, text);
   return {
     office,
     issued: product?.issuanceTime ?? null,
@@ -108,6 +124,7 @@ async function fetchOfficeProduct(office, productType) {
  *   byCounty: Map<string, object[]>,
  *   afdByWfo: Map<string, object>,
  *   hwoByWfo: Map<string, object>,
+ *   fwfByWfo: Map<string, object>,
  *   error?: string,
  *   calls: number
  * }>}
@@ -121,6 +138,8 @@ export async function fetchNws() {
   const afdByWfo = new Map();
   /** @type {Map<string, object>} */
   const hwoByWfo = new Map();
+  /** @type {Map<string, object>} */
+  const fwfByWfo = new Map();
   let alertsGeoJson = { type: 'FeatureCollection', features: [] };
 
   try {
@@ -183,22 +202,23 @@ export async function fetchNws() {
     errors.push(err instanceof Error ? err.message : String(err));
   }
 
+  /** @type {('AFD' | 'HWO' | 'FWF')[]} */
+  const productTypes = ['AFD', 'HWO', 'FWF'];
+  /** @type {Record<'AFD' | 'HWO' | 'FWF', Map<string, object>>} */
+  const productMaps = { AFD: afdByWfo, HWO: hwoByWfo, FWF: fwfByWfo };
+
   for (const office of OFFICES) {
-    try {
-      const afd = await fetchOfficeProduct(office, 'AFD');
-      calls += 2;
-      if (afd) afdByWfo.set(office, afd);
-    } catch (err) {
-      calls += 1;
-      errors.push(`AFD ${office}: ${err instanceof Error ? err.message : String(err)}`);
-    }
-    try {
-      const hwo = await fetchOfficeProduct(office, 'HWO');
-      calls += 2;
-      if (hwo) hwoByWfo.set(office, hwo);
-    } catch (err) {
-      calls += 1;
-      errors.push(`HWO ${office}: ${err instanceof Error ? err.message : String(err)}`);
+    for (const productType of productTypes) {
+      try {
+        const product = await fetchOfficeProduct(office, productType);
+        calls += 2;
+        if (product) productMaps[productType].set(office, product);
+      } catch (err) {
+        calls += 1;
+        errors.push(
+          `${productType} ${office}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
     }
   }
 
@@ -206,7 +226,7 @@ export async function fetchNws() {
   const status =
     errors.length === 0
       ? 'ok'
-      : okAlerts || afdByWfo.size > 0 || hwoByWfo.size > 0
+      : okAlerts || afdByWfo.size > 0 || hwoByWfo.size > 0 || fwfByWfo.size > 0
         ? 'partial'
         : 'error';
 
@@ -216,6 +236,7 @@ export async function fetchNws() {
     byCounty,
     afdByWfo,
     hwoByWfo,
+    fwfByWfo,
     error: errors.length ? errors.join('; ') : undefined,
     calls,
   };
