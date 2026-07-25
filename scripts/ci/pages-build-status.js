@@ -1,5 +1,9 @@
 /**
- * Testable GitHub Pages build polling state machine.
+ * Testable GitHub Pages deployment-workflow polling state machine.
+ *
+ * GitHub's legacy /pages/builds endpoint can report "Page build failed" while
+ * the canonical dynamic/pages/pages-build-deployment workflow succeeds and
+ * publishes the CDN. Use the workflow run as the source of truth.
  */
 
 export class PagesBuildWaitError extends Error {
@@ -26,7 +30,7 @@ export function findExpectedBuild(builds, expect) {
   const prefix = expect.slice(0, 7);
   return (
     builds.find((build) => {
-      const commit = typeof build.commit === 'string' ? build.commit : '';
+      const commit = typeof build.head_sha === 'string' ? build.head_sha : '';
       return commit === expect || commit.startsWith(prefix);
     }) ?? null
   );
@@ -49,15 +53,17 @@ export function classifyPagesBuild(builds, expect) {
   }
 
   const status = typeof build.status === 'string' ? build.status : 'unknown';
-  const rawError =
-    build.error && typeof build.error === 'object'
-      ? /** @type {{ message?: unknown }} */ (build.error).message
-      : null;
-  const error = rawError != null && String(rawError) ? String(rawError) : '-';
+  const conclusion =
+    typeof build.conclusion === 'string' && build.conclusion ? build.conclusion : null;
 
-  if (status === 'built') return { state: 'success', status, error, build };
-  if (status === 'errored') return { state: 'error', status, error, build };
-  return { state: 'pending', status, error, build };
+  if (status !== 'completed') return { state: 'pending', status, error: '-', build };
+  if (conclusion === 'success') return { state: 'success', status, error: '-', build };
+  return {
+    state: 'error',
+    status,
+    error: `pages-build-deployment concluded ${conclusion ?? 'without a conclusion'}`,
+    build,
+  };
 }
 
 /**
@@ -103,10 +109,10 @@ export async function waitForPagesBuild(options) {
 
     if (result.state === 'success') return /** @type {Record<string, unknown>} */ (result.build);
     if (result.state === 'error') {
-      const commit = String(result.build?.commit ?? '').slice(0, 7) || 'unknown';
+      const commit = String(result.build?.head_sha ?? '').slice(0, 7) || 'unknown';
       throw new PagesBuildWaitError(
         'build_error',
-        `GitHub Pages build failed for ${commit}: ${result.error}`,
+        `GitHub Pages deployment failed for ${commit}: ${result.error}`,
         result.build,
       );
     }

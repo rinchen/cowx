@@ -19,10 +19,10 @@ describe('GitHub Pages build polling', () => {
       sleep: async () => {},
     });
 
-    assert.equal(build.commit, fixtures.expectedSha);
+    assert.equal(build.head_sha, fixtures.expectedSha);
   });
 
-  it('fails immediately for the expected errored commit', async () => {
+  it('fails immediately for an unsuccessful completed deployment', async () => {
     let calls = 0;
 
     await assert.rejects(
@@ -39,7 +39,7 @@ describe('GitHub Pages build polling', () => {
       (error) => {
         assert.ok(error instanceof PagesBuildWaitError);
         assert.equal(error.code, 'build_error');
-        assert.match(error.message, /Page build failed/);
+        assert.match(error.message, /concluded cancelled/);
         return true;
       },
     );
@@ -65,7 +65,7 @@ describe('GitHub Pages build polling', () => {
         assert.ok(error instanceof PagesBuildWaitError);
         assert.equal(error.code, 'timeout');
         assert.match(error.message, /~15s/);
-        assert.match(error.message, /last_status=building/);
+        assert.match(error.message, /last_status=in_progress/);
         return true;
       },
     );
@@ -84,7 +84,7 @@ describe('GitHub Pages build polling', () => {
     });
 
     assert.equal(calls, 2);
-    assert.equal(build.commit, fixtures.expectedSha);
+    assert.equal(build.head_sha, fixtures.expectedSha);
   });
 
   it('classifies a missing expected commit as pending', () => {

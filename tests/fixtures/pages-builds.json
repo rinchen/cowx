@@ -1,29 +1,31 @@
 {
   "expectedSha": "25511e520d2c5c248e61ab471c65b8323c43e337",
   "unrelated": {
-    "commit": "befcaf90deab91c7e7584ab4dfb266c2f772ad65",
-    "status": "built",
-    "duration": 22786,
-    "error": null
+    "id": 30159348684,
+    "head_sha": "befcaf90deab91c7e7584ab4dfb266c2f772ad65",
+    "path": "dynamic/pages/pages-build-deployment",
+    "status": "completed",
+    "conclusion": "success"
   },
   "building": {
-    "commit": "25511e520d2c5c248e61ab471c65b8323c43e337",
-    "status": "building",
-    "duration": 0,
-    "error": null
+    "id": 30161471142,
+    "head_sha": "25511e520d2c5c248e61ab471c65b8323c43e337",
+    "path": "dynamic/pages/pages-build-deployment",
+    "status": "in_progress",
+    "conclusion": null
   },
   "built": {
-    "commit": "25511e520d2c5c248e61ab471c65b8323c43e337",
-    "status": "built",
-    "duration": 24811,
-    "error": null
+    "id": 30161743711,
+    "head_sha": "25511e520d2c5c248e61ab471c65b8323c43e337",
+    "path": "dynamic/pages/pages-build-deployment",
+    "status": "completed",
+    "conclusion": "success"
   },
   "errored": {
-    "commit": "25511e520d2c5c248e61ab471c65b8323c43e337",
-    "status": "errored",
-    "duration": 1500,
-    "error": {
-      "message": "Page build failed"
-    }
+    "id": 30161471142,
+    "head_sha": "25511e520d2c5c248e61ab471c65b8323c43e337",
+    "path": "dynamic/pages/pages-build-deployment",
+    "status": "completed",
+    "conclusion": "cancelled"
   }
 }

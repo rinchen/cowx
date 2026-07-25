@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# After a push to gh-pages, wait for the GitHub Pages build and fail if it errors.
-# JamesIves / pr-preview can succeed while the legacy Pages publisher rejects the
-# tip — without this check, production stays frozen on the last good CDN build.
+# After a push to gh-pages, wait for GitHub's canonical Pages deployment workflow
+# and fail if it errors. The legacy /pages/builds endpoint can falsely report
+# "Page build failed" even when pages-build-deployment succeeds and publishes.
 set -euo pipefail
 
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
@@ -40,7 +40,12 @@ async function api(path) {
 
 try {
   const hit = await waitForPagesBuild({
-    fetchBuilds: () => api(`/repos/${repo}/pages/builds?per_page=5`),
+    fetchBuilds: async () => {
+      const response = await api(`/repos/${repo}/actions/runs?branch=gh-pages&per_page=20`);
+      return response.workflow_runs.filter(
+        (run) => run.path === 'dynamic/pages/pages-build-deployment',
+      );
+    },
     expect,
     maxAttempts,
     sleepSecs,
@@ -50,11 +55,13 @@ try {
         return;
       }
       console.log(
-        `  attempt ${attempt}/${total}: status=${status} commit=${String(build.commit).slice(0, 7)} duration=${build.duration ?? '-'} error=${error}`,
+        `  attempt ${attempt}/${total}: status=${status} conclusion=${build.conclusion ?? '-'} commit=${String(build.head_sha).slice(0, 7)} run=${build.id ?? '-'} error=${error}`,
       );
     },
   });
-  console.log(`wait-for-pages-build: Pages build succeeded for ${String(hit.commit).slice(0, 7)}`);
+  console.log(
+    `wait-for-pages-build: Pages deployment succeeded for ${String(hit.head_sha).slice(0, 7)} (run=${hit.id ?? '-'})`,
+  );
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   console.error(`::error::${message}`);
