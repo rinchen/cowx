@@ -1,20 +1,59 @@
 #!/usr/bin/env bash
-# Check production meta.json age. Exit 0 if fresh, 1 if stale or unreachable.
+# Classify production meta.json age into two tiers so recovery stays quiet and
+# only a failed recovery pages a human.
+#
+#   fresh                        -> stale=false notify=false
+#   STALE_MINUTES  .. NOTIFY-1   -> stale=true  notify=false  (self-heal only)
+#   >= NOTIFY_MINUTES            -> stale=true  notify=true   (mitigations failed)
+#
+# Unreachable / unparseable meta cannot be aged, so it is treated as notify —
+# a missing data file on the CDN is worse than a stale one.
 #
 # Env:
 #   LIVE_META_URL   — production meta.json URL (required)
-#   STALE_MINUTES   — stale threshold (default 120)
-#   GITHUB_OUTPUT   — when set, write generated_at= and age_minutes=
+#   STALE_MINUTES   — self-heal threshold in minutes (default 90)
+#   NOTIFY_MINUTES  — Discord / page-a-human threshold in minutes (default 120)
+#   GITHUB_OUTPUT   — when set, write generated_at, age_minutes, reachable, stale, notify
+#
+# Exits 0 whenever the age could be evaluated; callers decide run status from
+# the outputs. Exits non-zero only on missing configuration.
 set -euo pipefail
 
 LIVE_META_URL="${LIVE_META_URL:?LIVE_META_URL required}"
-STALE_MINUTES="${STALE_MINUTES:-120}"
+STALE_MINUTES="${STALE_MINUTES:-90}"
+NOTIFY_MINUTES="${NOTIFY_MINUTES:-120}"
+
+generated_at=""
+age_minutes=""
+reachable="true"
+stale="false"
+notify="false"
+
+emit_outputs() {
+  if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+    {
+      echo "generated_at=${generated_at}"
+      echo "age_minutes=${age_minutes}"
+      echo "reachable=${reachable}"
+      echo "stale=${stale}"
+      echo "notify=${notify}"
+    } >>"${GITHUB_OUTPUT}"
+  fi
+}
+
+unreachable() {
+  echo "::error::$1"
+  reachable="false"
+  stale="true"
+  notify="true"
+  emit_outputs
+  exit 0
+}
 
 echo "check-stale-live-meta: fetching ${LIVE_META_URL}"
-body="$(curl -fsS --max-time 30 "${LIVE_META_URL}")" || {
-  echo "::error::Could not fetch live meta.json from ${LIVE_META_URL}"
-  exit 1
-}
+# Retry so a transient CDN blip does not masquerade as a broken site.
+body="$(curl -fsS --max-time 30 --retry 3 --retry-delay 5 --retry-all-errors "${LIVE_META_URL}")" ||
+  unreachable "Could not fetch live meta.json from ${LIVE_META_URL}"
 
 generated_at="$(printf '%s' "${body}" | node -e '
   let s = "";
@@ -29,34 +68,27 @@ generated_at="$(printf '%s' "${body}" | node -e '
       process.exit(2);
     }
   });
-')" || {
-  echo "::error::Live meta.json missing generatedAt"
-  exit 1
-}
+')" || unreachable "Live meta.json missing generatedAt"
 
 age_minutes="$(node -e '
   const iso = process.argv[1];
   const t = Date.parse(iso);
   if (!Number.isFinite(t)) process.exit(2);
   process.stdout.write(String(Math.floor((Date.now() - t) / 60000)));
-' "${generated_at}")" || {
-  echo "::error::Could not parse generatedAt=${generated_at}"
-  exit 1
-}
+' "${generated_at}")" || unreachable "Could not parse generatedAt=${generated_at}"
 
-echo "check-stale-live-meta: generatedAt=${generated_at} age_minutes=${age_minutes} stale_minutes=${STALE_MINUTES}"
+echo "check-stale-live-meta: generatedAt=${generated_at} age_minutes=${age_minutes} stale_minutes=${STALE_MINUTES} notify_minutes=${NOTIFY_MINUTES}"
 
-if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
-  {
-    echo "generated_at=${generated_at}"
-    echo "age_minutes=${age_minutes}"
-  } >>"${GITHUB_OUTPUT}"
+if [[ "${age_minutes}" -ge "${NOTIFY_MINUTES}" ]]; then
+  stale="true"
+  notify="true"
+  echo "::error::Production weather data is ${age_minutes}m old (>= ${NOTIFY_MINUTES}m) — self-heal did not recover"
+elif [[ "${age_minutes}" -ge "${STALE_MINUTES}" ]]; then
+  stale="true"
+  echo "::warning::Production weather data is ${age_minutes}m old (>= ${STALE_MINUTES}m) — dispatching Update Weather, no alert yet"
+else
+  echo "check-stale-live-meta: OK (fresh)"
 fi
 
-if [[ "${age_minutes}" -ge "${STALE_MINUTES}" ]]; then
-  echo "::error::Production weather data is stale (${age_minutes}m >= ${STALE_MINUTES}m)"
-  exit 1
-fi
-
-echo "check-stale-live-meta: OK (fresh)"
+emit_outputs
 exit 0
