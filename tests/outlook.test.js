@@ -488,20 +488,26 @@ describe('sourceStatusChips', () => {
       { id: 'airnow', status: 'error' },
       { id: 'cotrip', status: 'ok' },
       { id: 'openmeteo_climatology', status: 'partial' },
+      { id: 'firms', status: 'skipped' },
+      { id: 'cbrfc', status: 'ok' },
       { id: 'mystery_source', status: 'skipped' },
       null,
       { status: 'ok' },
     ]);
-    assert.equal(chips.length, 6);
+    assert.equal(chips.length, 8);
     assert.equal(chips[0].label, 'OM');
     assert.equal(chips[0].status, 'ok');
     assert.match(chips[0].title, /Open-Meteo forecast/i);
     assert.equal(chips[1].label, 'NWS');
+    assert.match(chips[1].title, /FWF/i);
     assert.equal(chips[3].label, 'COtrip');
     assert.match(chips[3].title, /RWIS/i);
     assert.equal(chips[4].label, 'Climo');
     assert.match(chips[4].title, /ERA5/i);
-    assert.equal(chips[5].label, 'MYSTER');
+    assert.equal(chips[5].label, 'FIRMS');
+    assert.equal(chips[5].status, 'skipped');
+    assert.equal(chips[6].label, 'CBRFC');
+    assert.equal(chips[7].label, 'MYSTER');
   });
 
   it('returns empty for non-arrays', () => {

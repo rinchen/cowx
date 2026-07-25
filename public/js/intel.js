@@ -272,6 +272,7 @@ export function renderHero(root, data, options = {}) {
   const hms = /** @type {Record<string, unknown> | null} */ (data.hms_smoke ?? null);
   const fireWeather = /** @type {Record<string, unknown> | null} */ (data.fire_weather ?? null);
   const nearbyFires = /** @type {Record<string, unknown> | null} */ (data.nearby_fires ?? null);
+  const nearbyFirms = /** @type {Record<string, unknown> | null} */ (data.nearby_firms ?? null);
   const fireRestrictions = /** @type {Record<string, unknown> | null} */ (
     data.fire_restrictions ?? null
   );
@@ -489,9 +490,13 @@ export function renderHero(root, data, options = {}) {
           /^(elevated|critical|extreme)$/.test(windRh2);
         const smokeActive = Boolean(hms && hms.density && hms.density !== 'none');
         const incidents = /** @type {Record<string, unknown>[]} */ (nearbyFires?.incidents ?? []);
+        const firmsHotspots = /** @type {Record<string, unknown>[]} */ (
+          nearbyFirms?.hotspots ?? []
+        );
         const firesActive = incidents.length > 0;
+        const firmsActive = firmsHotspots.length > 0;
         const banActive = fireRestrictions?.status === 'restriction_reported';
-        if (!spcActive && !smokeActive && !firesActive && !banActive) return '';
+        if (!spcActive && !smokeActive && !firesActive && !firmsActive && !banActive) return '';
         const bits = [];
         if (spcActive) {
           const label = windRh !== 'none' ? windRh : windRh2;
@@ -509,6 +514,16 @@ export function renderHero(root, data, options = {}) {
           bits.push(
             `Nearby fire: <strong>${escapeHtml(String(nearest?.name ?? 'Incident'))}</strong>${
               nearest?.distance_km != null ? ` (${Number(nearest.distance_km).toFixed(1)} km)` : ''
+            }`,
+          );
+        }
+        if (firmsActive) {
+          const nearest = firmsHotspots[0];
+          bits.push(
+            `FIRMS hotspot${
+              nearest?.distance_km != null
+                ? ` <strong>${Number(nearest.distance_km).toFixed(1)} km</strong>`
+                : ''
             }`,
           );
         }
@@ -962,7 +977,9 @@ export function renderSpecialtyIntel(root, data, options = {}) {
   const cwop = pwsPrimary ?? /** @type {Record<string, unknown> | null} */ (data.cwop ?? null);
   const coag = /** @type {Record<string, unknown> | null} */ (data.coagmet ?? null);
   const snotel = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
+  const cbrfc = /** @type {Record<string, unknown> | null} */ (data.cbrfc ?? null);
   const links = /** @type {Record<string, unknown>} */ (data.links ?? {});
+  const caic = /** @type {{ name?: string, url?: string } | null} */ (links.caic ?? null);
   const pwsLinks =
     pws?.links && typeof pws.links === 'object'
       ? /** @type {Record<string, unknown>} */ (pws.links)
@@ -1231,6 +1248,27 @@ export function renderSpecialtyIntel(root, data, options = {}) {
             <h3 class="glass-panel__subtitle">Snowpack</h3>
             <p class="specialty-inline"><strong>${escapeHtml(String(snotel.station_name ?? snotel.station_id ?? 'SNOTEL'))}</strong>${snotel.distance_km != null ? ` · ${snotel.distance_km} km` : ''}${snowBits.length ? ` · ${escapeHtml(snowBits.join(' · '))}` : ''}</p>
             <button type="button" class="btn btn-link intel-jump" data-jump-to="snowpack-heading">Full snowpack</button>
+          </div>`);
+      }
+
+      if (cbrfc?.name) {
+        const pct =
+          cbrfc.pctAvg != null && Number.isFinite(Number(cbrfc.pctAvg))
+            ? `${Math.round(Number(cbrfc.pctAvg))}% of avg`
+            : null;
+        localBlocks.push(`<div class="specialty-block" id="cbrfc-intel-heading">
+            <h3 class="glass-panel__subtitle">Water-supply guidance</h3>
+            <p class="specialty-inline"><strong>${escapeHtml(String(cbrfc.name))}</strong>${cbrfc.period ? ` · ${escapeHtml(String(cbrfc.period))}` : ''}${pct ? ` · ${escapeHtml(pct)}` : ''}</p>
+            <p class="intel-muted">CBRFC unregulated seasonal volume — not a day-to-day forecast.</p>
+            <button type="button" class="btn btn-link intel-jump" data-jump-to="hydrology-heading">Full hydrology</button>
+          </div>`);
+      }
+
+      if (caic?.url && safeHttpsUrl(String(caic.url))) {
+        localBlocks.push(`<div class="specialty-block" id="caic-intel-heading">
+            <h3 class="glass-panel__subtitle">Avalanche forecast</h3>
+            <p class="specialty-inline">Check CAIC before entering avalanche terrain.</p>
+            <p class="specialty-actions"><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(String(caic.url))))}" target="_blank" rel="noopener noreferrer" aria-label="Open CAIC avalanche forecasts (opens in new tab)">${escapeHtml(String(caic.name || 'CAIC forecasts'))}</a></p>
           </div>`);
       }
 

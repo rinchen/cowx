@@ -591,7 +591,12 @@ const SOURCE_CHIP_META = {
   openmeteo: { label: 'OM', title: 'Open-Meteo forecast' },
   openmeteo_aq: { label: 'AQ', title: 'Open-Meteo air quality' },
   openmeteo_climatology: { label: 'Climo', title: 'Open-Meteo ERA5 climatology (vs typical)' },
-  nws: { label: 'NWS', title: 'National Weather Service alerts & discussions' },
+  nws: {
+    label: 'NWS',
+    title: 'National Weather Service alerts, AFD, HWO & fire weather planning (FWF)',
+  },
+  firms: { label: 'FIRMS', title: 'NASA FIRMS active fire detections' },
+  cbrfc: { label: 'CBRFC', title: 'NOAA CBRFC hydrologic guidance' },
   airnow: { label: 'AirNow', title: 'EPA AirNow AQI' },
   purpleair: { label: 'PA', title: 'PurpleAir sensors' },
   coagmet: { label: 'CoAg', title: 'CoAgMET agriculture stations' },

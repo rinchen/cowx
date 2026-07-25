@@ -2,6 +2,11 @@
  * Colorado burn / fire restriction status + curated verification links.
  * Failure point: COEM HTML fetch/parse failure.
  * Fallback: status unknown + curated county/statewide links; never invent Stage 1/2.
+ *
+ * Note (2026-07): No single licensed statewide Stage 1/2 JSON exists on
+ * data.colorado.gov. Restrictions are issued per county sheriff / land manager;
+ * COEM HTML + curated county URLs remain the practical feed. Revisit if DFPC or
+ * COEM publish an open GeoJSON/ArcGIS FeatureServer with clear redistribution terms.
  */
 
 import { readFile } from 'node:fs/promises';

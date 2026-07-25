@@ -36,6 +36,9 @@ import { fetchSpcFireWx } from './adapters/spc-firewx.js';
 import { fetchNifcFires } from './adapters/nifc-fires.js';
 import { fetchBurnRestrictions } from './adapters/burn-restrictions.js';
 import { fetchSpaceWeather } from './adapters/space-weather.js';
+import { fetchFirms } from './adapters/firms.js';
+import { fetchCbrfc } from './adapters/cbrfc.js';
+import { buildCaicLink } from '../lib/caic-links.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
@@ -203,6 +206,20 @@ export async function runFetch() {
     () => fetchSpaceWeather(),
     (r) => (r.snapshot ? '(snapshot)' : ''),
   );
+  const firms = await runAdapter(
+    'firms',
+    () => fetchFirms(locations),
+    () => '',
+  );
+  const cbrfc = await runAdapter(
+    'cbrfc',
+    () => fetchCbrfc(locations),
+    (r) => {
+      let n = 0;
+      for (const v of r.bySlug?.values?.() ?? []) if (v) n += 1;
+      return n ? `(${n} locs)` : '';
+    },
+  );
 
   const updatedAt = new Date().toISOString();
   const index = [];
@@ -276,6 +293,7 @@ export async function runFetch() {
       }
       const afd = nws.afdByWfo?.get(loc.wfo) ?? null;
       const hwo = nws.hwoByWfo?.get(loc.wfo) ?? null;
+      const fwf = nws.fwfByWfo?.get(loc.wfo) ?? null;
       const ag = coagmet.bySlug.get(loc.slug) ?? null;
       const av = aviation.bySlug.get(loc.slug) ?? null;
       const pa = purpleair.bySlug.get(loc.slug) ?? null;
@@ -308,8 +326,11 @@ export async function runFetch() {
       const hmsRec = hms.bySlug.get(loc.slug) ?? null;
       const fireWeather = spcFireWx.bySlug.get(loc.slug) ?? null;
       const nearbyFires = nifcFires.bySlug.get(loc.slug) ?? null;
+      const nearbyFirms = firms.bySlug.get(loc.slug) ?? null;
       const fireRestrictions = burnRestrictions.bySlug.get(loc.slug) ?? null;
+      const cbrfcRec = cbrfc.bySlug.get(loc.slug) ?? null;
       const webcamLinks = sanitizeWebcamLinks(loc.webcam_links);
+      const caicLink = buildCaicLink(loc);
 
       const climatologyRec =
         climatology.bySlug.get(loc.slug) ??
@@ -335,6 +356,7 @@ export async function runFetch() {
         alerts,
         afd,
         hwo,
+        fwf,
         coagmet: ag,
         aviation: av,
         purpleair: pa,
@@ -350,7 +372,9 @@ export async function runFetch() {
         hms_smoke: hmsRec,
         fire_weather: fireWeather,
         nearby_fires: nearbyFires,
+        nearby_firms: nearbyFirms,
         fire_restrictions: fireRestrictions,
+        cbrfc: cbrfcRec,
         rf_comms: om?.rf_comms ?? prior?.rf_comms ?? null,
         links: {
           nws_forecast: `https://forecast.weather.gov/MapClick.php?lat=${loc.lat}&lon=${loc.lon}`,
@@ -369,6 +393,9 @@ export async function runFetch() {
           usgs: gauge?.url ?? 'https://waterdata.usgs.gov/nwis/rt',
           snotel: snow?.url ?? 'https://www.nrcs.usda.gov/wps/portal/wcc/home/',
           cotrip: 'https://maps.cotrip.org/',
+          cbrfc: cbrfcRec?.pointUrl ?? cbrfcRec?.sourceUrl ?? 'https://www.cbrfc.noaa.gov/',
+          firms: 'https://firms.modaps.eosdis.nasa.gov/',
+          caic: caicLink,
           webcam_links: webcamLinks,
         },
       };
@@ -459,6 +486,12 @@ export async function runFetch() {
   await writeFile(
     path.join(DATA_DIR, 'spc-firewx.geojson'),
     JSON.stringify(spcFireWx.fireWxGeoJson ?? { type: 'FeatureCollection', features: [] }),
+    'utf8',
+  );
+
+  await writeFile(
+    path.join(DATA_DIR, 'firms-fires.geojson'),
+    JSON.stringify(firms.firmsGeoJson ?? { type: 'FeatureCollection', features: [] }),
     'utf8',
   );
 

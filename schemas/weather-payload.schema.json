@@ -287,6 +287,45 @@
         "url": { "type": "string" }
       }
     },
+    "fwf": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "office": { "type": "string" },
+        "issued": { "type": ["string", "null"] },
+        "snippet": { "type": ["string", "null"] },
+        "url": { "type": "string" }
+      }
+    },
+    "nearby_firms": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "hotspots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "sourceUrl": { "type": ["string", "null"] },
+        "disclaimer": { "type": "string" }
+      }
+    },
+    "cbrfc": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "pctAvg": { "type": ["number", "null"] },
+        "period": { "type": ["string", "null"] },
+        "distance_km": { "type": "number" },
+        "disclaimer": { "type": "string" },
+        "pointUrl": { "type": ["string", "null"] },
+        "sourceUrl": { "type": ["string", "null"] }
+      }
+    },
     "alerts": { "type": "array" },
     "afd": { "type": ["object", "null"] },
     "coagmet": { "type": ["object", "null"] },
