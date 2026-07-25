@@ -22,6 +22,7 @@ import {
   pickNowSky,
   resolveCatalogNow,
   sliceCompactHours,
+  tempTransitionCue,
 } from './outlook.js';
 import { dailyIndexForNow, resolveAstronomy, resolveRfComms } from './live.js';
 import {
@@ -251,6 +252,16 @@ export function renderHero(root, data, options = {}) {
   const code = /** @type {number | null} */ (nowSky?.weather_code ?? current?.weather_code ?? null);
   const conditionLabel = String(nowSky?.condition ?? current?.condition ?? wmoLabel(code));
 
+  // Forecast-transition cue (catalog path only — a pin's live temp is not the
+  // catalog hourly series, so "now → next" would compare unlike numbers).
+  const transition = !usingPinNow ? tempTransitionCue(hourly) : null;
+  const transitionLabel = transition
+    ? `→ ${Math.round(transition.next_temp_f)}° by ${formatCompactHourLabel(transition.next_time)}`
+    : null;
+  const transitionAria = transition
+    ? ` ${transition.delta_f > 0 ? 'Rising' : 'Falling'} toward ${Math.round(transition.next_temp_f)} degrees by ${formatCompactHourLabel(transition.next_time)} per the next forecast hour.`
+    : '';
+
   const windDeg = /** @type {number | null} */ (current?.wind_dir_deg ?? null);
   const compass = windCompassHtml(windDeg, { size: 22 });
   const windMetaParts = [];
@@ -362,11 +373,12 @@ export function renderHero(root, data, options = {}) {
       <div class="intel-now">
         ${
           current?.temp_f != null
-            ? `<button type="button" class="intel-now-hero" data-jump-to="hourly-heading" aria-label="${escapeHtml(`Current conditions ${Math.round(Number(current.temp_f))} degrees Fahrenheit, ${conditionLabel}. Open hourly forecast.`)}">
+            ? `<button type="button" class="intel-now-hero" data-jump-to="hourly-heading" aria-label="${escapeHtml(`Current conditions ${Math.round(Number(current.temp_f))} degrees Fahrenheit, ${conditionLabel}.${transitionAria} Open hourly forecast.`)}">
                 ${weatherIconHtml(code, { isDay, size: 48, className: 'weather-icon', alt: '' })}
                 <span class="intel-now-hero__text">
                   <span class="intel-temp">${Math.round(Number(current.temp_f))}°F</span>
                   <span class="intel-cond">${escapeHtml(conditionLabel)}</span>
+                  ${transitionLabel ? `<span class="intel-next-temp">${escapeHtml(transitionLabel)}</span>` : ''}
                   ${
                     current?.feels_like_f != null
                       ? `<span class="intel-feels">Feels like ${Math.round(Number(current.feels_like_f))}°F</span>`

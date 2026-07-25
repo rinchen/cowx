@@ -147,6 +147,17 @@ export function currentHourIndex(times, nowMs = Date.now()) {
 }
 
 /**
+ * Minutes elapsed within the current hour (0–59).
+ * America/Denver offsets are whole hours (UTC-6/-7), so UTC minutes match the
+ * Denver wall clock — no Intl round-trip needed.
+ * @param {number} [nowMs]
+ * @returns {number}
+ */
+export function minutesIntoHour(nowMs = Date.now()) {
+  return new Date(nowMs).getUTCMinutes();
+}
+
+/**
  * America/Denver calendar date YYYY-MM-DD.
  * @param {number} [nowMs]
  * @returns {string}
