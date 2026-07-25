@@ -108,18 +108,25 @@ function showError(message) {
 }
 
 /**
+ * Fetch JSON under DATA_BASE.
+ * Always bypasses the browser HTTP cache: GitHub Pages serves data/* with
+ * max-age=600, and a hard reload of the document does not reliably drop prior
+ * fetch() responses — visitors can keep seeing a frozen Updated stamp / temps
+ * until cache expiry even after a successful weather deploy.
  * @param {string} path
  * @param {{ bustCache?: boolean, timeoutMs?: number }} [opts]
  * @returns {Promise<unknown>}
  */
 async function fetchJson(path, opts = {}) {
-  const bust = opts.bustCache ? `?_=${Date.now()}` : '';
+  // Query bust even when callers omit bustCache — some browsers still reuse
+  // disk cache for no-store in edge cases; the param forces a distinct URL.
+  const bust = `?_=${Date.now()}`;
   const timeoutMs = opts.timeoutMs ?? 12_000;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(`${DATA_BASE}/${path}${bust}`, {
-      cache: opts.bustCache ? 'no-store' : 'default',
+      cache: 'no-store',
       signal: controller.signal,
     });
     if (!response.ok) throw new Error(`Failed to load ${path} (${response.status})`);

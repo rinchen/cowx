@@ -30,7 +30,7 @@ async function fetchGeoJsonCached(url) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 15_000);
     try {
-      const res = await fetch(url, { signal: controller.signal });
+      const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
     } finally {
