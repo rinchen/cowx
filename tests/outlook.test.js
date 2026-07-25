@@ -4,6 +4,7 @@ import {
   buildHourlyModalTableHtml,
   buildOutlookHighlights,
   buildPeriodSummaries,
+  currentHourIndex,
   nearestHourIndex,
   pickNowCurrent,
   pickNowSky,
@@ -92,8 +93,24 @@ describe('nearestHourIndex', () => {
   });
 });
 
+describe('currentHourIndex', () => {
+  it('prefers the started hour when nearest would be the next forecast', () => {
+    const nowMs = new Date('2026-07-25T14:41:00Z').getTime(); // 08:41 MDT
+    const times = ['2026-07-25T08:00', '2026-07-25T09:00'];
+    assert.equal(nearestHourIndex(times, nowMs), 1);
+    assert.equal(currentHourIndex(times, nowMs), 0);
+  });
+
+  it('uses absolute instants for Z timestamps', () => {
+    const now = new Date('2026-07-20T15:40:00Z').getTime();
+    const times = ['2026-07-20T15:00:00Z', '2026-07-20T16:00:00Z'];
+    assert.equal(nearestHourIndex(times, now), 1);
+    assert.equal(currentHourIndex(times, now), 0);
+  });
+});
+
 describe('pickNowSky', () => {
-  it('returns Overcast from nearest hour when earlier hour was Clear', () => {
+  it('returns Overcast from the in-progress hour when earlier hour was Clear', () => {
     const hourly = {
       time: ['2026-07-21T06:00:00', '2026-07-21T07:00:00', '2026-07-21T08:00:00'],
       weather_code: [0, 3, 3],
@@ -128,7 +145,7 @@ describe('pickNowSky', () => {
 });
 
 describe('pickNowCurrent / resolveCatalogNow', () => {
-  it('uses nearest-hour temp instead of the fetch-time snapshot', () => {
+  it('uses in-progress-hour temp instead of the fetch-time snapshot', () => {
     const hourly = {
       time: ['2026-07-21T19:00:00', '2026-07-22T06:00:00', '2026-07-22T07:00:00'],
       temperature_2m: [93.4, 67.4, 70.1],
@@ -165,6 +182,25 @@ describe('pickNowCurrent / resolveCatalogNow', () => {
     assert.equal(merged.surface_pressure_mb, 850.2);
   });
 
+  it('keeps the started hour after :30 instead of the next forecast', () => {
+    const hourly = {
+      time: ['2026-07-25T08:00', '2026-07-25T09:00'],
+      temperature_2m: [75.8, 81.1],
+      apparent_temperature: [76.3, 80.3],
+      weather_code: [0, 0],
+      relative_humidity_2m: [46, 39],
+      wind_speed_10m: [1.6, 4.6],
+      wind_direction_10m: [106, 133],
+      wind_gusts_10m: [2.2, 5.8],
+      cloud_cover: [0, 0],
+      is_day: [1, 1],
+    };
+    const nowMs = new Date('2026-07-25T14:41:00Z').getTime(); // 08:41 MDT
+    const merged = resolveCatalogNow({ temp_f: 75.8 }, hourly, nowMs);
+    assert.ok(merged);
+    assert.equal(merged.temp_f, 75.8);
+  });
+
   it('recomputes precip_today_in from hourly for the Denver calendar day', () => {
     const hourly = {
       time: [
@@ -198,7 +234,7 @@ describe('pickNowCurrent / resolveCatalogNow', () => {
 });
 
 describe('sliceCompactHours', () => {
-  it('returns at most the requested count from nearest hour', () => {
+  it('returns at most the requested count from in-progress hour', () => {
     const hourly = makeHourly(48);
     const nowMs = new Date(hourly.time[6]).getTime();
     const rows = sliceCompactHours(hourly, { count: 10, nowMs });

@@ -105,6 +105,48 @@ export function nearestHourIndex(times, nowMs = Date.now()) {
 }
 
 /**
+ * Index of the in-progress hour: latest slot at or before now.
+ * Prefer this over {@link nearestHourIndex} for “current conditions” — after :30,
+ * nearest jumps to the *next* forecast hour and can read several °F hot during
+ * morning warm-up (e.g. 8:41 → 09:00 model vs ~actual 08:00 / METAR).
+ * If every slot is still in the future, falls back to nearest.
+ * @param {string[]} times
+ * @param {number} [nowMs]
+ * @returns {number}
+ */
+export function currentHourIndex(times, nowMs = Date.now()) {
+  if (!Array.isArray(times) || times.length === 0) return 0;
+
+  const allAbsolute = times.every((t) => hasExplicitOffset(String(t)));
+  if (allAbsolute) {
+    let best = -1;
+    let bestMs = -Infinity;
+    times.forEach((t, i) => {
+      const ms = new Date(t).getTime();
+      if (!Number.isFinite(ms) || ms > nowMs) return;
+      if (ms >= bestMs) {
+        bestMs = ms;
+        best = i;
+      }
+    });
+    return best >= 0 ? best : nearestHourIndex(times, nowMs);
+  }
+
+  const target = denverNowOrdinal(nowMs);
+  let best = -1;
+  let bestOrd = -Infinity;
+  times.forEach((t, i) => {
+    const ord = omLocalOrdinal(String(t));
+    if (!Number.isFinite(ord) || ord > target) return;
+    if (ord >= bestOrd) {
+      bestOrd = ord;
+      best = i;
+    }
+  });
+  return best >= 0 ? best : nearestHourIndex(times, nowMs);
+}
+
+/**
  * America/Denver calendar date YYYY-MM-DD.
  * @param {number} [nowMs]
  * @returns {string}

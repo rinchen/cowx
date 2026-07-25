@@ -12,7 +12,7 @@ import {
   denverHourKey,
   precipTodayInches,
 } from './denver-time.js';
-import { nearestHourIndex, resolveCatalogNow } from './outlook.js';
+import { currentHourIndex, resolveCatalogNow } from './outlook.js';
 import { estimateRfComms } from './rf-comms.js';
 
 export { dailyIndexForNow, denverDateKey, denverHourKey, precipTodayInches, resolveCatalogNow };
@@ -50,7 +50,7 @@ export function resolveRfComms(current, hourly, elevationFt, fallback = null, no
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   const series = /** @type {(number | null)[]} */ (hourly?.temperature_850hPa ?? []);
   if (times.length && series.length && current?.temp_f != null) {
-    const hi = nearestHourIndex(times, nowMs);
+    const hi = currentHourIndex(times, nowMs);
     const t850 = series[hi];
     const estimated = estimateRfComms(current, t850, elevationFt);
     if (estimated) return /** @type {Record<string, unknown>} */ (estimated);

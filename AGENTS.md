@@ -309,4 +309,4 @@ npx serve public      # local preview
 
 Use Node **20+** (see `.nvmrc`). For local adapter keys, copy `.env.example` to `.env` (gitignored). `NOTIFY_WEBHOOK_URL` is Actions-only.
 
-Open-Meteo forecast times use `timezone=America/Denver` and arrive as offset-less local ISO (`2026-07-22T12:00` = noon Mountain). Compare them with `nearestHourIndex` / `denverHourKey` / `precipTodayInches` from `public/js/denver-time.js` — never `new Date(t)` on those strings.
+Open-Meteo forecast times use `timezone=America/Denver` and arrive as offset-less local ISO (`2026-07-22T12:00` = noon Mountain). Compare them with `currentHourIndex` / `nearestHourIndex` / `denverHourKey` / `precipTodayInches` from `public/js/denver-time.js` — never `new Date(t)` on those strings. Use `currentHourIndex` (latest hour ≤ now) for At a Glance / “now” conditions; `nearestHourIndex` is for absolute closeness only.
