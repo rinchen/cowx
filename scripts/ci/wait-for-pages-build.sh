@@ -20,7 +20,7 @@ echo "wait-for-pages-build: polling builds for ${REPO} (expect=${EXPECT_SHA:-any
 export REPO TOKEN EXPECT_SHA MAX_ATTEMPTS SLEEP_SECS MAX_RERUNS RERUN_DELAY_SECS
 node --input-type=module <<'NODE'
 import {
-  parseInProgressDeploymentBlocker,
+  diagnosePagesFailureText,
   waitForPagesBuild,
 } from './scripts/ci/pages-build-status.js';
 
@@ -168,19 +168,7 @@ try {
     rerunDelaySecs,
     diagnoseFailure: async (build) => {
       const text = await failureTextForBuild(build);
-      const blockingSha = parseInProgressDeploymentBlocker(text);
-      if (blockingSha) {
-        return {
-          retryable: true,
-          blockingSha,
-          detail: `in-progress deployment conflict; blocker=${blockingSha.slice(0, 7)}`,
-        };
-      }
-      // Non-conflict failures (content errors, cancelled, etc.) should fail fast.
-      return {
-        retryable: false,
-        detail: text ? text.replace(/\s+/g, ' ').slice(0, 180) : 'non-retryable Pages failure',
-      };
+      return diagnosePagesFailureText(text);
     },
     clearBlockingDeployment,
     rerunBuild: async (build) => {

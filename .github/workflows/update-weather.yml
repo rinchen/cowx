@@ -122,7 +122,13 @@ jobs:
       - name: Strip weather data from existing PR previews
         run: bash scripts/ci/ensure-slim-pr-previews.sh
 
+      # Always move the tip so deploy_only mode can republish when CDN is stale
+      # even if main's public/ tree matches the previous gh-pages payload.
+      - name: Stamp deploy identity
+        run: printf '%s %s\n' "${{ github.run_id }}" "${{ github.sha }}" > public/.pages-deploy-stamp
+
       - name: Deploy to gh-pages
+        id: pages_deploy
         uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
         with:
           branch: gh-pages
@@ -132,6 +138,7 @@ jobs:
 
       - name: Verify GitHub Pages build
         id: verify_pages
+        if: steps.pages_deploy.outputs.deployment_status != 'skipped'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

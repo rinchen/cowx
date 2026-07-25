@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import {
   PagesBuildWaitError,
   classifyPagesBuild,
+  diagnosePagesFailureText,
   parseInProgressDeploymentBlocker,
   waitForPagesBuild,
 } from '../scripts/ci/pages-build-status.js';
@@ -28,6 +29,28 @@ describe('parseInProgressDeploymentBlocker', () => {
   it('returns null for unrelated failures', () => {
     assert.equal(parseInProgressDeploymentBlocker('Page build failed.'), null);
     assert.equal(parseInProgressDeploymentBlocker(''), null);
+  });
+});
+
+describe('diagnosePagesFailureText', () => {
+  it('marks lock conflicts as retryable with a blocker SHA', () => {
+    const text =
+      'due to in progress deployment. Please cancel 1c6d6fd1dc1d58d7f4cf4b39fe6c1cae75d5bbe6 first';
+    const d = diagnosePagesFailureText(text);
+    assert.equal(d.retryable, true);
+    assert.equal(d.blockingSha, '1c6d6fd1dc1d58d7f4cf4b39fe6c1cae75d5bbe6');
+  });
+
+  it('marks deploy-pages timeouts as retryable without a blocker SHA', () => {
+    const d = diagnosePagesFailureText('Timeout reached, aborting!\nTimeout reached, aborting!');
+    assert.equal(d.retryable, true);
+    assert.equal(d.blockingSha, null);
+    assert.match(d.detail, /timeout/i);
+  });
+
+  it('marks unrelated failures as non-retryable', () => {
+    const d = diagnosePagesFailureText('Page build failed.');
+    assert.equal(d.retryable, false);
   });
 });
 
@@ -107,6 +130,39 @@ describe('GitHub Pages build polling', () => {
     assert.deepEqual(cleared, ['1c6d6fd1dc1d58d7f4cf4b39fe6c1cae75d5bbe6']);
     assert.deepEqual(rerunIds, [fixtures.transientFailure.id]);
     assert.ok(sleeps.includes(60_000), 'expected rerun delay before re-run');
+  });
+
+  it('on timeout, clears the tip SHA then re-runs', async () => {
+    const responses = [
+      [fixtures.transientFailure],
+      [fixtures.rerunInProgress],
+      [fixtures.rerunSucceeded],
+    ];
+    let calls = 0;
+    /** @type {string[]} */
+    const cleared = [];
+
+    const build = await waitForPagesBuild({
+      fetchBuilds: async () => responses[Math.min(calls++, responses.length - 1)],
+      expect: fixtures.expectedSha,
+      maxAttempts: 10,
+      maxReruns: 3,
+      rerunDelaySecs: 0,
+      diagnoseFailure: async () => ({
+        retryable: true,
+        blockingSha: null,
+        detail: 'deploy-pages timeout',
+      }),
+      clearBlockingDeployment: async (sha) => {
+        cleared.push(sha);
+      },
+      rerunBuild: async () => {},
+      sleep: async () => {},
+    });
+
+    assert.equal(build.conclusion, 'success');
+    // No blocker SHA from diagnosis → clear the failed tip itself.
+    assert.deepEqual(cleared, [fixtures.transientFailure.head_sha]);
   });
 
   it('fails immediately when diagnosis is not retryable', async () => {

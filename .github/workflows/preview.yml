@@ -73,6 +73,7 @@ jobs:
           PY
 
       - name: Deploy preview
+        id: preview_deploy
         uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1.8.1
         with:
           source-dir: public
@@ -81,8 +82,10 @@ jobs:
           action: auto
           qr-code: true
 
+      # Only verify when this job published a new tip. A skipped deploy must not
+      # fail CI by re-checking an already-broken prior tip (Pages timeout/lock).
       - name: Verify GitHub Pages build
-        if: github.event.action != 'closed'
+        if: github.event.action != 'closed' && steps.preview_deploy.outputs.deployment_status != 'skipped'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

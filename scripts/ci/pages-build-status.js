@@ -40,6 +40,38 @@ export function parseInProgressDeploymentBlocker(text) {
 }
 
 /**
+ * Decide whether a pages-build-deployment failure is worth clearing/re-running.
+ * Covers the deploy-pages lock conflict and the ~10m native deploy timeout
+ * (large gh-pages trees with weather data often land near that limit).
+ * @param {string} text
+ * @returns {{ retryable: boolean, blockingSha: string | null, detail: string }}
+ */
+export function diagnosePagesFailureText(text) {
+  const raw = String(text ?? '');
+  const blockingSha = parseInProgressDeploymentBlocker(raw);
+  if (blockingSha) {
+    return {
+      retryable: true,
+      blockingSha,
+      detail: `in-progress deployment conflict; blocker=${blockingSha.slice(0, 7)}`,
+    };
+  }
+  if (/Timeout reached,\s*aborting/i.test(raw)) {
+    return {
+      retryable: true,
+      blockingSha: null,
+      detail: 'deploy-pages timeout',
+    };
+  }
+  const compact = raw.replace(/\s+/g, ' ').trim().slice(0, 180);
+  return {
+    retryable: false,
+    blockingSha: null,
+    detail: compact || 'non-retryable Pages failure',
+  };
+}
+
+/**
  * @param {Record<string, unknown>[]} builds
  * @param {string} expect
  * @returns {Record<string, unknown> | null}
@@ -194,7 +226,9 @@ export async function waitForPagesBuild(options) {
       if (diagnosis.retryable && rerunBuild && rerunsUsed < maxReruns && !rerunTriggered.has(key)) {
         rerunTriggered.add(key);
         rerunsUsed += 1;
-        const blockingSha = diagnosis.blockingSha ?? null;
+        // Prefer the SHA named in the lock error; for timeouts clear the tip itself.
+        const blockingSha =
+          diagnosis.blockingSha ?? (typeof build.head_sha === 'string' ? build.head_sha : null);
         if (blockingSha && clearBlockingDeployment) {
           await clearBlockingDeployment(blockingSha);
         }
