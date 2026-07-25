@@ -1,14 +1,18 @@
 name: Check Stale Data
 
-# Alert-only watchdog: if production meta.json is older than 2 hours, fail the
-# run and POST to NOTIFY_WEBHOOK_URL (when set). Does not re-trigger fetch.
+# Watchdog: if production meta.json is older than STALE_MINUTES, dispatch
+# Update Weather (self-heal), Discord-alert when configured, and fail the run.
+# GitHub often delays */20 schedules by 1–3h; this catch-up path must not be
+# alert-only or the CDN stays frozen until a human notices.
 on:
   schedule:
-    - cron: '0 */2 * * *'
+    # Frequent lightweight tick — GitHub may delay, but more chances than */2h.
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: write
 
 concurrency:
   group: check-stale-data
@@ -16,7 +20,8 @@ concurrency:
 
 env:
   LIVE_META_URL: https://rinchen.github.io/cowx/data/meta.json
-  STALE_MINUTES: '120'
+  # Recover before the ~2h UX cliff; cron gaps of 90–220m are common.
+  STALE_MINUTES: '90'
 
 jobs:
   check:
@@ -31,6 +36,15 @@ jobs:
           STALE_MINUTES: ${{ env.STALE_MINUTES }}
         run: bash scripts/ci/check-stale-live-meta.sh
         continue-on-error: true
+
+      - name: Self-heal — dispatch Update Weather
+        if: steps.age.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "Live meta stale; dispatching update-weather.yml on main"
+          gh workflow run update-weather.yml --repo "${{ github.repository }}" --ref main
 
       - name: Notify Discord if stale
         if: steps.age.outcome == 'failure'
@@ -47,7 +61,7 @@ jobs:
           else
             age_label="${AGE_MINUTES:-unknown}"
             generated="${GENERATED_AT:-unknown}"
-            content="COWX production weather data stale (${age_label}m ≥ ${STALE_MINUTES}m). generatedAt=${generated}. Live: ${LIVE_META_URL}. Re-run Update Weather: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/update-weather.yml — this check: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            content="COWX production weather data stale (${age_label}m ≥ ${STALE_MINUTES}m). Auto-dispatched Update Weather. generatedAt=${generated}. Live: ${LIVE_META_URL}. This check: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             payload=$(jq -n --arg content "$content" '{content: $content}')
             curl --max-time 15 -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_WEBHOOK_URL"
           fi
