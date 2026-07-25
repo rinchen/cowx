@@ -9,10 +9,11 @@ TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN required}"
 EXPECT_SHA="${1:-}"
 MAX_ATTEMPTS="${PAGES_BUILD_MAX_ATTEMPTS:-180}" # ~15 minutes at 5s
 SLEEP_SECS="${PAGES_BUILD_POLL_SECS:-5}"
+MAX_RERUNS="${PAGES_BUILD_MAX_RERUNS:-3}" # self-heal transient in-progress-deployment conflicts
 
 echo "wait-for-pages-build: polling builds for ${REPO} (expect=${EXPECT_SHA:-any})"
 
-export REPO TOKEN EXPECT_SHA MAX_ATTEMPTS SLEEP_SECS
+export REPO TOKEN EXPECT_SHA MAX_ATTEMPTS SLEEP_SECS MAX_RERUNS
 node --input-type=module <<'NODE'
 import { waitForPagesBuild } from './scripts/ci/pages-build-status.js';
 
@@ -21,9 +22,11 @@ const token = process.env.TOKEN;
 const expect = process.env.EXPECT_SHA || '';
 const maxAttempts = Number(process.env.MAX_ATTEMPTS || 180);
 const sleepSecs = Number(process.env.SLEEP_SECS || 5);
+const maxReruns = Number(process.env.MAX_RERUNS || 3);
 
-async function api(path) {
+async function api(path, { method = 'GET' } = {}) {
   const res = await fetch(`https://api.github.com${path}`, {
+    method,
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/vnd.github+json',
@@ -33,9 +36,10 @@ async function api(path) {
   });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`GitHub API ${res.status} ${path}: ${body.slice(0, 200)}`);
+    throw new Error(`GitHub API ${res.status} ${method} ${path}: ${body.slice(0, 200)}`);
   }
-  return res.json();
+  // Re-run endpoints return 201 with an empty body.
+  return res.status === 204 || res.status === 201 ? null : res.json();
 }
 
 try {
@@ -49,6 +53,17 @@ try {
     expect,
     maxAttempts,
     sleepSecs,
+    maxReruns,
+    rerunBuild: async (build) => {
+      // GitHub reuses the run id and bumps run_attempt; a full re-run re-attempts
+      // both build and deploy once the blocking deployment has settled.
+      await api(`/repos/${repo}/actions/runs/${build.id}/rerun`, { method: 'POST' });
+    },
+    onRerun({ rerunsUsed, maxReruns: total, build }) {
+      console.log(
+        `  re-run ${rerunsUsed}/${total}: retrying transient Pages deploy failure for run=${build.id ?? '-'} commit=${String(build.head_sha).slice(0, 7)}`,
+      );
+    },
     onAttempt({ attempt, maxAttempts: total, status, error, build }) {
       if (!build) {
         console.log(`  attempt ${attempt}/${total}: no matching build yet`);

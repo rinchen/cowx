@@ -67,18 +67,38 @@ export function classifyPagesBuild(builds, expect) {
 }
 
 /**
+ * Stable identity for a specific run attempt so we only trigger one re-run per
+ * failed attempt (GitHub reuses the run id and bumps run_attempt on re-run).
+ * @param {Record<string, unknown> | null} build
+ * @returns {string}
+ */
+function buildAttemptKey(build) {
+  if (!build) return '';
+  const id = build.id ?? '';
+  const runAttempt = build.run_attempt ?? '';
+  return `${id}:${runAttempt}`;
+}
+
+/**
  * @param {{
  *   fetchBuilds: () => Promise<Record<string, unknown>[]>,
  *   expect?: string,
  *   maxAttempts?: number,
  *   sleepSecs?: number,
  *   sleep?: (ms: number) => Promise<void>,
+ *   rerunBuild?: (build: Record<string, unknown>) => Promise<void>,
+ *   maxReruns?: number,
  *   onAttempt?: (details: {
  *     attempt: number,
  *     maxAttempts: number,
  *     status: string,
  *     error: string,
  *     build: Record<string, unknown> | null,
+ *   }) => void,
+ *   onRerun?: (details: {
+ *     rerunsUsed: number,
+ *     maxReruns: number,
+ *     build: Record<string, unknown>,
  *   }) => void,
  * }} options
  * @returns {Promise<Record<string, unknown>>}
@@ -89,6 +109,9 @@ export async function waitForPagesBuild(options) {
   const sleepSecs = options.sleepSecs ?? 5;
   const sleep = options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   const onAttempt = options.onAttempt ?? (() => {});
+  const onRerun = options.onRerun ?? (() => {});
+  const rerunBuild = options.rerunBuild ?? null;
+  const maxReruns = options.maxReruns ?? 0;
 
   if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
     throw new TypeError('maxAttempts must be a positive integer');
@@ -96,9 +119,15 @@ export async function waitForPagesBuild(options) {
   if (!Number.isFinite(sleepSecs) || sleepSecs < 0) {
     throw new TypeError('sleepSecs must be a non-negative number');
   }
+  if (!Number.isInteger(maxReruns) || maxReruns < 0) {
+    throw new TypeError('maxReruns must be a non-negative integer');
+  }
 
   let lastStatus = 'not_found';
   let lastBuild = null;
+  let rerunsUsed = 0;
+  /** @type {Set<string>} */
+  const rerunTriggered = new Set();
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const builds = await options.fetchBuilds();
@@ -109,11 +138,31 @@ export async function waitForPagesBuild(options) {
 
     if (result.state === 'success') return /** @type {Record<string, unknown>} */ (result.build);
     if (result.state === 'error') {
-      const commit = String(result.build?.head_sha ?? '').slice(0, 7) || 'unknown';
+      const build = /** @type {Record<string, unknown>} */ (result.build);
+      const key = buildAttemptKey(build);
+      // GitHub's Pages pipeline rejects a deployment while the previous commit's
+      // deployment is still settling ("due to in progress deployment"). That is
+      // transient: re-run the failed build and keep polling so a code push is not
+      // permanently left unpublished. Only one re-run per failed attempt.
+      if (rerunBuild && rerunsUsed < maxReruns && !rerunTriggered.has(key)) {
+        rerunTriggered.add(key);
+        rerunsUsed += 1;
+        await rerunBuild(build);
+        onRerun({ rerunsUsed, maxReruns, build });
+        if (attempt < maxAttempts) await sleep(sleepSecs * 1000);
+        continue;
+      }
+      // A re-run was already triggered for this attempt; wait for GitHub to
+      // restart it (a new run_attempt) rather than failing on the stale result.
+      if (rerunTriggered.has(key) && attempt < maxAttempts) {
+        await sleep(sleepSecs * 1000);
+        continue;
+      }
+      const commit = String(build?.head_sha ?? '').slice(0, 7) || 'unknown';
       throw new PagesBuildWaitError(
         'build_error',
         `GitHub Pages deployment failed for ${commit}: ${result.error}`,
-        result.build,
+        build,
       );
     }
     if (attempt < maxAttempts) await sleep(sleepSecs * 1000);

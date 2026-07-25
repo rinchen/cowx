@@ -19,6 +19,7 @@ permissions:
   contents: write
   pull-requests: write
   pages: write
+  actions: write # re-run transient Pages deploy failures in the Verify step
 
 jobs:
   deploy-preview:
