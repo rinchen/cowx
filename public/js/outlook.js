@@ -136,6 +136,22 @@ export function tempTransitionCue(hourly, nowMs = Date.now()) {
 }
 
 /**
+ * Hero display text for a temp-transition cue: compact visual label plus the
+ * spoken aria phrase. Pure so the live clock can re-derive it every minute.
+ * @param {{ next_temp_f: number, next_time: string, delta_f: number } | null | undefined} cue
+ * @returns {{ label: string, aria: string } | null}
+ */
+export function formatTempTransitionLabel(cue) {
+  if (!cue) return null;
+  const temp = Math.round(cue.next_temp_f);
+  const when = formatCompactHourLabel(cue.next_time);
+  return {
+    label: `→ ${temp}° by ${when}`,
+    aria: `${cue.delta_f > 0 ? 'Rising' : 'Falling'} toward ${temp} degrees by ${when} per the next forecast hour.`,
+  };
+}
+
+/**
  * @typedef {{
  *   index: number,
  *   time: string,
