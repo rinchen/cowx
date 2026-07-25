@@ -48,7 +48,7 @@ cowx/   # repo directory (brand: COWX)
     ├── preview.yml           # PR preview sites under /pr-preview/pr-N/ on gh-pages
     ├── pages.yml             # Deploy UI to gh-pages on code pushes (preserves data/)
     ├── update-weather.yml    # Scheduled fetch (~45m target) + deploy + failure notify
-    └── check-stale-data.yml  # Every 2h: Discord if live meta.json ≥ 2h old
+    └── check-stale-data.yml  # Every 30m: if live meta ≥ 90m old, dispatch Update Weather + Discord
 ```
 
 ### Key artifacts
@@ -190,8 +190,8 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 ## Fetch cadence & API budget
 
-- **Schedule:** `update-weather.yml` cron is `*/20 * * * *` plus `workflow_dispatch`. A decide job skips when live CDN `meta.json` is < 40 minutes old (target cadence ~45 minutes despite GitHub schedule delay); if live is stale but `main`’s `public/data/meta.json` is fresh, it deploy-only; otherwise it runs `pnpm fetch:data`.
-- **Stale watchdog:** `check-stale-data.yml` every 2 hours (`0 */2 * * *`) fails and Discord-alerts when production `generatedAt` is ≥ 2 hours old (alert-only; does not auto-fetch).
+- **Schedule:** `update-weather.yml` uses two staggered crons (`5,25,45` and `15,35,55`) plus `workflow_dispatch`. A decide job skips when live CDN `meta.json` is < 40 minutes old (target cadence ~45 minutes despite GitHub schedule delay); if live is stale but `main`’s `public/data/meta.json` is fresh, it deploy-only; otherwise it runs `pnpm fetch:data`.
+- **Stale watchdog:** `check-stale-data.yml` every 30 minutes (`*/30 * * * *`). If production `generatedAt` is ≥ 90 minutes old, it **dispatches** `update-weather.yml` (self-heal), Discord-alerts when `NOTIFY_WEBHOOK_URL` is set, and fails the run. GitHub often delays weather crons by 1–3 hours; without this catch-up the CDN stays frozen.
 - **Design goal:** Stay within free-tier limits; do not fetch more often than ~45 minutes when the CDN is already fresh.
 
 Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):
@@ -286,7 +286,7 @@ Include a detailed body for non-trivial changes: **what** changed and **why**. F
 
 ## Failure notifications
 
-When the **weather fetch step** in `update-weather.yml` fails (`weather_fetch`), or the **gh-pages deploy / Pages build verification** fails, a notify job POSTs a summary to `NOTIFY_WEBHOOK_URL` (if set). Install/push races after a successful fetch do **not** notify. Separately, `check-stale-data.yml` POSTs when live `meta.json` is ≥ 2 hours old. Neither opens a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
+When the **weather fetch step** in `update-weather.yml` fails (`weather_fetch`), or the **gh-pages deploy / Pages build verification** fails, a notify job POSTs a summary to `NOTIFY_WEBHOOK_URL` (if set). Install/push races after a successful fetch do **not** notify. Separately, `check-stale-data.yml` POSTs when live `meta.json` is ≥ 90 minutes old (and auto-dispatches Update Weather). Neither opens a GitHub Issue. Never log or echo the webhook URL. See `how-it-works.html` for the user-facing explanation.
 
 ---
 

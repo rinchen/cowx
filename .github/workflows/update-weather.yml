@@ -2,8 +2,11 @@ name: Update Weather
 
 on:
   schedule:
-    # Fire often; decide job skips when live CDN meta is still fresh (< 40m).
-    - cron: '*/20 * * * *'
+    # Two staggered schedules — GitHub often delays or drops a single cron for
+    # 1–3h; a second expression improves delivery odds. decide skips when live
+    # CDN meta is still fresh (< 40m). check-stale-data.yml self-heals if both miss.
+    - cron: '5,25,45 * * * *'
+    - cron: '15,35,55 * * * *'
   workflow_dispatch:
 
 permissions:
