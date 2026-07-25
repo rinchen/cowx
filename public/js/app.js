@@ -19,6 +19,7 @@ import { sourceStatusChips, sourceStatusLegendHtml } from './outlook.js';
 import { getFavoriteLocations, searchLocations } from './search.js';
 import { renderWorkspace } from './workspace.js';
 import { destroyMap } from './map.js';
+import { _clearHyperlocalCache } from './hyperlocal.js';
 
 /** @typedef {{ slug: string; name: string; lat: number; lon: number; county?: string; aqi?: number | null }} IndexEntry */
 /** @typedef {{ city: string; county: string; slug: string }} ZipEntry */
@@ -224,6 +225,7 @@ async function refreshIfDataUpdated() {
 
     announce('New weather data available. Refreshing…');
     await loadCoreData({ bustCache: true });
+    _clearHyperlocalCache();
     await handleRoute({ bustCache: true });
     announce('Weather data updated.');
   } catch (err) {
@@ -750,6 +752,24 @@ async function renderLocationView(slug, opts = {}, generation = ++routeGeneratio
 
   if (generation !== routeGeneration) return;
 
+  if (!locationPayloadLooksUsable(payload)) {
+    document.body.classList.remove('workspace-active');
+    renderErrorCard(
+      'Data looks incomplete',
+      `Weather data for ${indexEntry.name} is missing required fields. Try refreshing shortly.`,
+      'Back to home',
+    );
+    showError(`Weather data for ${indexEntry.name} looks incomplete.`);
+    announce('Weather data looks incomplete', 'assertive');
+    return;
+  }
+
+  if (!locationPayloadHasForecast(payload)) {
+    showError(
+      `Forecast tables for ${indexEntry.name} look incomplete — some sections may be empty.`,
+    );
+  }
+
   els.main.innerHTML = `<div id="workspace-root"></div>`;
   const wsRoot = document.getElementById('workspace-root');
   if (!wsRoot) return;
@@ -857,6 +877,42 @@ async function handleRoute(opts = {}) {
   await renderResolveView();
 }
 
+/**
+ * Minimum shape for a location payload to attempt workspace render.
+ * @param {unknown} payload
+ * @returns {boolean}
+ */
+function locationPayloadLooksUsable(payload) {
+  return (
+    Boolean(payload) &&
+    typeof payload === 'object' &&
+    typeof (/** @type {{ slug?: unknown }} */ (payload).slug) === 'string' &&
+    /** @type {{ slug: string }} */ (payload).slug.length > 0
+  );
+}
+
+/**
+ * Soft check that hourly forecast tables are present when expected.
+ * @param {unknown} payload
+ * @returns {boolean}
+ */
+function locationPayloadHasForecast(payload) {
+  if (!payload || typeof payload !== 'object') return false;
+  const hourly = /** @type {{ hourly?: { time?: unknown } }} */ (payload).hourly;
+  if (hourly == null) return false;
+  return Array.isArray(hourly.time);
+}
+
+/**
+ * Surface unexpected app errors without reacting to CDN/img noise or extensions.
+ * @param {string} label
+ * @param {unknown} detail
+ */
+function reportUnexpectedError(label, detail) {
+  console.error(label, detail);
+  showError('An unexpected error occurred. Try refreshing the page.');
+}
+
 async function init() {
   els.status = document.getElementById('status-announcer');
   els.errorBanner = document.getElementById('error-banner');
@@ -872,6 +928,15 @@ async function init() {
   });
   await handleRoute();
   startDataRefreshWatcher();
+
+  window.addEventListener('error', (e) => {
+    // Resource load failures (img/script tags) fire on the element, not window.
+    if (e.target && e.target !== window) return;
+    reportUnexpectedError('Uncaught error', e.error ?? e.message);
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    reportUnexpectedError('Unhandled rejection', e.reason);
+  });
 }
 
 void init().catch((err) => {

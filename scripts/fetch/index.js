@@ -229,6 +229,9 @@ export async function runFetch() {
     ),
   );
 
+  /** @type {{ slug: string, payload: object, indexEntry: object }[]} */
+  const pendingWrites = [];
+
   for (const loc of locations) {
     try {
       const om = openmeteo.bySlug.get(loc.slug);
@@ -370,31 +373,48 @@ export async function runFetch() {
         },
       };
 
-      await writeFile(locationPayloadPath(loc.slug), JSON.stringify(payload), 'utf8');
-
-      index.push({
+      pendingWrites.push({
         slug: loc.slug,
-        name: loc.name,
-        lat: loc.lat,
-        lon: loc.lon,
-        region: loc.region,
-        county: loc.county,
-        elevation_ft: loc.elevation_ft,
-        temp_f: current?.temp_f ?? null,
-        condition: current?.condition ?? null,
-        humidity: current?.humidity ?? null,
-        wind_speed_mph: current?.wind_speed_mph ?? null,
-        uv_index: current?.uv_index ?? null,
-        aqi: an?.aqi ?? pa?.aqi_pm25 ?? omaq?.us_aqi ?? null,
-        nws_alert: alerts.length > 0,
-        forecast_stale: forecastStale,
-        updated_at: updatedAt,
+        payload,
+        indexEntry: {
+          slug: loc.slug,
+          name: loc.name,
+          lat: loc.lat,
+          lon: loc.lon,
+          region: loc.region,
+          county: loc.county,
+          elevation_ft: loc.elevation_ft,
+          temp_f: current?.temp_f ?? null,
+          condition: current?.condition ?? null,
+          humidity: current?.humidity ?? null,
+          wind_speed_mph: current?.wind_speed_mph ?? null,
+          uv_index: current?.uv_index ?? null,
+          aqi: an?.aqi ?? pa?.aqi_pm25 ?? omaq?.us_aqi ?? null,
+          nws_alert: alerts.length > 0,
+          forecast_stale: forecastStale,
+          updated_at: updatedAt,
+        },
       });
     } catch (err) {
       console.warn(
         `fetch: skipped location ${loc.slug} — ${err instanceof Error ? err.message : String(err)}`,
       );
     }
+  }
+
+  if (pendingWrites.length < locations.length * 0.5) {
+    throw new Error(
+      `Too few location payloads built (${pendingWrites.length}/${locations.length}); refusing partial write`,
+    );
+  }
+
+  for (const row of pendingWrites) {
+    await writeFile(locationPayloadPath(row.slug), JSON.stringify(row.payload), 'utf8');
+    index.push(row.indexEntry);
+  }
+
+  if (index.length !== pendingWrites.length) {
+    throw new Error(`Index/write mismatch: index=${index.length} pending=${pendingWrites.length}`);
   }
 
   await writeFile(
@@ -490,6 +510,14 @@ export async function runFetch() {
     nws.status === 'ok' ||
     nws.status === 'partial' ||
     staleCount > 0;
+
+  const minCalls = 10;
+  const maxCalls = locations.length * 50;
+  if (totalCalls < minCalls || totalCalls > maxCalls) {
+    console.warn(
+      `fetch: apiCalls ${totalCalls} outside expected band (${minCalls}–${maxCalls} for ${locations.length} locations)`,
+    );
+  }
 
   const meta = {
     generatedAt: updatedAt,

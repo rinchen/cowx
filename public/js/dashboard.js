@@ -637,12 +637,12 @@ function renderCollapsibleSection(parent, headingId, title, renderBody, opts = {
 /**
  * @param {DocumentFragment | HTMLElement} container
  * @param {string} title
- * @param {string} bodyHtml
+ * @param {string} bodyText Plain text only (escaped) — do not pass unsanitized HTML.
  */
-function renderEmpty(container, title, bodyHtml) {
+function renderEmpty(container, title, bodyText) {
   const el = document.createElement('p');
   el.className = 'empty-state';
-  el.innerHTML = `<strong>${escapeHtml(title)}</strong> ${bodyHtml}`;
+  el.innerHTML = `<strong>${escapeHtml(title)}</strong> ${escapeHtml(bodyText)}`;
   container.appendChild(el);
 }
 
