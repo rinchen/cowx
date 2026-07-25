@@ -13,6 +13,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { synthesizeBottomLine } from '../public/js/bottom-line.js';
 import {
+  currentHourIndex,
   dailyIndexForNow,
   denverDateKey,
   denverHourKey,
@@ -78,6 +79,27 @@ describe('denver-tz-invariant: nearestHourIndex', () => {
   });
 });
 
+describe('denver-tz-invariant: currentHourIndex', () => {
+  it('stays on the in-progress hour after :30 (Longmont 81°F trap)', () => {
+    // 08:41 MDT — nearest would pick 09:00; current conditions must stay on 08:00.
+    const nowMs = new Date('2026-07-25T14:41:00Z').getTime();
+    const times = ['2026-07-25T08:00', '2026-07-25T09:00', '2026-07-25T10:00'];
+    assert.equal(nearestHourIndex(times, nowMs), 1);
+    assert.equal(currentHourIndex(times, nowMs), 0);
+  });
+
+  it('advances at the top of the next Denver hour', () => {
+    const nowMs = new Date('2026-07-25T15:01:00Z').getTime(); // 09:01 MDT
+    const times = ['2026-07-25T08:00', '2026-07-25T09:00', '2026-07-25T10:00'];
+    assert.equal(currentHourIndex(times, nowMs), 1);
+  });
+
+  it('matches noonish Denver pick used by At a Glance', () => {
+    const times = ['2026-07-22T06:00', '2026-07-22T12:00', '2026-07-22T18:00'];
+    assert.equal(currentHourIndex(times, NOONISH_MDT), 1);
+  });
+});
+
 describe('denver-tz-invariant: precipTodayInches', () => {
   it('sums only Denver calendar-day hours through current Mountain hour', () => {
     const times = [
@@ -131,7 +153,7 @@ describe('denver-tz-invariant: resolveCatalogNow / pickNow*', () => {
     cloud_cover: [0, 100, 90, 70, 10],
   };
 
-  it('At a Glance now uses Denver nearest hour + precip day (CI regression)', () => {
+  it('At a Glance now uses Denver in-progress hour + precip day (CI regression)', () => {
     const snapshot = { temp_f: 90, precip_today_in: 9.99, surface_pressure_mb: 850 };
     const merged = resolveCatalogNow(snapshot, hourly, NOONISH_MDT);
     assert.ok(merged);
@@ -142,6 +164,27 @@ describe('denver-tz-invariant: resolveCatalogNow / pickNow*', () => {
     assert.equal(merged.condition, 'Slight Rain');
   });
 
+  it('does not jump to the next forecast hour before it starts', () => {
+    const morning = {
+      time: ['2026-07-25T08:00', '2026-07-25T09:00', '2026-07-25T10:00'],
+      temperature_2m: [75.8, 81.1, 87.5],
+      precipitation: [0, 0, 0],
+      weather_code: [0, 0, 0],
+      is_day: [1, 1, 1],
+      apparent_temperature: [76, 80, 86],
+      relative_humidity_2m: [46, 39, 30],
+      wind_speed_10m: [2, 5, 8],
+      wind_direction_10m: [100, 130, 150],
+      wind_gusts_10m: [3, 6, 10],
+      cloud_cover: [0, 0, 0],
+    };
+    const nowMs = new Date('2026-07-25T14:41:00Z').getTime(); // 08:41 MDT
+    const merged = resolveCatalogNow({ temp_f: 75.8 }, morning, nowMs);
+    assert.ok(merged);
+    assert.equal(merged.temp_f, 75.8);
+    assert.equal(merged.time, '2026-07-25T08:00');
+  });
+
   it('pickNowCurrent matches the same Denver hour', () => {
     const now = pickNowCurrent(hourly, NOONISH_MDT);
     assert.ok(now);
@@ -149,14 +192,14 @@ describe('denver-tz-invariant: resolveCatalogNow / pickNow*', () => {
     assert.equal(now.time, '2026-07-22T12:00');
   });
 
-  it('pickNowSky follows Denver nearest weather_code', () => {
+  it('pickNowSky follows Denver in-progress weather_code', () => {
     const sky = pickNowSky(hourly, NOONISH_MDT);
     assert.ok(sky);
     assert.equal(sky.weather_code, 61);
     assert.match(String(sky.condition), /rain/i);
   });
 
-  it('sliceCompactHours starts at Denver nearest hour', () => {
+  it('sliceCompactHours starts at Denver in-progress hour', () => {
     const rows = sliceCompactHours(hourly, { count: 3, nowMs: NOONISH_MDT });
     assert.equal(rows.length, 2); // only 12:00 and 18:00 remain
     assert.equal(rows[0].time, '2026-07-22T12:00');

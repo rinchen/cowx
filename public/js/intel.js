@@ -18,7 +18,7 @@ import {
   buildOutlookHighlights,
   buildPeriodSummaries,
   formatCompactHourLabel,
-  nearestHourIndex,
+  currentHourIndex,
   pickNowSky,
   resolveCatalogNow,
   sliceCompactHours,
@@ -198,13 +198,13 @@ export function renderHero(root, data, options = {}) {
   const pinCurrent =
     hyperlocal?.current && typeof hyperlocal.current === 'object' ? hyperlocal.current : null;
   const usingPinNow = Boolean(pin && pinCurrent?.temp_f != null);
-  // Catalog path: nearest hourly "now" (not the frozen fetch-time current snapshot).
+  // Catalog path: in-progress hourly "now" (not the frozen fetch-time current snapshot).
   const current = usingPinNow
     ? pinCurrent
     : (resolveCatalogNow(catalogCurrent, hourly) ?? catalogCurrent);
 
   const times = /** @type {string[]} */ (hourly?.time ?? []);
-  const hi = times.length ? nearestHourIndex(times) : 0;
+  const hi = times.length ? currentHourIndex(times) : 0;
   const dayIdx = dailyIndexForNow(daily);
   const todayHi =
     dayIdx >= 0 ? /** @type {number[]} */ (daily?.temperature_2m_max ?? [])[dayIdx] : null;
@@ -570,7 +570,7 @@ export function renderOutlook(root, data, options = {}) {
     dayIdx >= 0 && dailyTimes[dayIdx] != null ? String(dailyTimes[dayIdx]).slice(0, 10) : null;
 
   const times = /** @type {string[]} */ (hourly?.time ?? []);
-  const hi = times.length ? nearestHourIndex(times) : 0;
+  const hi = times.length ? currentHourIndex(times) : 0;
   const sliceEnd = Math.min(times.length, hi + 24);
   const sliceStart = Math.max(0, sliceEnd - 24);
   const temps = /** @type {(number | null)[]} */ (hourly?.temperature_2m ?? []).slice(

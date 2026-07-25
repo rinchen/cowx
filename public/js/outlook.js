@@ -2,15 +2,20 @@
  * Pure helpers for Short-Term Outlook / hourly modal (testable, no DOM).
  */
 
-import { dailyIndexForNow, nearestHourIndex, precipTodayInches } from './denver-time.js';
+import { currentHourIndex, dailyIndexForNow, precipTodayInches } from './denver-time.js';
 import { escapeHtml } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { windDirLabel } from './wind.js';
 
-export { dailyIndexForNow, nearestHourIndex, precipTodayInches } from './denver-time.js';
+export {
+  currentHourIndex,
+  dailyIndexForNow,
+  nearestHourIndex,
+  precipTodayInches,
+} from './denver-time.js';
 
 /**
- * Sky for "now" from the nearest hourly slot (same clock as Short-Term Outlook).
+ * Sky for "now" from the in-progress hourly slot (same clock as Short-Term Outlook).
  * Prefer this over a frozen fetch-time `current` snapshot so the hero/bottom-line
  * stay aligned with the outlook as the wall clock advances between fetches.
  * @param {Record<string, unknown> | null | undefined} hourly
@@ -29,9 +34,9 @@ export function pickNowSky(hourly, nowMs = Date.now()) {
 }
 
 /**
- * Full "now" conditions from the nearest hourly slot (UI `current` shape).
- * Used so At a Glance temp/wind/humidity track the wall clock between fetches,
- * instead of freezing on the Open-Meteo `current` snapshot from fetch time.
+ * Full "now" conditions from the in-progress hourly slot (UI `current` shape).
+ * Uses {@link currentHourIndex} (not nearest) so after :30 we do not jump to the
+ * next forecast hour — that was reading several °F hot vs observations.
  * @param {Record<string, unknown> | null | undefined} hourly
  * @param {number} [nowMs]
  * @returns {Record<string, unknown> | null}
@@ -39,7 +44,7 @@ export function pickNowSky(hourly, nowMs = Date.now()) {
 export function pickNowCurrent(hourly, nowMs = Date.now()) {
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   if (!times.length) return null;
-  const hi = nearestHourIndex(times, nowMs);
+  const hi = currentHourIndex(times, nowMs);
   const weather_code = numOrNull(/** @type {(number | null)[]} */ (hourly?.weather_code ?? [])[hi]);
   const dayFlag = /** @type {(number | null)[]} */ (hourly?.is_day ?? [])[hi];
   const is_day = dayFlag === 0 || dayFlag === 1 ? dayFlag : null;
@@ -71,7 +76,7 @@ export function pickNowCurrent(hourly, nowMs = Date.now()) {
 }
 
 /**
- * Catalog path "now": nearest-hour fields overlaid on the fetch-time snapshot.
+ * Catalog path "now": in-progress-hour fields overlaid on the fetch-time snapshot.
  * Recomputes precip_today_in from hourly so rainfall tracks the wall clock / calendar day.
  * Snapshot keeps current-only fields such as surface_pressure_mb when hourly omits them.
  * @param {Record<string, unknown> | null | undefined} snapshot
@@ -119,7 +124,7 @@ export function resolveCatalogNow(snapshot, hourly, nowMs = Date.now()) {
  */
 
 /**
- * Next N hours from the nearest hour (inclusive).
+ * Next N hours from the in-progress hour (inclusive).
  * @param {Record<string, unknown> | null | undefined} hourly
  * @param {{ count?: number, nowMs?: number }} [opts]
  * @returns {CompactHourRow[]}
@@ -128,7 +133,7 @@ export function sliceCompactHours(hourly, opts = {}) {
   const count = Math.min(12, Math.max(1, opts.count ?? 10));
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   if (!times.length) return [];
-  const start = nearestHourIndex(times, opts.nowMs);
+  const start = currentHourIndex(times, opts.nowMs);
   const end = Math.min(times.length, start + count);
   /** @type {CompactHourRow[]} */
   const rows = [];
@@ -341,7 +346,7 @@ function summarizeIndices(hourly, indices, meta) {
 export function buildOutlookHighlights(hourly, opts = {}) {
   const times = /** @type {string[]} */ (hourly?.time ?? []);
   if (!times.length) return [];
-  const from = opts.fromIndex != null ? opts.fromIndex : nearestHourIndex(times, opts.nowMs);
+  const from = opts.fromIndex != null ? opts.fromIndex : currentHourIndex(times, opts.nowMs);
   const hours = opts.hours ?? 48;
   const end = Math.min(times.length, from + hours);
 
