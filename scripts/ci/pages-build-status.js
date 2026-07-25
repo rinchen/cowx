@@ -4,6 +4,11 @@
  * GitHub's legacy /pages/builds endpoint can report "Page build failed" while
  * the canonical dynamic/pages/pages-build-deployment workflow succeeds and
  * publishes the CDN. Use the workflow run as the source of truth.
+ *
+ * A common transient failure: deploy-pages rejects with
+ * "due to in progress deployment. Please cancel <sha> first" when a prior
+ * gh-pages commit's Pages deployment is still settling (or wedged). Re-running
+ * alone is not enough — clear the blocker, wait, then re-run.
  */
 
 export class PagesBuildWaitError extends Error {
@@ -18,6 +23,20 @@ export class PagesBuildWaitError extends Error {
     this.code = code;
     this.build = build;
   }
+}
+
+/**
+ * Extract the blocking commit SHA from a deploy-pages "in progress deployment"
+ * error. Returns null when the failure is not that transient conflict.
+ * @param {string} text
+ * @returns {string | null}
+ */
+export function parseInProgressDeploymentBlocker(text) {
+  if (!text) return null;
+  const match = String(text).match(
+    /due to in progress deployment\.\s*Please cancel ([a-f0-9]{40}) first/i,
+  );
+  return match?.[1] ?? null;
 }
 
 /**
@@ -80,14 +99,25 @@ function buildAttemptKey(build) {
 }
 
 /**
+ * @typedef {{
+ *   retryable: boolean,
+ *   blockingSha?: string | null,
+ *   detail?: string,
+ * }} PagesFailureDiagnosis
+ */
+
+/**
  * @param {{
  *   fetchBuilds: () => Promise<Record<string, unknown>[]>,
  *   expect?: string,
  *   maxAttempts?: number,
  *   sleepSecs?: number,
  *   sleep?: (ms: number) => Promise<void>,
+ *   diagnoseFailure?: (build: Record<string, unknown>) => Promise<PagesFailureDiagnosis>,
+ *   clearBlockingDeployment?: (blockingSha: string) => Promise<void>,
  *   rerunBuild?: (build: Record<string, unknown>) => Promise<void>,
  *   maxReruns?: number,
+ *   rerunDelaySecs?: number,
  *   onAttempt?: (details: {
  *     attempt: number,
  *     maxAttempts: number,
@@ -99,6 +129,8 @@ function buildAttemptKey(build) {
  *     rerunsUsed: number,
  *     maxReruns: number,
  *     build: Record<string, unknown>,
+ *     blockingSha?: string | null,
+ *     detail?: string,
  *   }) => void,
  * }} options
  * @returns {Promise<Record<string, unknown>>}
@@ -110,8 +142,11 @@ export async function waitForPagesBuild(options) {
   const sleep = options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   const onAttempt = options.onAttempt ?? (() => {});
   const onRerun = options.onRerun ?? (() => {});
+  const diagnoseFailure = options.diagnoseFailure ?? null;
+  const clearBlockingDeployment = options.clearBlockingDeployment ?? null;
   const rerunBuild = options.rerunBuild ?? null;
   const maxReruns = options.maxReruns ?? 0;
+  const rerunDelaySecs = options.rerunDelaySecs ?? 60;
 
   if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
     throw new TypeError('maxAttempts must be a positive integer');
@@ -121,6 +156,9 @@ export async function waitForPagesBuild(options) {
   }
   if (!Number.isInteger(maxReruns) || maxReruns < 0) {
     throw new TypeError('maxReruns must be a non-negative integer');
+  }
+  if (!Number.isFinite(rerunDelaySecs) || rerunDelaySecs < 0) {
+    throw new TypeError('rerunDelaySecs must be a non-negative number');
   }
 
   let lastStatus = 'not_found';
@@ -140,28 +178,46 @@ export async function waitForPagesBuild(options) {
     if (result.state === 'error') {
       const build = /** @type {Record<string, unknown>} */ (result.build);
       const key = buildAttemptKey(build);
-      // GitHub's Pages pipeline rejects a deployment while the previous commit's
-      // deployment is still settling ("due to in progress deployment"). That is
-      // transient: re-run the failed build and keep polling so a code push is not
-      // permanently left unpublished. Only one re-run per failed attempt.
-      if (rerunBuild && rerunsUsed < maxReruns && !rerunTriggered.has(key)) {
-        rerunTriggered.add(key);
-        rerunsUsed += 1;
-        await rerunBuild(build);
-        onRerun({ rerunsUsed, maxReruns, build });
-        if (attempt < maxAttempts) await sleep(sleepSecs * 1000);
-        continue;
-      }
       // A re-run was already triggered for this attempt; wait for GitHub to
       // restart it (a new run_attempt) rather than failing on the stale result.
       if (rerunTriggered.has(key) && attempt < maxAttempts) {
         await sleep(sleepSecs * 1000);
         continue;
       }
+
+      /** @type {PagesFailureDiagnosis} */
+      let diagnosis = { retryable: Boolean(rerunBuild && maxReruns > 0) };
+      if (diagnoseFailure) {
+        diagnosis = await diagnoseFailure(build);
+      }
+
+      if (diagnosis.retryable && rerunBuild && rerunsUsed < maxReruns && !rerunTriggered.has(key)) {
+        rerunTriggered.add(key);
+        rerunsUsed += 1;
+        const blockingSha = diagnosis.blockingSha ?? null;
+        if (blockingSha && clearBlockingDeployment) {
+          await clearBlockingDeployment(blockingSha);
+        }
+        onRerun({
+          rerunsUsed,
+          maxReruns,
+          build,
+          blockingSha,
+          detail: diagnosis.detail,
+        });
+        // Prior weather deploys can take ~10 minutes; a short poll interval is
+        // not enough for the Pages lock to release. Wait before re-running.
+        if (rerunDelaySecs > 0) await sleep(rerunDelaySecs * 1000);
+        await rerunBuild(build);
+        if (attempt < maxAttempts) await sleep(sleepSecs * 1000);
+        continue;
+      }
+
       const commit = String(build?.head_sha ?? '').slice(0, 7) || 'unknown';
+      const detail = diagnosis.detail ? ` (${diagnosis.detail})` : '';
       throw new PagesBuildWaitError(
         'build_error',
-        `GitHub Pages deployment failed for ${commit}: ${result.error}`,
+        `GitHub Pages deployment failed for ${commit}: ${result.error}${detail}`,
         build,
       );
     }

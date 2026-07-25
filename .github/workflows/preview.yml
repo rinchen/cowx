@@ -20,6 +20,7 @@ permissions:
   pull-requests: write
   pages: write
   actions: write # re-run transient Pages deploy failures in the Verify step
+  deployments: write # clear wedged github-pages deployment locks before re-run
 
 jobs:
   deploy-preview:

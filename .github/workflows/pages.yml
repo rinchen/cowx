@@ -9,6 +9,7 @@ permissions:
   contents: write
   pages: write
   actions: write # re-run transient Pages deploy failures in the Verify step
+  deployments: write # clear wedged github-pages deployment locks before re-run
 
 # Share with preview.yml and update-weather.yml deploy-pages so all writers
 # to gh-pages run one at a time (avoids Pages build queue stampede).
