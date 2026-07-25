@@ -34,7 +34,7 @@ import { fetchCwop } from './adapters/cwop.js';
 import { fetchHms } from './adapters/hms.js';
 import { fetchSpcFireWx } from './adapters/spc-firewx.js';
 import { fetchNifcFires } from './adapters/nifc-fires.js';
-import { fetchBurnRestrictions } from './adapters/burn-restrictions.js';
+import { fetchBurnRestrictions, mergeFireRestrictions } from './adapters/burn-restrictions.js';
 import { fetchSpaceWeather } from './adapters/space-weather.js';
 import { fetchFirms } from './adapters/firms.js';
 import { fetchCbrfc } from './adapters/cbrfc.js';
@@ -327,7 +327,11 @@ export async function runFetch() {
       const fireWeather = spcFireWx.bySlug.get(loc.slug) ?? null;
       const nearbyFires = nifcFires.bySlug.get(loc.slug) ?? null;
       const nearbyFirms = firms.bySlug.get(loc.slug) ?? null;
-      const fireRestrictions = burnRestrictions.bySlug.get(loc.slug) ?? null;
+      const fireRestrictions = mergeFireRestrictions(
+        burnRestrictions.bySlug.get(loc.slug),
+        prior,
+        Boolean(burnRestrictions.scrapeOk),
+      );
       const cbrfcRec = cbrfc.bySlug.get(loc.slug) ?? null;
       const webcamLinks = sanitizeWebcamLinks(loc.webcam_links);
       const caicLink = buildCaicLink(loc);

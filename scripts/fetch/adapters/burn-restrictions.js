@@ -12,7 +12,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fetchWithTimeout } from '../../lib/http.js';
+import { fetchWithTimeout, sleep, NWS_USER_AGENT } from '../../lib/http.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LINKS_PATH = path.resolve(__dirname, '../../locations/co-fire-restriction-links.json');
@@ -21,6 +21,11 @@ const LINKS_PATH = path.resolve(__dirname, '../../locations/co-fire-restriction-
 const COEM_URL = 'http://www.coemergency.com/p/fire-bans-danger.html';
 
 const DISCLAIMER = 'Verify with local sheriff / land manager before burning or campfires.';
+
+const RETRYABLE_STATUS = new Set([429, 502, 503, 504]);
+const MAX_ATTEMPTS = 3;
+const BACKOFF_MS = [2_000, 5_000];
+const RETRY_AFTER_CAP_MS = 30_000;
 
 /**
  * @typedef {'restriction_reported' | 'none_reported' | 'unknown'} RestrictionStatus
@@ -159,8 +164,115 @@ export function buildRestrictionForLocation(loc, statusByCounty, links, updatedA
 }
 
 /**
+ * When COEM scrape fails, keep curated links from the fresh payload but carry
+ * forward the last known-good county status (and its updatedAt).
+ * @param {object | null | undefined} fresh
+ * @param {object | null | undefined} prior
+ * @param {boolean} scrapeOk
+ * @returns {object | null}
+ */
+export function mergeFireRestrictions(fresh, prior, scrapeOk) {
+  if (!fresh || typeof fresh !== 'object') {
+    return prior?.fire_restrictions && typeof prior.fire_restrictions === 'object'
+      ? prior.fire_restrictions
+      : null;
+  }
+  if (scrapeOk) return fresh;
+
+  const priorFr = prior?.fire_restrictions;
+  const priorStatus = priorFr && typeof priorFr === 'object' ? priorFr.status : null;
+  if (priorStatus === 'restriction_reported' || priorStatus === 'none_reported') {
+    return {
+      ...fresh,
+      status: priorStatus,
+      updatedAt: priorFr.updatedAt ?? null,
+    };
+  }
+  return fresh;
+}
+
+/**
+ * @param {Headers | undefined} headers
+ * @param {number} attemptIndex zero-based index of the attempt that just failed
+ * @returns {number}
+ */
+function retryDelayMs(headers, attemptIndex) {
+  const raw = headers?.get?.('retry-after');
+  if (raw != null && raw !== '') {
+    const seconds = Number(raw);
+    if (Number.isFinite(seconds) && seconds >= 0) {
+      return Math.min(seconds * 1000, RETRY_AFTER_CAP_MS);
+    }
+  }
+  return BACKOFF_MS[Math.min(attemptIndex, BACKOFF_MS.length - 1)];
+}
+
+/**
+ * Fetch COEM fire-bans HTML with retries on 429/5xx and network errors.
+ * On failure, the thrown Error has a numeric `calls` property for meta accounting.
+ * @param {{
+ *   fetchImpl?: typeof fetchWithTimeout,
+ *   sleepFn?: (ms: number) => Promise<void>,
+ *   timeoutMs?: number,
+ * }} [opts]
+ * @returns {Promise<{ html: string, calls: number }>}
+ */
+export async function fetchCoemHtml(opts = {}) {
+  const fetchImpl = opts.fetchImpl ?? fetchWithTimeout;
+  const sleepFn = opts.sleepFn ?? sleep;
+  const timeoutMs = opts.timeoutMs ?? 45_000;
+  let calls = 0;
+  /** @type {Error | null} */
+  let lastError = null;
+
+  /**
+   * @param {Error} err
+   * @returns {never}
+   */
+  function fail(err) {
+    Object.assign(err, { calls });
+    throw err;
+  }
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetchImpl(COEM_URL, {
+        timeoutMs,
+        headers: { 'User-Agent': NWS_USER_AGENT },
+      });
+      calls += 1;
+      if (res.ok) {
+        return { html: await res.text(), calls };
+      }
+      lastError = new Error(`HTTP ${res.status} for COEM fire bans page`);
+      if (!RETRYABLE_STATUS.has(res.status) || attempt === MAX_ATTEMPTS - 1) {
+        fail(lastError);
+      }
+      await sleepFn(retryDelayMs(res.headers, attempt));
+      continue;
+    } catch (err) {
+      // HTTP path already decided not to retry — rethrow as-is (calls attached).
+      if (err === lastError) throw err;
+
+      // Network / abort — count the attempt and retry when attempts remain.
+      calls += 1;
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt === MAX_ATTEMPTS - 1) fail(lastError);
+      await sleepFn(BACKOFF_MS[Math.min(attempt, BACKOFF_MS.length - 1)]);
+    }
+  }
+
+  fail(lastError ?? new Error('COEM fire bans page unavailable'));
+}
+
+/**
  * @param {import('../../lib/types.js').Location[]} locations
- * @param {{ fetchHtml?: () => Promise<string>, linksPath?: string }} [opts]
+ * @param {{
+ *   fetchHtml?: () => Promise<string>,
+ *   fetchImpl?: typeof fetchWithTimeout,
+ *   sleepFn?: (ms: number) => Promise<void>,
+ *   linksPath?: string,
+ * }} [opts]
  */
 export async function fetchBurnRestrictions(locations, opts = {}) {
   /** @type {Map<string, object>} */
@@ -180,27 +292,31 @@ export async function fetchBurnRestrictions(locations, opts = {}) {
   let statusByCounty = new Map();
   /** @type {string | null} */
   let updatedAt = null;
-  let parseOk = false;
+  let scrapeOk = false;
 
   try {
     let html;
     if (opts.fetchHtml) {
       html = await opts.fetchHtml();
     } else {
-      const res = await fetchWithTimeout(COEM_URL, { timeoutMs: 45_000 });
-      calls += 1;
-      if (!res.ok) throw new Error(`HTTP ${res.status} for COEM fire bans page`);
-      html = await res.text();
+      const fetched = await fetchCoemHtml({
+        fetchImpl: opts.fetchImpl,
+        sleepFn: opts.sleepFn,
+      });
+      html = fetched.html;
+      calls += fetched.calls;
     }
     statusByCounty = parseCoemRestrictionHtml(html);
     if (statusByCounty.size > 0) {
-      parseOk = true;
+      scrapeOk = true;
       updatedAt = new Date().toISOString();
     } else {
       errors.push('COEM parse returned no counties');
     }
   } catch (err) {
-    if (!opts.fetchHtml) calls += 1;
+    if (err && typeof err === 'object' && typeof err.calls === 'number') {
+      calls += err.calls;
+    }
     errors.push(err instanceof Error ? err.message : String(err));
   }
 
@@ -208,9 +324,10 @@ export async function fetchBurnRestrictions(locations, opts = {}) {
     bySlug.set(loc.slug, buildRestrictionForLocation(loc, statusByCounty, links, updatedAt));
   }
 
-  if (!parseOk && Object.keys(links.counties).length === 0 && links.statewide.length === 0) {
+  if (!scrapeOk && Object.keys(links.counties).length === 0 && links.statewide.length === 0) {
     return {
       status: 'error',
+      scrapeOk: false,
       bySlug,
       calls,
       error: (errors.join('; ') || 'Burn restriction data unavailable').slice(0, 500),
@@ -218,7 +335,8 @@ export async function fetchBurnRestrictions(locations, opts = {}) {
   }
 
   return {
-    status: parseOk ? (errors.length ? 'partial' : 'ok') : 'partial',
+    status: scrapeOk ? (errors.length ? 'partial' : 'ok') : 'partial',
+    scrapeOk,
     bySlug,
     calls,
     ...(errors.length ? { error: errors.join('; ').slice(0, 500) } : {}),
