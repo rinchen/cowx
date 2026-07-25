@@ -28,7 +28,10 @@ async function loadSpaceWeather(dataBase) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12_000);
   try {
-    const res = await fetch(`${dataBase}/space-weather.json`, { signal: controller.signal });
+    const res = await fetch(`${dataBase}/space-weather.json?_=${Date.now()}`, {
+      cache: 'no-store',
+      signal: controller.signal,
+    });
     if (!res.ok) {
       console.warn('workspace: space-weather.json HTTP %s', res.status);
       return null;
