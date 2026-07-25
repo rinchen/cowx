@@ -9,6 +9,7 @@
 
 import { wmoLabel } from './wmo.js';
 import { escapeHtml } from './dom.js';
+import { denverHourKey, omLocalOrdinal } from './denver-time.js';
 
 export { wmoLabel };
 
@@ -66,33 +67,82 @@ export function weatherIconHtml(code, opts = {}) {
 }
 
 /**
- * Infer day/night from ISO time vs today's sunrise/sunset arrays when available.
+ * Hour 0–23 for a Denver-local (or Z/offset) ISO, without host-TZ `Date` traps.
+ * @param {string} isoTime
+ * @returns {number}
+ */
+function hourFromIso(isoTime) {
+  if (/[zZ]$|[+-]\d{2}:?\d{2}$/.test(isoTime)) {
+    const d = new Date(isoTime);
+    if (Number.isFinite(d.getTime())) {
+      // Absolute instants: use America/Denver wall hour
+      return Number(denverHourKey(d.getTime()).slice(11, 13));
+    }
+  }
+  const m = /T(\d{2})/.exec(isoTime);
+  if (m) return Number(m[1]);
+  const ord = omLocalOrdinal(isoTime);
+  if (Number.isFinite(ord)) return new Date(ord).getUTCHours();
+  return NaN;
+}
+
+/**
+ * Comparable ms for sunrise/sunset/hourly Open-Meteo Denver-local ISO strings.
+ * Absolute (Z/offset) strings use real epoch ms; bare local ISO uses ordinal ms.
+ * @param {string} t
+ * @returns {number}
+ */
+function comparableMs(t) {
+  if (/[zZ]$|[+-]\d{2}:?\d{2}$/.test(t)) {
+    const ms = new Date(t).getTime();
+    return Number.isFinite(ms) ? ms : NaN;
+  }
+  return omLocalOrdinal(t);
+}
+
+/**
+ * Coarse day/night when sunrise/sunset arrays are missing (6–20 Denver wall).
+ * @param {string | null | undefined} isoTime
+ * @returns {boolean}
+ */
+function coarseDaytime(isoTime) {
+  if (!isoTime) {
+    const hour = Number(denverHourKey().slice(11, 13));
+    return hour >= 6 && hour < 20;
+  }
+  const hour = hourFromIso(String(isoTime));
+  if (!Number.isFinite(hour)) return true;
+  return hour >= 6 && hour < 20;
+}
+
+/**
+ * Infer day/night from ISO time vs sunrise/sunset arrays when available.
+ * Offset-less Open-Meteo / astronomy times are America/Denver wall clock — never
+ * parse them with host-local `new Date(t)`.
  * @param {string | null | undefined} isoTime
  * @param {string[] | null | undefined} sunrises
  * @param {string[] | null | undefined} sunsets
  * @returns {boolean}
  */
 export function isDaytime(isoTime, sunrises, sunsets) {
-  if (!isoTime) {
-    const hour = new Date().getHours();
-    return hour >= 6 && hour < 20;
-  }
+  if (!isoTime) return coarseDaytime(null);
   try {
-    const t = new Date(isoTime).getTime();
+    const t = comparableMs(String(isoTime));
+    if (!Number.isFinite(t)) return coarseDaytime(String(isoTime));
+
     if (!Array.isArray(sunrises) || !Array.isArray(sunsets) || !sunrises.length) {
-      const hour = new Date(isoTime).getHours();
-      return hour >= 6 && hour < 20;
+      return coarseDaytime(String(isoTime));
     }
     for (let i = 0; i < Math.min(sunrises.length, sunsets.length); i += 1) {
-      const rise = new Date(sunrises[i]).getTime();
-      const set = new Date(sunsets[i]).getTime();
+      const rise = comparableMs(String(sunrises[i]));
+      const set = comparableMs(String(sunsets[i]));
+      if (!Number.isFinite(rise) || !Number.isFinite(set)) continue;
       if (t >= rise && t < set) return true;
       if (t >= rise - 12 * 3600_000 && t <= set + 12 * 3600_000) {
         return t >= rise && t < set;
       }
     }
-    const hour = new Date(isoTime).getHours();
-    return hour >= 6 && hour < 20;
+    return coarseDaytime(String(isoTime));
   } catch {
     return true;
   }

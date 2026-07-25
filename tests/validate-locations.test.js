@@ -66,4 +66,14 @@ describe('validateLocationsData', () => {
     const negErrs = validateLocationsData([{ ...valid, elevation_ft: -100 }]);
     assert.ok(negErrs.some((e) => e.includes('must be >= 0')));
   });
+
+  it('rejects catalogs larger than 1000 locations', () => {
+    const huge = Array.from({ length: 1001 }, (_, i) => ({
+      ...valid,
+      slug: `loc-${i}`,
+      name: `Loc ${i}`,
+    }));
+    const errors = validateLocationsData(huge);
+    assert.ok(errors.some((e) => e.includes('max 1000')));
+  });
 });

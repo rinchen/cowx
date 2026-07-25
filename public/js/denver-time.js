@@ -45,10 +45,12 @@ function denverNowOrdinal(nowMs) {
 
 /**
  * Wall-clock ordinal for an Open-Meteo America/Denver local ISO (no offset).
+ * Strings with Z/offset fall through to absolute `Date` ms when used by callers
+ * that check {@link hasExplicitOffset} first; this parser only handles bare local ISO.
  * @param {string} t
  * @returns {number}
  */
-function omLocalOrdinal(t) {
+export function omLocalOrdinal(t) {
   const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2})(?::(\d{2}))?(?::(\d{2}))?/.exec(String(t));
   if (!m) return NaN;
   return Date.UTC(

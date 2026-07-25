@@ -52,6 +52,12 @@ export function validateLocationsData(data) {
     return ['colorado-locations.json must contain at least one location'];
   }
 
+  /** Soft cap so a runaway catalog cannot burn the full free-tier API budget. */
+  const MAX_LOCATIONS = 1000;
+  if (data.length > MAX_LOCATIONS) {
+    return [`colorado-locations.json has ${data.length} locations (max ${MAX_LOCATIONS})`];
+  }
+
   const seenSlugs = new Set();
 
   for (let i = 0; i < data.length; i += 1) {

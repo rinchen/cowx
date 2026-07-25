@@ -30,7 +30,10 @@ async function fetchGeoJsonCached(url) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 15_000);
     try {
-      const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+      // Query bust: GitHub Pages max-age=600; some browsers still reuse no-store.
+      const sep = url.includes('?') ? '&' : '?';
+      const bustUrl = `${url}${sep}_=${Date.now()}`;
+      const res = await fetch(bustUrl, { cache: 'no-store', signal: controller.signal });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
     } finally {
