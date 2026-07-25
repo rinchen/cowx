@@ -18,6 +18,7 @@ import {
   buildOutlookHighlights,
   buildPeriodSummaries,
   formatCompactHourLabel,
+  formatTempTransitionLabel,
   currentHourIndex,
   pickNowSky,
   resolveCatalogNow,
@@ -254,13 +255,9 @@ export function renderHero(root, data, options = {}) {
 
   // Forecast-transition cue (catalog path only — a pin's live temp is not the
   // catalog hourly series, so "now → next" would compare unlike numbers).
-  const transition = !usingPinNow ? tempTransitionCue(hourly) : null;
-  const transitionLabel = transition
-    ? `→ ${Math.round(transition.next_temp_f)}° by ${formatCompactHourLabel(transition.next_time)}`
-    : null;
-  const transitionAria = transition
-    ? ` ${transition.delta_f > 0 ? 'Rising' : 'Falling'} toward ${Math.round(transition.next_temp_f)} degrees by ${formatCompactHourLabel(transition.next_time)} per the next forecast hour.`
-    : '';
+  const transitionText = !usingPinNow ? formatTempTransitionLabel(tempTransitionCue(hourly)) : null;
+  const transitionLabel = transitionText?.label ?? null;
+  const transitionAria = transitionText ? ` ${transitionText.aria}` : '';
 
   const windDeg = /** @type {number | null} */ (current?.wind_dir_deg ?? null);
   const compass = windCompassHtml(windDeg, { size: 22 });
@@ -545,8 +542,91 @@ export function renderHero(root, data, options = {}) {
       clockEl.textContent = new Date().toLocaleTimeString();
     }
   }
-  tickClock();
-  const clockTimer = setInterval(tickClock, 1000);
+  // --- Live hero sync (catalog path only) ---
+  // The transition cue gates on ≥ :30 into the hour and "now" tracks the
+  // in-progress hourly slot — both were baked at render time, so a tab left
+  // open across :30 (or an hour boundary) kept stale DOM until the next data
+  // snapshot. Re-derive from the already-loaded hourly series each minute.
+  const heroBtn = /** @type {HTMLElement | null} */ (root.querySelector('.intel-now-hero'));
+  let liveHourIdx = hi;
+  let liveTemp = current?.temp_f != null ? Math.round(Number(current.temp_f)) : null;
+  let liveCond = conditionLabel;
+
+  /** @param {number} [nowMs] */
+  function syncLiveHero(nowMs = Date.now()) {
+    if (usingPinNow || !heroBtn || !hourly) return;
+
+    const newHi = times.length ? currentHourIndex(times, nowMs) : 0;
+    if (newHi !== liveHourIdx) {
+      liveHourIdx = newHi;
+      const liveNow = resolveCatalogNow(catalogCurrent, hourly, nowMs) ?? catalogCurrent;
+      const liveSky = pickNowSky(hourly, nowMs);
+      if (liveNow?.temp_f != null) {
+        liveTemp = Math.round(Number(liveNow.temp_f));
+        const tempEl = heroBtn.querySelector('.intel-temp');
+        if (tempEl) tempEl.textContent = `${liveTemp}°F`;
+      }
+      if (liveSky) {
+        liveCond = String(liveSky.condition ?? wmoLabel(liveSky.weather_code));
+        const condEl = heroBtn.querySelector('.intel-cond');
+        if (condEl) condEl.textContent = liveCond;
+        const iconEl = heroBtn.querySelector('.weather-icon');
+        if (iconEl) {
+          const holder = document.createElement('span');
+          holder.innerHTML = weatherIconHtml(liveSky.weather_code, {
+            isDay: liveSky.is_day,
+            size: 48,
+            className: 'weather-icon',
+            alt: '',
+          });
+          if (holder.firstElementChild) iconEl.replaceWith(holder.firstElementChild);
+        }
+      }
+      if (liveNow?.feels_like_f != null) {
+        const feelsEl = heroBtn.querySelector('.intel-feels');
+        if (feelsEl) {
+          feelsEl.textContent = `Feels like ${Math.round(Number(liveNow.feels_like_f))}°F`;
+        }
+      }
+    }
+
+    const cueText = formatTempTransitionLabel(tempTransitionCue(hourly, nowMs));
+    let cueEl = heroBtn.querySelector('.intel-next-temp');
+    if (cueText) {
+      if (!cueEl) {
+        cueEl = document.createElement('span');
+        cueEl.className = 'intel-next-temp';
+        const condEl = heroBtn.querySelector('.intel-cond');
+        if (condEl) condEl.insertAdjacentElement('afterend', cueEl);
+        else heroBtn.querySelector('.intel-now-hero__text')?.prepend(cueEl);
+      }
+      if (cueEl.textContent !== cueText.label) cueEl.textContent = cueText.label;
+    } else if (cueEl) {
+      cueEl.remove();
+    }
+
+    if (liveTemp != null) {
+      heroBtn.setAttribute(
+        'aria-label',
+        `Current conditions ${liveTemp} degrees Fahrenheit, ${liveCond}.${cueText ? ` ${cueText.aria}` : ''} Open hourly forecast.`,
+      );
+    }
+  }
+
+  let lastMinuteKey = Math.floor(Date.now() / 60_000);
+  function tick() {
+    tickClock();
+    const minuteKey = Math.floor(Date.now() / 60_000);
+    if (minuteKey === lastMinuteKey) return;
+    lastMinuteKey = minuteKey;
+    try {
+      syncLiveHero();
+    } catch {
+      // Never let a live-sync failure kill the wall clock.
+    }
+  }
+  tick();
+  const clockTimer = setInterval(tick, 1000);
 
   return {
     headline,

@@ -5,6 +5,7 @@ import {
   buildOutlookHighlights,
   buildPeriodSummaries,
   currentHourIndex,
+  formatTempTransitionLabel,
   nearestHourIndex,
   pickNowCurrent,
   pickNowSky,
@@ -296,6 +297,43 @@ describe('tempTransitionCue', () => {
     const cue = tempTransitionCue(zTimes, nowMs);
     assert.ok(cue);
     assert.equal(cue.next_temp_f, 65);
+  });
+
+  it('becomes eligible exactly at the :30 minute boundary', () => {
+    const before = new Date('2026-07-25T14:29:59Z').getTime(); // 08:29:59 MDT
+    const at = new Date('2026-07-25T14:30:00Z').getTime(); // 08:30 MDT
+    assert.equal(tempTransitionCue(hourly, before), null);
+    assert.ok(tempTransitionCue(hourly, at));
+  });
+});
+
+describe('formatTempTransitionLabel', () => {
+  it('formats a rising cue with rounded temp and hour label', () => {
+    const text = formatTempTransitionLabel({
+      next_temp_f: 80.6,
+      next_time: '2026-07-25T09:00',
+      delta_f: 4.8,
+    });
+    assert.ok(text);
+    assert.match(text.label, /^→ 81° by /);
+    assert.match(text.aria, /^Rising toward 81 degrees by /);
+    assert.match(text.aria, / per the next forecast hour\.$/);
+  });
+
+  it('formats a falling cue with Falling aria phrasing', () => {
+    const text = formatTempTransitionLabel({
+      next_temp_f: 71,
+      next_time: '2026-07-25T17:00',
+      delta_f: -17,
+    });
+    assert.ok(text);
+    assert.match(text.label, /^→ 71° by /);
+    assert.match(text.aria, /^Falling toward 71 degrees by /);
+  });
+
+  it('returns null when there is no cue', () => {
+    assert.equal(formatTempTransitionLabel(null), null);
+    assert.equal(formatTempTransitionLabel(undefined), null);
   });
 });
 
