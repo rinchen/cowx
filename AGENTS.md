@@ -195,6 +195,7 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
   - **≥ `STALE_MINUTES` (90):** **dispatch** `update-weather.yml` (self-heal) and stay green — no Discord. GitHub often delays weather crons by 1–3 hours; without this catch-up the CDN stays frozen.
   - **≥ `NOTIFY_MINUTES` (120):** self-heal did not recover, so Discord-alert (when `NOTIFY_WEBHOOK_URL` is set) and fail the run. Unreachable / unparseable live `meta.json` also alerts.
   - Keep the alert tier at 2 hours: a Discord ping must mean the mitigations failed, not that a cron slipped.
+- **External keepalive:** GitHub has delayed both scheduled workflows for several hours simultaneously, so its schedules cannot enforce the 2-hour target alone. A cron-job.org job must POST `workflow_dispatch` to `check-stale-data.yml` every 15 minutes with `{"ref":"main","inputs":{"source":"external"}}`, using a repository-scoped fine-grained PAT with **Actions: Read and write** only. Store the PAT only in cron-job.org; never commit or log it. See README for the complete request.
 - **Design goal:** Stay within free-tier limits; do not fetch more often than ~45 minutes when the CDN is already fresh.
 
 Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):

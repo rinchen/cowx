@@ -4,7 +4,8 @@ on:
   schedule:
     # Two staggered schedules — GitHub often delays or drops a single cron for
     # 1–3h; a second expression improves delivery odds. decide skips when live
-    # CDN meta is still fresh (< 40m). check-stale-data.yml self-heals if both miss.
+    # CDN meta is still fresh (< 40m). The externally-woken check-stale-data.yml
+    # self-heals if GitHub delays both schedules.
     - cron: '5,25,45 * * * *'
     - cron: '15,35,55 * * * *'
   workflow_dispatch:
