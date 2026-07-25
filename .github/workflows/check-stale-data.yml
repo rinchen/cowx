@@ -5,11 +5,19 @@ name: Check Stale Data
 #   >= NOTIFY_MINUTES — recovery did not work; Discord-alert and fail the run.
 # GitHub often delays weather crons by 1–3h, so the recoverable tier must not
 # page anyone; only a genuinely ≥2h-old CDN means the mitigations failed.
+# GitHub can also starve both schedules simultaneously. An independent
+# cron-job.org keepalive dispatches this workflow every 15m (see README).
 on:
   schedule:
     # Frequent lightweight tick — GitHub may delay, but more chances than */2h.
     - cron: '*/30 * * * *'
   workflow_dispatch:
+    inputs:
+      source:
+        description: Dispatch source (external keepalive uses "external")
+        required: false
+        default: manual
+        type: string
 
 permissions:
   contents: read
@@ -30,6 +38,11 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - name: Record trigger source
+        env:
+          TRIGGER_SOURCE: ${{ inputs.source || github.event_name }}
+        run: echo "check-stale-data trigger_source=${TRIGGER_SOURCE}"
+
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Check live meta age

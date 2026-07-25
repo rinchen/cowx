@@ -1,0 +1,29 @@
+{
+  "expectedSha": "25511e520d2c5c248e61ab471c65b8323c43e337",
+  "unrelated": {
+    "commit": "befcaf90deab91c7e7584ab4dfb266c2f772ad65",
+    "status": "built",
+    "duration": 22786,
+    "error": null
+  },
+  "building": {
+    "commit": "25511e520d2c5c248e61ab471c65b8323c43e337",
+    "status": "building",
+    "duration": 0,
+    "error": null
+  },
+  "built": {
+    "commit": "25511e520d2c5c248e61ab471c65b8323c43e337",
+    "status": "built",
+    "duration": 24811,
+    "error": null
+  },
+  "errored": {
+    "commit": "25511e520d2c5c248e61ab471c65b8323c43e337",
+    "status": "errored",
+    "duration": 1500,
+    "error": {
+      "message": "Page build failed"
+    }
+  }
+}

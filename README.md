@@ -49,6 +49,21 @@ Same-repo pull requests get a sticky comment with a live preview URL under `/pr-
 
 Weather data targets a **~45-minute** cadence via `.github/workflows/update-weather.yml` (staggered `:05/:15/:25/:35/:45/:55` crons plus `workflow_dispatch`). GitHub may delay schedules; the workflow **skips** fetch/deploy when live CDN `meta.json` is still fresh (< 40 minutes), and can **deploy-only** when `main` is fresh but the CDN is stale. Every **30 minutes**, `.github/workflows/check-stale-data.yml` checks live `generatedAt` in two tiers: at **≥ 90 minutes** it quietly **dispatches Update Weather** (self-heal) and stays green, and only at **≥ 120 minutes** — meaning that recovery failed — does it Discord-alert (when `NOTIFY_WEBHOOK_URL` is set) and fail the run. Fetch/Pages verify failures also notify. Committed JSON in `public/data/` (published by the weather workflow) is what visitors see between runs. `public/.nojekyll` keeps GitHub Pages from running Jekyll on the static tree.
 
+GitHub scheduled workflows are best-effort and have delayed both the weather workflow and its watchdog for several hours at once. To target a **~2-hour maximum data age**, configure an independent 15-minute keepalive:
+
+1. Create a fine-grained GitHub personal access token limited to this repository with **Actions: Read and write** permission. No Contents permission is needed.
+2. In [cron-job.org](https://cron-job.org), create a job that runs every 15 minutes:
+   - Method: `POST`
+   - URL: `https://api.github.com/repos/rinchen/cowx/actions/workflows/check-stale-data.yml/dispatches`
+   - Headers:
+     - `Authorization: Bearer <fine-grained PAT>`
+     - `Accept: application/vnd.github+json`
+     - `X-GitHub-Api-Version: 2022-11-28`
+   - Body: `{"ref":"main","inputs":{"source":"external"}}`
+3. Confirm that **Check Stale Data** appears in Actions with event `workflow_dispatch` about every 15 minutes.
+
+Store the token only in cron-job.org. Never commit it, add it to documentation, or print it in logs. Without the external keepalive, the GitHub schedules remain best-effort and cannot guarantee a two-hour ceiling.
+
 ## GitHub Actions secrets
 
 Optional secrets improve inline sensor/AQI data and failure alerting. Configure under **Settings → Secrets and variables → Actions**. Use these **names** only — never commit values:

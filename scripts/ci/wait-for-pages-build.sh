@@ -7,17 +7,19 @@ set -euo pipefail
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
 TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN required}"
 EXPECT_SHA="${1:-}"
-MAX_ATTEMPTS="${PAGES_BUILD_MAX_ATTEMPTS:-36}" # ~3 minutes at 5s
+MAX_ATTEMPTS="${PAGES_BUILD_MAX_ATTEMPTS:-180}" # ~15 minutes at 5s
 SLEEP_SECS="${PAGES_BUILD_POLL_SECS:-5}"
 
 echo "wait-for-pages-build: polling builds for ${REPO} (expect=${EXPECT_SHA:-any})"
 
 export REPO TOKEN EXPECT_SHA MAX_ATTEMPTS SLEEP_SECS
-node <<'NODE'
+node --input-type=module <<'NODE'
+import { waitForPagesBuild } from './scripts/ci/pages-build-status.js';
+
 const repo = process.env.REPO;
 const token = process.env.TOKEN;
 const expect = process.env.EXPECT_SHA || '';
-const maxAttempts = Number(process.env.MAX_ATTEMPTS || 36);
+const maxAttempts = Number(process.env.MAX_ATTEMPTS || 180);
 const sleepSecs = Number(process.env.SLEEP_SECS || 5);
 
 async function api(path) {
@@ -36,40 +38,29 @@ async function api(path) {
   return res.json();
 }
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
-const prefix = expect.slice(0, 7);
-
-for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-  const builds = await api(`/repos/${repo}/pages/builds?per_page=5`);
-  const hit = expect
-    ? builds.find((b) => b.commit && (b.commit === expect || b.commit.startsWith(prefix)))
-    : builds[0];
-  if (!hit) {
-    console.log(`  attempt ${attempt}/${maxAttempts}: no matching build yet`);
-    await sleep(sleepSecs * 1000);
-    continue;
-  }
-  const err = (hit.error && hit.error.message) || '-';
-  console.log(
-    `  attempt ${attempt}/${maxAttempts}: status=${hit.status} commit=${String(hit.commit).slice(0, 7)} duration=${hit.duration ?? '-'} error=${err}`,
+try {
+  const hit = await waitForPagesBuild({
+    fetchBuilds: () => api(`/repos/${repo}/pages/builds?per_page=5`),
+    expect,
+    maxAttempts,
+    sleepSecs,
+    onAttempt({ attempt, maxAttempts: total, status, error, build }) {
+      if (!build) {
+        console.log(`  attempt ${attempt}/${total}: no matching build yet`);
+        return;
+      }
+      console.log(
+        `  attempt ${attempt}/${total}: status=${status} commit=${String(build.commit).slice(0, 7)} duration=${build.duration ?? '-'} error=${error}`,
+      );
+    },
+  });
+  console.log(`wait-for-pages-build: Pages build succeeded for ${String(hit.commit).slice(0, 7)}`);
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`::error::${message}`);
+  console.error(
+    'wait-for-pages-build: failing so Actions does not report green while the CDN is frozen',
   );
-  if (hit.status === 'built') {
-    console.log(`wait-for-pages-build: Pages build succeeded for ${String(hit.commit).slice(0, 7)}`);
-    process.exit(0);
-  }
-  if (hit.status === 'errored') {
-    console.error(`::error::GitHub Pages build failed for ${String(hit.commit).slice(0, 7)}: ${err}`);
-    console.error(
-      'wait-for-pages-build: failing so Actions does not report green while the CDN is frozen',
-    );
-    process.exit(1);
-  }
-  await sleep(sleepSecs * 1000);
+  process.exit(1);
 }
-
-console.error(`::error::Timed out waiting for GitHub Pages build (expect=${expect || 'any'})`);
-process.exit(1);
 NODE
