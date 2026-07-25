@@ -60,7 +60,8 @@ jobs:
             data
 
       - name: Verify GitHub Pages build
-        if: steps.pages_deploy.outputs.deployment_status != 'skipped'
+        # JamesIves sets deployment_status as a step output and via GITHUB_ENV.
+        if: steps.pages_deploy.outputs.deployment_status != 'skipped' && env.deployment_status != 'skipped'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

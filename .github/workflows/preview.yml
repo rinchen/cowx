@@ -82,14 +82,9 @@ jobs:
           action: auto
           qr-code: true
 
-      # Only verify when this job published a new tip. A skipped deploy must not
-      # fail CI by re-checking an already-broken prior tip (Pages timeout/lock).
-      - name: Verify GitHub Pages build
-        if: github.event.action != 'closed' && steps.preview_deploy.outputs.deployment_status != 'skipped'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          git fetch origin gh-pages
-          tip="$(git rev-parse origin/gh-pages)"
-          bash scripts/ci/wait-for-pages-build.sh "${tip}"
+      # Do not Verify Pages here. A preview push still triggers a full-site
+      # pages-build-deployment (weather data included) that often runs ~10m and
+      # can wedge on deploy-pages locks/timeouts — blocking the PR for no gain.
+      # Production publish is still gated by pages.yml / update-weather.yml Verify.
+      # pr-preview-action also only exposes deployment_status via GITHUB_ENV, not
+      # step outputs, so a skipped deploy previously still entered Verify.

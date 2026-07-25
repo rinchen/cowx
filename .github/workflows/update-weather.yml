@@ -138,7 +138,7 @@ jobs:
 
       - name: Verify GitHub Pages build
         id: verify_pages
-        if: steps.pages_deploy.outputs.deployment_status != 'skipped'
+        if: steps.pages_deploy.outputs.deployment_status != 'skipped' && env.deployment_status != 'skipped'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
