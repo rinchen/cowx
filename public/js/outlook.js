@@ -2,7 +2,12 @@
  * Pure helpers for Short-Term Outlook / hourly modal (testable, no DOM).
  */
 
-import { currentHourIndex, dailyIndexForNow, precipTodayInches } from './denver-time.js';
+import {
+  currentHourIndex,
+  dailyIndexForNow,
+  minutesIntoHour,
+  precipTodayInches,
+} from './denver-time.js';
 import { escapeHtml } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { windDirLabel } from './wind.js';
@@ -105,6 +110,29 @@ export function resolveCatalogNow(snapshot, hourly, nowMs = Date.now()) {
   const merged = { ...snapshot, ...fromHour };
   if (precipToday != null) merged.precip_today_in = precipToday;
   return merged;
+}
+
+/**
+ * Hero cue for an imminent temperature transition (`76° → 81° by 9 AM`).
+ * Shown only in the back half of the in-progress hour (≥ :30) and only when
+ * the next forecast hour differs meaningfully (≥ 3°F) — the big number stays
+ * the observed “now”; this is explicitly labeled forecast context.
+ * @param {Record<string, unknown> | null | undefined} hourly
+ * @param {number} [nowMs]
+ * @returns {{ next_temp_f: number, next_time: string, delta_f: number } | null}
+ */
+export function tempTransitionCue(hourly, nowMs = Date.now()) {
+  const times = /** @type {string[]} */ (hourly?.time ?? []);
+  if (!times.length) return null;
+  if (minutesIntoHour(nowMs) < 30) return null;
+  const temps = /** @type {(number | null)[]} */ (hourly?.temperature_2m ?? []);
+  const hi = currentHourIndex(times, nowMs);
+  const nowTemp = numOrNull(temps[hi]);
+  const nextTemp = numOrNull(temps[hi + 1]);
+  if (nowTemp == null || nextTemp == null) return null;
+  const delta = nextTemp - nowTemp;
+  if (Math.abs(delta) < 3) return null;
+  return { next_temp_f: nextTemp, next_time: times[hi + 1], delta_f: delta };
 }
 
 /**

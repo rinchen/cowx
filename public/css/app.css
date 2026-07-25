@@ -2665,6 +2665,14 @@ button.glance-aqi-bar__source.intel-jump {
   line-height: 1.2;
 }
 
+.intel-next-temp {
+  margin: 0;
+  color: var(--glass-muted);
+  font-size: 0.875rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .intel-now-wind {
   display: flex;
   align-items: center;

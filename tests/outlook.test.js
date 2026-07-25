@@ -13,6 +13,7 @@ import {
   sourceStatusChips,
   sourceStatusLabel,
   sourceStatusLegendHtml,
+  tempTransitionCue,
 } from '../public/js/outlook.js';
 
 /**
@@ -230,6 +231,71 @@ describe('pickNowCurrent / resolveCatalogNow', () => {
     assert.deepEqual(resolveCatalogNow(snapshot, null), snapshot);
     assert.deepEqual(resolveCatalogNow(snapshot, { time: [] }), snapshot);
     assert.equal(resolveCatalogNow(null, null), null);
+  });
+});
+
+describe('tempTransitionCue', () => {
+  // Denver-local offset-less Open-Meteo times (morning warm-up ramp).
+  const hourly = {
+    time: ['2026-07-25T08:00', '2026-07-25T09:00', '2026-07-25T10:00'],
+    temperature_2m: [75.8, 81.1, 87.5],
+  };
+
+  it('signals the next hour once past :30 with a meaningful rise', () => {
+    const nowMs = new Date('2026-07-25T14:41:00Z').getTime(); // 08:41 MDT
+    const cue = tempTransitionCue(hourly, nowMs);
+    assert.ok(cue);
+    assert.equal(cue.next_temp_f, 81.1);
+    assert.equal(cue.next_time, '2026-07-25T09:00');
+    assert.ok(cue.delta_f > 0);
+  });
+
+  it('stays hidden in the front half of the hour', () => {
+    const nowMs = new Date('2026-07-25T14:15:00Z').getTime(); // 08:15 MDT
+    assert.equal(tempTransitionCue(hourly, nowMs), null);
+  });
+
+  it('stays hidden when the change is under 3°F', () => {
+    const flat = {
+      time: ['2026-07-25T14:00', '2026-07-25T15:00'],
+      temperature_2m: [101.8, 102.8],
+    };
+    const nowMs = new Date('2026-07-25T20:45:00Z').getTime(); // 14:45 MDT
+    assert.equal(tempTransitionCue(flat, nowMs), null);
+  });
+
+  it('signals a meaningful drop with a negative delta', () => {
+    const front = {
+      time: ['2026-07-25T16:00', '2026-07-25T17:00'],
+      temperature_2m: [88, 71],
+    };
+    const nowMs = new Date('2026-07-25T22:50:00Z').getTime(); // 16:50 MDT
+    const cue = tempTransitionCue(front, nowMs);
+    assert.ok(cue);
+    assert.equal(cue.next_temp_f, 71);
+    assert.ok(cue.delta_f < 0);
+  });
+
+  it('returns null when the next hour or series is missing', () => {
+    const lastSlot = {
+      time: ['2026-07-25T08:00'],
+      temperature_2m: [75.8],
+    };
+    const nowMs = new Date('2026-07-25T14:41:00Z').getTime();
+    assert.equal(tempTransitionCue(lastSlot, nowMs), null);
+    assert.equal(tempTransitionCue(null, nowMs), null);
+    assert.equal(tempTransitionCue({ time: [] }, nowMs), null);
+  });
+
+  it('handles absolute Z timestamps by instant', () => {
+    const zTimes = {
+      time: ['2026-07-25T14:00:00Z', '2026-07-25T15:00:00Z'],
+      temperature_2m: [60, 65],
+    };
+    const nowMs = new Date('2026-07-25T14:40:00Z').getTime();
+    const cue = tempTransitionCue(zTimes, nowMs);
+    assert.ok(cue);
+    assert.equal(cue.next_temp_f, 65);
   });
 });
 
