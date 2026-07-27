@@ -348,20 +348,56 @@ export function renderHero(root, data, options = {}) {
   const updatedAt = data.updatedAt ?? data.updated_at ?? null;
 
   const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
-  let aqiBarsHtml = '';
+  const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
+  /** @type {string[]} */
+  const aqiBarParts = [];
   if (airnow?.aqi != null && Number.isFinite(Number(airnow.aqi))) {
     const n = Math.round(Number(airnow.aqi));
     const catLabel = airnow.category != null ? String(airnow.category) : aqiCategory(n).label;
-    aqiBarsHtml = `<div class="glance-aqi-bars" aria-label="Air quality index">
-        <div class="glance-aqi-bar">
+    const area = airnow.reporting_area != null ? String(airnow.reporting_area) : '';
+    const sourceLabel = area ? `AirNow · ${area}` : 'AirNow · region';
+    aqiBarParts.push(`<div class="glance-aqi-bar">
           <div class="glance-aqi-bar__meta">
-            <button type="button" class="glance-aqi-bar__source intel-jump" data-jump-to="aqi-heading" aria-label="AirNow. Open air quality and pollen details.">AirNow</button>
+            <button type="button" class="glance-aqi-bar__source intel-jump" data-jump-to="aqi-heading" aria-label="${escapeHtml(sourceLabel)}. Open air quality and pollen details.">${escapeHtml(sourceLabel)}</button>
             <span class="glance-aqi-bar__value">${n}${catLabel ? ` · ${escapeHtml(catLabel)}` : ''}</span>
           </div>
-          ${aqiBarHtml(n, { label: `AirNow AQI ${n} on a 0 to 500 scale` })}
-        </div>
-      </div>`;
+          ${aqiBarHtml(n, { label: `AirNow regional AQI ${n} on a 0 to 500 scale` })}
+        </div>`);
   }
+  if (purpleair?.aqi_pm25 != null && Number.isFinite(Number(purpleair.aqi_pm25))) {
+    const n = Math.round(Number(purpleair.aqi_pm25));
+    const catLabel = aqiCategory(n).label;
+    const count =
+      purpleair.sensor_count != null && Number.isFinite(Number(purpleair.sensor_count))
+        ? Math.round(Number(purpleair.sensor_count))
+        : null;
+    const dist =
+      purpleair.distance_km != null && Number.isFinite(Number(purpleair.distance_km))
+        ? Number(purpleair.distance_km)
+        : null;
+    const localBits = ['PurpleAir · local'];
+    if (count != null) localBits.push(count === 1 ? '1 sensor' : `${count} sensors`);
+    if (dist != null) localBits.push(`${dist} km`);
+    const sourceLabel = localBits.join(' · ');
+    aqiBarParts.push(`<div class="glance-aqi-bar">
+          <div class="glance-aqi-bar__meta">
+            <button type="button" class="glance-aqi-bar__source intel-jump" data-jump-to="aqi-heading" aria-label="${escapeHtml(sourceLabel)}. Open air quality and pollen details.">${escapeHtml(sourceLabel)}</button>
+            <span class="glance-aqi-bar__value">${n}${catLabel ? ` · ${escapeHtml(catLabel)}` : ''}</span>
+          </div>
+          ${aqiBarHtml(n, { label: `PurpleAir local AQI ${n} on a 0 to 500 scale` })}
+        </div>`);
+  }
+  const aqiBarsHtml = aqiBarParts.length
+    ? `<div class="glance-aqi-bars" aria-label="Air quality index">${aqiBarParts.join('')}</div>`
+    : '';
+
+  const ringSourceAria = (() => {
+    const bits = [];
+    if (aq.airnow != null) bits.push(`AirNow ${Math.round(aq.airnow)}`);
+    if (aq.purpleair != null) bits.push(`PurpleAir ${Math.round(aq.purpleair)}`);
+    if (!bits.length && aq.source) bits.push(aq.source);
+    return bits.length ? ` from ${bits.join(' and ')}` : aq.source ? ` from ${aq.source}` : '';
+  })();
 
   root.innerHTML = `
     <section class="glass-panel glance-hero${usingPinNow ? ' glass-panel--pin-now' : ''}" aria-labelledby="glance-hero-heading">
@@ -374,7 +410,7 @@ export function renderHero(root, data, options = {}) {
             <span class="glance-hero__updated">Updated ${escapeHtml(fmtUpdated(updatedAt))}</span>
           </p>
         </div>
-        <button type="button" class="aqi-ring ${cat.className}" data-jump-to="aqi-heading" aria-label="${escapeHtml(`Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${aq.source ? ` from ${aq.source}` : ''}. Open air quality details.`)}">
+        <button type="button" class="aqi-ring ${cat.className}" data-jump-to="aqi-heading" aria-label="${escapeHtml(`Air quality ${aq.aqi != null ? Math.round(aq.aqi) : 'unavailable'}: ${cat.label}${ringSourceAria}. Open air quality details.`)}">
           <span class="aqi-ring__value">${aq.aqi != null ? Math.round(aq.aqi) : '—'}</span>
           <span class="aqi-ring__label">AQI</span>
         </button>
@@ -799,7 +835,15 @@ export function renderOutlook(root, data, options = {}) {
         <span class="outlook-hour-card__temp">${row.temp_f != null ? `${Math.round(row.temp_f)}°` : '—'}</span>
         ${vs ? `<span class="outlook-hour-card__vs" title="Versus typical for this date and hour">${escapeHtml(vs)}</span>` : ''}
         <span class="outlook-hour-card__feels">${row.feels_like_f != null ? `Feels ${Math.round(row.feels_like_f)}°` : ''}</span>
-        <span class="outlook-hour-card__precip">${row.precip_pct != null ? `${Math.round(row.precip_pct)}%` : '—'}</span>
+        <span class="outlook-hour-card__precip"${
+          row.precip_pct != null
+            ? ` aria-label="Precipitation chance ${Math.round(row.precip_pct)} percent"`
+            : ''
+        }>${
+          row.precip_pct != null
+            ? metricValueWithIcon('umbrella', `${Math.round(row.precip_pct)}%`, { size: 14 })
+            : '—'
+        }</span>
         <span class="outlook-hour-card__wind">${windHtml}</span>
         ${trendIcon ? `<span class="outlook-hour-card__pressure">${trendIcon}</span>` : ''}
       </li>`;

@@ -3,36 +3,94 @@
  */
 
 /**
- * Prefer AirNow → PurpleAir → Open-Meteo AQ.
+ * @param {unknown} v
+ * @returns {number | null}
+ */
+function finiteOrNull(v) {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Health-conservative summary: max(AirNow, PurpleAir) when both exist;
+ * else AirNow → PurpleAir → Open-Meteo.
+ * Also returns dual fields for dual-bar UI.
  * @param {Record<string, unknown>} data
- * @returns {{ aqi: number | null, pm25: number | null, source: string }}
+ * @returns {{
+ *   aqi: number | null,
+ *   pm25: number | null,
+ *   source: string,
+ *   airnow: number | null,
+ *   purpleair: number | null,
+ *   openmeteo: number | null,
+ * }}
  */
 export function pickAqi(data) {
   const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
   const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
   const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
-  if (airnow?.aqi != null) {
+
+  const anAqi = finiteOrNull(airnow?.aqi);
+  const paAqi = finiteOrNull(purpleair?.aqi_pm25);
+  const omAqi = finiteOrNull(omaq?.us_aqi);
+  const paPm25 = finiteOrNull(purpleair?.pm25);
+  const omPm25 = finiteOrNull(omaq?.pm25);
+
+  if (anAqi != null && paAqi != null) {
+    const aqi = Math.max(anAqi, paAqi);
     return {
-      aqi: Number(airnow.aqi),
-      pm25: null,
+      aqi,
+      pm25: paPm25,
+      source:
+        aqi === anAqi && aqi === paAqi
+          ? 'AirNow / PurpleAir'
+          : aqi === anAqi
+            ? 'AirNow'
+            : 'PurpleAir',
+      airnow: anAqi,
+      purpleair: paAqi,
+      openmeteo: omAqi,
+    };
+  }
+  if (anAqi != null) {
+    return {
+      aqi: anAqi,
+      pm25: paPm25,
       source: 'AirNow',
+      airnow: anAqi,
+      purpleair: paAqi,
+      openmeteo: omAqi,
     };
   }
-  if (purpleair?.aqi_pm25 != null) {
+  if (paAqi != null) {
     return {
-      aqi: Number(purpleair.aqi_pm25),
-      pm25: purpleair.pm25 != null ? Number(purpleair.pm25) : null,
+      aqi: paAqi,
+      pm25: paPm25,
       source: 'PurpleAir',
+      airnow: anAqi,
+      purpleair: paAqi,
+      openmeteo: omAqi,
     };
   }
-  if (omaq?.us_aqi != null) {
+  if (omAqi != null) {
     return {
-      aqi: Number(omaq.us_aqi),
-      pm25: omaq.pm25 != null ? Number(omaq.pm25) : null,
+      aqi: omAqi,
+      pm25: omPm25,
       source: 'Open-Meteo',
+      airnow: anAqi,
+      purpleair: paAqi,
+      openmeteo: omAqi,
     };
   }
-  return { aqi: null, pm25: null, source: '' };
+  return {
+    aqi: null,
+    pm25: null,
+    source: '',
+    airnow: null,
+    purpleair: null,
+    openmeteo: null,
+  };
 }
 
 /**

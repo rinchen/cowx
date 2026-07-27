@@ -16,6 +16,7 @@ import {
   resetMapView,
   setAqiLayer,
 } from './map.js';
+import { providerDelayBannerHtml } from './provider-delay.js';
 
 /**
  * Load statewide space-weather snapshot (planetary; shared for all locations).
@@ -104,6 +105,8 @@ export async function renderWorkspace(root, data, options) {
       </p>`
     : '';
 
+  const delayBanner = providerDelayBannerHtml(data);
+
   root.innerHTML = `
     <div class="workspace" id="workspace">
       <header class="workspace__header glass-panel glass-panel--header">
@@ -127,12 +130,8 @@ export async function renderWorkspace(root, data, options) {
           </div>
         </div>
         ${pinNote}
+        ${delayBanner}
       </header>
-      ${
-        data.forecastStale
-          ? `<p class="stale-banner" role="status">Showing last successful forecast — a newer model pull was rate-limited.</p>`
-          : ''
-      }
       <div class="workspace__grid">
         <div class="workspace__map glass-panel glass-panel--map">
           <details class="workspace-map-details" open>

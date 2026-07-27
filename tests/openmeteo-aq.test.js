@@ -77,7 +77,12 @@ describe('fetchOpenMeteoAq with mocked fetch', () => {
         }),
       });
 
-    const result = await fetchOpenMeteoAq(locs(1), { delayMs: 0 });
+    const result = await fetchOpenMeteoAq(locs(1), {
+      delayMs: 0,
+      retryBackoffMs: 0,
+      shortBackoffMs: 0,
+      rateLimitDelayMs: 0,
+    });
     assert.equal(result.status, 'ok');
     assert.equal(result.bySlug.size, 1);
     const row = result.bySlug.get('loc-0');
@@ -108,10 +113,50 @@ describe('fetchOpenMeteoAq with mocked fetch', () => {
       });
     };
 
-    const result = await fetchOpenMeteoAq(locs(41), { delayMs: 0 });
+    const result = await fetchOpenMeteoAq(locs(41), {
+      delayMs: 0,
+      retryBackoffMs: 0,
+      shortBackoffMs: 0,
+      rateLimitDelayMs: 0,
+    });
     assert.equal(result.status, 'partial');
     assert.equal(result.bySlug.size, 40);
     assert.ok(result.error);
+    // first pass: ok + fail; retry pass: fail again
+    assert.equal(result.calls, 3);
+  });
+
+  it('retries missing slugs and recovers', async () => {
+    let call = 0;
+    globalThis.fetch = async () => {
+      call += 1;
+      if (call === 1) {
+        return /** @type {Response} */ ({
+          ok: false,
+          status: 503,
+          text: async () => 'unavailable',
+          json: async () => ({}),
+        });
+      }
+      return /** @type {Response} */ ({
+        ok: true,
+        status: 200,
+        text: async () => '',
+        json: async () => ({
+          current: { pm2_5: 8, us_aqi: 33, time: '2026-07-21T13:00' },
+        }),
+      });
+    };
+
+    const result = await fetchOpenMeteoAq(locs(1), {
+      delayMs: 0,
+      retryBackoffMs: 0,
+      shortBackoffMs: 0,
+      rateLimitDelayMs: 0,
+    });
+    assert.equal(result.status, 'ok');
+    assert.equal(result.bySlug.size, 1);
+    assert.equal(result.bySlug.get('loc-0')?.us_aqi, 33);
     assert.equal(result.calls, 2);
   });
 
@@ -124,7 +169,12 @@ describe('fetchOpenMeteoAq with mocked fetch', () => {
         json: async () => ({}),
       });
 
-    const result = await fetchOpenMeteoAq(locs(2), { delayMs: 0 });
+    const result = await fetchOpenMeteoAq(locs(2), {
+      delayMs: 0,
+      retryBackoffMs: 0,
+      shortBackoffMs: 0,
+      rateLimitDelayMs: 0,
+    });
     assert.equal(result.status, 'error');
     assert.equal(result.bySlug.size, 0);
     assert.match(String(result.error), /HTTP 500/);

@@ -5,6 +5,7 @@ import { runAdapterSafely } from '../scripts/lib/adapter-runner.js';
 import {
   fetchJson,
   fetchWithTimeout,
+  formatFetchErrorCause,
   sanitizeErrorMessage,
   sanitizeUrlForError,
 } from '../scripts/lib/http.js';
@@ -66,6 +67,19 @@ describe('runAdapterSafely', () => {
     assert.equal(result.bySlug.size, 0);
     assert.doesNotMatch(String(result.error), /leak-me/);
     assert.match(String(result.error), /API_KEY=\[redacted\]/i);
+  });
+});
+
+describe('formatFetchErrorCause', () => {
+  it('labels AbortError as timeout', () => {
+    const err = Object.assign(new Error('Aborted'), { name: 'AbortError' });
+    assert.equal(formatFetchErrorCause(err), 'timeout');
+  });
+
+  it('surfaces cause.code when present', () => {
+    const err = new Error('fetch failed');
+    err.cause = { code: 'ECONNRESET' };
+    assert.equal(formatFetchErrorCause(err), 'ECONNRESET');
   });
 });
 

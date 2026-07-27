@@ -1151,7 +1151,7 @@ function appendDeepForecast(root, data, ctx) {
       'No hourly data',
       data.forecastStale
         ? 'Prior forecast also lacked hourly rows.'
-        : 'Forecast temporarily unavailable (source rate-limited or failed this run).',
+        : 'Forecast temporarily unavailable (provider delay or failed this run).',
     );
     if (hourlyCollapsed) {
       renderCollapsibleSection(root, 'hourly-heading', 'Hourly forecast (48h)', () => empty, {
@@ -1183,7 +1183,7 @@ function appendDeepForecast(root, data, ctx) {
     renderEmpty(
       empty,
       'No daily forecast',
-      'Forecast temporarily unavailable (source rate-limited or failed this run).',
+      'Forecast temporarily unavailable (provider delay or failed this run).',
     );
     if (dailyCollapsed) {
       renderCollapsibleSection(root, 'daily-heading', 'Daily forecast (10 day)', () => empty, {
@@ -1665,13 +1665,33 @@ function appendDeepForecast(root, data, ctx) {
           }
         }
         if (pa) {
+          const sensorCount =
+            pa.sensor_count != null && Number.isFinite(Number(pa.sensor_count))
+              ? Math.round(Number(pa.sensor_count))
+              : null;
           parts.push(
-            `<dt>PurpleAir</dt><dd>${pa.name ? escapeHtml(String(pa.name)) : '—'}${pa.distance_km != null ? ` (${pa.distance_km} km)` : ''}</dd>`,
+            `<dt>PurpleAir</dt><dd>${pa.name ? escapeHtml(String(pa.name)) : '—'}${pa.distance_km != null ? ` (${pa.distance_km} km median)` : ''}${sensorCount != null ? ` · ${sensorCount} sensor${sensorCount === 1 ? '' : 's'}` : ''}</dd>`,
           );
           parts.push(
-            `<dt>PurpleAir PM2.5</dt><dd>${pa.pm25 != null ? `${pa.pm25} µg/m³` : '—'}</dd>`,
+            `<dt>PurpleAir PM2.5</dt><dd>${pa.pm25 != null ? `${pa.pm25} µg/m³` : '—'}${sensorCount != null && sensorCount > 1 ? ' (median)' : ''}</dd>`,
           );
           parts.push(`<dt>PurpleAir AQI (est.)</dt><dd>${pa.aqi_pm25 ?? '—'}</dd>`);
+          const paSensors =
+            /** @type {{ name?: string, distance_km?: number, pm25?: number }[]} */ (
+              Array.isArray(pa.sensors) ? pa.sensors : []
+            );
+          if (paSensors.length > 1) {
+            parts.push(
+              `<dt>PurpleAir sensors</dt><dd>${paSensors
+                .map((s) => {
+                  const nm = s.name ? escapeHtml(String(s.name)) : 'sensor';
+                  const d = s.distance_km != null ? `${s.distance_km} km` : '';
+                  const pm = s.pm25 != null ? `${s.pm25} µg/m³` : '';
+                  return [nm, d, pm].filter(Boolean).join(' · ');
+                })
+                .join('; ')}</dd>`,
+            );
+          }
           if (pa.humidity != null)
             parts.push(`<dt>PurpleAir humidity</dt><dd>${pa.humidity}%</dd>`);
           if (pa.temperature_f != null) {

@@ -58,6 +58,22 @@ export function sanitizeErrorMessage(message) {
 }
 
 /**
+ * Short cause suffix for network/abort failures (meta.json / logs).
+ * @param {unknown} err
+ * @returns {string}
+ */
+export function formatFetchErrorCause(err) {
+  if (!(err instanceof Error)) return '';
+  if (err.name === 'AbortError') return 'timeout';
+  const cause = /** @type {{ code?: string, message?: string } | undefined} */ (err.cause);
+  if (cause && typeof cause === 'object') {
+    if (cause.code) return String(cause.code);
+    if (cause.message) return sanitizeErrorMessage(String(cause.message).slice(0, 80));
+  }
+  return '';
+}
+
+/**
  * @param {string} url
  * @param {RequestInit & { timeoutMs?: number }} [options]
  * @returns {Promise<Response>}
@@ -68,6 +84,17 @@ export async function fetchWithTimeout(url, options = {}) {
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetch(url, { ...init, signal: controller.signal });
+  } catch (err) {
+    const safeUrl = sanitizeUrlForError(url);
+    const base = err instanceof Error ? err.message : String(err);
+    const cause = formatFetchErrorCause(err);
+    const msg = cause ? `${base} (${cause}) for ${safeUrl}` : `${base} for ${safeUrl}`;
+    const wrapped = new Error(sanitizeErrorMessage(msg));
+    if (err instanceof Error) {
+      wrapped.cause = err;
+      if (err.name === 'AbortError') wrapped.name = 'AbortError';
+    }
+    throw wrapped;
   } finally {
     clearTimeout(timer);
   }
