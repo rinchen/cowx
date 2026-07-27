@@ -71,26 +71,8 @@ jobs:
         run: pnpm run fetch:data
 
       - name: Commit data changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet public/data; then
-            echo "No data changes to commit"
-            exit 0
-          fi
-          git add public/data
-          git commit -m "chore: update weather data"
-          # Concurrent pushes (code commits or overlapping schedules) can reject a
-          # bare push; rebase onto remote main and retry a few times.
-          for attempt in 1 2 3; do
-            if git push; then
-              exit 0
-            fi
-            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main"
-            git pull --rebase origin main
-          done
-          echo "Failed to push data commit after retries"
-          exit 1
+        # Replay the just-fetched public/data onto tip of main (no JSON rebase).
+        run: bash scripts/ci/push-weather-data.sh
 
   # Commits made with GITHUB_TOKEN do not trigger pages.yml (GitHub recursion
   # guard). Deploy public/ here so scheduled weather updates reach the live site.
