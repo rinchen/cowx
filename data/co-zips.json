@@ -1,0 +1,1094 @@
+[
+  {
+    "zip": "80202",
+    "lat": 39.7527,
+    "lon": -104.9997,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80203",
+    "lat": 39.7312,
+    "lon": -104.9822,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80204",
+    "lat": 39.74,
+    "lon": -105.02,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80205",
+    "lat": 39.755,
+    "lon": -104.965,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80206",
+    "lat": 39.73,
+    "lon": -104.95,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80207",
+    "lat": 39.76,
+    "lon": -104.93,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80209",
+    "lat": 39.708,
+    "lon": -104.968,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80210",
+    "lat": 39.678,
+    "lon": -104.963,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80211",
+    "lat": 39.758,
+    "lon": -105.015,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80212",
+    "lat": 39.77,
+    "lon": -105.045,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80218",
+    "lat": 39.74,
+    "lon": -104.97,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80219",
+    "lat": 39.7,
+    "lon": -105.03,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80220",
+    "lat": 39.735,
+    "lon": -104.91,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80222",
+    "lat": 39.675,
+    "lon": -104.93,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80224",
+    "lat": 39.695,
+    "lon": -104.9,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80230",
+    "lat": 39.65,
+    "lon": -104.88,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80231",
+    "lat": 39.66,
+    "lon": -104.85,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80237",
+    "lat": 39.64,
+    "lon": -104.9,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80238",
+    "lat": 39.78,
+    "lon": -104.89,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80246",
+    "lat": 39.71,
+    "lon": -104.93,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80247",
+    "lat": 39.7,
+    "lon": -104.88,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80249",
+    "lat": 39.78,
+    "lon": -104.76,
+    "city": "Denver",
+    "county": "Denver"
+  },
+  {
+    "zip": "80010",
+    "lat": 39.7394,
+    "lon": -104.8642,
+    "city": "Aurora",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80011",
+    "lat": 39.75,
+    "lon": -104.82,
+    "city": "Aurora",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80012",
+    "lat": 39.7,
+    "lon": -104.84,
+    "city": "Aurora",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80013",
+    "lat": 39.66,
+    "lon": -104.79,
+    "city": "Aurora",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80014",
+    "lat": 39.67,
+    "lon": -104.83,
+    "city": "Aurora",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80015",
+    "lat": 39.62,
+    "lon": -104.79,
+    "city": "Aurora",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80016",
+    "lat": 39.61,
+    "lon": -104.74,
+    "city": "Aurora",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80017",
+    "lat": 39.69,
+    "lon": -104.81,
+    "city": "Aurora",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80018",
+    "lat": 39.72,
+    "lon": -104.72,
+    "city": "Aurora",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80045",
+    "lat": 39.75,
+    "lon": -104.84,
+    "city": "Aurora",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80401",
+    "lat": 39.7555,
+    "lon": -105.2211,
+    "city": "Golden",
+    "county": "Jefferson"
+  },
+  {
+    "zip": "80403",
+    "lat": 39.77,
+    "lon": -105.25,
+    "city": "Golden",
+    "county": "Jefferson"
+  },
+  {
+    "zip": "80419",
+    "lat": 39.6336,
+    "lon": -105.3178,
+    "city": "Evergreen",
+    "county": "Jefferson"
+  },
+  {
+    "zip": "80433",
+    "lat": 39.5219,
+    "lon": -105.3053,
+    "city": "Conifer",
+    "county": "Jefferson"
+  },
+  {
+    "zip": "80439",
+    "lat": 39.65,
+    "lon": -105.3,
+    "city": "Kittredge",
+    "county": "Jefferson"
+  },
+  {
+    "zip": "80465",
+    "lat": 39.6536,
+    "lon": -105.1911,
+    "city": "Morrison",
+    "county": "Jefferson"
+  },
+  {
+    "zip": "80123",
+    "lat": 39.61,
+    "lon": -105.08,
+    "city": "Littleton",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80120",
+    "lat": 39.595,
+    "lon": -105.01,
+    "city": "Littleton",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80121",
+    "lat": 39.62,
+    "lon": -104.95,
+    "city": "Centennial",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80122",
+    "lat": 39.58,
+    "lon": -104.95,
+    "city": "Centennial",
+    "county": "Arapahoe"
+  },
+  {
+    "zip": "80124",
+    "lat": 39.54,
+    "lon": -104.89,
+    "city": "Lone Tree",
+    "county": "Douglas"
+  },
+  {
+    "zip": "80126",
+    "lat": 39.52,
+    "lon": -104.86,
+    "city": "Highlands Ranch",
+    "county": "Douglas"
+  },
+  {
+    "zip": "80129",
+    "lat": 39.55,
+    "lon": -104.99,
+    "city": "Highlands Ranch",
+    "county": "Douglas"
+  },
+  {
+    "zip": "80130",
+    "lat": 39.53,
+    "lon": -104.92,
+    "city": "Highlands Ranch",
+    "county": "Douglas"
+  },
+  {
+    "zip": "80134",
+    "lat": 39.52,
+    "lon": -104.76,
+    "city": "Parker",
+    "county": "Douglas"
+  },
+  {
+    "zip": "80138",
+    "lat": 39.37,
+    "lon": -104.86,
+    "city": "Castle Rock",
+    "county": "Douglas"
+  },
+  {
+    "zip": "80301",
+    "lat": 40.015,
+    "lon": -105.2705,
+    "city": "Boulder",
+    "county": "Boulder"
+  },
+  {
+    "zip": "80302",
+    "lat": 40.019,
+    "lon": -105.28,
+    "city": "Boulder",
+    "county": "Boulder"
+  },
+  {
+    "zip": "80303",
+    "lat": 40,
+    "lon": -105.24,
+    "city": "Boulder",
+    "county": "Boulder"
+  },
+  {
+    "zip": "80304",
+    "lat": 40.04,
+    "lon": -105.29,
+    "city": "Boulder",
+    "county": "Boulder"
+  },
+  {
+    "zip": "80305",
+    "lat": 39.98,
+    "lon": -105.25,
+    "city": "Boulder",
+    "county": "Boulder"
+  },
+  {
+    "zip": "80501",
+    "lat": 40.1672,
+    "lon": -105.1019,
+    "city": "Longmont",
+    "county": "Boulder"
+  },
+  {
+    "zip": "80503",
+    "lat": 40.18,
+    "lon": -105.14,
+    "city": "Longmont",
+    "county": "Boulder"
+  },
+  {
+    "zip": "80504",
+    "lat": 40.15,
+    "lon": -105.08,
+    "city": "Longmont",
+    "county": "Boulder"
+  },
+  {
+    "zip": "80516",
+    "lat": 40.0503,
+    "lon": -105.0499,
+    "city": "Erie",
+    "county": "Weld"
+  },
+  {
+    "zip": "80520",
+    "lat": 40.3772,
+    "lon": -105.5217,
+    "city": "Estes Park",
+    "county": "Larimer"
+  },
+  {
+    "zip": "80521",
+    "lat": 40.5853,
+    "lon": -105.0844,
+    "city": "Fort Collins",
+    "county": "Larimer"
+  },
+  {
+    "zip": "80525",
+    "lat": 40.54,
+    "lon": -105.05,
+    "city": "Fort Collins",
+    "county": "Larimer"
+  },
+  {
+    "zip": "80526",
+    "lat": 40.52,
+    "lon": -105.08,
+    "city": "Fort Collins",
+    "county": "Larimer"
+  },
+  {
+    "zip": "80528",
+    "lat": 40.48,
+    "lon": -104.98,
+    "city": "Windsor",
+    "county": "Weld"
+  },
+  {
+    "zip": "80537",
+    "lat": 40.3978,
+    "lon": -105.0749,
+    "city": "Loveland",
+    "county": "Larimer"
+  },
+  {
+    "zip": "80538",
+    "lat": 40.42,
+    "lon": -105.05,
+    "city": "Loveland",
+    "county": "Larimer"
+  },
+  {
+    "zip": "80550",
+    "lat": 40.4233,
+    "lon": -104.7091,
+    "city": "Greeley",
+    "county": "Weld"
+  },
+  {
+    "zip": "80601",
+    "lat": 40.0847,
+    "lon": -104.8131,
+    "city": "Fort Lupton",
+    "county": "Weld"
+  },
+  {
+    "zip": "80602",
+    "lat": 40.1125,
+    "lon": -104.9366,
+    "city": "Firestone",
+    "county": "Weld"
+  },
+  {
+    "zip": "80603",
+    "lat": 40.0991,
+    "lon": -104.9372,
+    "city": "Frederick",
+    "county": "Weld"
+  },
+  {
+    "zip": "80631",
+    "lat": 40.4233,
+    "lon": -104.7091,
+    "city": "Greeley",
+    "county": "Weld"
+  },
+  {
+    "zip": "80634",
+    "lat": 40.4,
+    "lon": -104.75,
+    "city": "Greeley",
+    "county": "Weld"
+  },
+  {
+    "zip": "80640",
+    "lat": 40.1603,
+    "lon": -103.2144,
+    "city": "Akron",
+    "county": "Washington"
+  },
+  {
+    "zip": "80701",
+    "lat": 40.6255,
+    "lon": -103.2077,
+    "city": "Sterling",
+    "county": "Logan"
+  },
+  {
+    "zip": "80751",
+    "lat": 40.2589,
+    "lon": -103.6236,
+    "city": "Brush",
+    "county": "Morgan"
+  },
+  {
+    "zip": "80801",
+    "lat": 39.3061,
+    "lon": -102.2694,
+    "city": "Burlington",
+    "county": "Kit Carson"
+  },
+  {
+    "zip": "80813",
+    "lat": 38.8339,
+    "lon": -104.8214,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80814",
+    "lat": 38.8578,
+    "lon": -104.9172,
+    "city": "Manitou Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80816",
+    "lat": 38.9939,
+    "lon": -105.0569,
+    "city": "Woodland Park",
+    "county": "Teller"
+  },
+  {
+    "zip": "80817",
+    "lat": 38.6822,
+    "lon": -104.7006,
+    "city": "Fountain",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80829",
+    "lat": 38.4519,
+    "lon": -105.2425,
+    "city": "Cañon City",
+    "county": "Fremont"
+  },
+  {
+    "zip": "80831",
+    "lat": 38.8339,
+    "lon": -104.8214,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80840",
+    "lat": 38.8339,
+    "lon": -104.8214,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80903",
+    "lat": 38.8339,
+    "lon": -104.8214,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80904",
+    "lat": 38.85,
+    "lon": -104.84,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80905",
+    "lat": 38.82,
+    "lon": -104.79,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80906",
+    "lat": 38.78,
+    "lon": -104.82,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80907",
+    "lat": 38.88,
+    "lon": -104.82,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80908",
+    "lat": 38.95,
+    "lon": -104.78,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80909",
+    "lat": 38.84,
+    "lon": -104.77,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80910",
+    "lat": 38.82,
+    "lon": -104.77,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80911",
+    "lat": 38.75,
+    "lon": -104.8,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80915",
+    "lat": 38.85,
+    "lon": -104.75,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80916",
+    "lat": 38.78,
+    "lon": -104.75,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80918",
+    "lat": 38.9,
+    "lon": -104.76,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80919",
+    "lat": 38.95,
+    "lon": -104.82,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80920",
+    "lat": 38.95,
+    "lon": -104.82,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80921",
+    "lat": 39.09,
+    "lon": -104.87,
+    "city": "Monument",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80922",
+    "lat": 39.02,
+    "lon": -104.82,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80923",
+    "lat": 38.92,
+    "lon": -104.72,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80924",
+    "lat": 39,
+    "lon": -104.78,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80925",
+    "lat": 38.75,
+    "lon": -104.7,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "80927",
+    "lat": 39.05,
+    "lon": -104.7,
+    "city": "Colorado Springs",
+    "county": "El Paso"
+  },
+  {
+    "zip": "81001",
+    "lat": 38.2544,
+    "lon": -104.6091,
+    "city": "Pueblo",
+    "county": "Pueblo"
+  },
+  {
+    "zip": "81003",
+    "lat": 38.28,
+    "lon": -104.62,
+    "city": "Pueblo",
+    "county": "Pueblo"
+  },
+  {
+    "zip": "81004",
+    "lat": 38.23,
+    "lon": -104.64,
+    "city": "Pueblo",
+    "county": "Pueblo"
+  },
+  {
+    "zip": "81005",
+    "lat": 38.24,
+    "lon": -104.68,
+    "city": "Pueblo",
+    "county": "Pueblo"
+  },
+  {
+    "zip": "81006",
+    "lat": 38.28,
+    "lon": -104.68,
+    "city": "Pueblo",
+    "county": "Pueblo"
+  },
+  {
+    "zip": "81007",
+    "lat": 38.3,
+    "lon": -104.72,
+    "city": "Pueblo",
+    "county": "Pueblo"
+  },
+  {
+    "zip": "81008",
+    "lat": 38.32,
+    "lon": -104.7,
+    "city": "Pueblo",
+    "county": "Pueblo"
+  },
+  {
+    "zip": "81101",
+    "lat": 37.4694,
+    "lon": -105.87,
+    "city": "Alamosa",
+    "county": "Alamosa"
+  },
+  {
+    "zip": "81125",
+    "lat": 37.2753,
+    "lon": -107.8801,
+    "city": "Durango",
+    "county": "La Plata"
+  },
+  {
+    "zip": "81137",
+    "lat": 37.3489,
+    "lon": -108.5859,
+    "city": "Cortez",
+    "county": "Montezuma"
+  },
+  {
+    "zip": "81147",
+    "lat": 37.9375,
+    "lon": -107.8123,
+    "city": "Telluride",
+    "county": "San Miguel"
+  },
+  {
+    "zip": "81201",
+    "lat": 38.5347,
+    "lon": -105.9989,
+    "city": "Salida",
+    "county": "Chaffee"
+  },
+  {
+    "zip": "81211",
+    "lat": 38.4817,
+    "lon": -106.0384,
+    "city": "Breckenridge",
+    "county": "Summit"
+  },
+  {
+    "zip": "81212",
+    "lat": 38.4519,
+    "lon": -105.2425,
+    "city": "Cañon City",
+    "county": "Fremont"
+  },
+  {
+    "zip": "81224",
+    "lat": 38.4817,
+    "lon": -106.0384,
+    "city": "Breckenridge",
+    "county": "Summit"
+  },
+  {
+    "zip": "81225",
+    "lat": 38.5347,
+    "lon": -105.9989,
+    "city": "Salida",
+    "county": "Chaffee"
+  },
+  {
+    "zip": "81251",
+    "lat": 38.8697,
+    "lon": -106.9878,
+    "city": "Crested Butte",
+    "county": "Gunnison"
+  },
+  {
+    "zip": "81401",
+    "lat": 38.5458,
+    "lon": -106.9253,
+    "city": "Gunnison",
+    "county": "Gunnison"
+  },
+  {
+    "zip": "81413",
+    "lat": 38.4783,
+    "lon": -107.8762,
+    "city": "Montrose",
+    "county": "Montrose"
+  },
+  {
+    "zip": "81416",
+    "lat": 38.0228,
+    "lon": -107.6714,
+    "city": "Ouray",
+    "county": "Ouray"
+  },
+  {
+    "zip": "81435",
+    "lat": 37.2692,
+    "lon": -107.0098,
+    "city": "Pagosa Springs",
+    "county": "Archuleta"
+  },
+  {
+    "zip": "81501",
+    "lat": 39.0639,
+    "lon": -108.5506,
+    "city": "Grand Junction",
+    "county": "Mesa"
+  },
+  {
+    "zip": "81503",
+    "lat": 39.05,
+    "lon": -108.53,
+    "city": "Grand Junction",
+    "county": "Mesa"
+  },
+  {
+    "zip": "81504",
+    "lat": 39.08,
+    "lon": -108.52,
+    "city": "Grand Junction",
+    "county": "Mesa"
+  },
+  {
+    "zip": "81505",
+    "lat": 39.1,
+    "lon": -108.58,
+    "city": "Grand Junction",
+    "county": "Mesa"
+  },
+  {
+    "zip": "81506",
+    "lat": 39.12,
+    "lon": -108.6,
+    "city": "Grand Junction",
+    "county": "Mesa"
+  },
+  {
+    "zip": "81507",
+    "lat": 39.04,
+    "lon": -108.6,
+    "city": "Grand Junction",
+    "county": "Mesa"
+  },
+  {
+    "zip": "81601",
+    "lat": 39.5505,
+    "lon": -107.3248,
+    "city": "Glenwood Springs",
+    "county": "Garfield"
+  },
+  {
+    "zip": "81611",
+    "lat": 39.1911,
+    "lon": -106.8175,
+    "city": "Aspen",
+    "county": "Pitkin"
+  },
+  {
+    "zip": "81615",
+    "lat": 39.6433,
+    "lon": -106.3781,
+    "city": "Vail",
+    "county": "Eagle"
+  },
+  {
+    "zip": "81620",
+    "lat": 39.5744,
+    "lon": -106.0975,
+    "city": "Frisco",
+    "county": "Summit"
+  },
+  {
+    "zip": "81621",
+    "lat": 39.4817,
+    "lon": -106.0384,
+    "city": "Breckenridge",
+    "county": "Summit"
+  },
+  {
+    "zip": "81623",
+    "lat": 39.5505,
+    "lon": -107.3248,
+    "city": "Glenwood Springs",
+    "county": "Garfield"
+  },
+  {
+    "zip": "81625",
+    "lat": 39.6433,
+    "lon": -106.3781,
+    "city": "Vail",
+    "county": "Eagle"
+  },
+  {
+    "zip": "81631",
+    "lat": 39.1911,
+    "lon": -106.8175,
+    "city": "Aspen",
+    "county": "Pitkin"
+  },
+  {
+    "zip": "81632",
+    "lat": 39.213,
+    "lon": -106.9378,
+    "city": "Snowmass Village",
+    "county": "Pitkin"
+  },
+  {
+    "zip": "81637",
+    "lat": 39.6433,
+    "lon": -106.3781,
+    "city": "Vail",
+    "county": "Eagle"
+  },
+  {
+    "zip": "81639",
+    "lat": 39.5744,
+    "lon": -106.0975,
+    "city": "Frisco",
+    "county": "Summit"
+  },
+  {
+    "zip": "81647",
+    "lat": 39.485,
+    "lon": -106.8317,
+    "city": "Steamboat Springs",
+    "county": "Routt"
+  },
+  {
+    "zip": "81654",
+    "lat": 39.5505,
+    "lon": -107.3248,
+    "city": "Glenwood Springs",
+    "county": "Garfield"
+  },
+  {
+    "zip": "81657",
+    "lat": 39.6433,
+    "lon": -106.3781,
+    "city": "Vail",
+    "county": "Eagle"
+  },
+  {
+    "zip": "80424",
+    "lat": 39.2508,
+    "lon": -106.2925,
+    "city": "Leadville",
+    "county": "Lake"
+  },
+  {
+    "zip": "80435",
+    "lat": 39.4817,
+    "lon": -106.0384,
+    "city": "Breckenridge",
+    "county": "Summit"
+  },
+  {
+    "zip": "80443",
+    "lat": 39.9614,
+    "lon": -105.5108,
+    "city": "Nederland",
+    "county": "Boulder"
+  },
+  {
+    "zip": "80447",
+    "lat": 40.0861,
+    "lon": -105.9394,
+    "city": "Granby",
+    "county": "Grand"
+  },
+  {
+    "zip": "80451",
+    "lat": 39.5744,
+    "lon": -106.0975,
+    "city": "Frisco",
+    "county": "Summit"
+  },
+  {
+    "zip": "80452",
+    "lat": 39.5744,
+    "lon": -106.0975,
+    "city": "Frisco",
+    "county": "Summit"
+  },
+  {
+    "zip": "80459",
+    "lat": 39.485,
+    "lon": -106.8317,
+    "city": "Steamboat Springs",
+    "county": "Routt"
+  },
+  {
+    "zip": "80461",
+    "lat": 39.485,
+    "lon": -106.8317,
+    "city": "Steamboat Springs",
+    "county": "Routt"
+  },
+  {
+    "zip": "80467",
+    "lat": 40.2522,
+    "lon": -105.8231,
+    "city": "Grand Lake",
+    "county": "Grand"
+  },
+  {
+    "zip": "80468",
+    "lat": 40.3772,
+    "lon": -105.5217,
+    "city": "Estes Park",
+    "county": "Larimer"
+  },
+  {
+    "zip": "80478",
+    "lat": 40.0861,
+    "lon": -105.9394,
+    "city": "Granby",
+    "county": "Grand"
+  },
+  {
+    "zip": "80482",
+    "lat": 40.0861,
+    "lon": -105.9394,
+    "city": "Granby",
+    "county": "Grand"
+  },
+  {
+    "zip": "80487",
+    "lat": 40.2522,
+    "lon": -105.8231,
+    "city": "Grand Lake",
+    "county": "Grand"
+  },
+  {
+    "zip": "80498",
+    "lat": 39.6433,
+    "lon": -106.3781,
+    "city": "Vail",
+    "county": "Eagle"
+  }
+]
