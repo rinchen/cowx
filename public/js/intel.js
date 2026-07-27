@@ -19,6 +19,7 @@ import {
   wmoLabel,
   meteoconIconHtml,
   pressureTrendIconHtml,
+  metricValueWithIcon,
 } from './icons.js';
 import {
   buildOutlookHighlights,
@@ -107,11 +108,6 @@ function fmtUpdated(iso) {
   }
 }
 
-/**
- * @param {string} label
- * @param {string | null} value
- * @param {string | null} jumpId
- */
 /**
  * @param {string} label
  * @param {string | null | undefined} value
@@ -323,11 +319,11 @@ export function renderHero(root, data, options = {}) {
   const pressureTrendLabel = pressureTrendKey ? PRESSURE_TREND_LABELS[pressureTrendKey] : null;
   const pressureMetricHtml =
     pressureInHg != null
-      ? `<span class="pressure-metric">${meteoconIconHtml('barometer', {
+      ? `<span class="metric-with-icon">${meteoconIconHtml('barometer', {
           size: 18,
           alt: '',
-          className: 'meteocon-icon pressure-metric__barometer',
-        })}<span class="pressure-metric__text">${escapeHtml(pressureInHg)} inHg</span>${pressureTrendIconHtml(
+          className: 'meteocon-icon metric-with-icon__glyph',
+        })}<span class="metric-with-icon__text">${escapeHtml(pressureInHg)} inHg</span>${pressureTrendIconHtml(
           pressureTrendKey,
           { size: 14, className: 'pressure-trend-icon' },
         )}</span>`
@@ -460,30 +456,62 @@ export function renderHero(root, data, options = {}) {
         ${metricRow('Vs typical', vsTypicalToday, 'climatology-heading')}
         ${metricRow(
           'Precip chance',
-          precipChance != null ? `${Math.round(Number(precipChance))}% this hour` : null,
+          precipChance != null
+            ? metricValueWithIcon('umbrella', `${Math.round(Number(precipChance))}% this hour`)
+            : null,
           'hourly-heading',
+          {
+            html: true,
+            ariaValue:
+              precipChance != null ? `${Math.round(Number(precipChance))}% this hour` : undefined,
+          },
         )}
         ${metricRow(
           'Humidity',
-          current?.humidity != null ? `${current.humidity}%` : null,
+          current?.humidity != null
+            ? metricValueWithIcon('humidity', `${current.humidity}%`)
+            : null,
           'hourly-heading',
+          {
+            html: true,
+            ariaValue: current?.humidity != null ? `${current.humidity}%` : undefined,
+          },
         )}
         ${metricRow(
           'Dewpoint',
-          hourDew != null ? `${Math.round(Number(hourDew))}°F` : null,
+          hourDew != null
+            ? metricValueWithIcon('thermometer-water', `${Math.round(Number(hourDew))}°F`)
+            : null,
           'hourly-heading',
+          {
+            html: true,
+            ariaValue: hourDew != null ? `${Math.round(Number(hourDew))}°F` : undefined,
+          },
         )}
         ${metricRow(
           'Rainfall today',
           current?.precip_today_in != null
-            ? `${Number(current.precip_today_in).toFixed(2)} in`
+            ? metricValueWithIcon('raindrop', `${Number(current.precip_today_in).toFixed(2)} in`)
             : null,
           'hourly-heading',
+          {
+            html: true,
+            ariaValue:
+              current?.precip_today_in != null
+                ? `${Number(current.precip_today_in).toFixed(2)} in`
+                : undefined,
+          },
         )}
         ${metricRow(
           'Cloud cover',
-          current?.cloud_cover != null ? `${current.cloud_cover}%` : null,
+          current?.cloud_cover != null
+            ? metricValueWithIcon('cloudy', `${current.cloud_cover}%`)
+            : null,
           'hourly-heading',
+          {
+            html: true,
+            ariaValue: current?.cloud_cover != null ? `${current.cloud_cover}%` : undefined,
+          },
         )}
         ${metricRow('Pressure', pressureMetricHtml, 'hourly-heading', {
           html: true,
@@ -491,8 +519,15 @@ export function renderHero(root, data, options = {}) {
         })}
         ${metricRow(
           'UV index',
-          hourUv != null && Number.isFinite(hourUv) ? String(Math.round(hourUv)) : null,
+          hourUv != null && Number.isFinite(hourUv)
+            ? metricValueWithIcon('uv-index', String(Math.round(hourUv)))
+            : null,
           'hourly-heading',
+          {
+            html: true,
+            ariaValue:
+              hourUv != null && Number.isFinite(hourUv) ? String(Math.round(hourUv)) : undefined,
+          },
         )}
         ${metricRow(
           'Visibility',

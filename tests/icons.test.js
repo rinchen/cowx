@@ -5,6 +5,7 @@ import {
   wmoLabel,
   weatherIconHtml,
   meteoconIconHtml,
+  metricValueWithIcon,
   pressureTrendIconHtml,
   isDaytime,
 } from '../public/js/icons.js';
@@ -27,14 +28,40 @@ describe('weatherIconHtml', () => {
 });
 
 describe('meteoconIconHtml', () => {
-  it('resolves barometer from the meteocons tree', () => {
-    const html = meteoconIconHtml('barometer', { alt: 'Barometer' });
-    assert.match(html, /src="[^"]*\/img\/meteocons\/(svg|svg-static)\/fill\/barometer\.svg"/);
-    assert.match(html, /alt="Barometer"/);
+  it('resolves allowlisted metric glyphs from the meteocons tree', () => {
+    for (const slug of [
+      'barometer',
+      'humidity',
+      'uv-index',
+      'thermometer-water',
+      'umbrella',
+      'raindrop',
+      'cloudy',
+    ]) {
+      const html = meteoconIconHtml(slug, { alt: slug });
+      assert.match(
+        html,
+        new RegExp(`src="[^"]*/img/meteocons/(svg|svg-static)/fill/${slug}\\.svg"`),
+      );
+    }
   });
 
   it('rejects unknown slugs', () => {
     assert.equal(meteoconIconHtml('not-a-real-icon'), '');
+  });
+});
+
+describe('metricValueWithIcon', () => {
+  it('wraps escaped text with a decorative glyph', () => {
+    const html = metricValueWithIcon('humidity', '42%');
+    assert.match(html ?? '', /humidity\.svg/);
+    assert.match(html ?? '', /metric-with-icon__text">42%/);
+    assert.match(html ?? '', /alt=""/);
+  });
+
+  it('returns null for empty text', () => {
+    assert.equal(metricValueWithIcon('humidity', null), null);
+    assert.equal(metricValueWithIcon('humidity', ''), null);
   });
 });
 

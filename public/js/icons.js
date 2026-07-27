@@ -23,7 +23,15 @@ const METEOCONS_BASE = new URL('../img/meteocons/', import.meta.url);
 const WEATHER_ICONS_BASE = new URL('../img/weather-icons/', import.meta.url);
 
 /** Allowed non-WMO Meteocons slugs for metric glyphs. */
-const METEOCON_SLUGS = new Set(['barometer']);
+const METEOCON_SLUGS = new Set([
+  'barometer',
+  'humidity',
+  'uv-index',
+  'thermometer-water',
+  'umbrella',
+  'raindrop',
+  'cloudy',
+]);
 
 /**
  * @param {number | null | undefined} code
@@ -99,6 +107,24 @@ export function meteoconIconHtml(slug, opts = {}) {
   const format = prefersReducedMotion() ? 'svg-static' : 'svg';
   const src = new URL(`${format}/fill/${key}.svg`, METEOCONS_BASE).href;
   return `<img class="${escapeHtml(className)}" src="${src}" width="${size}" height="${size}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" />`;
+}
+
+/**
+ * Compact metric value: decorative Meteocons glyph + escaped text.
+ * @param {string} slug
+ * @param {string | null | undefined} text
+ * @param {{ size?: number }} [opts]
+ * @returns {string | null}
+ */
+export function metricValueWithIcon(slug, text, opts = {}) {
+  if (text == null || text === '') return null;
+  const icon = meteoconIconHtml(slug, {
+    size: opts.size ?? 18,
+    alt: '',
+    className: 'meteocon-icon metric-with-icon__glyph',
+  });
+  if (!icon) return escapeHtml(String(text));
+  return `<span class="metric-with-icon">${icon}<span class="metric-with-icon__text">${escapeHtml(String(text))}</span></span>`;
 }
 
 /**

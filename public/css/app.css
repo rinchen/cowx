@@ -3082,7 +3082,8 @@ button.glance-aqi-bar__source.intel-jump {
 }
 
 .pressure-metric,
-.pressure-cell {
+.pressure-cell,
+.metric-with-icon {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -3090,6 +3091,7 @@ button.glance-aqi-bar__source.intel-jump {
 }
 
 .pressure-metric__barometer,
+.metric-with-icon__glyph,
 .pressure-trend-icon,
 .meteocon-icon {
   flex-shrink: 0;
@@ -3097,7 +3099,8 @@ button.glance-aqi-bar__source.intel-jump {
   object-fit: contain;
 }
 
-.pressure-metric__text {
+.pressure-metric__text,
+.metric-with-icon__text {
   white-space: nowrap;
 }
 
