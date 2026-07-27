@@ -28,7 +28,7 @@ function buildUrl(chunk) {
     `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}` +
     `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pressure_msl,surface_pressure,is_day,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,uv_index,dewpoint_2m,visibility` +
     `&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,wind_speed_80m,wind_direction_80m,relative_humidity_2m,dewpoint_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,uv_index,soil_temperature_6cm,soil_moisture_3_to_9cm,cape,shortwave_radiation,freezing_level_height,is_day,pressure_msl,temperature_850hPa` +
-    `&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,precipitation_probability_max,precipitation_hours,snowfall_sum,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,uv_index_max,sunrise,sunset,sunshine_duration,daylight_duration,shortwave_radiation_sum,et0_fao_evapotranspiration,relative_humidity_2m_max,relative_humidity_2m_min,dewpoint_2m_max,dewpoint_2m_min,cloud_cover_mean,visibility_min,cape_max` +
+    `&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,precipitation_probability_max,precipitation_hours,snowfall_sum,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,uv_index_max,sunrise,sunset,sunshine_duration,daylight_duration,shortwave_radiation_sum,et0_fao_evapotranspiration,relative_humidity_2m_max,relative_humidity_2m_min,dewpoint_2m_max,dewpoint_2m_min,cloud_cover_mean,visibility_min,cape_max,pressure_msl_mean` +
     `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FDenver&forecast_days=10&forecast_hours=48`
   );
 }
@@ -210,6 +210,7 @@ export function mapResult(r, condition) {
           cloud_cover_mean: r.daily.cloud_cover_mean ?? [],
           visibility_min: r.daily.visibility_min ?? [],
           cape_max: r.daily.cape_max ?? [],
+          pressure_msl_mean: r.daily.pressure_msl_mean ?? [],
           thunderstorm_probability_max: [],
         }
       : null,

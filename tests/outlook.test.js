@@ -42,6 +42,8 @@ function makeHourly(hours, anchor = new Date('2026-07-20T12:00:00-06:00')) {
   const weather_code = [];
   /** @type {number[]} */
   const is_day = [];
+  /** @type {number[]} */
+  const pressure_msl = [];
 
   for (let i = 0; i < hours; i += 1) {
     const t = new Date(anchor.getTime() + (i - 6) * 3600_000);
@@ -55,6 +57,8 @@ function makeHourly(hours, anchor = new Date('2026-07-20T12:00:00-06:00')) {
     thunderstorm_probability.push(i === 15 ? 55 : 5);
     weather_code.push(i % 3 === 0 ? 61 : 1);
     is_day.push(t.getUTCHours() >= 13 && t.getUTCHours() < 25 ? 1 : 0);
+    // Rising ~1 mb/hour so trends after index 0 are "rising"
+    pressure_msl.push(1010 + i);
   }
 
   return {
@@ -68,6 +72,7 @@ function makeHourly(hours, anchor = new Date('2026-07-20T12:00:00-06:00')) {
     thunderstorm_probability,
     weather_code,
     is_day,
+    pressure_msl,
   };
 }
 
@@ -348,6 +353,9 @@ describe('sliceCompactHours', () => {
     assert.ok(rows[0].feels_like_f != null);
     assert.ok(rows[0].precip_pct != null);
     assert.ok(rows[0].wind_mph != null);
+    assert.equal(rows[0].pressure_mb, 1010 + 6);
+    assert.equal(rows[0].pressure_trend, 'rising');
+    assert.equal(rows[1].pressure_trend, 'rising');
   });
 
   it('caps count at 12', () => {

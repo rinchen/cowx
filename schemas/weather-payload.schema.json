@@ -87,7 +87,8 @@
         "dewpoint_2m_min": { "type": "array" },
         "cloud_cover_mean": { "type": "array" },
         "visibility_min": { "type": "array" },
-        "cape_max": { "type": "array" }
+        "cape_max": { "type": "array" },
+        "pressure_msl_mean": { "type": "array" }
       }
     },
     "openmeteo_aq": {

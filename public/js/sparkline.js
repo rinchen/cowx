@@ -138,6 +138,47 @@ export function mbToInHg(mb) {
 }
 
 /**
+ * Format millibars / hPa as inches of mercury (2 decimal places).
+ * @param {number | null | undefined} mb
+ * @returns {string | null}
+ */
+export function formatInHg(mb) {
+  if (mb == null || !Number.isFinite(Number(mb))) return null;
+  return mbToInHg(Number(mb)).toFixed(2);
+}
+
+/** @typedef {'rising' | 'falling' | 'flat'} PressureTrend */
+
+export const PRESSURE_TREND_LABELS = /** @type {const} */ ({
+  rising: 'Rising',
+  falling: 'Falling',
+  flat: 'Flat',
+});
+
+/**
+ * Classify barometric trend at `index` vs the prior hourly sample.
+ * Threshold is in inHg (default 0.02 ≈ 0.68 mb).
+ * @param {(number | null | undefined)[]} mbSeries
+ * @param {number} index
+ * @param {{ thresholdInHg?: number }} [opts]
+ * @returns {PressureTrend | null}
+ */
+export function pressureTrend(mbSeries, index, opts = {}) {
+  const thresholdInHg = opts.thresholdInHg ?? 0.02;
+  if (!Array.isArray(mbSeries) || index < 1) return null;
+  const curRaw = mbSeries[index];
+  const prevRaw = mbSeries[index - 1];
+  if (curRaw == null || prevRaw == null) return null;
+  const cur = Number(curRaw);
+  const prev = Number(prevRaw);
+  if (!Number.isFinite(cur) || !Number.isFinite(prev)) return null;
+  const deltaInHg = mbToInHg(cur) - mbToInHg(prev);
+  if (deltaInHg >= thresholdInHg) return 'rising';
+  if (deltaInHg <= -thresholdInHg) return 'falling';
+  return 'flat';
+}
+
+/**
  * Detect a rapid pressure drop (inHg) over a window of samples.
  * Uses index positions; skips non-finite values in the delta check.
  * @param {(number | null)[]} inHgValues

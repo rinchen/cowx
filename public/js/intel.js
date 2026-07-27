@@ -29,6 +29,7 @@ import { dailyIndexForNow, resolveAstronomy, resolveRfComms } from './live.js';
 import {
   bindMeteogramScrubber,
   detectPressureDip,
+  formatInHg,
   formatMeteogramAxisTicks,
   formatMeteogramHour,
   formatSeriesRangeLabel,
@@ -36,6 +37,8 @@ import {
   meteogramHtml,
   meteogramTimeAxisHtml,
   miniBarChartHtml,
+  PRESSURE_TREND_LABELS,
+  pressureTrend,
   seriesRange,
 } from './sparkline.js';
 import { windCompassHtml, windDirLabel } from './wind.js';
@@ -293,14 +296,22 @@ export function renderHero(root, data, options = {}) {
         ? /** @type {number[]} */ (hourly.thunderstorm_probability)[hi]
         : null;
 
-  const pressureDisplay =
-    current?.surface_pressure_mb != null
-      ? current.surface_pressure_mb
-      : current?.pressure_mb != null
-        ? current.pressure_mb
-        : catalogCurrent?.surface_pressure_mb != null
-          ? catalogCurrent.surface_pressure_mb
-          : catalogCurrent?.pressure_mb;
+  const pressureMb =
+    current?.pressure_mb != null
+      ? Number(current.pressure_mb)
+      : catalogCurrent?.pressure_mb != null
+        ? Number(catalogCurrent.pressure_mb)
+        : null;
+  const pressureInHg = formatInHg(pressureMb);
+  const pressureSeries = /** @type {(number | null)[]} */ (hourly?.pressure_msl ?? []);
+  const pressureTrendKey = times.length ? pressureTrend(pressureSeries, hi) : null;
+  const pressureTrendLabel = pressureTrendKey ? PRESSURE_TREND_LABELS[pressureTrendKey] : null;
+  const pressureMetric =
+    pressureInHg != null
+      ? pressureTrendLabel
+        ? `${pressureInHg} inHg · ${pressureTrendLabel}`
+        : `${pressureInHg} inHg`
+      : null;
 
   const pinSourceLabel =
     pin?.source === 'gps' ? 'GPS' : pin?.source === 'address' ? 'address' : 'network';
@@ -450,11 +461,7 @@ export function renderHero(root, data, options = {}) {
           current?.cloud_cover != null ? `${current.cloud_cover}%` : null,
           'hourly-heading',
         )}
-        ${metricRow(
-          'Pressure',
-          pressureDisplay != null ? `${Math.round(Number(pressureDisplay))} mb` : null,
-          'hourly-heading',
-        )}
+        ${metricRow('Pressure', pressureMetric, 'hourly-heading')}
         ${metricRow(
           'UV index',
           hourUv != null && Number.isFinite(hourUv) ? String(Math.round(hourUv)) : null,
@@ -720,6 +727,7 @@ export function renderOutlook(root, data, options = {}) {
       const hour = localHourFromIso(row.time != null ? String(row.time) : null);
       const typical = hour != null ? typicalDiurnalTemp(normal, hour) : null;
       const vs = formatCompactVsTypical(row.temp_f, typical);
+      const trendLabel = row.pressure_trend ? PRESSURE_TREND_LABELS[row.pressure_trend] : null;
       return `<li class="outlook-hour-card">
         <span class="outlook-hour-card__time">${escapeHtml(formatCompactHourLabel(row.time))}</span>
         ${weatherIconHtml(row.weather_code, { isDay: row.is_day, size: 32, className: 'weather-icon weather-icon--sm', alt: wmoLabel(row.weather_code) })}
@@ -728,6 +736,7 @@ export function renderOutlook(root, data, options = {}) {
         <span class="outlook-hour-card__feels">${row.feels_like_f != null ? `Feels ${Math.round(row.feels_like_f)}°` : ''}</span>
         <span class="outlook-hour-card__precip">${row.precip_pct != null ? `${Math.round(row.precip_pct)}%` : '—'}</span>
         <span class="outlook-hour-card__wind">${escapeHtml(windBit)}</span>
+        ${trendLabel ? `<span class="outlook-hour-card__pressure">${escapeHtml(trendLabel)}</span>` : ''}
       </li>`;
     })
     .join('');
