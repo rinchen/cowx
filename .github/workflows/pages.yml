@@ -32,7 +32,8 @@ jobs:
         run: bash scripts/ci/ensure-slim-pr-previews.sh
 
       # Weather JSON is owned by update-weather.yml. Drop it from this payload and
-      # clean-exclude data/ so JamesIves does not wipe or overwrite the live tree.
+      # clean-exclude data/ so the GitHub Pages deploy action does not wipe or
+      # overwrite the live tree.
       - name: Omit public/data from UI deploy
         run: |
           set -euo pipefail
@@ -50,6 +51,7 @@ jobs:
 
       - name: Deploy to gh-pages
         id: pages_deploy
+        # Marketplace: github-pages-deploy-action (publishes folder → gh-pages branch)
         uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
         with:
           branch: gh-pages
@@ -60,7 +62,7 @@ jobs:
             data
 
       - name: Verify GitHub Pages build
-        # JamesIves sets deployment_status as a step output and via GITHUB_ENV.
+        # Deploy action sets deployment_status as a step output and via GITHUB_ENV.
         if: steps.pages_deploy.outputs.deployment_status != 'skipped' && env.deployment_status != 'skipped'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,3 +71,21 @@ jobs:
           git fetch origin gh-pages
           tip="$(git rev-parse origin/gh-pages)"
           bash scripts/ci/wait-for-pages-build.sh "${tip}"
+
+  notify-on-failure:
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    if: always() && needs.deploy.result == 'failure'
+    steps:
+      - name: Post Discord notification
+        env:
+          NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+        run: |
+          if [ -z "$NOTIFY_WEBHOOK_URL" ]; then
+            echo "NOTIFY_WEBHOOK_URL not configured, skipping Discord notification"
+            exit 0
+          fi
+          payload=$(jq -n \
+            --arg content "COWX ALERT: GitHub Pages deploy failed (gh-pages may be missing): ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            '{content: $content}')
+          curl --max-time 15 -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_WEBHOOK_URL"

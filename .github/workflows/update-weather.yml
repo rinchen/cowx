@@ -130,6 +130,7 @@ jobs:
 
       - name: Deploy to gh-pages
         id: pages_deploy
+        # Marketplace: github-pages-deploy-action (publishes folder → gh-pages branch)
         uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
         with:
           branch: gh-pages
@@ -173,7 +174,7 @@ jobs:
           if [ "$FETCH_FAILED" = "true" ]; then
             reason="weather fetch failed"
           elif [ "$DEPLOY_RESULT" = "failure" ]; then
-            reason="gh-pages deploy or Pages build verification failed"
+            reason="ALERT: gh-pages deploy or Pages build verification failed (branch may be missing)"
           fi
           payload=$(jq -n \
             --arg content "COWX ${reason}: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
