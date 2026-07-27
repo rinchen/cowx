@@ -2,9 +2,10 @@ name: Check Stale Data
 
 # Two-tier watchdog on production meta.json age:
 #   >= STALE_MINUTES  — dispatch Update Weather (self-heal) and stay green/quiet.
-#   >= NOTIFY_MINUTES — recovery did not work; Discord-alert and fail the run.
+#   >= NOTIFY_MINUTES — dispatch, wait up to ~20m for live meta to recover, then
+#                       Discord-alert and fail only if still unrecovered.
 # GitHub often delays weather crons by 1–3h, so the recoverable tier must not
-# page anyone; only a genuinely ≥2h-old CDN means the mitigations failed.
+# page anyone; an in-flight fetch must not look like a failed mitigation either.
 # GitHub can also starve both schedules simultaneously. An independent
 # cron-job.org keepalive dispatches this workflow every 15m (see README).
 on:
@@ -62,14 +63,31 @@ jobs:
           echo "Live meta stale (${{ steps.age.outputs.age_minutes }}m); dispatching update-weather.yml on main"
           gh workflow run update-weather.yml --repo "${{ github.repository }}" --ref main
 
-      # Only fires once data is genuinely past NOTIFY_MINUTES (or the CDN copy is
-      # unreachable) — i.e. the self-heal dispatch above already failed to recover.
+      # At ≥ NOTIFY_MINUTES, do not page yet — an in-flight Update Weather (or the
+      # dispatch above) often lands within one fetch+deploy cycle. Wait, then
+      # alert only if live meta is still unrecovered. Unreachable meta skips the
+      # wait and pages immediately.
+      - name: Wait for self-heal recovery
+        id: recovery
+        if: steps.age.outputs.notify == 'true' && steps.age.outputs.reachable == 'true'
+        env:
+          LIVE_META_URL: ${{ env.LIVE_META_URL }}
+          BASELINE_GENERATED_AT: ${{ steps.age.outputs.generated_at }}
+          RECOVERED_MAX_AGE_MINUTES: ${{ env.STALE_MINUTES }}
+          WAIT_TIMEOUT_MINUTES: '20'
+          POLL_SECS: '30'
+        run: bash scripts/ci/wait-for-fresh-live-meta.sh
+
+      # Only fires when live meta stays past NOTIFY_MINUTES after the wait (or the
+      # CDN copy is unreachable) — i.e. mitigations actually failed to recover.
       - name: Notify Discord — self-heal failed
-        if: steps.age.outputs.notify == 'true'
+        if: |
+          steps.age.outputs.notify == 'true' &&
+          (steps.age.outputs.reachable != 'true' || steps.recovery.outputs.recovered != 'true')
         env:
           NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
-          GENERATED_AT: ${{ steps.age.outputs.generated_at }}
-          AGE_MINUTES: ${{ steps.age.outputs.age_minutes }}
+          GENERATED_AT: ${{ steps.recovery.outputs.final_generated_at || steps.age.outputs.generated_at }}
+          AGE_MINUTES: ${{ steps.recovery.outputs.final_age_minutes || steps.age.outputs.age_minutes }}
           REACHABLE: ${{ steps.age.outputs.reachable }}
           LIVE_META_URL: ${{ env.LIVE_META_URL }}
           NOTIFY_MINUTES: ${{ env.NOTIFY_MINUTES }}
@@ -89,7 +107,10 @@ jobs:
           curl --max-time 15 -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_WEBHOOK_URL"
 
       - name: Fail run when self-heal failed
-        if: steps.age.outputs.notify == 'true'
+        if: |
+          steps.age.outputs.notify == 'true' &&
+          (steps.age.outputs.reachable != 'true' || steps.recovery.outputs.recovered != 'true')
         # Red in Actions even when NOTIFY_WEBHOOK_URL is unset. The recoverable
         # 90m tier stays green so routine cron delays do not send failure mail.
+        # Notify-tier waits for recovery first so in-flight fetches are not paged.
         run: exit 1
