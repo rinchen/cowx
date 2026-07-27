@@ -1,10 +1,10 @@
 import { escapeHtml, safeHttpsUrl, safeExternalUrl } from './dom.js';
 import { aqiBarHtml } from './aqi.js';
 import { climatologyPeriodLabel, compareDailyToNormal, formatTempDelta } from './climatology.js';
-import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
+import { isDaytime, weatherIconHtml, wmoLabel, pressureTrendIconHtml } from './icons.js';
 import { imageryUrls } from './imagery.js';
 import { resolveAstronomy, resolveCatalogNow, resolveRfComms } from './live.js';
-import { formatInHg } from './sparkline.js';
+import { formatInHg, pressureTrend } from './sparkline.js';
 import { windCellHtml } from './wind.js';
 import { rwisLiveReadings } from './rwis.js';
 
@@ -779,6 +779,17 @@ function buildHourlyTable(hourly, sunrises, sunsets, opts = {}) {
     const day = dayFlag === 0 || dayFlag === 1 ? dayFlag === 1 : isDaytime(t, sunrises, sunsets);
     const precipType = precipTypeLine(rain, showers, snow);
     const pressureLabel = formatInHg(pressureMb);
+    const trendIcon = pressureTrendIconHtml(
+      pressureTrend(/** @type {(number | null)[]} */ (hourly.pressure_msl ?? []), i),
+      {
+        size: 14,
+        className: 'pressure-trend-icon',
+      },
+    );
+    const pressureCell =
+      pressureLabel != null
+        ? `<span class="pressure-cell">${escapeHtml(pressureLabel)}${trendIcon}</span>`
+        : '—';
     /** @type {Record<string, string>} */
     const cellByKey = {
       time: `<td class="sticky-col col-time" data-col="time">${escapeHtml(fmtTime(t))}</td>`,
@@ -798,7 +809,7 @@ function buildHourlyTable(hourly, sunrises, sunsets, opts = {}) {
       cloud: `<td class="col-cloud" data-col="cloud">${cloud != null ? `${cloud}%` : '—'}</td>`,
       cloudLayers: `<td class="col-cloudLayers" data-col="cloudLayers">${cloudLayersHtml(cloudLow, cloudMid, cloudHigh)}</td>`,
       freeze: `<td class="col-freeze" data-col="freeze">${fmtFreezingLevelFt(freeze) ?? '—'}</td>`,
-      pressure: `<td class="col-pressure" data-col="pressure">${pressureLabel ?? '—'}</td>`,
+      pressure: `<td class="col-pressure" data-col="pressure">${pressureCell}</td>`,
       uv: `<td class="col-uv" data-col="uv">${uv != null ? String(uv) : '—'}</td>`,
       vis: `<td class="col-vis" data-col="vis">${fmtVisibility(vis)}</td>`,
     };

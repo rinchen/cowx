@@ -5,16 +5,33 @@
  * Icons are vendored under public/img/meteocons/ using the CDN path layout:
  * {format}/{style}/{slug}.svg (svg | svg-static, fill).
  * Resolved via import.meta.url so paths work with or without a trailing slash on /cowx.
+ *
+ * Pressure trend arrows use Weather Icons (SIL OFL) under public/img/weather-icons/.
  */
 
 import { wmoLabel } from './wmo.js';
 import { escapeHtml } from './dom.js';
 import { denverHourKey, omLocalOrdinal } from './denver-time.js';
+import { PRESSURE_TREND_LABELS } from './sparkline.js';
 
 export { wmoLabel };
 
 /** Base URL for vendored icons (…/img/meteocons/), always correct from this module. */
 const METEOCONS_BASE = new URL('../img/meteocons/', import.meta.url);
+
+/** Base URL for Weather Icons subset (…/img/weather-icons/). */
+const WEATHER_ICONS_BASE = new URL('../img/weather-icons/', import.meta.url);
+
+/** Allowed non-WMO Meteocons slugs for metric glyphs. */
+const METEOCON_SLUGS = new Set([
+  'barometer',
+  'humidity',
+  'uv-index',
+  'thermometer-water',
+  'umbrella',
+  'raindrop',
+  'cloudy',
+]);
 
 /**
  * @param {number | null | undefined} code
@@ -51,6 +68,15 @@ function prefersReducedMotion() {
 }
 
 /**
+ * Sanitize a CSS class string for icon <img> tags.
+ * @param {string} className
+ * @returns {string}
+ */
+function safeIconClass(className) {
+  return String(className).replace(/[^a-zA-Z0-9_\-\s]/g, '');
+}
+
+/**
  * @param {number | null | undefined} code
  * @param {{ isDay?: boolean, size?: number, alt?: string, className?: string }} [opts]
  * @returns {string} HTML for an <img>
@@ -60,10 +86,67 @@ export function weatherIconHtml(code, opts = {}) {
   const size = opts.size ?? 48;
   const slug = wmoToMeteoconSlug(code, isDay);
   const alt = opts.alt ?? wmoLabel(code);
-  const className = String(opts.className ?? 'weather-icon').replace(/[^a-zA-Z0-9_\-\s]/g, '');
+  const className = safeIconClass(opts.className ?? 'weather-icon');
   const format = prefersReducedMotion() ? 'svg-static' : 'svg';
   const src = new URL(`${format}/fill/${slug}.svg`, METEOCONS_BASE).href;
   return `<img class="${escapeHtml(className)}" src="${src}" width="${size}" height="${size}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" />`;
+}
+
+/**
+ * Non-WMO Meteocons glyph (e.g. barometer) as an <img>.
+ * @param {string} slug
+ * @param {{ size?: number, alt?: string, className?: string }} [opts]
+ * @returns {string}
+ */
+export function meteoconIconHtml(slug, opts = {}) {
+  const key = String(slug ?? '');
+  if (!METEOCON_SLUGS.has(key)) return '';
+  const size = opts.size ?? 20;
+  const alt = opts.alt ?? key;
+  const className = safeIconClass(opts.className ?? 'meteocon-icon');
+  const format = prefersReducedMotion() ? 'svg-static' : 'svg';
+  const src = new URL(`${format}/fill/${key}.svg`, METEOCONS_BASE).href;
+  return `<img class="${escapeHtml(className)}" src="${src}" width="${size}" height="${size}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async" />`;
+}
+
+/**
+ * Compact metric value: decorative Meteocons glyph + escaped text.
+ * @param {string} slug
+ * @param {string | null | undefined} text
+ * @param {{ size?: number }} [opts]
+ * @returns {string | null}
+ */
+export function metricValueWithIcon(slug, text, opts = {}) {
+  if (text == null || text === '') return null;
+  const icon = meteoconIconHtml(slug, {
+    size: opts.size ?? 18,
+    alt: '',
+    className: 'meteocon-icon metric-with-icon__glyph',
+  });
+  if (!icon) return escapeHtml(String(text));
+  return `<span class="metric-with-icon">${icon}<span class="metric-with-icon__text">${escapeHtml(String(text))}</span></span>`;
+}
+
+/**
+ * Rising / Falling / Flat pressure trend icon (Weather Icons + site-local flat).
+ * Visible words are omitted; alt carries the spoken label.
+ * @param {'rising' | 'falling' | 'flat' | null | undefined} trend
+ * @param {{ size?: number, className?: string }} [opts]
+ * @returns {string}
+ */
+export function pressureTrendIconHtml(trend, opts = {}) {
+  if (trend !== 'rising' && trend !== 'falling' && trend !== 'flat') return '';
+  const size = opts.size ?? 16;
+  const className = safeIconClass(opts.className ?? 'pressure-trend-icon');
+  const label = PRESSURE_TREND_LABELS[trend];
+  const file =
+    trend === 'rising'
+      ? 'wi-direction-up.svg'
+      : trend === 'falling'
+        ? 'wi-direction-down.svg'
+        : 'pressure-flat.svg';
+  const src = new URL(file, WEATHER_ICONS_BASE).href;
+  return `<img class="${escapeHtml(className)} pressure-trend-icon--${trend}" src="${src}" width="${size}" height="${size}" alt="${escapeHtml(label)}" title="${escapeHtml(label)}" loading="lazy" decoding="async" />`;
 }
 
 /**
