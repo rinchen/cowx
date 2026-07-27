@@ -10,6 +10,7 @@ import {
 } from './denver-time.js';
 import { escapeHtml } from './dom.js';
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
+import { pressureTrend } from './sparkline.js';
 import { windDirLabel } from './wind.js';
 
 export {
@@ -163,6 +164,8 @@ export function formatTempTransitionLabel(cue) {
  *   wind_dir_deg: number | null,
  *   gust_mph: number | null,
  *   tstorm_pct: number | null,
+ *   pressure_mb: number | null,
+ *   pressure_trend: import('./sparkline.js').PressureTrend | null,
  *   is_day: boolean,
  * }} CompactHourRow
  */
@@ -179,11 +182,13 @@ export function sliceCompactHours(hourly, opts = {}) {
   if (!times.length) return [];
   const start = currentHourIndex(times, opts.nowMs);
   const end = Math.min(times.length, start + count);
+  const pressureSeries = /** @type {(number | null)[]} */ (hourly?.pressure_msl ?? []);
   /** @type {CompactHourRow[]} */
   const rows = [];
   for (let i = start; i < end; i += 1) {
     const dayFlag = /** @type {(number | null)[]} */ (hourly?.is_day ?? [])[i];
     const isDay = dayFlag === 0 || dayFlag === 1 ? dayFlag === 1 : true;
+    const pressure_mb = numOrNull(pressureSeries[i]);
     rows.push({
       index: i,
       time: times[i],
@@ -203,6 +208,8 @@ export function sliceCompactHours(hourly, opts = {}) {
       tstorm_pct: numOrNull(
         /** @type {(number | null)[]} */ (hourly?.thunderstorm_probability ?? [])[i],
       ),
+      pressure_mb,
+      pressure_trend: pressureTrend(pressureSeries, i),
       is_day: isDay,
     });
   }

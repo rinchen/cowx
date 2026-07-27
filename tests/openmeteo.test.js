@@ -146,6 +146,7 @@ describe('mapResult wind fields', () => {
           cloud_cover_mean: [40],
           visibility_min: [12000],
           cape_max: [900],
+          pressure_msl_mean: [1012.5],
         },
       },
       'Clear',
@@ -167,6 +168,7 @@ describe('mapResult wind fields', () => {
     assert.deepEqual(mapped.daily.cloud_cover_mean, [40]);
     assert.deepEqual(mapped.daily.visibility_min, [12000]);
     assert.deepEqual(mapped.daily.cape_max, [900]);
+    assert.deepEqual(mapped.daily.pressure_msl_mean, [1012.5]);
   });
 
   it('sums precip_today from hourly through current Denver hour', () => {

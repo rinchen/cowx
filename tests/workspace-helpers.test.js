@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   detectPressureDip,
+  formatInHg,
   formatMeteogramHour,
   formatMeteogramAxisTicks,
   formatMeteogramTimeLabels,
@@ -11,6 +12,8 @@ import {
   meteogramIndexFromX,
   meteogramScrubPercent,
   meteogramTimeAxisHtml,
+  PRESSURE_TREND_LABELS,
+  pressureTrend,
   seriesRange,
   sparklineHtml,
 } from '../public/js/sparkline.js';
@@ -35,6 +38,21 @@ describe('sparkline / meteogram', () => {
 
   it('converts mb to inHg', () => {
     assert.ok(Math.abs(mbToInHg(1013.25) - 29.92) < 0.05);
+  });
+
+  it('formats inHg and classifies pressure trends', () => {
+    assert.equal(formatInHg(1013.25), '29.92');
+    assert.equal(formatInHg(null), null);
+    assert.equal(pressureTrend([1010, 1010.5], 0), null);
+    assert.equal(pressureTrend([1010, null], 1), null);
+    assert.equal(pressureTrend([1010, 1010.2], 1), 'flat');
+    // ~0.03 inHg rise
+    assert.equal(pressureTrend([1010, 1011.1], 1), 'rising');
+    // ~0.03 inHg fall
+    assert.equal(pressureTrend([1011.1, 1010], 1), 'falling');
+    assert.equal(PRESSURE_TREND_LABELS.rising, 'Rising');
+    assert.equal(PRESSURE_TREND_LABELS.falling, 'Falling');
+    assert.equal(PRESSURE_TREND_LABELS.flat, 'Flat');
   });
 
   it('computes series range and labels', () => {

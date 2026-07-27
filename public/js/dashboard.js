@@ -4,6 +4,7 @@ import { climatologyPeriodLabel, compareDailyToNormal, formatTempDelta } from '.
 import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
 import { imageryUrls } from './imagery.js';
 import { resolveAstronomy, resolveCatalogNow, resolveRfComms } from './live.js';
+import { formatInHg } from './sparkline.js';
 import { windCellHtml } from './wind.js';
 import { rwisLiveReadings } from './rwis.js';
 
@@ -700,6 +701,7 @@ function buildHourlyTable(hourly, sunrises, sunsets, opts = {}) {
     seriesHasValues(hourly.cloud_cover_low) ||
     seriesHasValues(hourly.cloud_cover_mid) ||
     seriesHasValues(hourly.cloud_cover_high);
+  const showPressure = seriesHasValues(hourly.pressure_msl);
   const showUv = seriesHasValues(hourly.uv_index);
   const showVis = seriesHasValues(hourly.visibility);
   const showFreeze =
@@ -727,6 +729,7 @@ function buildHourlyTable(hourly, sunrises, sunsets, opts = {}) {
   if (showCloud) cols.push({ key: 'cloud', label: 'Cloud' });
   if (showCloudLayers) cols.push({ key: 'cloudLayers', label: 'L/M/H', optional: true });
   if (showFreeze) cols.push({ key: 'freeze', label: 'Freeze lvl', optional: true });
+  if (showPressure) cols.push({ key: 'pressure', label: 'Pressure' });
   if (showUv) cols.push({ key: 'uv', label: 'UV' });
   if (showVis) cols.push({ key: 'vis', label: 'Vis' });
 
@@ -767,6 +770,7 @@ function buildHourlyTable(hourly, sunrises, sunsets, opts = {}) {
     const cloudMid = /** @type {number[]} */ (hourly.cloud_cover_mid ?? [])[i];
     const cloudHigh = /** @type {number[]} */ (hourly.cloud_cover_high ?? [])[i];
     const freeze = /** @type {number[]} */ (hourly.freezing_level_height ?? [])[i];
+    const pressureMb = /** @type {number[]} */ (hourly.pressure_msl ?? [])[i];
     const uv = /** @type {number[]} */ (hourly.uv_index ?? [])[i];
     const vis = /** @type {number[]} */ (hourly.visibility ?? [])[i];
     const rain = /** @type {number[]} */ (hourly.rain ?? [])[i];
@@ -774,6 +778,7 @@ function buildHourlyTable(hourly, sunrises, sunsets, opts = {}) {
     const dayFlag = isDaySeries[i];
     const day = dayFlag === 0 || dayFlag === 1 ? dayFlag === 1 : isDaytime(t, sunrises, sunsets);
     const precipType = precipTypeLine(rain, showers, snow);
+    const pressureLabel = formatInHg(pressureMb);
     /** @type {Record<string, string>} */
     const cellByKey = {
       time: `<td class="sticky-col col-time" data-col="time">${escapeHtml(fmtTime(t))}</td>`,
@@ -793,6 +798,7 @@ function buildHourlyTable(hourly, sunrises, sunsets, opts = {}) {
       cloud: `<td class="col-cloud" data-col="cloud">${cloud != null ? `${cloud}%` : '—'}</td>`,
       cloudLayers: `<td class="col-cloudLayers" data-col="cloudLayers">${cloudLayersHtml(cloudLow, cloudMid, cloudHigh)}</td>`,
       freeze: `<td class="col-freeze" data-col="freeze">${fmtFreezingLevelFt(freeze) ?? '—'}</td>`,
+      pressure: `<td class="col-pressure" data-col="pressure">${pressureLabel ?? '—'}</td>`,
       uv: `<td class="col-uv" data-col="uv">${uv != null ? String(uv) : '—'}</td>`,
       vis: `<td class="col-vis" data-col="vis">${fmtVisibility(vis)}</td>`,
     };
@@ -816,19 +822,28 @@ function buildDailyTable(daily, climatology = null) {
   const showFeels =
     seriesHasValues(daily.apparent_temperature_max) ||
     seriesHasValues(daily.apparent_temperature_min);
+  const showPrecipPct = seriesHasValues(daily.precipitation_probability_max);
+  const showPrecipIn = seriesHasValues(daily.precipitation_sum);
   const showTstorm = seriesHasValues(daily.thunderstorm_probability_max);
   const showSnow = seriesHasValues(daily.snowfall_sum);
   const showPrecipHours = seriesHasValues(daily.precipitation_hours);
+  const showWind =
+    seriesHasValues(daily.wind_speed_10m_max) || seriesHasValues(daily.wind_direction_10m_dominant);
+  const showGust = seriesHasValues(daily.wind_gusts_10m_max);
   const showRh =
     seriesHasValues(daily.relative_humidity_2m_max) ||
     seriesHasValues(daily.relative_humidity_2m_min);
   const showDew = seriesHasValues(daily.dewpoint_2m_max) || seriesHasValues(daily.dewpoint_2m_min);
   const showCloud = seriesHasValues(daily.cloud_cover_mean);
   const showCape = seriesHasAbove(daily.cape_max, 100);
+  const showPressure = seriesHasValues(daily.pressure_msl_mean);
+  const showUv = seriesHasValues(daily.uv_index_max);
   const showVis = seriesHasValues(daily.visibility_min);
   const showSunshine = seriesHasValues(daily.sunshine_duration);
   const showDaylight = seriesHasValues(daily.daylight_duration);
   const showEt0 = seriesHasValues(daily.et0_fao_evapotranspiration);
+  const showSunrise = seriesHasValues(daily.sunrise);
+  const showSunset = seriesHasValues(daily.sunset);
   const showVsTypical = true;
 
   /** @type {{ key: string, label: string, optional?: boolean }[]} */
@@ -840,21 +855,25 @@ function buildDailyTable(daily, climatology = null) {
   ];
   if (showVsTypical) cols.push({ key: 'vsTypical', label: 'Vs typical' });
   if (showFeels) cols.push({ key: 'feels', label: 'Feels' });
-  cols.push({ key: 'precipPct', label: 'Precip %' }, { key: 'precipIn', label: 'Precip in' });
+  if (showPrecipPct) cols.push({ key: 'precipPct', label: 'Precip %' });
+  if (showPrecipIn) cols.push({ key: 'precipIn', label: 'Precip in' });
   if (showSnow) cols.push({ key: 'snow', label: 'Snow', optional: true });
   if (showPrecipHours) cols.push({ key: 'precipHours', label: 'Precip hrs', optional: true });
-  cols.push({ key: 'wind', label: 'Wind' }, { key: 'gust', label: 'Gust' });
+  if (showWind) cols.push({ key: 'wind', label: 'Wind' });
+  if (showGust) cols.push({ key: 'gust', label: 'Gust' });
   if (showTstorm) cols.push({ key: 'tstorm', label: 'Tstorm %' });
   if (showCape) cols.push({ key: 'cape', label: 'CAPE', optional: true });
   if (showRh) cols.push({ key: 'rh', label: 'RH' });
   if (showDew) cols.push({ key: 'dew', label: 'Dew' });
   if (showCloud) cols.push({ key: 'cloud', label: 'Cloud' });
-  cols.push({ key: 'uv', label: 'UV' });
+  if (showPressure) cols.push({ key: 'pressure', label: 'Pressure' });
+  if (showUv) cols.push({ key: 'uv', label: 'UV' });
   if (showVis) cols.push({ key: 'vis', label: 'Vis' });
   if (showSunshine) cols.push({ key: 'sunshine', label: 'Sunshine', optional: true });
   if (showDaylight) cols.push({ key: 'daylight', label: 'Daylight', optional: true });
   if (showEt0) cols.push({ key: 'et0', label: 'ET₀', optional: true });
-  cols.push({ key: 'sunrise', label: 'Sunrise' }, { key: 'sunset', label: 'Sunset' });
+  if (showSunrise) cols.push({ key: 'sunrise', label: 'Sunrise' });
+  if (showSunset) cols.push({ key: 'sunset', label: 'Sunset' });
 
   const wrap = document.createElement('div');
   wrap.className = 'table-scroll';
@@ -895,6 +914,7 @@ function buildDailyTable(daily, climatology = null) {
     const dewMax = /** @type {number[]} */ (daily.dewpoint_2m_max ?? [])[i];
     const dewMin = /** @type {number[]} */ (daily.dewpoint_2m_min ?? [])[i];
     const cloudMean = /** @type {number[]} */ (daily.cloud_cover_mean ?? [])[i];
+    const pressureMb = /** @type {number[]} */ (daily.pressure_msl_mean ?? [])[i];
     const uvMax = /** @type {number[]} */ (daily.uv_index_max ?? [])[i];
     const visMin = /** @type {number[]} */ (daily.visibility_min ?? [])[i];
     const sunshine = /** @type {number[]} */ (daily.sunshine_duration ?? [])[i];
@@ -932,6 +952,7 @@ function buildDailyTable(daily, climatology = null) {
           : dewMin != null
             ? `${Math.round(dewMin)}°F`
             : '—';
+    const pressureLabel = formatInHg(pressureMb);
     /** @type {Record<string, string>} */
     const cellByKey = {
       day: `<td class="sticky-col col-day" data-col="day">${escapeHtml(fmtDate(times[i]))}</td>`,
@@ -951,6 +972,7 @@ function buildDailyTable(daily, climatology = null) {
       rh: `<td class="col-rh" data-col="rh">${rhLabel}</td>`,
       dew: `<td class="col-dew" data-col="dew">${dewLabel}</td>`,
       cloud: `<td class="col-cloud" data-col="cloud">${cloudMean != null ? `${Math.round(Number(cloudMean))}%` : '—'}</td>`,
+      pressure: `<td class="col-pressure" data-col="pressure">${pressureLabel ?? '—'}</td>`,
       uv: `<td class="col-uv" data-col="uv">${uvMax != null ? String(uvMax) : '—'}</td>`,
       vis: `<td class="col-vis" data-col="vis">${fmtVisibility(visMin)}</td>`,
       sunshine: `<td class="col-sunshine" data-col="sunshine">${fmtDurationSeconds(sunshine) ?? '—'}</td>`,
