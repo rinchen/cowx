@@ -1,112 +1,113 @@
 {
-  "generatedAt": "2026-07-27T02:46:38.487Z",
+  "generatedAt": "2026-07-27T05:10:48.382Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-27T02:41:45.606Z",
-      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-27T05:06:16.912Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-27T02:43:33.876Z",
-      "error": "fetch failed; fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-27T05:07:56.026Z",
+      "error": "fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-07-27T02:43:34.040Z"
+      "fetchedAt": "2026-07-27T05:07:56.154Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:43:35.387Z"
+      "fetchedAt": "2026-07-27T05:07:58.556Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:43:35.870Z"
+      "fetchedAt": "2026-07-27T05:07:59.089Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:43:38.690Z"
+      "fetchedAt": "2026-07-27T05:08:00.634Z"
     },
     {
       "id": "purpleair",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:43:39.059Z"
+      "fetchedAt": "2026-07-27T05:08:00.937Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:45:37.982Z"
+      "fetchedAt": "2026-07-27T05:09:43.018Z"
     },
     {
       "id": "usgs",
-      "status": "ok",
-      "fetchedAt": "2026-07-27T02:45:42.377Z"
+      "status": "error",
+      "fetchedAt": "2026-07-27T05:09:45.553Z",
+      "error": "HTTP 503 for https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST: <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Error report</title><style type=\"te"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:45:57.571Z"
+      "fetchedAt": "2026-07-27T05:10:02.391Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:45:59.246Z"
+      "fetchedAt": "2026-07-27T05:10:04.198Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:46:24.839Z"
+      "fetchedAt": "2026-07-27T05:10:30.979Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-27T02:46:33.427Z"
+      "fetchedAt": "2026-07-27T05:10:41.931Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:46:33.759Z"
+      "fetchedAt": "2026-07-27T05:10:42.797Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:46:34.575Z"
+      "fetchedAt": "2026-07-27T05:10:43.783Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:46:34.819Z"
+      "fetchedAt": "2026-07-27T05:10:44.234Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:46:35.035Z"
+      "fetchedAt": "2026-07-27T05:10:44.495Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:46:35.197Z"
+      "fetchedAt": "2026-07-27T05:10:44.896Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:46:35.389Z"
+      "fetchedAt": "2026-07-27T05:10:45.318Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-07-27T02:46:38.486Z"
+      "fetchedAt": "2026-07-27T05:10:48.381Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 365,
-  "forecastStaleCount": 85,
-  "openmeteoCoverage": 253
+  "apiCalls": 366,
+  "forecastStaleCount": 60,
+  "openmeteoCoverage": 278
 }
