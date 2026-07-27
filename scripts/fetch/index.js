@@ -298,7 +298,14 @@ export async function runFetch() {
       const av = aviation.bySlug.get(loc.slug) ?? null;
       const pa = purpleair.bySlug.get(loc.slug) ?? null;
       const an = airnow.bySlug.get(loc.slug) ?? null;
-      const omaq = openmeteoAq.bySlug.get(loc.slug) ?? null;
+      let omaq = openmeteoAq.bySlug.get(loc.slug) ?? null;
+      let aqCarriedForward = false;
+      if (!omaq && prior?.openmeteo_aq && typeof prior.openmeteo_aq === 'object') {
+        omaq = prior.openmeteo_aq;
+        aqCarriedForward = true;
+      }
+      const openmeteoMissedSlug = !om;
+      const providerDelay = forecastStale || aqCarriedForward || openmeteoMissedSlug;
       const gauge = usgs.bySlug.get(loc.slug) ?? null;
       const snow = snotel.bySlug.get(loc.slug) ?? null;
       const cdotRec = cdot.bySlug.get(loc.slug) ?? null;
@@ -352,6 +359,8 @@ export async function runFetch() {
         icao: loc.icao ?? null,
         updatedAt,
         forecastStale,
+        providerDelay,
+        providerDelayAt: providerDelay ? updatedAt : null,
         current,
         hourly,
         daily,
@@ -420,9 +429,21 @@ export async function runFetch() {
           humidity: current?.humidity ?? null,
           wind_speed_mph: current?.wind_speed_mph ?? null,
           uv_index: current?.uv_index ?? null,
-          aqi: an?.aqi ?? pa?.aqi_pm25 ?? omaq?.us_aqi ?? null,
+          aqi: (() => {
+            const anAqi =
+              an?.aqi != null && Number.isFinite(Number(an.aqi)) ? Number(an.aqi) : null;
+            const paAqi =
+              pa?.aqi_pm25 != null && Number.isFinite(Number(pa.aqi_pm25))
+                ? Number(pa.aqi_pm25)
+                : null;
+            if (anAqi != null && paAqi != null) return Math.max(anAqi, paAqi);
+            if (anAqi != null) return anAqi;
+            if (paAqi != null) return paAqi;
+            return omaq?.us_aqi ?? null;
+          })(),
           nws_alert: alerts.length > 0,
           forecast_stale: forecastStale,
+          provider_delay: providerDelay,
           updated_at: updatedAt,
         },
       });

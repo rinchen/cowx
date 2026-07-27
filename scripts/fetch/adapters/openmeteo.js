@@ -310,31 +310,48 @@ export async function fetchOpenMeteo(locations) {
   let calls = 0;
   const errors = [];
 
+  /**
+   * @param {import('../../lib/types.js').Location[]} chunk
+   * @returns {Promise<boolean>}
+   */
+  async function fetchForecastChunk(chunk) {
+    calls += 1;
+    const data = await fetchJson(buildUrl(chunk), { timeoutMs: 90_000 });
+    const results = Array.isArray(data) ? data : [data];
+    for (let j = 0; j < chunk.length; j += 1) {
+      const loc = chunk[j];
+      const r = results[j];
+      if (!r?.current) continue;
+      const mapped = mapResult(r, wmoLabel(r.current.weather_code));
+      attachRfComms(mapped, loc.elevation_ft);
+      attachAstronomy(mapped, loc.lat, loc.lon);
+      bySlug.set(loc.slug, mapped);
+    }
+    calls += await fetchAndMergeNbm(chunk, bySlug, errors);
+    return true;
+  }
+
   for (let i = 0; i < locations.length; i += CHUNK) {
     if (i > 0) await sleep(CHUNK_DELAY_MS);
     const chunk = locations.slice(i, i + CHUNK);
     try {
-      calls += 1;
-      const data = await fetchJson(buildUrl(chunk), { timeoutMs: 90_000 });
-      const results = Array.isArray(data) ? data : [data];
-      for (let j = 0; j < chunk.length; j += 1) {
-        const loc = chunk[j];
-        const r = results[j];
-        if (!r?.current) continue;
-        const mapped = mapResult(r, wmoLabel(r.current.weather_code));
-        attachRfComms(mapped, loc.elevation_ft);
-        attachAstronomy(mapped, loc.lat, loc.lon);
-        bySlug.set(loc.slug, mapped);
-      }
-      calls += await fetchAndMergeNbm(chunk, bySlug, errors);
+      await fetchForecastChunk(chunk);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      errors.push(msg);
-      if (msg.includes('429')) {
-        console.warn('openmeteo: 429 — backing off 65s');
-        await sleep(RETRY_BACKOFF_MS);
-      } else {
-        await sleep(5000);
+      // One immediate retry for transient network failures before recording the chunk as failed.
+      try {
+        console.warn(`openmeteo: chunk failed (${msg}); immediate retry`);
+        await sleep(msg.includes('429') ? RETRY_BACKOFF_MS : 2000);
+        await fetchForecastChunk(chunk);
+      } catch (retryErr) {
+        const retryMsg = retryErr instanceof Error ? retryErr.message : String(retryErr);
+        errors.push(retryMsg);
+        if (retryMsg.includes('429') || msg.includes('429')) {
+          console.warn('openmeteo: 429 — backing off 65s');
+          await sleep(RETRY_BACKOFF_MS);
+        } else {
+          await sleep(5000);
+        }
       }
     }
   }

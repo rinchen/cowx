@@ -214,3 +214,31 @@ describe('cwop parser', () => {
     assert.equal(stations[0].temp_f, 72);
   });
 });
+
+describe('provider delay banner', () => {
+  it('renders centered delay copy with snapshot time', async () => {
+    const { providerDelayBannerHtml } = await import('../public/js/provider-delay.js');
+    const html = providerDelayBannerHtml({
+      providerDelay: true,
+      providerDelayAt: '2026-07-27T20:10:28.425Z',
+    });
+    assert.match(html, /stale-banner--header/);
+    assert.match(html, /Data provider delays/);
+    assert.match(html, /Snapshot/);
+    assert.match(html, /MT/);
+  });
+
+  it('is empty when providerDelay and forecastStale are false', async () => {
+    const { providerDelayBannerHtml } = await import('../public/js/provider-delay.js');
+    assert.equal(providerDelayBannerHtml({ providerDelay: false, forecastStale: false }), '');
+  });
+
+  it('shows for legacy forecastStale payloads', async () => {
+    const { providerDelayBannerHtml } = await import('../public/js/provider-delay.js');
+    const html = providerDelayBannerHtml({
+      forecastStale: true,
+      updatedAt: '2026-07-27T20:10:28.425Z',
+    });
+    assert.match(html, /Data provider delays/);
+  });
+});

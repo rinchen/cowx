@@ -20,6 +20,8 @@
       "format": "date-time"
     },
     "forecastStale": { "type": "boolean" },
+    "providerDelay": { "type": "boolean" },
+    "providerDelayAt": { "type": ["string", "null"], "format": "date-time" },
     "current": {
       "type": ["object", "null"],
       "additionalProperties": true,

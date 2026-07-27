@@ -1184,6 +1184,11 @@ main {
   font-size: 0.9375rem;
 }
 
+.stale-banner--header {
+  margin: 0.75rem 0 0;
+  text-align: center;
+}
+
 .workspace__pin {
   margin: 0;
   color: var(--glass-muted);
@@ -2277,6 +2282,15 @@ button.glance-aqi-bar__source.intel-jump {
 .outlook-hour-card__pressure {
   color: var(--glass-muted);
   font-size: 0.7rem;
+}
+
+.outlook-hour-card__precip .metric-with-icon {
+  gap: 0.2rem;
+}
+
+.outlook-hour-card__precip .metric-with-icon__glyph {
+  width: 14px;
+  height: 14px;
 }
 
 .outlook-hour-card__wind .wind-cell {
