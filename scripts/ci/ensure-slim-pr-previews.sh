@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Checkout gh-pages, strip pr-preview/*/data, push if dirty.
-# Runs before JamesIves production deploys so clean-exclude cannot re-poison the tip.
+# Runs before GitHub Pages deploy action production deploys so clean-exclude
+# cannot re-poison the tip.
+#
+# If gh-pages is missing, fail hard — production is down and notify jobs must fire.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -11,7 +14,18 @@ cleanup() {
 }
 trap cleanup EXIT
 
-git fetch origin gh-pages
+gh_pages_missing() {
+  echo "::error::CRITICAL: gh-pages branch is missing. Production GitHub Pages has no publish tip. Restore gh-pages immediately (do not treat this as a soft skip)."
+  exit 1
+}
+
+if ! git fetch origin gh-pages 2>/dev/null; then
+  gh_pages_missing
+fi
+if ! git rev-parse --verify --quiet origin/gh-pages >/dev/null; then
+  gh_pages_missing
+fi
+
 git worktree add --detach "${WORKTREE}" origin/gh-pages
 
 bash "${STRIP}" "${WORKTREE}"
