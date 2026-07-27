@@ -1,110 +1,108 @@
 {
-  "generatedAt": "2026-07-27T01:35:29.592Z",
+  "generatedAt": "2026-07-27T02:46:38.487Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-27T01:27:22.959Z",
+      "fetchedAt": "2026-07-27T02:41:45.606Z",
       "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-27T01:29:02.285Z",
-      "error": "fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-27T02:43:33.876Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-07-27T01:29:02.433Z"
+      "fetchedAt": "2026-07-27T02:43:34.040Z"
     },
     {
       "id": "nws",
-      "status": "partial",
-      "fetchedAt": "2026-07-27T01:30:01.129Z",
-      "error": "HTTP 502 for https://api.weather.gov/alerts/active?area=CO: {\"type\":\"https://api.weather.gov/problems/ApplicationUnavailable\",\n            \"title\":\"Application Unavailable\",\n            \"status\":502,\n            \"detail\":\"The application is temporarily unavail"
+      "status": "ok",
+      "fetchedAt": "2026-07-27T02:43:35.387Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:30:06.574Z"
+      "fetchedAt": "2026-07-27T02:43:35.870Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:30:09.543Z"
+      "fetchedAt": "2026-07-27T02:43:38.690Z"
     },
     {
       "id": "purpleair",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:30:09.919Z"
+      "fetchedAt": "2026-07-27T02:43:39.059Z"
     },
     {
       "id": "airnow",
-      "status": "partial",
-      "fetchedAt": "2026-07-27T01:34:28.757Z",
-      "error": "This operation was aborted; This operation was aborted; This operation was aborted; This operation was aborted; This operation was aborted"
+      "status": "ok",
+      "fetchedAt": "2026-07-27T02:45:37.982Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:34:29.577Z"
+      "fetchedAt": "2026-07-27T02:45:42.377Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:34:45.744Z"
+      "fetchedAt": "2026-07-27T02:45:57.571Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:34:47.165Z"
+      "fetchedAt": "2026-07-27T02:45:59.246Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:35:13.755Z"
+      "fetchedAt": "2026-07-27T02:46:24.839Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-27T01:35:24.326Z"
+      "fetchedAt": "2026-07-27T02:46:33.427Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:35:24.855Z"
+      "fetchedAt": "2026-07-27T02:46:33.759Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:35:25.353Z"
+      "fetchedAt": "2026-07-27T02:46:34.575Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:35:25.636Z"
+      "fetchedAt": "2026-07-27T02:46:34.819Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:35:25.770Z"
+      "fetchedAt": "2026-07-27T02:46:35.035Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:35:25.946Z"
+      "fetchedAt": "2026-07-27T02:46:35.197Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:35:26.420Z"
+      "fetchedAt": "2026-07-27T02:46:35.389Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-07-27T01:35:29.592Z"
+      "fetchedAt": "2026-07-27T02:46:38.486Z"
     }
   ],
   "locationCount": 338,
