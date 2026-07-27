@@ -13,7 +13,13 @@ import {
 } from './climatology.js';
 import { aqiBarHtml, aqiCategory, pickAqi } from './aqi.js';
 import { escapeHtml, safeHttpsUrl } from './dom.js';
-import { isDaytime, weatherIconHtml, wmoLabel } from './icons.js';
+import {
+  isDaytime,
+  weatherIconHtml,
+  wmoLabel,
+  meteoconIconHtml,
+  pressureTrendIconHtml,
+} from './icons.js';
 import {
   buildOutlookHighlights,
   buildPeriodSummaries,
@@ -41,7 +47,7 @@ import {
   pressureTrend,
   seriesRange,
 } from './sparkline.js';
-import { windCompassHtml, windDirLabel } from './wind.js';
+import { windCellHtml, windCompassHtml, windDirLabel } from './wind.js';
 import { rwisLiveReadings } from './rwis.js';
 
 export { aqiCategory };
@@ -106,14 +112,23 @@ function fmtUpdated(iso) {
  * @param {string | null} value
  * @param {string | null} jumpId
  */
-function metricRow(label, value, jumpId) {
+/**
+ * @param {string} label
+ * @param {string | null | undefined} value
+ * @param {string | null} [jumpId]
+ * @param {{ html?: boolean, ariaValue?: string }} [opts] — `html: true` for trusted value markup
+ * @returns {string}
+ */
+function metricRow(label, value, jumpId, opts = {}) {
   if (value == null || value === '') return '';
+  const valueInner = opts.html ? value : escapeHtml(value);
+  const ariaValue = opts.ariaValue ?? (opts.html ? String(label) : String(value));
   const labelHtml = `<span class="intel-metric__label">${escapeHtml(label)}</span>`;
-  const valueHtml = `<span class="intel-metric__value">${escapeHtml(value)}</span>`;
+  const valueHtml = `<span class="intel-metric__value">${valueInner}</span>`;
   if (!jumpId) {
     return `<div class="intel-metric">${labelHtml}${valueHtml}</div>`;
   }
-  return `<button type="button" class="intel-metric intel-metric--jump" data-jump-to="${escapeHtml(jumpId)}" aria-label="${escapeHtml(label)}: ${escapeHtml(value)}. Jump to details.">
+  return `<button type="button" class="intel-metric intel-metric--jump" data-jump-to="${escapeHtml(jumpId)}" aria-label="${escapeHtml(label)}: ${escapeHtml(ariaValue)}. Jump to details.">
     ${labelHtml}${valueHtml}
   </button>`;
 }
@@ -306,11 +321,20 @@ export function renderHero(root, data, options = {}) {
   const pressureSeries = /** @type {(number | null)[]} */ (hourly?.pressure_msl ?? []);
   const pressureTrendKey = times.length ? pressureTrend(pressureSeries, hi) : null;
   const pressureTrendLabel = pressureTrendKey ? PRESSURE_TREND_LABELS[pressureTrendKey] : null;
-  const pressureMetric =
+  const pressureMetricHtml =
     pressureInHg != null
-      ? pressureTrendLabel
-        ? `${pressureInHg} inHg · ${pressureTrendLabel}`
-        : `${pressureInHg} inHg`
+      ? `<span class="pressure-metric">${meteoconIconHtml('barometer', {
+          size: 18,
+          alt: '',
+          className: 'meteocon-icon pressure-metric__barometer',
+        })}<span class="pressure-metric__text">${escapeHtml(pressureInHg)} inHg</span>${pressureTrendIconHtml(
+          pressureTrendKey,
+          { size: 14, className: 'pressure-trend-icon' },
+        )}</span>`
+      : null;
+  const pressureAria =
+    pressureInHg != null
+      ? `${pressureInHg} inHg${pressureTrendLabel ? `, ${pressureTrendLabel}` : ''}`
       : null;
 
   const pinSourceLabel =
@@ -461,7 +485,10 @@ export function renderHero(root, data, options = {}) {
           current?.cloud_cover != null ? `${current.cloud_cover}%` : null,
           'hourly-heading',
         )}
-        ${metricRow('Pressure', pressureMetric, 'hourly-heading')}
+        ${metricRow('Pressure', pressureMetricHtml, 'hourly-heading', {
+          html: true,
+          ariaValue: pressureAria ?? undefined,
+        })}
         ${metricRow(
           'UV index',
           hourUv != null && Number.isFinite(hourUv) ? String(Math.round(hourUv)) : null,
@@ -721,13 +748,16 @@ export function renderOutlook(root, data, options = {}) {
 
   const hourCards = compact
     .map((row) => {
-      const windBit = row.wind_mph != null ? `${Math.round(row.wind_mph)} mph` : '—';
+      const windHtml = windCellHtml(row.wind_dir_deg, row.wind_mph, { size: 18 });
       const iso = row.time != null ? String(row.time).slice(0, 10) : todayIso;
       const normal = iso ? normalForDate(climatology, iso) : null;
       const hour = localHourFromIso(row.time != null ? String(row.time) : null);
       const typical = hour != null ? typicalDiurnalTemp(normal, hour) : null;
       const vs = formatCompactVsTypical(row.temp_f, typical);
-      const trendLabel = row.pressure_trend ? PRESSURE_TREND_LABELS[row.pressure_trend] : null;
+      const trendIcon = pressureTrendIconHtml(row.pressure_trend, {
+        size: 14,
+        className: 'pressure-trend-icon',
+      });
       return `<li class="outlook-hour-card">
         <span class="outlook-hour-card__time">${escapeHtml(formatCompactHourLabel(row.time))}</span>
         ${weatherIconHtml(row.weather_code, { isDay: row.is_day, size: 32, className: 'weather-icon weather-icon--sm', alt: wmoLabel(row.weather_code) })}
@@ -735,8 +765,8 @@ export function renderOutlook(root, data, options = {}) {
         ${vs ? `<span class="outlook-hour-card__vs" title="Versus typical for this date and hour">${escapeHtml(vs)}</span>` : ''}
         <span class="outlook-hour-card__feels">${row.feels_like_f != null ? `Feels ${Math.round(row.feels_like_f)}°` : ''}</span>
         <span class="outlook-hour-card__precip">${row.precip_pct != null ? `${Math.round(row.precip_pct)}%` : '—'}</span>
-        <span class="outlook-hour-card__wind">${escapeHtml(windBit)}</span>
-        ${trendLabel ? `<span class="outlook-hour-card__pressure">${escapeHtml(trendLabel)}</span>` : ''}
+        <span class="outlook-hour-card__wind">${windHtml}</span>
+        ${trendIcon ? `<span class="outlook-hour-card__pressure">${trendIcon}</span>` : ''}
       </li>`;
     })
     .join('');

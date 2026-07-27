@@ -1,6 +1,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { wmoToMeteoconSlug, wmoLabel, weatherIconHtml, isDaytime } from '../public/js/icons.js';
+import {
+  wmoToMeteoconSlug,
+  wmoLabel,
+  weatherIconHtml,
+  meteoconIconHtml,
+  pressureTrendIconHtml,
+  isDaytime,
+} from '../public/js/icons.js';
 
 describe('wmoToMeteoconSlug', () => {
   it('maps clear and rain with day/night', () => {
@@ -16,6 +23,37 @@ describe('weatherIconHtml', () => {
     const html = weatherIconHtml(0, { isDay: true, alt: 'Clear' });
     assert.match(html, /src="[^"]*\/img\/meteocons\/(svg|svg-static)\/fill\/clear-day\.svg"/);
     assert.match(html, /alt="Clear"/);
+  });
+});
+
+describe('meteoconIconHtml', () => {
+  it('resolves barometer from the meteocons tree', () => {
+    const html = meteoconIconHtml('barometer', { alt: 'Barometer' });
+    assert.match(html, /src="[^"]*\/img\/meteocons\/(svg|svg-static)\/fill\/barometer\.svg"/);
+    assert.match(html, /alt="Barometer"/);
+  });
+
+  it('rejects unknown slugs', () => {
+    assert.equal(meteoconIconHtml('not-a-real-icon'), '');
+  });
+});
+
+describe('pressureTrendIconHtml', () => {
+  it('renders Weather Icons arrows with spoken alt text', () => {
+    const up = pressureTrendIconHtml('rising');
+    assert.match(up, /wi-direction-up\.svg/);
+    assert.match(up, /alt="Rising"/);
+    const down = pressureTrendIconHtml('falling');
+    assert.match(down, /wi-direction-down\.svg/);
+    assert.match(down, /alt="Falling"/);
+    const flat = pressureTrendIconHtml('flat');
+    assert.match(flat, /pressure-flat\.svg/);
+    assert.match(flat, /alt="Flat"/);
+  });
+
+  it('returns empty for missing trend', () => {
+    assert.equal(pressureTrendIconHtml(null), '');
+    assert.equal(pressureTrendIconHtml(undefined), '');
   });
 });
 

@@ -2279,6 +2279,22 @@ button.glance-aqi-bar__source.intel-jump {
   font-size: 0.7rem;
 }
 
+.outlook-hour-card__wind .wind-cell {
+  gap: 0.25rem;
+}
+
+.outlook-hour-card__wind .wind-cell__speed {
+  font-size: inherit;
+  color: inherit;
+}
+
+.outlook-hour-card__pressure {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1rem;
+}
+
 .outlook-hourly-cta {
   display: inline-flex;
   align-items: center;
@@ -3063,6 +3079,30 @@ button.glance-aqi-bar__source.intel-jump {
   color: var(--glass-text);
   line-height: 1.3;
   word-break: break-word;
+}
+
+.pressure-metric,
+.pressure-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  vertical-align: middle;
+}
+
+.pressure-metric__barometer,
+.pressure-trend-icon,
+.meteocon-icon {
+  flex-shrink: 0;
+  display: block;
+  object-fit: contain;
+}
+
+.pressure-metric__text {
+  white-space: nowrap;
+}
+
+.col-pressure .pressure-cell {
+  font-variant-numeric: tabular-nums;
 }
 
 .intel-metric--jump {
