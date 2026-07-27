@@ -1,112 +1,113 @@
 {
-  "generatedAt": "2026-07-27T10:23:49.742Z",
+  "generatedAt": "2026-07-27T12:11:48.989Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-07-27T10:19:18.107Z",
-      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-27T12:06:54.064Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-27T10:20:56.943Z",
-      "error": "fetch failed; fetch failed; fetch failed"
+      "fetchedAt": "2026-07-27T12:08:43.182Z",
+      "error": "fetch failed; fetch failed; fetch failed; fetch failed"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-07-27T10:20:57.097Z"
+      "fetchedAt": "2026-07-27T12:08:43.345Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:20:59.423Z"
+      "fetchedAt": "2026-07-27T12:08:45.547Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:21:06.187Z"
+      "fetchedAt": "2026-07-27T12:08:47.198Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:21:06.848Z"
+      "fetchedAt": "2026-07-27T12:08:49.201Z"
     },
     {
       "id": "purpleair",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:21:07.380Z"
+      "fetchedAt": "2026-07-27T12:08:49.506Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:22:48.465Z"
+      "fetchedAt": "2026-07-27T12:10:35.786Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:22:49.889Z"
+      "fetchedAt": "2026-07-27T12:10:36.392Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:23:06.808Z"
+      "fetchedAt": "2026-07-27T12:10:54.475Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:23:08.188Z"
+      "fetchedAt": "2026-07-27T12:11:04.816Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:23:34.363Z"
+      "fetchedAt": "2026-07-27T12:11:31.375Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-27T10:23:44.329Z"
+      "fetchedAt": "2026-07-27T12:11:42.149Z"
     },
     {
       "id": "hms",
-      "status": "ok",
-      "fetchedAt": "2026-07-27T10:23:44.934Z"
+      "status": "partial",
+      "fetchedAt": "2026-07-27T12:11:42.523Z",
+      "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:23:45.416Z"
+      "fetchedAt": "2026-07-27T12:11:43.208Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:23:45.672Z"
+      "fetchedAt": "2026-07-27T12:11:43.430Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:23:45.960Z"
+      "fetchedAt": "2026-07-27T12:11:43.732Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:23:46.168Z"
+      "fetchedAt": "2026-07-27T12:11:43.866Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:23:46.532Z"
+      "fetchedAt": "2026-07-27T12:11:45.941Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-07-27T10:23:49.742Z"
+      "fetchedAt": "2026-07-27T12:11:48.988Z"
     }
   ],
   "locationCount": 338,
   "apiCalls": 365,
-  "forecastStaleCount": 85,
-  "openmeteoCoverage": 253
+  "forecastStaleCount": 75,
+  "openmeteoCoverage": 263
 }
