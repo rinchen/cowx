@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Checkout gh-pages, strip pr-preview/*/data, push if dirty.
 # Runs before JamesIves production deploys so clean-exclude cannot re-poison the tip.
+# If gh-pages is missing (deleted tip), exit successfully so JamesIves can recreate it.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -11,7 +12,15 @@ cleanup() {
 }
 trap cleanup EXIT
 
-git fetch origin gh-pages
+if ! git fetch origin gh-pages 2>/dev/null; then
+  echo "ensure-slim-pr-previews: gh-pages missing — skipping (deploy will recreate)"
+  exit 0
+fi
+if ! git rev-parse --verify --quiet origin/gh-pages >/dev/null; then
+  echo "ensure-slim-pr-previews: gh-pages missing — skipping (deploy will recreate)"
+  exit 0
+fi
+
 git worktree add --detach "${WORKTREE}" origin/gh-pages
 
 bash "${STRIP}" "${WORKTREE}"
