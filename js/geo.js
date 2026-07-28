@@ -1,10 +1,10 @@
 import { isInColorado } from './geocode.js';
+import { haversineKm as haversineKmPoints, nearestPoint, roundKm } from './geo-math.js';
 
 /** @typedef {{ slug: string; name: string; lat: number; lon: number; county?: string; elevationFt?: number }} IndexEntry */
 
 /** @typedef {{ lat: number; lon: number; accuracy_m: number | null; at: string; source: 'gps' | 'ip' | 'address'; label?: string }} HyperlocalPin */
 
-const EARTH_RADIUS_KM = 6371;
 const IP_GEO_TIMEOUT_MS = 5000;
 const IP_GEO_ENDPOINTS = ['https://ipwho.is/', 'https://get.geojs.io/v1/ip/geo.json'];
 const PIN_STORAGE_KEY = 'cowx:hyperlocalPin';
@@ -28,7 +28,7 @@ function sanitizePinLabel(label) {
 }
 
 /**
- * Haversine distance in kilometers between two WGS84 points.
+ * Haversine distance in kilometers between two WGS84 points (legacy 4-arg form).
  * @param {number} lat1
  * @param {number} lon1
  * @param {number} lat2
@@ -36,13 +36,7 @@ function sanitizePinLabel(label) {
  * @returns {number}
  */
 export function haversineKm(lat1, lon1, lat2, lon2) {
-  const toRad = (deg) => (deg * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return haversineKmPoints({ lat: lat1, lon: lon1 }, { lat: lat2, lon: lon2 });
 }
 
 /**
@@ -56,20 +50,8 @@ export function findNearestLocation(lat, lon, locations) {
   if (!locations?.length || !Number.isFinite(lat) || !Number.isFinite(lon)) {
     return null;
   }
-
-  let nearest = locations[0];
-  let minDist = haversineKm(lat, lon, nearest.lat, nearest.lon);
-
-  for (let i = 1; i < locations.length; i += 1) {
-    const loc = locations[i];
-    const dist = haversineKm(lat, lon, loc.lat, loc.lon);
-    if (dist < minDist) {
-      minDist = dist;
-      nearest = loc;
-    }
-  }
-
-  return nearest;
+  const nearest = nearestPoint({ lat, lon }, locations);
+  return nearest ? /** @type {IndexEntry} */ (nearest.point) : null;
 }
 
 /**
@@ -83,7 +65,7 @@ export function pinDistanceKm(pin, loc) {
   const lat = Number(loc.lat);
   const lon = Number(loc.lon);
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-  return Math.round(haversineKm(pin.lat, pin.lon, lat, lon) * 10) / 10;
+  return roundKm(haversineKmPoints(pin, { lat, lon }));
 }
 
 /**

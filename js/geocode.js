@@ -4,13 +4,8 @@
  * Fallback: caller keeps catalog search; no pin set.
  */
 
-/** Rough Colorado bounding box (same as catalog validator). */
-export const CO_BBOX = {
-  west: -109.2,
-  south: 36.9,
-  east: -102.0,
-  north: 41.1,
-};
+export { CO_BBOX, isInColorado } from './colorado.js';
+import { CO_BBOX, isInColorado } from './colorado.js';
 
 const GEOCODE_TIMEOUT_MS = 12_000;
 /** Cap query length before hitting Nominatim (UI maxlength should match). */
@@ -40,22 +35,6 @@ async function respectNominatimCooldown() {
     });
   }
   lastNominatimAt = Date.now();
-}
-
-/**
- * @param {number} lat
- * @param {number} lon
- * @returns {boolean}
- */
-export function isInColorado(lat, lon) {
-  return (
-    Number.isFinite(lat) &&
-    Number.isFinite(lon) &&
-    lat >= CO_BBOX.south &&
-    lat <= CO_BBOX.north &&
-    lon >= CO_BBOX.west &&
-    lon <= CO_BBOX.east
-  );
 }
 
 /**
@@ -119,7 +98,13 @@ export async function geocodeColoradoAddress(query) {
       console.warn('geocode: Nominatim HTTP', res.status);
       return { ok: false, reason: 'http' };
     }
-    const json = await res.json();
+    let json;
+    try {
+      json = await res.json();
+    } catch {
+      console.warn('geocode: Nominatim invalid JSON');
+      return { ok: false, reason: 'invalid' };
+    }
     const hit = pickColoradoNominatimResult(json);
     if (!hit) return { ok: false, reason: 'empty' };
     return { ok: true, ...hit };
