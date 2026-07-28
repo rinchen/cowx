@@ -1,113 +1,111 @@
 {
-  "generatedAt": "2026-07-27T22:39:23.823Z",
+  "generatedAt": "2026-07-27T23:59:59.363Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "partial",
-      "fetchedAt": "2026-07-27T22:32:46.234Z",
-      "error": "HTTP 503 for https://api.open-meteo.com/v1/forecast?latitude=40.8,39.315,39.3831,38.75,38.9467,39.0167,39.2567,39.4,39.2286,39.25,39.5667,39.65,39.6333,39.7333,39.7833,38.3667,38.1347,38.1358,38.3667,38.45&longitude=-104.2,-105.8931,-105.8003,-105.5167,-105.3583,-105.5167,-105.2783,-104.95,-104.8861,-104.9833,-105.2333,-105.3,-105.2833,-105.2333,-105.4167,-105.1333,-105.4658,-105.4425,-105.6833,-105.8333&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,cloud_cover,pr"
+      "status": "ok",
+      "fetchedAt": "2026-07-27T23:52:07.827Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-07-27T22:36:51.718Z",
+      "fetchedAt": "2026-07-27T23:57:02.594Z",
       "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.1528,40.4856,40.5153,40.0375,40.0875,40.2431,39.6433,39.6314,39.6042,39.6447,39.6556,39.6469,39.65,39.5867,39.5128,39.5022,39.5744,39.6297,39.6297,39.6042,39.4817,39.4306,39.8667,39.1911,39.213,39.3686,39.4022,39.5505,39.5728,39.5486,39.5347,39.4519,39.0639,39.1589,39.1103,39.0919,39.08,39.24,39.3339,39.1958&longitude=-106.9086,-107.2597,-107.5464,-107.9131,-108.8047,-108.9389,-106.3781,-"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-07-27T22:36:51.880Z"
+      "fetchedAt": "2026-07-27T23:57:02.748Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:36:54.593Z"
+      "fetchedAt": "2026-07-27T23:57:07.554Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:36:55.202Z"
+      "fetchedAt": "2026-07-27T23:57:08.207Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:36:55.707Z"
+      "fetchedAt": "2026-07-27T23:57:08.744Z"
     },
     {
       "id": "purpleair",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:36:56.146Z"
+      "fetchedAt": "2026-07-27T23:57:09.126Z"
     },
     {
       "id": "airnow",
-      "status": "partial",
-      "fetchedAt": "2026-07-27T22:38:22.337Z",
-      "error": "HTTP 429 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=38.400000000000006&longitude=-107.80000000000001&distance=50&API_KEY=[redacted] {\"WebServiceError\":[{\"Message\":\"Web service request limit exceeded.  See web service documentation at www.airnowapi.org for details.\"}]}; HTTP 429 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=38.6&longitude=-108&distance=50&API_KEY=[redacted] {\"WebServiceError\":"
+      "status": "ok",
+      "fetchedAt": "2026-07-27T23:58:49.906Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:38:23.424Z"
+      "fetchedAt": "2026-07-27T23:58:58.745Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:38:39.928Z"
+      "fetchedAt": "2026-07-27T23:59:15.059Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:38:41.363Z"
+      "fetchedAt": "2026-07-27T23:59:16.229Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:39:07.684Z"
+      "fetchedAt": "2026-07-27T23:59:42.038Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-07-27T22:39:19.567Z"
+      "fetchedAt": "2026-07-27T23:59:54.159Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:39:19.757Z"
+      "fetchedAt": "2026-07-27T23:59:54.689Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:39:20.074Z"
+      "fetchedAt": "2026-07-27T23:59:54.836Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:39:20.288Z"
+      "fetchedAt": "2026-07-27T23:59:55.162Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:39:20.561Z"
+      "fetchedAt": "2026-07-27T23:59:55.387Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:39:20.740Z"
+      "fetchedAt": "2026-07-27T23:59:55.778Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:39:20.947Z"
+      "fetchedAt": "2026-07-27T23:59:56.200Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-07-27T22:39:23.823Z"
+      "fetchedAt": "2026-07-27T23:59:59.362Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 379,
-  "forecastStaleCount": 5,
-  "openmeteoCoverage": 333
+  "apiCalls": 380,
+  "forecastStaleCount": 0,
+  "openmeteoCoverage": 338
 }
