@@ -15,8 +15,25 @@ import {
   invalidateMapSize,
   resetMapView,
   setAqiLayer,
+  setAlertPolygons,
 } from './map.js';
+import {
+  ALERTS_UPDATED_EVENT,
+  getAlertPolygons,
+  hasLiveAlerts,
+  resolveLocationAlerts,
+} from './nws-alerts.js';
 import { providerDelayBannerHtml } from './provider-delay.js';
+
+/**
+ * Overlay live NWS alerts onto a shallow copy of the location payload.
+ * @param {Record<string, unknown>} data
+ * @param {import('./geo.js').HyperlocalPin | null} pin
+ * @returns {Record<string, unknown>}
+ */
+function dataWithLiveAlerts(data, pin) {
+  return { ...data, alerts: resolveLocationAlerts(data, pin) };
+}
 
 /**
  * Load statewide space-weather snapshot (planetary; shared for all locations).
@@ -89,6 +106,7 @@ export async function renderWorkspace(root, data, options) {
   }
 
   const hyperlocal = hyperlocalResult;
+  let viewData = dataWithLiveAlerts(data, pin);
 
   const pinSourceLabel =
     pin?.source === 'gps' ? 'GPS' : pin?.source === 'address' ? 'address' : 'network';
@@ -184,34 +202,48 @@ export async function renderWorkspace(root, data, options) {
 
   /** @type {(() => void) | null} */
   let destroyOutlook = null;
+  /** @type {(() => void) | null} */
+  let destroyHero = null;
+  /** @type {string} */
+  let headline = '';
 
-  const { headline, destroy: destroyHero } = renderHero(heroRoot, data, {
-    onJump: jumpToSection,
-    pin,
-    hyperlocal,
-    spaceWeather,
-  });
+  /**
+   * @param {Record<string, unknown>} nextData
+   */
+  function paintAlertConsumers(nextData) {
+    destroyHero?.();
+    const heroApi = renderHero(heroRoot, nextData, {
+      onJump: jumpToSection,
+      pin,
+      hyperlocal,
+      spaceWeather,
+    });
+    destroyHero = heroApi.destroy;
+    headline = heroApi.headline;
 
-  const outlookApi = renderOutlook(outlookRoot, data, {
+    renderDeepForecast(deepRoot, nextData, {
+      sources: options.sources ?? [],
+      includeMapSlot: false,
+      spaceWeather,
+      hourlyCollapsed: true,
+      dailyCollapsed: true,
+    });
+  }
+
+  paintAlertConsumers(viewData);
+
+  const outlookApi = renderOutlook(outlookRoot, viewData, {
     onJump: jumpToSection,
     spaceWeather,
     sources: options.sources ?? [],
   });
   destroyOutlook = outlookApi.destroy;
 
-  renderSpecialtyIntel(specialtyRoot, data, {
+  renderSpecialtyIntel(specialtyRoot, viewData, {
     onJump: jumpToSection,
     pin,
     hyperlocal,
     spaceWeather,
-  });
-
-  renderDeepForecast(deepRoot, data, {
-    sources: options.sources ?? [],
-    includeMapSlot: false,
-    spaceWeather,
-    hourlyCollapsed: true,
-    dailyCollapsed: true,
   });
 
   const favBtn = /** @type {HTMLButtonElement | null} */ (root.querySelector('#btn-favorite'));
@@ -225,11 +257,22 @@ export async function renderWorkspace(root, data, options) {
 
   initStateMap(mapContainer, options.locations, slug, () => {}, {
     loadAlerts: true,
-    alertsUrl: `${options.dataBase ?? 'data'}/alerts.geojson`,
+    alertsUrl: `${dataBase}/alerts.geojson`,
+    alertsGeoJson: hasLiveAlerts() ? getAlertPolygons() : null,
     fixedView: false,
     showMarkers: false,
     onAlertsError: (msg) => options.onAnnounce?.(`Alert map unavailable: ${msg}`),
   });
+
+  const onAlertsUpdated = () => {
+    if (!stillCurrent()) return;
+    viewData = dataWithLiveAlerts(data, pin);
+    paintAlertConsumers(viewData);
+    setAlertPolygons(getAlertPolygons(), (msg) =>
+      options.onAnnounce?.(`Alert map unavailable: ${msg}`),
+    );
+  };
+  window.addEventListener(ALERTS_UPDATED_EVENT, onAlertsUpdated);
 
   const mapDetails = /** @type {HTMLDetailsElement | null} */ (
     root.querySelector('.workspace-map-details')
@@ -269,8 +312,9 @@ export async function renderWorkspace(root, data, options) {
   });
 
   if (!stillCurrent()) {
+    window.removeEventListener(ALERTS_UPDATED_EVENT, onAlertsUpdated);
     mapDetails?.removeEventListener('toggle', onMapDetailsToggle);
-    destroyHero();
+    destroyHero?.();
     destroyOutlook?.();
     destroyMap();
     return { headline, destroy: () => {} };
@@ -298,8 +342,9 @@ export async function renderWorkspace(root, data, options) {
   return {
     headline,
     destroy: () => {
+      window.removeEventListener(ALERTS_UPDATED_EVENT, onAlertsUpdated);
       mapDetails?.removeEventListener('toggle', onMapDetailsToggle);
-      destroyHero();
+      destroyHero?.();
       destroyOutlook?.();
       destroyMap();
     },
