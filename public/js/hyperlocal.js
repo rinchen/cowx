@@ -4,7 +4,7 @@
  * Fallback: caller keeps catalog-assigned cameras/PWS/current.
  */
 
-import { haversineKm } from './geo.js';
+import { rankWithinKm } from './geo-math.js';
 import { wmoLabel } from './wmo.js';
 
 /** @typedef {import('./geo.js').HyperlocalPin} HyperlocalPin */
@@ -89,15 +89,12 @@ export function nearestFromPin(lat, lon, candidates, limit, maxKm) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon) || !candidates.length || limit <= 0) {
     return [];
   }
-  return candidates
-    .map((c) => ({
-      item: c.item,
-      distance_km: Math.round(haversineKm(lat, lon, c.lat, c.lon) * 10) / 10,
-    }))
-    .filter((c) => c.distance_km <= maxKm)
-    .sort((a, b) => a.distance_km - b.distance_km)
-    .slice(0, limit)
-    .map((c) => ({ ...c.item, distance_km: c.distance_km }));
+  const ranked = rankWithinKm(
+    { lat, lon },
+    candidates.map((c) => ({ ...c, lat: c.lat, lon: c.lon })),
+    { maxKm, limit },
+  );
+  return ranked.map((c) => ({ ...c.item, distance_km: c.distance_km }));
 }
 
 /**

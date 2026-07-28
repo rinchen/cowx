@@ -81,7 +81,9 @@
         COWX is a <strong>static site</strong> hosted on GitHub Pages. There is no application
         server. Weather data is pre-fetched by a GitHub Action about every
         <strong>45 minutes</strong> and written into JSON files under <code>public/data/</code>.
-        Your browser loads only the location you need.
+        Your browser loads only the location you need. If schedules slip, a watchdog quietly
+        re-dispatches an update around <strong>90 minutes</strong> of staleness, and Discord-alerts
+        only if live data is still unrecovered past about <strong>two hours</strong>.
       </p>
 
       <h2>Finding your location</h2>
@@ -138,7 +140,8 @@
         <li>
           <code>cdot-cameras.geojson</code> / <code>cdot-alerts.geojson</code> /
           <code>cwop.geojson</code> / <code>hms-smoke.geojson</code> /
-          <code>spc-firewx.geojson</code> — roadway, APRS, smoke, and fire-weather layers
+          <code>spc-firewx.geojson</code> / <code>firms-fires.geojson</code> — roadway, APRS, smoke,
+          fire-weather, and satellite hotspot layers
         </li>
         <li>
           <code>space-weather.json</code> — statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF cues)
@@ -195,11 +198,24 @@
 
       <h2>Failure notifications</h2>
       <p>
-        When the scheduled <strong>weather fetch step</strong> fails (not install or push races
-        after a successful fetch), GitHub Actions can post to a Discord webhook configured as the
-        repository secret <code>NOTIFY_WEBHOOK_URL</code> with a link to the failed run. It does not
-        open a GitHub Issue. Secret values are never committed to the repository.
+        GitHub Actions can post to a Discord webhook configured as the repository secret
+        <code>NOTIFY_WEBHOOK_URL</code> (secret values are never committed). Alerts fire when:
       </p>
+      <ul>
+        <li>
+          The scheduled <strong>weather fetch step</strong> fails (not install or push races after a
+          successful fetch)
+        </li>
+        <li>
+          A <strong>gh-pages deploy</strong> or GitHub Pages build verification fails on production
+          deploys
+        </li>
+        <li>
+          Live data stays unrecovered past about <strong>120 minutes</strong> after the stale-data
+          watchdog has already tried to self-heal (or live <code>meta.json</code> is unreachable)
+        </li>
+      </ul>
+      <p>These notifications do not open a GitHub Issue.</p>
 
       <h2 id="ad-blockers">Ad blockers</h2>
       <p>
@@ -245,8 +261,8 @@
           stores your pin; it stays only in your browser’s <code>localStorage</code>.
         </li>
         <li>
-          API keys for PurpleAir/AirNow are used only in GitHub Actions at build time — never in the
-          browser.
+          API keys for PurpleAir, AirNow, COtrip, and FIRMS are used only in GitHub Actions at build
+          time — never in the browser.
         </li>
       </ul>
 

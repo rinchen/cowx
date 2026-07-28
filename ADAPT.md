@@ -20,7 +20,7 @@ pnpm test
 npx serve public
 ```
 
-Point GitHub Pages at the `gh-pages` branch (UI from `.github/workflows/pages.yml`; weather JSON from `update-weather.yml`). Keep `clean-exclude` covering `pr-preview` and `data` on `pages.yml` if you use PR previews / UI-only code deploys. Leave `public/.nojekyll` in place so GitHub Pages does not run Jekyll over the static tree. Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `COTRIP_API_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
+Point GitHub Pages at the `gh-pages` branch (UI from `.github/workflows/pages.yml`; weather JSON from `update-weather.yml`). Keep `clean-exclude` covering `pr-preview` and `data` on `pages.yml` if you use PR previews / UI-only code deploys. Leave `public/.nojekyll` in place so GitHub Pages does not run Jekyll over the static tree. Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `COTRIP_API_KEY`, `FIRMS_MAP_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
 
 ### GitHub Pages / PR previews
 
@@ -48,15 +48,15 @@ Point GitHub Pages at the `gh-pages` branch (UI from `.github/workflows/pages.ym
 
 Replace every entry with sites in your state. Each object needs at least:
 
-| Field          | Notes                                                                                                                                                                                                                              |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `slug`         | Stable kebab-case, unique (`denver`, `pueblo`)                                                                                                                                                                                     |
-| `name`         | Display name                                                                                                                                                                                                                       |
-| `lat`, `lon`   | WGS84 (must fall in your target state bbox in the validator)                                                                                                                                                                       |
-| `region`       | Kebab-case region string; update `schemas/location.schema.json` enums for contracts. `pnpm validate:locations` does **not** enforce region/wfo enums — only required fields, slug shape, CO (or your) bbox, and webcam link rules. |
-| `county`       | County name                                                                                                                                                                                                                        |
-| `wfo`          | NWS office id (e.g. `BOU`) — update schema enum for documentation; CI validator does not check the enum                                                                                                                            |
-| `elevation_ft` | Elevation                                                                                                                                                                                                                          |
+| Field          | Notes                                                                                                                                                                                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slug`         | Stable kebab-case, unique (`denver`, `pueblo`)                                                                                                                                                                                                       |
+| `name`         | Display name                                                                                                                                                                                                                                         |
+| `lat`, `lon`   | WGS84 (must fall in your target state bbox in the validator)                                                                                                                                                                                         |
+| `region`       | Kebab-case region string. Update `REGION_ENUM` in `scripts/validate-locations.js` **and** `schemas/location.schema.json` when forking — `pnpm validate:locations` enforces the enum (plus required fields, slug shape, bbox, and webcam link rules). |
+| `county`       | County name                                                                                                                                                                                                                                          |
+| `wfo`          | NWS office id (e.g. `BOU`). Update `WFO_ENUM` in `scripts/validate-locations.js` **and** the schema enum — CI validator checks the enum                                                                                                              |
+| `elevation_ft` | Elevation                                                                                                                                                                                                                                            |
 
 Useful optional fields: `icao`, `pws_id` (WU dashboard link only), `coagmet_id`,
 `webcam_links` (municipal/ski/NWS camera **portals** as new-tab links — do not scrape or hotlink stills).
@@ -132,7 +132,7 @@ Most sources are national APIs keyed by lat/lon. These are Colorado-hardcoded to
 | [`scripts/lib/hf-conditions.js`](scripts/lib/hf-conditions.js)                               | HF band estimate helpers used by space-weather merge / UI — keep or retune heuristics for your latitude                  |
 | [`scripts/lib/http.js`](scripts/lib/http.js)                                                 | NWS `User-Agent` string — use your project name + contact URL/email                                                      |
 
-National / keep with new coords: Open-Meteo forecast & AQ, AirNow (with key), RainViewer, NWS point links.
+National / keep with new coords: Open-Meteo forecast & AQ, AirNow (with key), NWS point links. RainViewer radar is **client-side only** (browser CDN/API) — not a fetch adapter.
 
 After adapter edits:
 

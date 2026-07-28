@@ -9,11 +9,12 @@ import { access, mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { sanitizeErrorMessage } from '../lib/http.js';
+import { sanitizeErrorMessage, logSafe } from '../lib/http.js';
 import { runAdapterSafely } from '../lib/adapter-runner.js';
 import { buildAstronomy } from '../lib/astronomy.js';
 import { buildPollenHealthLinks } from '../lib/pollen-links.js';
 import { validateLocationsData } from '../validate-locations.js';
+import { pickAqi } from '../../public/js/aqi.js';
 import { fetchOpenMeteo } from './adapters/openmeteo.js';
 import { fetchOpenMeteoAq } from './adapters/openmeteo-aq.js';
 import {
@@ -230,7 +231,8 @@ export async function runFetch() {
   try {
     zipPoints = JSON.parse(await readFile(ZIPS_SRC, 'utf8'));
   } catch (err) {
-    console.warn(
+    logSafe(
+      'warn',
       `fetch: could not load co-zips.json for pollen links — ${err instanceof Error ? err.message : String(err)}`,
     );
   }
@@ -248,6 +250,8 @@ export async function runFetch() {
 
   /** @type {{ slug: string, payload: object, indexEntry: object }[]} */
   const pendingWrites = [];
+  /** @type {string[]} */
+  const mergeSkipSlugs = [];
 
   for (const loc of locations) {
     try {
@@ -287,7 +291,8 @@ export async function runFetch() {
           nws.alertsGeoJson ?? { type: 'FeatureCollection', features: [] },
         );
       } catch (err) {
-        console.warn(
+        logSafe(
+          'warn',
           `fetch: alertsForLocation failed for ${loc.slug} — ${err instanceof Error ? err.message : String(err)}`,
         );
       }
@@ -429,18 +434,11 @@ export async function runFetch() {
           humidity: current?.humidity ?? null,
           wind_speed_mph: current?.wind_speed_mph ?? null,
           uv_index: current?.uv_index ?? null,
-          aqi: (() => {
-            const anAqi =
-              an?.aqi != null && Number.isFinite(Number(an.aqi)) ? Number(an.aqi) : null;
-            const paAqi =
-              pa?.aqi_pm25 != null && Number.isFinite(Number(pa.aqi_pm25))
-                ? Number(pa.aqi_pm25)
-                : null;
-            if (anAqi != null && paAqi != null) return Math.max(anAqi, paAqi);
-            if (anAqi != null) return anAqi;
-            if (paAqi != null) return paAqi;
-            return omaq?.us_aqi ?? null;
-          })(),
+          aqi: pickAqi({
+            airnow: an,
+            purpleair: pa,
+            openmeteo_aq: omaq,
+          }).aqi,
           nws_alert: alerts.length > 0,
           forecast_stale: forecastStale,
           provider_delay: providerDelay,
@@ -448,7 +446,9 @@ export async function runFetch() {
         },
       });
     } catch (err) {
-      console.warn(
+      mergeSkipSlugs.push(loc.slug);
+      logSafe(
+        'warn',
         `fetch: skipped location ${loc.slug} — ${err instanceof Error ? err.message : String(err)}`,
       );
     }
@@ -550,7 +550,8 @@ export async function runFetch() {
   try {
     await copyFile(ZIPS_SRC, ZIPS_DST);
   } catch (err) {
-    console.warn(
+    logSafe(
+      'warn',
       `fetch: could not copy co-zips.json — ${err instanceof Error ? err.message : String(err)}`,
     );
     try {
@@ -562,12 +563,7 @@ export async function runFetch() {
     }
   }
 
-  const criticalOk =
-    openmeteo.status === 'ok' ||
-    openmeteo.status === 'partial' ||
-    nws.status === 'ok' ||
-    nws.status === 'partial' ||
-    staleCount > 0;
+  const criticalOk = criticalSourcesOk(openmeteo);
 
   const minCalls = 10;
   const maxCalls = locations.length * 50;
@@ -585,6 +581,12 @@ export async function runFetch() {
     apiCalls: totalCalls,
     forecastStaleCount: staleCount,
     openmeteoCoverage: openmeteo.bySlug.size,
+    ...(mergeSkipSlugs.length
+      ? {
+          mergeSkipCount: mergeSkipSlugs.length,
+          mergeSkipSample: mergeSkipSlugs.slice(0, 20),
+        }
+      : {}),
   };
   await writeFile(path.join(DATA_DIR, 'meta.json'), `${JSON.stringify(meta, null, 2)}\n`, 'utf8');
 
@@ -634,6 +636,16 @@ async function runClimatologyAdapter(locations) {
 }
 
 /**
+ * Open-Meteo must return usable coverage for the fetch job to succeed.
+ * Carry-forward stale forecasts alone must not keep the job green.
+ * @param {{ status?: string }} openmeteo
+ * @returns {boolean}
+ */
+export function criticalSourcesOk(openmeteo) {
+  return openmeteo?.status === 'ok' || openmeteo?.status === 'partial';
+}
+
+/**
  * @param {string} id
  * @param {{ status: string, error?: string }} result
  */
@@ -650,7 +662,7 @@ const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolv
 
 if (isMain) {
   runFetch().catch((err) => {
-    console.error('fetch failed:', err);
+    logSafe('error', 'fetch failed:', err);
     process.exitCode = 1;
   });
 }

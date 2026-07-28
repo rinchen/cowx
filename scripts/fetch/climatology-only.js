@@ -116,14 +116,25 @@ async function main() {
   if (result.error) console.warn(`climatology-only: ${result.error}`);
 
   let written = 0;
+  /** @type {string[]} */
+  const writeErrors = [];
   for (const [slug, climo] of result.bySlug) {
     const file = path.join(LOCATIONS_DIR, `${slug}.json`);
-    const payload = JSON.parse(await readFile(file, 'utf8'));
-    payload.climatology = climo;
-    await writeFile(file, JSON.stringify(payload), 'utf8');
-    written += 1;
+    try {
+      const payload = JSON.parse(await readFile(file, 'utf8'));
+      payload.climatology = climo;
+      await writeFile(file, JSON.stringify(payload), 'utf8');
+      written += 1;
+    } catch (err) {
+      writeErrors.push(`${slug}: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
   console.log(`climatology-only: wrote ${written} location files`);
+  if (writeErrors.length) {
+    console.warn(
+      `climatology-only: ${writeErrors.length} write failures — ${writeErrors.slice(0, 5).join('; ')}`,
+    );
+  }
 
   try {
     const meta = JSON.parse(await readFile(META_PATH, 'utf8'));
@@ -146,7 +157,7 @@ async function main() {
     );
   }
 
-  if (result.status === 'error' && written === 0 && propagated === 0) {
+  if ((result.status === 'error' && written === 0 && propagated === 0) || writeErrors.length > 0) {
     process.exitCode = 1;
   }
 }

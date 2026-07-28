@@ -884,12 +884,19 @@ async function handleRoute(opts = {}) {
  * @returns {boolean}
  */
 function locationPayloadLooksUsable(payload) {
-  return (
-    Boolean(payload) &&
-    typeof payload === 'object' &&
-    typeof (/** @type {{ slug?: unknown }} */ (payload).slug) === 'string' &&
-    /** @type {{ slug: string }} */ (payload).slug.length > 0
-  );
+  if (!payload || typeof payload !== 'object') return false;
+  const p = /** @type {Record<string, unknown>} */ (payload);
+  if (typeof p.slug !== 'string' || !p.slug.length) return false;
+  if (typeof p.name !== 'string' || !p.name.trim()) return false;
+  const lat = Number(p.lat);
+  const lon = Number(p.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+  const hourly = p.hourly;
+  if (hourly != null && typeof hourly === 'object') {
+    const time = /** @type {{ time?: unknown }} */ (hourly).time;
+    if (time != null && !Array.isArray(time)) return false;
+  }
+  return true;
 }
 
 /**
@@ -938,6 +945,7 @@ async function init() {
     reportUnexpectedError('Uncaught error', e.error ?? e.message);
   });
   window.addEventListener('unhandledrejection', (e) => {
+    e.preventDefault();
     reportUnexpectedError('Unhandled rejection', e.reason);
   });
 }

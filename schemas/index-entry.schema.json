@@ -59,6 +59,9 @@
     "forecast_stale": {
       "type": "boolean"
     },
+    "provider_delay": {
+      "type": "boolean"
+    },
     "updated_at": {
       "type": "string"
     }

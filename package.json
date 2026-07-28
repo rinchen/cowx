@@ -9,13 +9,14 @@
     "node": ">=20"
   },
   "scripts": {
-    "fetch": "node scripts/fetch/index.js",
     "fetch:data": "node scripts/fetch/index.js",
     "fetch:climatology": "node scripts/fetch/climatology-only.js",
     "test": "TZ=UTC node --test tests/*.test.js",
+    "test:coverage": "TZ=UTC node --experimental-test-coverage --test tests/*.test.js",
     "lint": "eslint .",
     "format": "prettier --write .",
     "validate:locations": "node scripts/validate-locations.js",
+    "validate:schemas": "node scripts/validate-schemas.js",
     "update": "pnpm update && pnpm dedupe",
     "prepare": "husky"
   },
@@ -29,11 +30,13 @@
     ]
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
-    "eslint": "^9.39.5",
-    "globals": "^16.5.0",
+    "@eslint/js": "^10.0.1",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "eslint": "^10.8.0",
+    "globals": "^17.8.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.4.0",
+    "lint-staged": "^17.2.0",
     "prettier": "^3.9.6"
   },
   "packageManager": "pnpm@10.34.3"

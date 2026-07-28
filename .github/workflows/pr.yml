@@ -35,3 +35,6 @@ jobs:
 
       - name: Validate locations
         run: pnpm validate:locations
+
+      - name: Validate schemas
+        run: pnpm validate:schemas

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { validateLocationsData } from '../scripts/validate-locations.js';
+import { validateCoZipsData, validateLocationsData } from '../scripts/validate-locations.js';
 
 const valid = {
   slug: 'denver',
@@ -75,5 +75,24 @@ describe('validateLocationsData', () => {
     }));
     const errors = validateLocationsData(huge);
     assert.ok(errors.some((e) => e.includes('max 1000')));
+  });
+});
+
+describe('validateCoZipsData', () => {
+  it('accepts a valid ZIP row', () => {
+    assert.deepEqual(
+      validateCoZipsData([{ zip: '80202', lat: 39.75, lon: -104.99, city: 'Denver' }]),
+      [],
+    );
+  });
+
+  it('rejects bad zip shape and duplicates', () => {
+    const errors = validateCoZipsData([
+      { zip: '8020', lat: 39.75, lon: -104.99 },
+      { zip: '80202', lat: 39.75, lon: -104.99 },
+      { zip: '80202', lat: 39.76, lon: -104.98 },
+    ]);
+    assert.ok(errors.some((e) => e.includes('5-digit')));
+    assert.ok(errors.some((e) => e.includes('duplicate')));
   });
 });

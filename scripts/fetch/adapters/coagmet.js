@@ -126,6 +126,9 @@ export async function fetchCoagmet(locations) {
       status: bySlug.size > 0 ? 'ok' : 'partial',
       bySlug,
       calls,
+      ...(bySlug.size === 0
+        ? { error: 'no CoAgMET stations within range of catalog locations' }
+        : {}),
     };
   } catch (err) {
     return {

@@ -4,7 +4,7 @@
  * Fallback: empty alerts / no AFD/HWO; status error/partial.
  */
 
-import { fetchJson, NWS_USER_AGENT } from '../../lib/http.js';
+import { fetchJson, NWS_USER_AGENT, sleep } from '../../lib/http.js';
 import { pointInGeometry, pointInRing } from '../../lib/geometry.js';
 
 export { pointInGeometry, pointInRing };
@@ -89,32 +89,50 @@ export function snippetFromNwsProduct(productType, text) {
 /**
  * @param {string} office
  * @param {'AFD' | 'HWO' | 'FWF'} productType
- * @returns {Promise<{ office: string, issued: string | null, snippet: string, url: string } | null>}
+ * @returns {Promise<{
+ *   product: { office: string, issued: string | null, snippet: string, url: string } | null,
+ *   calls: number,
+ * }>}
  */
 async function fetchOfficeProduct(office, productType) {
-  const list = await fetchJson(
-    `https://api.weather.gov/products/types/${productType}/locations/${office}`,
-    {
+  let calls = 0;
+  try {
+    calls += 1;
+    const list = await fetchJson(
+      `https://api.weather.gov/products/types/${productType}/locations/${office}`,
+      {
+        headers: { 'User-Agent': NWS_USER_AGENT, Accept: 'application/ld+json' },
+        timeoutMs: 45_000,
+      },
+    );
+    const first = list?.['@graph']?.[0];
+    const productId = first?.id ?? first?.['@id'];
+    const productUrl = resolveNwsProductUrl(productId);
+    if (!productUrl) return { product: null, calls };
+
+    calls += 1;
+    const product = await fetchJson(productUrl, {
       headers: { 'User-Agent': NWS_USER_AGENT, Accept: 'application/ld+json' },
       timeoutMs: 45_000,
-    },
-  );
-  const first = list?.['@graph']?.[0];
-  const productId = first?.id ?? first?.['@id'];
-  const productUrl = resolveNwsProductUrl(productId);
-  if (!productUrl) return null;
-  const product = await fetchJson(productUrl, {
-    headers: { 'User-Agent': NWS_USER_AGENT, Accept: 'application/ld+json' },
-    timeoutMs: 45_000,
-  });
-  const text = String(product?.productText ?? '');
-  const snippet = snippetFromNwsProduct(productType, text);
-  return {
-    office,
-    issued: product?.issuanceTime ?? null,
-    snippet,
-    url: `https://forecast.weather.gov/product.php?site=${office}&issuedby=${office}&product=${productType}&format=CI`,
-  };
+    });
+    const text = String(product?.productText ?? '');
+    const snippet = snippetFromNwsProduct(productType, text);
+    return {
+      product: {
+        office,
+        issued: product?.issuanceTime ?? null,
+        snippet,
+        url: `https://forecast.weather.gov/product.php?site=${office}&issuedby=${office}&product=${productType}&format=CI`,
+      },
+      calls,
+    };
+  } catch (err) {
+    const wrapped = err instanceof Error ? err : new Error(String(err));
+    /** @type {Error & { nwsCalls?: number }} */
+    const withCalls = wrapped;
+    withCalls.nwsCalls = calls;
+    throw withCalls;
+  }
 }
 
 /**
@@ -206,19 +224,25 @@ export async function fetchNws() {
   const productTypes = ['AFD', 'HWO', 'FWF'];
   /** @type {Record<'AFD' | 'HWO' | 'FWF', Map<string, object>>} */
   const productMaps = { AFD: afdByWfo, HWO: hwoByWfo, FWF: fwfByWfo };
+  const PRODUCT_DELAY_MS = Number(process.env.NWS_PRODUCT_DELAY_MS ?? 200);
 
   for (const office of OFFICES) {
     for (const productType of productTypes) {
       try {
-        const product = await fetchOfficeProduct(office, productType);
-        calls += 2;
+        const { product, calls: productCalls } = await fetchOfficeProduct(office, productType);
+        calls += productCalls;
         if (product) productMaps[productType].set(office, product);
       } catch (err) {
-        calls += 1;
+        const nwsCalls =
+          err && typeof err === 'object' && 'nwsCalls' in err
+            ? Number(/** @type {{ nwsCalls?: unknown }} */ (err).nwsCalls)
+            : 0;
+        calls += Number.isFinite(nwsCalls) && nwsCalls > 0 ? nwsCalls : 1;
         errors.push(
           `${productType} ${office}: ${err instanceof Error ? err.message : String(err)}`,
         );
       }
+      if (PRODUCT_DELAY_MS > 0) await sleep(PRODUCT_DELAY_MS);
     }
   }
 

@@ -207,7 +207,7 @@ describe('fetchCwop with mocked fetch', () => {
     assert.equal(result.bySlug.get('denver')?.callsign, 'CW1');
   });
 
-  it('returns skipped when every grid cell fails', async () => {
+  it('returns error when every grid cell fails', async () => {
     globalThis.fetch = async () =>
       /** @type {Response} */ ({
         ok: false,
@@ -222,7 +222,7 @@ describe('fetchCwop with mocked fetch', () => {
       sleepFn: noSleep,
       samplePoints: tinyGrid,
     });
-    assert.equal(result.status, 'skipped');
+    assert.equal(result.status, 'error');
     assert.equal(result.bySlug.get('denver'), null);
     assert.equal(result.geojson.features.length, 0);
     assert.ok(result.error);

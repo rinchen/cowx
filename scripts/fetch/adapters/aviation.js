@@ -135,6 +135,7 @@ export async function fetchAviation(locations) {
       status: bySlug.size > 0 ? 'ok' : 'partial',
       bySlug,
       calls,
+      ...(bySlug.size === 0 ? { error: 'no METAR stations matched catalog locations' } : {}),
     };
   } catch (err) {
     return {

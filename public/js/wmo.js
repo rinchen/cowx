@@ -1,7 +1,6 @@
 /**
- * Open-Meteo / WMO weather code → English label (client copy of scripts/lib/wmo.js).
- * No bundler on GitHub Pages — cannot import from scripts/. Keep labels in sync;
- * tests/dom-aqi.test.js asserts parity.
+ * Open-Meteo / WMO weather code → English label.
+ * Canonical copy for client + fetch (scripts/lib re-exports this).
  */
 
 const WMO = {

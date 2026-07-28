@@ -217,6 +217,7 @@ export async function fetchPurpleAir(locations, env = process.env) {
       status: bySlug.size > 0 ? 'ok' : 'partial',
       bySlug,
       calls,
+      ...(bySlug.size === 0 ? { error: 'no PurpleAir sensors matched catalog locations' } : {}),
     };
   } catch (err) {
     return {

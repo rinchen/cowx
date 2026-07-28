@@ -56,3 +56,41 @@ export function pointInGeometry(lon, lat, geometry) {
   }
   return false;
 }
+
+/**
+ * Representative lat/lon for Point, MultiPoint, LineString, or MultiLineString.
+ * @param {unknown} geometry
+ * @returns {{ lat: number, lon: number } | null}
+ */
+export function geometryRepresentativePoint(geometry) {
+  if (!geometry || typeof geometry !== 'object') return null;
+  const g = /** @type {{ type?: string, coordinates?: unknown }} */ (geometry);
+  /**
+   * @param {unknown} pair
+   * @returns {{ lat: number, lon: number } | null}
+   */
+  const fromPair = (pair) => {
+    if (!Array.isArray(pair) || pair.length < 2) return null;
+    const lon = Number(pair[0]);
+    const lat = Number(pair[1]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    return { lat, lon };
+  };
+
+  if (g.type === 'Point') return fromPair(g.coordinates);
+  if (g.type === 'MultiPoint' && Array.isArray(g.coordinates) && g.coordinates[0]) {
+    return fromPair(g.coordinates[0]);
+  }
+
+  /** @type {unknown[]} */
+  let coords = [];
+  if (g.type === 'LineString' && Array.isArray(g.coordinates)) {
+    coords = g.coordinates;
+  } else if (g.type === 'MultiLineString' && Array.isArray(g.coordinates)) {
+    for (const part of g.coordinates) {
+      if (Array.isArray(part)) coords.push(...part);
+    }
+  }
+  if (!coords.length) return null;
+  return fromPair(coords[Math.floor(coords.length / 2)]);
+}
