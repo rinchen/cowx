@@ -20,6 +20,7 @@ import { getFavoriteLocations, searchLocations } from './search.js';
 import { renderWorkspace } from './workspace.js';
 import { destroyMap } from './map.js';
 import { _clearHyperlocalCache } from './hyperlocal.js';
+import { initAlertPolling } from './nws-alerts.js';
 
 /** @typedef {{ slug: string; name: string; lat: number; lon: number; county?: string; aqi?: number | null }} IndexEntry */
 /** @typedef {{ city: string; county: string; slug: string }} ZipEntry */
@@ -921,6 +922,8 @@ async function init() {
   els.dataSources = document.getElementById('data-sources');
 
   bindBackToTop();
+  // Start immediately so the first NWS poll overlaps loadCoreData / first paint.
+  initAlertPolling({ intervalMs: 180_000 });
   await loadCoreData();
   bindHomeNavigation();
   window.addEventListener('hashchange', () => {
