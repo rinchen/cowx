@@ -922,6 +922,8 @@ async function init() {
   els.dataSources = document.getElementById('data-sources');
 
   bindBackToTop();
+  // Start immediately so the first NWS poll overlaps loadCoreData / first paint.
+  initAlertPolling({ intervalMs: 180_000 });
   await loadCoreData();
   bindHomeNavigation();
   window.addEventListener('hashchange', () => {
@@ -929,7 +931,6 @@ async function init() {
   });
   await handleRoute();
   startDataRefreshWatcher();
-  initAlertPolling({ intervalMs: 180_000 });
 
   window.addEventListener('error', (e) => {
     // Resource load failures (img/script tags) fire on the element, not window.
