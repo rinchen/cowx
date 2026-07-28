@@ -29,8 +29,12 @@ Without running `pnpm run fetch:data`, only committed snapshot data in `public/d
 | `pnpm run fetch:climatology` | Rebuild ERA5 day-of-year normals only (slow; optional `CLIMATOLOGY_MAX_LOCS`) |
 | `pnpm test`                  | Unit tests (fixtures only — no live API calls)                                |
 | `pnpm lint`                  | ESLint                                                                        |
-| `pnpm validate:locations`    | Validate `scripts/locations/colorado-locations.json`                          |
+| `pnpm validate:locations`    | Validate `scripts/locations/colorado-locations.json` (+ `co-zips.json`)       |
+| `pnpm validate:schemas`      | Ajv-check catalog + sample `public/data` against `schemas/`                   |
 | `pnpm format`                | Prettier                                                                      |
+| `pnpm update`                | Refresh lockfile within ranges (`pnpm update && pnpm dedupe`)                 |
+
+Pre-commit hooks (Husky + lint-staged) run ESLint/Prettier on staged files via `prepare`.
 
 ## GitHub Pages
 

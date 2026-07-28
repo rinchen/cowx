@@ -56,6 +56,17 @@
     "openmeteoCoverage": {
       "type": "integer",
       "minimum": 0
+    },
+    "mergeSkipCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Locations skipped during per-slug merge due to errors"
+    },
+    "mergeSkipSample": {
+      "type": "array",
+      "items": { "type": "string" },
+      "maxItems": 20,
+      "description": "Sample of slugs skipped during merge"
     }
   }
 }

@@ -12,6 +12,7 @@ import {
   sleep,
 } from '../../lib/http.js';
 import { haversineKm, nearestPoint } from '../../lib/geo.js';
+import { geometryRepresentativePoint } from '../../lib/geometry.js';
 import { toFiniteNumber } from '../../lib/parse.js';
 import { PASS_HINT_RE, CHAIN_RE, CLOSURE_RE } from '../../lib/road-alerts.js';
 
@@ -158,30 +159,7 @@ export function parseWeatherStationFeature(feature) {
  * @returns {{ lat: number, lon: number } | null}
  */
 export function geometryPoint(geometry) {
-  if (!geometry || typeof geometry !== 'object') return null;
-  const g = /** @type {{ type?: string, coordinates?: unknown }} */ (geometry);
-  if (g.type === 'Point' && Array.isArray(g.coordinates)) {
-    const lon = toFiniteNumber(g.coordinates[0]);
-    const lat = toFiniteNumber(g.coordinates[1]);
-    return lat != null && lon != null ? { lat, lon } : null;
-  }
-  if (g.type === 'MultiPoint' && Array.isArray(g.coordinates) && g.coordinates[0]) {
-    const c0 = /** @type {unknown[]} */ (g.coordinates)[0];
-    if (Array.isArray(c0)) {
-      const lon = toFiniteNumber(c0[0]);
-      const lat = toFiniteNumber(c0[1]);
-      return lat != null && lon != null ? { lat, lon } : null;
-    }
-  }
-  if (g.type === 'LineString' && Array.isArray(g.coordinates) && g.coordinates.length) {
-    const mid = /** @type {unknown[]} */ (g.coordinates)[Math.floor(g.coordinates.length / 2)];
-    if (Array.isArray(mid)) {
-      const lon = toFiniteNumber(mid[0]);
-      const lat = toFiniteNumber(mid[1]);
-      return lat != null && lon != null ? { lat, lon } : null;
-    }
-  }
-  return null;
+  return geometryRepresentativePoint(geometry);
 }
 
 /**

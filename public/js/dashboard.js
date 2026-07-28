@@ -634,7 +634,7 @@ function renderForecastCard(parent, headingId, title, body) {
  * @param {string} headingId
  * @param {string} title
  * @param {() => (Node | null)} renderBody
- * @param {{ open?: boolean, actionsHtml?: string }} [opts] — `open: true` expands; default collapsed
+ * @param {{ open?: boolean }} [opts] — `open: true` expands; default collapsed
  */
 function renderCollapsibleSection(parent, headingId, title, renderBody, opts = {}) {
   const body = renderBody();
@@ -644,13 +644,7 @@ function renderCollapsibleSection(parent, headingId, title, renderBody, opts = {
   details.className = 'dash-section';
   const summary = document.createElement('summary');
   summary.id = headingId;
-  const actionsHtml = opts.actionsHtml ?? '';
-  summary.innerHTML = `<span class="dash-section-title">${escapeHtml(title)}</span>${actionsHtml ? `<span class="dash-section-actions">${actionsHtml}</span>` : ''}`;
-  const actions = summary.querySelector('.dash-section-actions');
-  actions?.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-  });
+  summary.innerHTML = `<span class="dash-section-title">${escapeHtml(title)}</span>`;
   details.appendChild(summary);
   const content = document.createElement('div');
   content.className = 'dash-section-body';

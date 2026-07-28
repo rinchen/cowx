@@ -12,23 +12,28 @@ Guide for AI agents and contributors working on **COWX** (COlorado + Weather), a
 cowx/   # repo directory (brand: COWX)
 ├── AGENTS.md                 # This file
 ├── README.md                 # Human quick start
-├── package.json              # pnpm scripts (fetch, test, lint, validate:locations)
+├── package.json              # pnpm scripts (fetch:data, test, lint, validate:locations, update)
 ├── schemas/                  # JSON Schema for locations, payloads, meta, index (reference contracts)
 ├── scripts/
 │   ├── fetch/
 │   │   ├── index.js          # Fetch orchestrator — runs adapters, writes public/data/
+│   │   ├── climatology-only.js # ERA5 DOY normals backfill (`pnpm run fetch:climatology`)
 │   │   └── adapters/         # One module per upstream source (add new adapters here)
 │   ├── locations/
 │   │   ├── colorado-locations.json   # Curated Colorado location catalog (source of truth)
 │   │   └── co-zips.json              # ZIP → nearest catalog point (copied to public/data/)
 │   ├── lib/                  # Shared utilities (http, geo, slugify, rf-comms, wmo, etc.)
-│   └── validate-locations.js # Validates colorado-locations.json (unique slug, CO bbox)
+│   ├── ci/                   # Pages/stale-data helpers used by GitHub Actions workflows
+│   └── validate-locations.js # Validates catalog (unique slug, CO bbox, region/wfo enums, webcam https)
 ├── public/                   # Static site root (GitHub Pages)
 │   ├── index.html            # Geo-first app shell
 │   ├── how-it-works.html     # Architecture & privacy (user-facing)
 │   ├── credits.html          # Data provider attribution
 │   ├── css/app.css           # Shared styles
-│   ├── js/                   # Client modules (app, workspace, intel, outlook, climatology, rwis, sparkline, dashboard, hyperlocal, geocode, geo, wind, aqi, bottom-line, imagery, …)
+│   ├── js/                   # Client modules (app, workspace, intel, outlook, dashboard, map,
+│   │                           hyperlocal, geocode, geo, nws-alerts, live, radar-loop, rf-comms,
+│   │                           denver-time, search, favorites, provider-delay, climatology, rwis,
+│   │                           sparkline, wind, aqi, bottom-line, imagery, astronomy, icons, …)
 │   └── data/                 # Generated JSON — committed after fetch runs
 │       ├── index.json        # Slim location index for search/geo
 │       ├── meta.json         # Build time + per-source status + apiCalls
@@ -54,14 +59,14 @@ cowx/   # repo directory (brand: COWX)
 
 ### Key artifacts
 
-| Path                                        | Purpose                                                                                                                                |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/locations/colorado-locations.json` | Input catalog for fetch; validated by `pnpm validate:locations`                                                                        |
-| `public/data/meta.json`                     | `generatedAt`, `version`, `sources[]`, `apiCalls`, `forecastStaleCount`, `locationCount`, `openmeteoCoverage`                          |
-| `public/data/index.json`                    | Client lookup: slug, name, lat, lon, summary fields                                                                                    |
-| `public/data/locations/{slug}.json`         | Full drill-down weather/AQ payload for one location                                                                                    |
-| `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)                                                                            |
-| `schemas/*.schema.json`                     | Reference contracts (`location`, `locations-array`, `weather-payload`, `meta`, `index-entry`, `space-weather`); not yet enforced in CI |
+| Path                                        | Purpose                                                                                                                                                              |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/locations/colorado-locations.json` | Input catalog for fetch; validated by `pnpm validate:locations`                                                                                                      |
+| `public/data/meta.json`                     | `generatedAt`, `version`, `sources[]`, `apiCalls`, `forecastStaleCount`, `locationCount`, `openmeteoCoverage`                                                        |
+| `public/data/index.json`                    | Client lookup: slug, name, lat, lon, summary fields                                                                                                                  |
+| `public/data/locations/{slug}.json`         | Full drill-down weather/AQ payload for one location                                                                                                                  |
+| `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)                                                                                                          |
+| `schemas/*.schema.json`                     | Contracts (`location`, `locations-array`, `weather-payload`, `meta`, `index-entry`, `space-weather`); catalog/meta/index samples enforced by `pnpm validate:schemas` |
 
 **PR previews / Pages:** Weather JSON is published only by `update-weather.yml`. Code pushes use `pages.yml` for **UI only** (`clean-exclude: pr-preview` + `data`, omits `public/data` from the payload) so merges cannot roll back live weather. Bot data commits with `GITHUB_TOKEN` do not trigger `pages.yml`. All writers share the `gh-pages` concurrency group. Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Previews ship **UI only** (no duplicated `public/data/`) and read live JSON from production `/cowx/data` — legacy Pages builds fail on a full doubled tree. Production deploys strip any leftover `pr-preview/*/data` and **fail the workflow** if the GitHub Pages build errors (so Actions cannot stay green while the CDN is frozen). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
 
@@ -203,7 +208,7 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):
 
-| Source                                        | Calls / run (approx @ ~340 locs)                                        | Auth                |
+| Source                                        | Calls / run (approx @ ~338 locs)                                        | Auth                |
 | --------------------------------------------- | ----------------------------------------------------------------------- | ------------------- |
 | Open-Meteo Forecast                           | ~34+ (chunk 20 + NBM per chunk)                                         | None                |
 | Open-Meteo Air Quality                        | ~9 (chunk 40)                                                           | None                |

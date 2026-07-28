@@ -13,8 +13,6 @@ let stateMap = null;
 let radarLayer = null;
 /** @type {import('leaflet').GeoJSON | null} */
 let alertsLayer = null;
-/** @type {import('leaflet').GeoJSON | null} */
-let cwopLayer = null;
 /** @type {import('leaflet').LayerGroup | null} */
 let aqiLayer = null;
 /** @type {RadarLoopController | null} */
@@ -340,61 +338,6 @@ export function setAqiLayer(enabled, locations, activeSlug = null) {
 }
 
 /**
- * @deprecated CWOP map toggle removed from UI; kept for tests if needed.
- * Toggle CWOP/APRS GeoJSON layer.
- * @param {boolean} enabled
- * @param {string} url
- * @returns {Promise<boolean>}
- */
-export async function setCwopLayer(enabled, url = 'data/cwop.geojson') {
-  if (!stateMap || typeof L === 'undefined') return false;
-
-  if (cwopLayer) {
-    stateMap.removeLayer(cwopLayer);
-    cwopLayer = null;
-  }
-  if (!enabled) return false;
-
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 12_000);
-    let response;
-    try {
-      response = await fetch(url, { signal: controller.signal });
-    } finally {
-      clearTimeout(timer);
-    }
-    if (!response.ok) throw new Error(`CWOP geojson HTTP ${response.status}`);
-    const geojson = await response.json();
-    if (!geojson?.features?.length) return false;
-
-    cwopLayer = L.geoJSON(geojson, {
-      pointToLayer(_feature, latlng) {
-        return L.circleMarker(latlng, {
-          radius: 5,
-          color: '#a78bfa',
-          fillColor: '#c4b5fd',
-          fillOpacity: 0.85,
-          weight: 1,
-        });
-      },
-      onEachFeature(feature, layer) {
-        const p = feature.properties ?? {};
-        const bits = [escapeHtml(String(p.callsign || 'CWOP'))];
-        if (p.temp_f != null) bits.push(`${Math.round(Number(p.temp_f))}°F`);
-        if (p.wind_speed_mph != null) bits.push(`${Math.round(Number(p.wind_speed_mph))} mph`);
-        layer.bindTooltip(bits.join(' · '));
-      },
-    });
-    cwopLayer.addTo(stateMap);
-    return true;
-  } catch (err) {
-    console.warn('setCwopLayer failed', err);
-    return false;
-  }
-}
-
-/**
  * Legacy single-frame radar toggle (kept for non-workspace callers).
  * @param {boolean} enabled
  * @param {number} opacity 0–1
@@ -575,7 +518,6 @@ export function destroyMap() {
     stateMap = null;
     radarLayer = null;
     alertsLayer = null;
-    cwopLayer = null;
     aqiLayer = null;
   }
 }

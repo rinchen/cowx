@@ -9,6 +9,7 @@
 
 import { fetchJson } from '../../lib/http.js';
 import { haversineKm, nearestPoints } from '../../lib/geo.js';
+import { geometryRepresentativePoint } from '../../lib/geometry.js';
 import { toFiniteNumber } from '../../lib/parse.js';
 import { PASS_HINT_RE, CHAIN_RE, CLOSURE_RE } from '../../lib/road-alerts.js';
 
@@ -78,28 +79,7 @@ function arcgisDate(v) {
  * @returns {{ lat: number, lon: number } | null}
  */
 export function geometryMidpoint(geometry) {
-  if (!geometry || typeof geometry !== 'object') return null;
-  const g = /** @type {{ type?: string, coordinates?: unknown }} */ (geometry);
-  /** @type {number[][]} */
-  let coords = [];
-  if (g.type === 'LineString' && Array.isArray(g.coordinates)) {
-    coords = /** @type {number[][]} */ (g.coordinates);
-  } else if (g.type === 'MultiLineString' && Array.isArray(g.coordinates)) {
-    for (const part of g.coordinates) {
-      if (Array.isArray(part)) coords.push(.../** @type {number[][]} */ (part));
-    }
-  } else if (g.type === 'Point' && Array.isArray(g.coordinates)) {
-    const lon = toFiniteNumber(g.coordinates[0]);
-    const lat = toFiniteNumber(g.coordinates[1]);
-    if (lat != null && lon != null) return { lat, lon };
-    return null;
-  }
-  if (coords.length === 0) return null;
-  const mid = coords[Math.floor(coords.length / 2)];
-  const lon = toFiniteNumber(mid?.[0]);
-  const lat = toFiniteNumber(mid?.[1]);
-  if (lat == null || lon == null) return null;
-  return { lat, lon };
+  return geometryRepresentativePoint(geometry);
 }
 
 /**
@@ -222,9 +202,9 @@ export async function fetchCdot(locations) {
   const bySlug = new Map();
   let calls = 0;
   /** @type {{ type: string, features: object[] }} */
-  let camerasGeoJson = { type: 'FeatureCollection', features: [] };
+  let camerasGeoJson;
   /** @type {{ type: string, features: object[] }} */
-  let alertsGeoJson = { type: 'FeatureCollection', features: [] };
+  let alertsGeoJson;
   const errors = [];
   const updatedAt = new Date().toISOString();
 

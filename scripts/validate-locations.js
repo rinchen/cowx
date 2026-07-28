@@ -37,6 +37,46 @@ function isObject(value) {
 }
 
 /**
+ * Validate ZIP lookup table used for search + pollen links.
+ * @param {unknown} data
+ * @returns {string[]}
+ */
+export function validateCoZipsData(data) {
+  const errors = [];
+  if (!Array.isArray(data)) {
+    return ['co-zips.json must be a JSON array'];
+  }
+  if (data.length === 0) {
+    return ['co-zips.json must not be empty'];
+  }
+  const seen = new Set();
+  for (let i = 0; i < data.length; i += 1) {
+    const row = data[i];
+    if (!isObject(row)) {
+      errors.push(`co-zips[${i}] must be an object`);
+      continue;
+    }
+    const zip = row.zip;
+    if (typeof zip !== 'string' || !/^\d{5}$/.test(zip)) {
+      errors.push(`co-zips[${i}].zip must be a 5-digit string`);
+    } else if (seen.has(zip)) {
+      errors.push(`co-zips duplicate zip ${zip}`);
+    } else {
+      seen.add(zip);
+    }
+    const lat = Number(row.lat);
+    const lon = Number(row.lon);
+    if (!Number.isFinite(lat) || lat < CO_LAT_MIN || lat > CO_LAT_MAX) {
+      errors.push(`co-zips[${i}].lat out of Colorado bounds`);
+    }
+    if (!Number.isFinite(lon) || lon < CO_LON_MIN || lon > CO_LON_MAX) {
+      errors.push(`co-zips[${i}].lon out of Colorado bounds`);
+    }
+  }
+  return errors;
+}
+
+/**
  * Validate location catalog data (pure; used by CLI and tests).
  * @param {unknown} data
  * @returns {string[]} error messages
@@ -206,6 +246,23 @@ export async function validateLocations() {
   }
 
   console.log(`validate:locations ok (${data.length} location${data.length === 1 ? '' : 's'})`);
+
+  const zipsPath = path.join(__dirname, 'locations/co-zips.json');
+  try {
+    const zipsRaw = await readFile(zipsPath, 'utf8');
+    const zips = JSON.parse(zipsRaw);
+    const zipErrors = validateCoZipsData(zips);
+    if (zipErrors.length) {
+      console.error('error: invalid co-zips.json:');
+      for (const message of zipErrors.slice(0, 30)) console.error(`  - ${message}`);
+      return 1;
+    }
+    console.log(`validate:co-zips ok (${zips.length} ZIP${zips.length === 1 ? '' : 's'})`);
+  } catch (err) {
+    console.error('error: failed to validate co-zips.json:', err);
+    return 1;
+  }
+
   return 0;
 }
 

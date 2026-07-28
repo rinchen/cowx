@@ -125,3 +125,15 @@ export const NWS_USER_AGENT = 'COWX/1.0 (https://github.com/rinchen/cowx; colora
 export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/**
+ * Log with secret redaction (safe for Action logs).
+ * @param {'log'|'warn'|'error'} level
+ * @param {...unknown} args
+ */
+export function logSafe(level, ...args) {
+  const line = args.map((a) => sanitizeErrorMessage(a instanceof Error ? a.message : a)).join(' ');
+  if (level === 'error') console.error(line);
+  else if (level === 'warn') console.warn(line);
+  else console.log(line);
+}

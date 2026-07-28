@@ -303,9 +303,19 @@ async function fetchAndMergeNbm(chunk, bySlug, errors) {
 
 /**
  * @param {import('../../lib/types.js').Location[]} locations
+ * @param {{
+ *   chunkDelayMs?: number,
+ *   retryBackoffMs?: number,
+ *   shortBackoffMs?: number,
+ *   rateLimitDelayMs?: number,
+ * }} [opts]
  * @returns {Promise<{ status: string, bySlug: Map<string, object>, error?: string, calls: number }>}
  */
-export async function fetchOpenMeteo(locations) {
+export async function fetchOpenMeteo(locations, opts = {}) {
+  const chunkDelayMs = opts.chunkDelayMs ?? CHUNK_DELAY_MS;
+  const retryBackoffMs = opts.retryBackoffMs ?? RETRY_BACKOFF_MS;
+  const shortBackoffMs = opts.shortBackoffMs ?? 2000;
+  const rateLimitDelayMs = opts.rateLimitDelayMs ?? RETRY_BACKOFF_MS;
   const bySlug = new Map();
   let calls = 0;
   const errors = [];
@@ -332,7 +342,7 @@ export async function fetchOpenMeteo(locations) {
   }
 
   for (let i = 0; i < locations.length; i += CHUNK) {
-    if (i > 0) await sleep(CHUNK_DELAY_MS);
+    if (i > 0) await sleep(chunkDelayMs);
     const chunk = locations.slice(i, i + CHUNK);
     try {
       await fetchForecastChunk(chunk);
@@ -341,16 +351,16 @@ export async function fetchOpenMeteo(locations) {
       // One immediate retry for transient network failures before recording the chunk as failed.
       try {
         console.warn(`openmeteo: chunk failed (${msg}); immediate retry`);
-        await sleep(msg.includes('429') ? RETRY_BACKOFF_MS : 2000);
+        await sleep(msg.includes('429') ? rateLimitDelayMs : shortBackoffMs);
         await fetchForecastChunk(chunk);
       } catch (retryErr) {
         const retryMsg = retryErr instanceof Error ? retryErr.message : String(retryErr);
         errors.push(retryMsg);
         if (retryMsg.includes('429') || msg.includes('429')) {
           console.warn('openmeteo: 429 — backing off 65s');
-          await sleep(RETRY_BACKOFF_MS);
+          await sleep(rateLimitDelayMs);
         } else {
-          await sleep(5000);
+          await sleep(shortBackoffMs > 0 ? 5000 : 0);
         }
       }
     }
@@ -359,9 +369,9 @@ export async function fetchOpenMeteo(locations) {
   const missing = locations.filter((l) => !bySlug.has(l.slug));
   if (missing.length > 0) {
     console.warn(`openmeteo: retrying ${missing.length} missing locations after backoff`);
-    await sleep(RETRY_BACKOFF_MS);
+    await sleep(retryBackoffMs);
     for (let i = 0; i < missing.length; i += RETRY_CHUNK) {
-      if (i > 0) await sleep(CHUNK_DELAY_MS);
+      if (i > 0) await sleep(chunkDelayMs);
       const chunk = missing.slice(i, i + RETRY_CHUNK);
       try {
         calls += 1;

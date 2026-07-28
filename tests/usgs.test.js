@@ -1,10 +1,19 @@
-import { describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   assignNearestGauges,
   celsiusToFahrenheit,
+  fetchUsgs,
   parseNwisIv,
 } from '../scripts/fetch/adapters/usgs.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const usgsFixture = JSON.parse(
+  readFileSync(path.join(__dirname, 'fixtures/usgs-iv-sample.json'), 'utf8'),
+);
 
 describe('usgs helpers', () => {
   it('converts celsius to fahrenheit', () => {
@@ -122,5 +131,70 @@ describe('usgs helpers', () => {
       gauges,
     );
     assert.equal(bySlug.size, 0);
+  });
+});
+
+describe('fetchUsgs with mocked fetch', () => {
+  /** @type {typeof globalThis.fetch | undefined} */
+  let originalFetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+  afterEach(() => {
+    if (originalFetch) globalThis.fetch = originalFetch;
+  });
+
+  it('assigns nearest gauge from the USGS IV fixture', async () => {
+    globalThis.fetch = async () =>
+      /** @type {Response} */ ({
+        ok: true,
+        status: 200,
+        text: async () => '',
+        json: async () => usgsFixture,
+      });
+
+    const result = await fetchUsgs([
+      {
+        slug: 'fort-collins',
+        name: 'Fort Collins',
+        lat: 40.665,
+        lon: -105.223,
+        region: 'front-range',
+        county: 'Larimer',
+        wfo: 'BOU',
+        elevation_ft: 5000,
+      },
+    ]);
+    assert.equal(result.status, 'ok');
+    assert.equal(result.calls, 1);
+    assert.equal(result.bySlug.get('fort-collins')?.station_id, '06752000');
+  });
+
+  it('returns error when fetch fails', async () => {
+    globalThis.fetch = async () =>
+      /** @type {Response} */ ({
+        ok: false,
+        status: 500,
+        text: async () => 'err',
+        json: async () => {
+          throw new Error('no json');
+        },
+      });
+
+    const result = await fetchUsgs([
+      {
+        slug: 'denver',
+        name: 'Denver',
+        lat: 39.74,
+        lon: -104.99,
+        region: 'front-range',
+        county: 'Denver',
+        wfo: 'BOU',
+        elevation_ft: 5280,
+      },
+    ]);
+    assert.equal(result.status, 'error');
+    assert.ok(result.error);
   });
 });

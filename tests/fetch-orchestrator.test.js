@@ -2,7 +2,26 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
-import { locationPayloadPath, sanitizeWebcamLinks } from '../scripts/fetch/index.js';
+import {
+  criticalSourcesOk,
+  locationPayloadPath,
+  sanitizeWebcamLinks,
+} from '../scripts/fetch/index.js';
+
+describe('criticalSourcesOk', () => {
+  it('requires Open-Meteo ok or partial', () => {
+    assert.equal(criticalSourcesOk({ status: 'ok' }), true);
+    assert.equal(criticalSourcesOk({ status: 'partial' }), true);
+    assert.equal(criticalSourcesOk({ status: 'error' }), false);
+    assert.equal(criticalSourcesOk({ status: 'skipped' }), false);
+    assert.equal(criticalSourcesOk({}), false);
+  });
+
+  it('does not treat stale carry-forward alone as success', () => {
+    // staleCount > 0 previously kept the job green even when Open-Meteo failed.
+    assert.equal(criticalSourcesOk({ status: 'error' }), false);
+  });
+});
 
 describe('locationPayloadPath', () => {
   it('resolves a valid slug under public/data/locations', () => {

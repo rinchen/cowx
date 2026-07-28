@@ -5,7 +5,7 @@
  */
 
 import { fetchWithTimeout, sanitizeErrorMessage } from '../../lib/http.js';
-import { haversineKm } from '../../lib/geo.js';
+import { rankWithinKm } from '../../lib/geo.js';
 import { CO_BBOX } from '../../lib/colorado.js';
 import { toFiniteNumber } from '../../lib/parse.js';
 
@@ -101,14 +101,7 @@ export function parseFirmsCsv(csv) {
  * @param {number} [limit]
  */
 export function nearestHotspots(target, hotspots, maxKm = MAX_DISTANCE_KM, limit = MAX_HOTSPOTS) {
-  return hotspots
-    .map((h) => ({
-      ...h,
-      distance_km: Math.round(haversineKm(target, h) * 10) / 10,
-    }))
-    .filter((h) => h.distance_km <= maxKm)
-    .sort((a, b) => a.distance_km - b.distance_km)
-    .slice(0, limit);
+  return rankWithinKm(target, hotspots, { maxKm, limit });
 }
 
 /**

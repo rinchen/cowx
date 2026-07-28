@@ -5,7 +5,7 @@
  */
 
 import { fetchJson } from '../../lib/http.js';
-import { haversineKm } from '../../lib/geo.js';
+import { rankWithinKm } from '../../lib/geo.js';
 import { toFiniteNumber } from '../../lib/parse.js';
 
 const MAX_DISTANCE_KM = 80;
@@ -88,14 +88,7 @@ export function nearestIncidents(
   maxKm = MAX_DISTANCE_KM,
   limit = MAX_INCIDENTS,
 ) {
-  return incidents
-    .map((inc) => ({
-      ...inc,
-      distance_km: Math.round(haversineKm(target, inc) * 10) / 10,
-    }))
-    .filter((inc) => inc.distance_km <= maxKm)
-    .sort((a, b) => a.distance_km - b.distance_km)
-    .slice(0, limit);
+  return rankWithinKm(target, incidents, { maxKm, limit });
 }
 
 /**

@@ -177,7 +177,7 @@ export async function fetchCwop(locations, opts = {}) {
         pwsBySlug.set(loc.slug, null);
       }
       return {
-        status: 'skipped',
+        status: 'error',
         bySlug,
         pwsBySlug,
         geojson: { type: 'FeatureCollection', features: [] },
