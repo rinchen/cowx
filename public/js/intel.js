@@ -25,8 +25,10 @@ import {
   buildOutlookHighlights,
   buildPeriodSummaries,
   formatCompactHourLabel,
+  formatNearTermChanceLabel,
   formatTempTransitionLabel,
   currentHourIndex,
+  peakNextHours,
   pickNowSky,
   resolveCatalogNow,
   sliceCompactHours,
@@ -233,10 +235,11 @@ export function renderHero(root, data, options = {}) {
       : null;
   const todayNormal = todayIso ? normalForDate(climatology, todayIso) : null;
   const vsTypicalToday = formatTodayVsTypical(todayHi, todayLo, todayNormal);
-  const precipChance =
+  const precipNearTerm =
     hourly && Array.isArray(hourly.precipitation_probability)
-      ? /** @type {number[]} */ (hourly.precipitation_probability)[hi]
+      ? peakNextHours(times, /** @type {(number | null)[]} */ (hourly.precipitation_probability))
       : null;
+  const precipChanceLabel = formatNearTermChanceLabel(precipNearTerm);
   const hourDew =
     current?.dewpoint_f != null
       ? Number(current.dewpoint_f)
@@ -300,12 +303,19 @@ export function renderHero(root, data, options = {}) {
         : hourly && Array.isArray(hourly.uv_index)
           ? /** @type {number[]} */ (hourly.uv_index)[hi]
           : null;
-  const tstorm =
-    current?.thunderstorm_probability != null
-      ? Number(current.thunderstorm_probability)
-      : hourly && Array.isArray(hourly.thunderstorm_probability)
-        ? /** @type {number[]} */ (hourly.thunderstorm_probability)[hi]
+  const tstormNearTerm =
+    hourly && Array.isArray(hourly.thunderstorm_probability)
+      ? peakNextHours(times, /** @type {(number | null)[]} */ (hourly.thunderstorm_probability))
+      : current?.thunderstorm_probability != null
+        ? {
+            peak: Number(current.thunderstorm_probability),
+            peakAt: null,
+            peakIndex: -1,
+            thisHour: Number(current.thunderstorm_probability),
+            thisHourIndex: -1,
+          }
         : null;
+  const tstormChanceLabel = formatNearTermChanceLabel(tstormNearTerm);
 
   const pressureMb =
     current?.pressure_mb != null
@@ -492,14 +502,11 @@ export function renderHero(root, data, options = {}) {
         ${metricRow('Vs typical', vsTypicalToday, 'climatology-heading')}
         ${metricRow(
           'Precip chance',
-          precipChance != null
-            ? metricValueWithIcon('umbrella', `${Math.round(Number(precipChance))}% this hour`)
-            : null,
+          precipChanceLabel ? metricValueWithIcon('umbrella', precipChanceLabel.text) : null,
           'hourly-heading',
           {
             html: true,
-            ariaValue:
-              precipChance != null ? `${Math.round(Number(precipChance))}% this hour` : undefined,
+            ariaValue: precipChanceLabel?.aria,
           },
         )}
         ${metricRow(
@@ -579,8 +586,9 @@ export function renderHero(root, data, options = {}) {
         )}
         ${metricRow(
           'Thunderstorm',
-          tstorm != null && Number.isFinite(tstorm) ? `${Math.round(tstorm)}%` : null,
+          tstormChanceLabel?.text ?? null,
           'hourly-heading',
+          tstormChanceLabel ? { ariaValue: tstormChanceLabel.aria } : {},
         )}
         ${metricRow('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
       </div>

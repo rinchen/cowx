@@ -136,6 +136,83 @@ export function tempTransitionCue(hourly, nowMs = Date.now()) {
   return { next_temp_f: nextTemp, next_time: times[hi + 1], delta_f: delta };
 }
 
+/** Default near-term window for At a Glance precip / thunderstorm chance. */
+export const NEAR_TERM_HOURS = 6;
+
+/**
+ * Max value over the next N hours from the in-progress hour (inclusive).
+ * Null slots are skipped; when the max ties, the earliest hour wins.
+ * @param {string[]} times
+ * @param {(number | null | undefined)[]} series
+ * @param {{ nowMs?: number, hours?: number }} [opts]
+ * @returns {{
+ *   peak: number | null,
+ *   peakAt: string | null,
+ *   peakIndex: number,
+ *   thisHour: number | null,
+ *   thisHourIndex: number,
+ * }}
+ */
+export function peakNextHours(times, series, opts = {}) {
+  const nowMs = opts.nowMs ?? Date.now();
+  const hours = Math.max(1, Math.floor(opts.hours ?? NEAR_TERM_HOURS));
+  if (!Array.isArray(times) || !times.length || !Array.isArray(series)) {
+    return { peak: null, peakAt: null, peakIndex: -1, thisHour: null, thisHourIndex: -1 };
+  }
+  const hi = currentHourIndex(times, nowMs);
+  const thisHour = numOrNull(series[hi]);
+  let peak = null;
+  let peakIndex = -1;
+  const end = Math.min(times.length, hi + hours);
+  for (let i = hi; i < end; i += 1) {
+    const v = numOrNull(series[i]);
+    if (v == null) continue;
+    if (peak == null || v > peak) {
+      peak = v;
+      peakIndex = i;
+    }
+  }
+  return {
+    peak,
+    peakAt: peakIndex >= 0 ? times[peakIndex] : null,
+    peakIndex,
+    thisHour,
+    thisHourIndex: hi,
+  };
+}
+
+/**
+ * Hero label for precip / thunderstorm chance: peak over the near-term window,
+ * with “this hour” only when it differs from the peak.
+ * @param {{
+ *   peak: number | null,
+ *   peakAt: string | null,
+ *   peakIndex: number,
+ *   thisHour: number | null,
+ *   thisHourIndex: number,
+ * } | null | undefined} info
+ * @param {{ hours?: number }} [opts]
+ * @returns {{ text: string, aria: string } | null}
+ */
+export function formatNearTermChanceLabel(info, opts = {}) {
+  if (!info || info.peak == null) return null;
+  const hours = Math.max(1, Math.floor(opts.hours ?? NEAR_TERM_HOURS));
+  const peakPct = Math.round(info.peak);
+  const thisPct = info.thisHour != null ? Math.round(info.thisHour) : null;
+  const peakIsThisHour = info.peakIndex === info.thisHourIndex || thisPct === peakPct;
+
+  if (peakIsThisHour) {
+    const text = `${peakPct}% this hour`;
+    return { text, aria: text };
+  }
+
+  const when = info.peakAt ? formatCompactHourLabel(info.peakAt) : '';
+  const primary = when ? `${peakPct}% (peaks ${when})` : `${peakPct}% next ${hours}h`;
+  const text =
+    thisPct != null && thisPct !== peakPct ? `${primary} · ${thisPct}% this hour` : primary;
+  return { text, aria: text };
+}
+
 /**
  * Hero display text for a temp-transition cue: compact visual label plus the
  * spoken aria phrase. Pure so the live clock can re-derive it every minute.
