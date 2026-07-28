@@ -5,8 +5,10 @@ import {
   buildOutlookHighlights,
   buildPeriodSummaries,
   currentHourIndex,
+  formatNearTermChanceLabel,
   formatTempTransitionLabel,
   nearestHourIndex,
+  peakNextHours,
   pickNowCurrent,
   pickNowSky,
   resolveCatalogNow,
@@ -540,5 +542,147 @@ describe('source status key', () => {
     assert.match(html, /source-chip--skipped/);
     assert.match(html, /OK/);
     assert.match(html, /Partial/);
+  });
+});
+
+describe('peakNextHours', () => {
+  const times = [
+    '2026-07-28T12:00',
+    '2026-07-28T13:00',
+    '2026-07-28T14:00',
+    '2026-07-28T15:00',
+    '2026-07-28T16:00',
+    '2026-07-28T17:00',
+    '2026-07-28T18:00',
+    '2026-07-28T19:00',
+  ];
+  // 13:30 MDT = 19:30 UTC in July (MDT = UTC-6)
+  const nowMs = Date.parse('2026-07-28T19:30:00Z');
+
+  it('picks a later peak over a low current hour within the window', () => {
+    const series = [5, 11, 20, 55, 40, 15, 5, 0];
+    const hi = currentHourIndex(times, nowMs);
+    assert.equal(hi, 1); // 13:00 local
+    const got = peakNextHours(times, series, { nowMs, hours: 6 });
+    assert.equal(got.thisHour, 11);
+    assert.equal(got.thisHourIndex, 1);
+    assert.equal(got.peak, 55);
+    assert.equal(got.peakIndex, 3);
+    assert.equal(got.peakAt, '2026-07-28T15:00');
+  });
+
+  it('uses this hour when it is the max in the window', () => {
+    const series = [5, 70, 40, 20, 10, 5, 0, 0];
+    const got = peakNextHours(times, series, { nowMs, hours: 6 });
+    assert.equal(got.peak, 70);
+    assert.equal(got.peakIndex, got.thisHourIndex);
+    assert.equal(got.thisHour, 70);
+  });
+
+  it('skips null slots and returns nulls for an all-null series', () => {
+    const mixed = [null, null, 30, null, 45, null, 10, null];
+    const got = peakNextHours(times, mixed, { nowMs, hours: 6 });
+    assert.equal(got.thisHour, null);
+    assert.equal(got.peak, 45);
+    assert.equal(got.peakIndex, 4);
+
+    const empty = peakNextHours(times, [null, null, null, null, null, null, null, null], {
+      nowMs,
+      hours: 6,
+    });
+    assert.equal(empty.peak, null);
+    assert.equal(empty.peakAt, null);
+    assert.equal(empty.thisHour, null);
+  });
+
+  it('clips the window at the end of the series', () => {
+    const shortTimes = ['2026-07-28T17:00', '2026-07-28T18:00'];
+    const shortSeries = [12, 40];
+    const lateNow = Date.parse('2026-07-28T23:10:00Z'); // 17:10 MDT
+    const got = peakNextHours(shortTimes, shortSeries, { nowMs: lateNow, hours: 6 });
+    assert.equal(got.thisHourIndex, 0);
+    assert.equal(got.peak, 40);
+    assert.equal(got.peakIndex, 1);
+  });
+
+  it('returns empty result for missing inputs', () => {
+    assert.deepEqual(peakNextHours([], [10], { nowMs }), {
+      peak: null,
+      peakAt: null,
+      peakIndex: -1,
+      thisHour: null,
+      thisHourIndex: -1,
+    });
+  });
+});
+
+describe('formatNearTermChanceLabel', () => {
+  it('shows this hour only when peak is now', () => {
+    const label = formatNearTermChanceLabel({
+      peak: 11,
+      peakAt: '2026-07-28T13:00',
+      peakIndex: 1,
+      thisHour: 11,
+      thisHourIndex: 1,
+    });
+    assert.deepEqual(label, { text: '11% this hour', aria: '11% this hour' });
+  });
+
+  it('shows peaks time and this-hour secondary when they differ', () => {
+    const label = formatNearTermChanceLabel({
+      peak: 55.4,
+      peakAt: '2026-07-28T15:00',
+      peakIndex: 3,
+      thisHour: 11,
+      thisHourIndex: 1,
+    });
+    assert.ok(label);
+    assert.match(label.text, /^55% \(peaks /);
+    assert.match(label.text, / · 11% this hour$/);
+    assert.equal(label.aria, label.text);
+  });
+
+  it('omits this-hour secondary when thisHour is null', () => {
+    const label = formatNearTermChanceLabel({
+      peak: 40,
+      peakAt: '2026-07-28T16:00',
+      peakIndex: 4,
+      thisHour: null,
+      thisHourIndex: 1,
+    });
+    assert.ok(label);
+    assert.match(label.text, /^40% \(peaks /);
+    assert.doesNotMatch(label.text, /this hour/);
+  });
+
+  it('falls back to next Nh when peakAt is missing', () => {
+    const label = formatNearTermChanceLabel(
+      {
+        peak: 40,
+        peakAt: null,
+        peakIndex: 4,
+        thisHour: 10,
+        thisHourIndex: 1,
+      },
+      { hours: 6 },
+    );
+    assert.deepEqual(label, {
+      text: '40% next 6h · 10% this hour',
+      aria: '40% next 6h · 10% this hour',
+    });
+  });
+
+  it('returns null when peak is missing', () => {
+    assert.equal(formatNearTermChanceLabel(null), null);
+    assert.equal(
+      formatNearTermChanceLabel({
+        peak: null,
+        peakAt: null,
+        peakIndex: -1,
+        thisHour: null,
+        thisHourIndex: 0,
+      }),
+      null,
+    );
   });
 });
