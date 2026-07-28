@@ -50,7 +50,14 @@ function severityColor(severity) {
  * @param {IndexEntry[]} locations
  * @param {string | null} activeSlug
  * @param {(slug: string) => void} onSelect
- * @param {{ loadAlerts?: boolean, alertsUrl?: string, onAlertsError?: (msg: string) => void, fixedView?: boolean, showMarkers?: boolean }} [options]
+ * @param {{
+ *   loadAlerts?: boolean,
+ *   alertsUrl?: string,
+ *   alertsGeoJson?: { type?: string, features?: object[] } | null,
+ *   onAlertsError?: (msg: string) => void,
+ *   fixedView?: boolean,
+ *   showMarkers?: boolean,
+ * }} [options]
  */
 export function initStateMap(container, locations, activeSlug, onSelect, options = {}) {
   if (typeof L === 'undefined') {
@@ -143,13 +150,18 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
   }, 100);
 
   if (options.loadAlerts) {
-    void loadAlertPolygons(
-      options.alertsUrl ?? 'data/alerts.geojson',
-      options.onAlertsError,
-      generation,
-    ).catch((err) => {
-      console.error('loadAlertPolygons unhandled', err);
-    });
+    const live = options.alertsGeoJson;
+    if (live && Array.isArray(live.features)) {
+      setAlertPolygons(live, options.onAlertsError, generation);
+    } else {
+      void loadAlertPolygons(
+        options.alertsUrl ?? 'data/alerts.geojson',
+        options.onAlertsError,
+        generation,
+      ).catch((err) => {
+        console.error('loadAlertPolygons unhandled', err);
+      });
+    }
   }
 }
 
@@ -192,13 +204,14 @@ export function resetMapView(lat, lon, zoom = LOCALITY_ZOOM) {
 }
 
 /**
- * Draw NWS alert polygons. Failures leave the basemap usable.
- * @param {string} url
+ * Draw NWS alert polygons from an in-memory FeatureCollection (live poller).
+ * @param {{ type?: string, features?: object[] } | null | undefined} geojson
  * @param {(msg: string) => void} [onError]
  * @param {number} [expectedGeneration]
  */
-export async function loadAlertPolygons(url, onError, expectedGeneration = mapGeneration) {
+export function setAlertPolygons(geojson, onError, expectedGeneration = mapGeneration) {
   if (!stateMap || typeof L === 'undefined') return;
+  if (expectedGeneration !== mapGeneration) return;
 
   if (alertsLayer) {
     stateMap.removeLayer(alertsLayer);
@@ -206,12 +219,7 @@ export async function loadAlertPolygons(url, onError, expectedGeneration = mapGe
   }
 
   try {
-    const response = await fetchWithTimeout(url, { timeoutMs: 12_000 });
-    if (!response.ok) throw new Error(`Alerts geojson HTTP ${response.status}`);
-    const geojson = await response.json();
-    if (expectedGeneration !== mapGeneration || !stateMap) return;
     if (!geojson?.features?.length) return;
-
     alertsLayer = L.geoJSON(geojson, {
       style(feature) {
         const sev = feature?.properties?.severity;
@@ -239,6 +247,32 @@ export async function loadAlertPolygons(url, onError, expectedGeneration = mapGe
     });
     if (expectedGeneration !== mapGeneration || !stateMap) return;
     alertsLayer.addTo(stateMap);
+  } catch (err) {
+    if (expectedGeneration !== mapGeneration) return;
+    const msg = err instanceof Error ? err.message : String(err);
+    try {
+      onError?.(msg);
+    } catch (callbackErr) {
+      console.error('onAlertsError callback failed', callbackErr);
+    }
+  }
+}
+
+/**
+ * Draw NWS alert polygons from a URL. Failures leave the basemap usable.
+ * @param {string} url
+ * @param {(msg: string) => void} [onError]
+ * @param {number} [expectedGeneration]
+ */
+export async function loadAlertPolygons(url, onError, expectedGeneration = mapGeneration) {
+  if (!stateMap || typeof L === 'undefined') return;
+
+  try {
+    const response = await fetchWithTimeout(url, { timeoutMs: 12_000 });
+    if (!response.ok) throw new Error(`Alerts geojson HTTP ${response.status}`);
+    const geojson = await response.json();
+    if (expectedGeneration !== mapGeneration || !stateMap) return;
+    setAlertPolygons(geojson, onError, expectedGeneration);
   } catch (err) {
     if (expectedGeneration !== mapGeneration) return;
     const msg = err instanceof Error ? err.message : String(err);

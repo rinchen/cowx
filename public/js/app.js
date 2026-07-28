@@ -20,6 +20,7 @@ import { getFavoriteLocations, searchLocations } from './search.js';
 import { renderWorkspace } from './workspace.js';
 import { destroyMap } from './map.js';
 import { _clearHyperlocalCache } from './hyperlocal.js';
+import { initAlertPolling } from './nws-alerts.js';
 
 /** @typedef {{ slug: string; name: string; lat: number; lon: number; county?: string; aqi?: number | null }} IndexEntry */
 /** @typedef {{ city: string; county: string; slug: string }} ZipEntry */
@@ -928,6 +929,7 @@ async function init() {
   });
   await handleRoute();
   startDataRefreshWatcher();
+  initAlertPolling({ intervalMs: 180_000 });
 
   window.addEventListener('error', (e) => {
     // Resource load failures (img/script tags) fire on the element, not window.

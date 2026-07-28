@@ -183,9 +183,14 @@
         pin.
       </p>
       <p>
-        NWS alert polygons draw on the locality map. Links to NOAA radar, CSU CIRA satellite, and
-        other providers remain under External tools. Citizen, pilot, farmer, firefighter, and ham
-        radio operator needs shape <em>what we fetch</em>, not which panels you can open.
+        NWS alert polygons draw on the locality map. While a locality page is open, the browser also
+        polls <code>api.weather.gov</code> for Colorado active alerts about every three minutes
+        (paused when the tab is hidden) so warnings appear without waiting for the next scheduled
+        fetch. Matching uses your saved pin when one is set, otherwise the catalog location;
+        build-time <code>alerts.geojson</code> remains the fallback. Links to NOAA radar, CSU CIRA
+        satellite, and other providers remain under External tools. Citizen, pilot, farmer,
+        firefighter, and ham radio operator needs shape <em>what we fetch</em>, not which panels you
+        can open.
       </p>
 
       <h2>Failure notifications</h2>
