@@ -1,114 +1,115 @@
 {
-  "generatedAt": "2026-08-02T15:44:43.293Z",
+  "generatedAt": "2026-08-02T16:45:51.719Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:35:53.769Z"
+      "fetchedAt": "2026-08-02T16:37:25.839Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-08-02T15:40:48.546Z",
+      "fetchedAt": "2026-08-02T16:42:20.604Z",
       "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.1528,40.4856,40.5153,40.0375,40.0875,40.2431,39.6433,39.6314,39.6042,39.6447,39.6556,39.6469,39.65,39.5867,39.5128,39.5022,39.5744,39.6297,39.6297,39.6042,39.4817,39.4306,39.8667,39.1911,39.213,39.3686,39.4022,39.5505,39.5728,39.5486,39.5347,39.4519,39.0639,39.1589,39.1103,39.0919,39.08,39.24,39.3339,39.1958&longitude=-106.9086,-107.2597,-107.5464,-107.9131,-108.8047,-108.9389,-106.3781,-"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-02T15:40:48.698Z"
+      "fetchedAt": "2026-08-02T16:42:20.746Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:40:54.392Z"
+      "fetchedAt": "2026-08-02T16:42:27.180Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:40:54.969Z"
+      "fetchedAt": "2026-08-02T16:42:28.658Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:40:56.761Z"
+      "fetchedAt": "2026-08-02T16:42:29.162Z"
     },
     {
       "id": "purpleair",
       "status": "error",
-      "fetchedAt": "2026-08-02T15:40:57.024Z",
-      "error": "HTTP 402 for https://api.purpleair.com/v1/sensors?fields=name%2Clatitude%2Clongitude%2Cpm2.5_10minute%2Chumidity%2Ctemperature%2Clocation_type&nwlat=41.1&selat=36.9&nwlng=-109.2&selng=-102&max_age=3600: {\n  \"api_version\" : \"V1.2.2-1.1.45\",\n  \"time_stamp\" : 1785685256,\n  \"error\" : \"PaymentRequiredError\",\n  \"description\" : \"Payment is required to make this api call. Current balance is -3309 points.\"\n}"
+      "fetchedAt": "2026-08-02T16:42:29.396Z",
+      "error": "HTTP 402 for https://api.purpleair.com/v1/sensors?fields=name%2Clatitude%2Clongitude%2Cpm2.5_10minute%2Chumidity%2Ctemperature%2Clocation_type&nwlat=41.1&selat=36.9&nwlng=-109.2&selng=-102&max_age=3600: {\n  \"api_version\" : \"V1.2.2-1.1.45\",\n  \"time_stamp\" : 1785688949,\n  \"error\" : \"PaymentRequiredError\",\n  \"description\" : \"Payment is required to make this api call. Current balance is -3309 points.\"\n}"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:43:11.253Z"
+      "fetchedAt": "2026-08-02T16:44:28.442Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:43:12.701Z"
+      "fetchedAt": "2026-08-02T16:44:29.838Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:43:28.241Z"
+      "fetchedAt": "2026-08-02T16:44:45.201Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:43:30.175Z"
+      "fetchedAt": "2026-08-02T16:44:46.865Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:43:56.248Z"
+      "fetchedAt": "2026-08-02T16:45:12.841Z"
     },
     {
       "id": "cwop",
       "status": "error",
-      "fetchedAt": "2026-08-02T15:44:28.641Z",
+      "fetchedAt": "2026-08-02T16:45:46.190Z",
       "error": "HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.7&lon=-104.9&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-; HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.5&lon=-105.1&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if I"
     },
     {
       "id": "hms",
-      "status": "partial",
-      "fetchedAt": "2026-08-02T15:44:29.116Z",
-      "error": "no HMS polygons near Colorado"
+      "status": "ok",
+      "fetchedAt": "2026-08-02T16:45:46.730Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:44:31.348Z"
+      "fetchedAt": "2026-08-02T16:45:47.573Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:44:31.573Z"
+      "fetchedAt": "2026-08-02T16:45:47.787Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:44:39.488Z"
+      "fetchedAt": "2026-08-02T16:45:47.988Z"
     },
     {
       "id": "space_weather",
-      "status": "ok",
-      "fetchedAt": "2026-08-02T15:44:39.836Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-02T16:45:48.469Z",
+      "error": "xray: Expected ',' or '}' after property value in JSON at position 163105"
     },
     {
       "id": "firms",
-      "status": "ok",
-      "fetchedAt": "2026-08-02T15:44:40.232Z"
+      "status": "error",
+      "fetchedAt": "2026-08-02T16:45:48.763Z",
+      "error": "fetch failed (ETIMEDOUT) for https://firms.modaps.eosdis.nasa.gov/api/area/csv/[redacted]/VIIRS_SNPP_NRT/-109.2,36.9,-102,41.1/1"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-02T15:44:43.293Z"
+      "fetchedAt": "2026-08-02T16:45:51.719Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 380,
+  "apiCalls": 376,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
