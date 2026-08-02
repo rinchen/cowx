@@ -1,115 +1,114 @@
 {
-  "generatedAt": "2026-08-02T09:43:45.841Z",
+  "generatedAt": "2026-08-02T11:21:25.177Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "partial",
-      "fetchedAt": "2026-08-02T09:35:48.494Z",
-      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://api.open-meteo.com/v1/forecast?latitude=39.7969,39.8025,39.7061,39.6961,39.7614,39.7425,39.6336,39.5219,39.6536,39.4369,39.0917,39.1222,38.6822,38.7472,38.8339,38.8578,38.9939,38.945,38.7467,38.71&longitude=-105.4939,-105.5142,-105.6975,-105.7258,-105.6844,-105.5136,-105.3178,-105.3053,-105.1911,-104.9636,-104.8728,-104.9172,-104.7006,-104.7144,-104.8214,-104.9172,-105.0569,-105.1572,-105.1783,-105.14&current=temperature_2m,relative_humidity_2m,"
+      "status": "ok",
+      "fetchedAt": "2026-08-02T11:13:06.610Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-08-02T09:39:56.170Z",
+      "fetchedAt": "2026-08-02T11:18:01.414Z",
       "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.1528,40.4856,40.5153,40.0375,40.0875,40.2431,39.6433,39.6314,39.6042,39.6447,39.6556,39.6469,39.65,39.5867,39.5128,39.5022,39.5744,39.6297,39.6297,39.6042,39.4817,39.4306,39.8667,39.1911,39.213,39.3686,39.4022,39.5505,39.5728,39.5486,39.5347,39.4519,39.0639,39.1589,39.1103,39.0919,39.08,39.24,39.3339,39.1958&longitude=-106.9086,-107.2597,-107.5464,-107.9131,-108.8047,-108.9389,-106.3781,-"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-02T09:39:56.316Z"
+      "fetchedAt": "2026-08-02T11:18:01.564Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:40:02.373Z"
+      "fetchedAt": "2026-08-02T11:18:07.363Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:40:10.053Z"
+      "fetchedAt": "2026-08-02T11:18:10.905Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:40:10.617Z"
+      "fetchedAt": "2026-08-02T11:18:11.382Z"
     },
     {
       "id": "purpleair",
       "status": "error",
-      "fetchedAt": "2026-08-02T09:40:10.866Z",
-      "error": "HTTP 402 for https://api.purpleair.com/v1/sensors?fields=name%2Clatitude%2Clongitude%2Cpm2.5_10minute%2Chumidity%2Ctemperature%2Clocation_type&nwlat=41.1&selat=36.9&nwlng=-109.2&selng=-102&max_age=3600: {\n  \"api_version\" : \"V1.2.2-1.1.45\",\n  \"time_stamp\" : 1785663610,\n  \"error\" : \"PaymentRequiredError\",\n  \"description\" : \"Payment is required to make this api call. Current balance is -3309 points.\"\n}"
+      "fetchedAt": "2026-08-02T11:18:11.644Z",
+      "error": "HTTP 402 for https://api.purpleair.com/v1/sensors?fields=name%2Clatitude%2Clongitude%2Cpm2.5_10minute%2Chumidity%2Ctemperature%2Clocation_type&nwlat=41.1&selat=36.9&nwlng=-109.2&selng=-102&max_age=3600: {\n  \"api_version\" : \"V1.2.2-1.1.45\",\n  \"time_stamp\" : 1785669491,\n  \"error\" : \"PaymentRequiredError\",\n  \"description\" : \"Payment is required to make this api call. Current balance is -3309 points.\"\n}"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:42:13.654Z"
+      "fetchedAt": "2026-08-02T11:19:56.265Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:42:14.248Z"
+      "fetchedAt": "2026-08-02T11:19:57.650Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:42:30.683Z"
+      "fetchedAt": "2026-08-02T11:20:11.793Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:42:32.263Z"
+      "fetchedAt": "2026-08-02T11:20:12.874Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:42:58.578Z"
+      "fetchedAt": "2026-08-02T11:20:39.988Z"
     },
     {
       "id": "cwop",
       "status": "error",
-      "fetchedAt": "2026-08-02T09:43:31.829Z",
+      "fetchedAt": "2026-08-02T11:21:12.683Z",
       "error": "HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.7&lon=-104.9&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-; HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.5&lon=-105.1&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if I"
     },
     {
       "id": "hms",
-      "status": "ok",
-      "fetchedAt": "2026-08-02T09:43:32.649Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-02T11:21:12.831Z",
+      "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:43:33.685Z"
+      "fetchedAt": "2026-08-02T11:21:13.181Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:43:33.864Z"
+      "fetchedAt": "2026-08-02T11:21:13.616Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "partial",
-      "fetchedAt": "2026-08-02T09:43:42.167Z",
-      "error": "HTTP 429 for COEM fire bans page"
+      "status": "ok",
+      "fetchedAt": "2026-08-02T11:21:21.504Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:43:42.292Z"
+      "fetchedAt": "2026-08-02T11:21:21.660Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:43:42.796Z"
+      "fetchedAt": "2026-08-02T11:21:22.131Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-02T09:43:45.841Z"
+      "fetchedAt": "2026-08-02T11:21:25.177Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 373,
-  "forecastStaleCount": 55,
-  "openmeteoCoverage": 283
+  "apiCalls": 379,
+  "forecastStaleCount": 0,
+  "openmeteoCoverage": 338
 }
