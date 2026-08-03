@@ -122,8 +122,8 @@ describe('fetchOpenMeteoAq with mocked fetch', () => {
     assert.equal(result.status, 'partial');
     assert.equal(result.bySlug.size, 40);
     assert.ok(result.error);
-    // first pass: ok + fail; retry pass: fail again
-    assert.equal(result.calls, 3);
+    // first pass: ok + (fail + immediate retry); missing pass: (fail + immediate retry)
+    assert.equal(result.calls, 5);
   });
 
   it('retries missing slugs and recovers', async () => {
@@ -157,7 +157,40 @@ describe('fetchOpenMeteoAq with mocked fetch', () => {
     assert.equal(result.status, 'ok');
     assert.equal(result.bySlug.size, 1);
     assert.equal(result.bySlug.get('loc-0')?.us_aqi, 33);
+    // immediate chunk retry recovers — no missing pass
     assert.equal(result.calls, 2);
+  });
+
+  it('immediate chunk retry recovers without waiting for missing pass', async () => {
+    let call = 0;
+    globalThis.fetch = async () => {
+      call += 1;
+      if (call === 1) {
+        const err = new Error('fetch failed');
+        err.cause = { code: 'UND_ERR_CONNECT_TIMEOUT' };
+        throw err;
+      }
+      return /** @type {Response} */ ({
+        ok: true,
+        status: 200,
+        text: async () => '',
+        json: async () => ({
+          current: { pm2_5: 7, us_aqi: 29, time: '2026-07-21T13:00' },
+        }),
+      });
+    };
+
+    const result = await fetchOpenMeteoAq(locs(1), {
+      delayMs: 0,
+      retryBackoffMs: 0,
+      shortBackoffMs: 0,
+      rateLimitDelayMs: 0,
+    });
+    assert.equal(result.status, 'ok');
+    assert.equal(result.bySlug.get('loc-0')?.us_aqi, 29);
+    // connect timeout retries at HTTP layer (retries:2) then succeeds — at least 2 attempts
+    assert.ok(result.calls >= 1);
+    assert.ok(call >= 2);
   });
 
   it('returns error when all chunks fail', async () => {

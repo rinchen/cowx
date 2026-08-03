@@ -54,7 +54,7 @@ export async function fetchAirNow(locations, env = process.env) {
       const url =
         `https://www.airnowapi.org/aq/observation/latLong/current/?format=application/json` +
         `&latitude=${point.lat}&longitude=${point.lon}&distance=50&API_KEY=${encodeURIComponent(key)}`;
-      const data = await fetchJson(url, { timeoutMs: 20_000 });
+      const data = await fetchJson(url, { timeoutMs: 20_000, retries: 1 });
       if (!Array.isArray(data) || data.length === 0) continue;
 
       const byParam = {};

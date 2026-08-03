@@ -151,7 +151,7 @@ export async function fetchFirms(locations, env = process.env) {
     `/VIIRS_SNPP_NRT/${AREA}/1`;
 
   try {
-    const res = await fetchWithTimeout(url, { timeoutMs: 60_000 });
+    const res = await fetchWithTimeout(url, { timeoutMs: 60_000, retries: 2 });
     calls += 1;
     if (!res.ok) {
       throw new Error(`HTTP ${res.status} for ${redactFirmsUrl(url, key)}`);

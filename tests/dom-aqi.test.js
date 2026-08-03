@@ -26,27 +26,27 @@ describe('dom helpers', () => {
 });
 
 describe('aqi helpers', () => {
-  it('pickAqi uses max of AirNow and PurpleAir when both exist', () => {
+  it('pickAqi uses max of AirNow and AirGradient when both exist', () => {
     const picked = pickAqi({
       airnow: { aqi: 40 },
-      purpleair: { aqi_pm25: 90 },
+      airgradient: { aqi_pm25: 90 },
       openmeteo_aq: { us_aqi: 120 },
     });
     assert.equal(picked.aqi, 90);
-    assert.equal(picked.source, 'PurpleAir');
+    assert.equal(picked.source, 'AirGradient');
     assert.equal(picked.airnow, 40);
-    assert.equal(picked.purpleair, 90);
+    assert.equal(picked.airgradient, 90);
   });
 
-  it('pickAqi prefers AirNow when higher than PurpleAir', () => {
+  it('pickAqi prefers AirNow when higher than AirGradient', () => {
     const picked = pickAqi({
       airnow: { aqi: 93 },
-      purpleair: { aqi_pm25: 17 },
+      airgradient: { aqi_pm25: 17 },
     });
     assert.equal(picked.aqi, 93);
     assert.equal(picked.source, 'AirNow');
     assert.equal(picked.airnow, 93);
-    assert.equal(picked.purpleair, 17);
+    assert.equal(picked.airgradient, 17);
   });
 
   it('pickAqi falls back to Open-Meteo when others missing', () => {

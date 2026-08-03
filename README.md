@@ -74,13 +74,12 @@ Optional secrets improve inline sensor/AQI data and failure alerting. Configure 
 
 | Secret name          | Purpose                                                                                     |
 | -------------------- | ------------------------------------------------------------------------------------------- |
-| `PURPLEAIR_API_KEY`  | PurpleAir sensor readings at build time                                                     |
 | `AIRNOW_API_KEY`     | EPA AirNow AQI near locations                                                               |
 | `COTRIP_API_KEY`     | COtrip JSON feed (RWIS, incidents, planned events, road conditions)                         |
 | `FIRMS_MAP_KEY`      | NASA FIRMS VIIRS active-fire detections (free registration)                                 |
 | `NOTIFY_WEBHOOK_URL` | Webhook for Discord (or compatible) alerts on fetch/Pages failure or stale live data (≥ 2h) |
 
-The site works without these keys; affected sources (including NASA FIRMS hotspots when `FIRMS_MAP_KEY` is unset) degrade to skipped status in `meta.json` and offsite links in the UI. CDOT cameras, ArcGIS road alerts (fallback), CWOP PWS, HMS smoke, SPC fire weather, NIFC nearby fires, CBRFC water-supply guidance, NOAA SWPC space weather, and burn-restriction links need no secrets. City webcam portals are catalog **links** (new tab), not embedded feeds. For local fetch testing, copy [`.env.example`](.env.example) to `.env` (gitignored); notify is Actions-only.
+The site works without these keys; affected sources (including NASA FIRMS hotspots when `FIRMS_MAP_KEY` is unset) degrade to skipped status in `meta.json` and offsite links in the UI. AirGradient community PM2.5 uses a free public feed (no key). CDOT cameras, ArcGIS road alerts (fallback), CWOP PWS, HMS smoke, SPC fire weather, NIFC nearby fires, CBRFC water-supply guidance, NOAA SWPC space weather, and burn-restriction links need no secrets. City webcam portals are catalog **links** (new tab), not embedded feeds. For local fetch testing, copy [`.env.example`](.env.example) to `.env` (gitignored); notify is Actions-only.
 
 ## Privacy
 

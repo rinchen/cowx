@@ -63,7 +63,6 @@ jobs:
       - name: Fetch weather data
         id: weather_fetch
         env:
-          PURPLEAIR_API_KEY: ${{ secrets.PURPLEAIR_API_KEY }}
           AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
           COTRIP_API_KEY: ${{ secrets.COTRIP_API_KEY }}
           FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}

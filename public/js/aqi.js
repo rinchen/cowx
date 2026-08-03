@@ -13,8 +13,8 @@ function finiteOrNull(v) {
 }
 
 /**
- * Health-conservative summary: max(AirNow, PurpleAir) when both exist;
- * else AirNow → PurpleAir → Open-Meteo.
+ * Health-conservative summary: max(AirNow, AirGradient) when both exist;
+ * else AirNow → AirGradient → Open-Meteo.
  * Also returns dual fields for dual-bar UI.
  * @param {Record<string, unknown>} data
  * @returns {{
@@ -22,54 +22,54 @@ function finiteOrNull(v) {
  *   pm25: number | null,
  *   source: string,
  *   airnow: number | null,
- *   purpleair: number | null,
+ *   airgradient: number | null,
  *   openmeteo: number | null,
  * }}
  */
 export function pickAqi(data) {
   const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
-  const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
+  const airgradient = /** @type {Record<string, unknown> | null} */ (data.airgradient ?? null);
   const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
 
   const anAqi = finiteOrNull(airnow?.aqi);
-  const paAqi = finiteOrNull(purpleair?.aqi_pm25);
+  const agAqi = finiteOrNull(airgradient?.aqi_pm25);
   const omAqi = finiteOrNull(omaq?.us_aqi);
-  const paPm25 = finiteOrNull(purpleair?.pm25);
+  const agPm25 = finiteOrNull(airgradient?.pm25);
   const omPm25 = finiteOrNull(omaq?.pm25);
 
-  if (anAqi != null && paAqi != null) {
-    const aqi = Math.max(anAqi, paAqi);
+  if (anAqi != null && agAqi != null) {
+    const aqi = Math.max(anAqi, agAqi);
     return {
       aqi,
-      pm25: paPm25,
+      pm25: agPm25,
       source:
-        aqi === anAqi && aqi === paAqi
-          ? 'AirNow / PurpleAir'
+        aqi === anAqi && aqi === agAqi
+          ? 'AirNow / AirGradient'
           : aqi === anAqi
             ? 'AirNow'
-            : 'PurpleAir',
+            : 'AirGradient',
       airnow: anAqi,
-      purpleair: paAqi,
+      airgradient: agAqi,
       openmeteo: omAqi,
     };
   }
   if (anAqi != null) {
     return {
       aqi: anAqi,
-      pm25: paPm25,
+      pm25: agPm25,
       source: 'AirNow',
       airnow: anAqi,
-      purpleair: paAqi,
+      airgradient: agAqi,
       openmeteo: omAqi,
     };
   }
-  if (paAqi != null) {
+  if (agAqi != null) {
     return {
-      aqi: paAqi,
-      pm25: paPm25,
-      source: 'PurpleAir',
+      aqi: agAqi,
+      pm25: agPm25,
+      source: 'AirGradient',
       airnow: anAqi,
-      purpleair: paAqi,
+      airgradient: agAqi,
       openmeteo: omAqi,
     };
   }
@@ -79,7 +79,7 @@ export function pickAqi(data) {
       pm25: omPm25,
       source: 'Open-Meteo',
       airnow: anAqi,
-      purpleair: paAqi,
+      airgradient: agAqi,
       openmeteo: omAqi,
     };
   }
@@ -88,7 +88,7 @@ export function pickAqi(data) {
     pm25: null,
     source: '',
     airnow: null,
-    purpleair: null,
+    airgradient: null,
     openmeteo: null,
   };
 }

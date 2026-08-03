@@ -25,7 +25,7 @@ import {
 import { alertsForLocation, fetchNws } from './adapters/nws.js';
 import { fetchCoagmet } from './adapters/coagmet.js';
 import { fetchAviation } from './adapters/aviation.js';
-import { fetchPurpleAir } from './adapters/purpleair.js';
+import { fetchAirGradient } from './adapters/airgradient.js';
 import { fetchAirNow } from './adapters/airnow.js';
 import { fetchUsgs } from './adapters/usgs.js';
 import { fetchSnotel } from './adapters/snotel.js';
@@ -160,7 +160,7 @@ export async function runFetch() {
   );
   const coagmet = await runAdapter('coagmet', () => fetchCoagmet(locations));
   const aviation = await runAdapter('aviation', () => fetchAviation(locations));
-  const purpleair = await runAdapter('purpleair', () => fetchPurpleAir(locations));
+  const airgradient = await runAdapter('airgradient', () => fetchAirGradient(locations));
   const airnow = await runAdapter('airnow', () => fetchAirNow(locations));
   const usgs = await runAdapter('usgs', () => fetchUsgs(locations));
   const snotel = await runAdapter('snotel', () => fetchSnotel(locations));
@@ -301,7 +301,7 @@ export async function runFetch() {
       const fwf = nws.fwfByWfo?.get(loc.wfo) ?? null;
       const ag = coagmet.bySlug.get(loc.slug) ?? null;
       const av = aviation.bySlug.get(loc.slug) ?? null;
-      const pa = purpleair.bySlug.get(loc.slug) ?? null;
+      const agSense = airgradient.bySlug.get(loc.slug) ?? null;
       const an = airnow.bySlug.get(loc.slug) ?? null;
       let omaq = openmeteoAq.bySlug.get(loc.slug) ?? null;
       let aqCarriedForward = false;
@@ -377,7 +377,7 @@ export async function runFetch() {
         fwf,
         coagmet: ag,
         aviation: av,
-        purpleair: pa,
+        airgradient: agSense,
         airnow: an,
         openmeteo_aq: omaq,
         usgs: gauge,
@@ -403,7 +403,7 @@ export async function runFetch() {
           pollen_zip: pollenHealth.pollen_zip,
           pollen_city: pollenHealth.pollen_city,
           nab_links: pollenHealth.nab_links,
-          purpleair_map: 'https://map.purpleair.com/',
+          airgradient: 'https://www.airgradient.com/',
           airnow: 'https://www.airnow.gov/',
           coagmet: ag?.url ?? 'https://coagmet.colostate.edu/',
           aviation: av?.url ?? 'https://aviationweather.gov/',
@@ -436,7 +436,7 @@ export async function runFetch() {
           uv_index: current?.uv_index ?? null,
           aqi: pickAqi({
             airnow: an,
-            purpleair: pa,
+            airgradient: agSense,
             openmeteo_aq: omaq,
           }).aqi,
           nws_alert: alerts.length > 0,

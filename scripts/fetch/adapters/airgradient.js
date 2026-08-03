@@ -1,7 +1,7 @@
 /**
- * PurpleAir CO bounding-box sensors → outdoor multi-sensor consensus per location.
- * Failure point: missing key, point exhaustion, HTTP errors.
- * Fallback: status skipped/error; UI uses offsite links.
+ * AirGradient public world sensors → multi-sensor PM2.5 consensus per location.
+ * Failure point: upstream timeout / empty CO coverage.
+ * Fallback: status error/partial; UI uses AirNow / Open-Meteo AQ.
  */
 
 import { fetchJson } from '../../lib/http.js';
@@ -9,6 +9,8 @@ import { nearestPoints, roundKm } from '../../lib/geo.js';
 import { CO_BBOX } from '../../lib/colorado.js';
 import { toFiniteNumber } from '../../lib/parse.js';
 
+const WORLD_URL = 'https://api.airgradient.com/public/api/v1/world/locations/measures/current';
+const SOURCE_URL = 'https://www.airgradient.com/';
 const PREFERRED_MAX_KM = 10;
 const FALLBACK_MAX_KM = 25;
 const MAX_SENSORS = 5;
@@ -28,7 +30,6 @@ export function median(values) {
 }
 
 /**
- * Quartile helpers on a sorted copy.
  * @param {number[]} values
  * @returns {{ q1: number, q3: number, iqr: number }}
  */
@@ -54,7 +55,6 @@ function trimPmOutliers(usable) {
   const absDevs = pms.map((v) => Math.abs(v - med));
   const mad = median(absDevs);
   if (!(mad > 0)) {
-    // Fall back to Tukey fences when MAD is 0 (many identical readings).
     const { q1, q3, iqr } = quartiles(pms);
     if (!(iqr > 0)) return usable;
     const lo = q1 - 1.5 * iqr;
@@ -68,7 +68,7 @@ function trimPmOutliers(usable) {
 }
 
 /**
- * @typedef {{ name: string, distance_km: number, pm25: number }} PurpleAirSensorSample
+ * @typedef {{ name: string, distance_km: number, pm25: number }} AirGradientSensorSample
  */
 
 /**
@@ -82,10 +82,10 @@ function trimPmOutliers(usable) {
  *   max_distance_km: number,
  *   name: string,
  *   url: string,
- *   sensors: PurpleAirSensorSample[],
+ *   sensors: AirGradientSensorSample[],
  * } | null}
  */
-export function purpleAirConsensus(sensorsNear) {
+export function airGradientConsensus(sensorsNear) {
   if (!Array.isArray(sensorsNear) || sensorsNear.length === 0) return null;
 
   /** @type {{ name: string, distanceKm: number, pm25: number }[]} */
@@ -94,7 +94,7 @@ export function purpleAirConsensus(sensorsNear) {
     const pm = toFiniteNumber(s.pm25);
     if (pm == null) continue;
     usable.push({
-      name: String(s.name ?? 'PurpleAir'),
+      name: String(s.name ?? 'AirGradient'),
       distanceKm: Number(s.distanceKm),
       pm25: pm,
     });
@@ -117,7 +117,7 @@ export function purpleAirConsensus(sensorsNear) {
       pm25: s.pm25,
     }));
 
-  const nearestName = sensors[0]?.name ?? 'PurpleAir';
+  const nearestName = sensors[0]?.name ?? 'AirGradient';
   const name =
     sensors.length === 1
       ? nearestName
@@ -132,59 +132,65 @@ export function purpleAirConsensus(sensorsNear) {
     distance_km,
     max_distance_km,
     name,
-    url: 'https://map.purpleair.com/',
+    url: SOURCE_URL,
     sensors,
   };
 }
 
 /**
- * @param {import('../../lib/types.js').Location[]} locations
- * @param {{ PURPLEAIR_API_KEY?: string }} env
+ * Keep online Colorado sensors with a finite PM2.5 (`pm02`).
+ * @param {unknown} raw
+ * @returns {{ lat: number, lon: number, name: string, pm25: number, humidity: number | null, temperature_c: number | null }[]}
  */
-export async function fetchPurpleAir(locations, env = process.env) {
+export function filterCoAirGradientSensors(raw) {
+  const rows = Array.isArray(raw) ? raw : [];
+  /** @type {{ lat: number, lon: number, name: string, pm25: number, humidity: number | null, temperature_c: number | null }[]} */
+  const out = [];
+  for (const row of rows) {
+    if (!row || typeof row !== 'object') continue;
+    const r = /** @type {Record<string, unknown>} */ (row);
+    if (r.offline === true) continue;
+    const lat = toFiniteNumber(r.latitude);
+    const lon = toFiniteNumber(r.longitude);
+    const pm25 = toFiniteNumber(r.pm02);
+    if (lat == null || lon == null || pm25 == null) continue;
+    if (lat < CO_BBOX.south || lat > CO_BBOX.north || lon < CO_BBOX.west || lon > CO_BBOX.east) {
+      continue;
+    }
+    const name =
+      String(r.publicLocationName || r.locationName || r.publicPlaceName || '').trim() ||
+      'AirGradient';
+    out.push({
+      lat,
+      lon,
+      name,
+      pm25,
+      humidity: toFiniteNumber(r.rhum),
+      temperature_c: toFiniteNumber(r.atmp),
+    });
+  }
+  return out;
+}
+
+/**
+ * @param {import('../../lib/types.js').Location[]} locations
+ */
+export async function fetchAirGradient(locations) {
   const bySlug = new Map();
   let calls = 0;
-  const key = env.PURPLEAIR_API_KEY;
-  if (!key) {
-    return { status: 'skipped', bySlug, calls, error: 'PURPLEAIR_API_KEY not set' };
-  }
 
   try {
     calls += 1;
-    const fields = 'name,latitude,longitude,pm2.5_10minute,humidity,temperature,location_type';
-    const url =
-      `https://api.purpleair.com/v1/sensors?fields=${encodeURIComponent(fields)}` +
-      `&nwlat=${CO_BBOX.north}&selat=${CO_BBOX.south}&nwlng=${CO_BBOX.west}&selng=${CO_BBOX.east}&max_age=3600`;
-
-    const data = await fetchJson(url, {
-      headers: { 'X-API-Key': key },
-      timeoutMs: 60_000,
-    });
-
-    const fieldNames = data?.fields ?? [];
-    const rows = data?.data ?? [];
-    const sensors = rows
-      .map((row) => {
-        const obj = {};
-        for (let i = 0; i < fieldNames.length; i += 1) {
-          obj[fieldNames[i]] = row[i];
-        }
-        const lat = toFiniteNumber(obj.latitude);
-        const lon = toFiniteNumber(obj.longitude);
-        if (lat == null || lon == null) return null;
-        // 0 = outdoor, 1 = indoor
-        const locationType = toFiniteNumber(obj.location_type);
-        if (locationType != null && locationType !== 0) return null;
-        return {
-          lat,
-          lon,
-          name: obj.name ?? 'PurpleAir',
-          pm25: toFiniteNumber(obj['pm2.5_10minute']),
-          humidity: toFiniteNumber(obj.humidity),
-          temperature_f: toFiniteNumber(obj.temperature),
-        };
-      })
-      .filter(Boolean);
+    const raw = await fetchJson(WORLD_URL, { timeoutMs: 60_000, retries: 2 });
+    const sensors = filterCoAirGradientSensors(raw);
+    if (sensors.length === 0) {
+      return {
+        status: 'error',
+        bySlug,
+        calls,
+        error: 'no online AirGradient sensors with PM2.5 in Colorado',
+      };
+    }
 
     for (const loc of locations) {
       let near = nearestPoints(loc, sensors, MAX_SENSORS).filter(
@@ -195,7 +201,7 @@ export async function fetchPurpleAir(locations, env = process.env) {
           (n) => n.distanceKm <= FALLBACK_MAX_KM,
         );
       }
-      const consensus = purpleAirConsensus(
+      const consensus = airGradientConsensus(
         near.map((n) => ({
           name: /** @type {string} */ (n.point.name),
           distanceKm: n.distanceKm,
@@ -204,12 +210,13 @@ export async function fetchPurpleAir(locations, env = process.env) {
       );
       if (!consensus) continue;
 
-      // Attach humidity/temp from the nearest sensor used in consensus (informational).
       const nearest = near[0]?.point;
+      const tempC = nearest?.temperature_c;
       bySlug.set(loc.slug, {
         ...consensus,
         humidity: nearest?.humidity ?? null,
-        temperature_f: nearest?.temperature_f ?? null,
+        temperature_f:
+          tempC != null && Number.isFinite(tempC) ? Math.round((tempC * 9) / 5 + 32) : null,
       });
     }
 
@@ -217,7 +224,7 @@ export async function fetchPurpleAir(locations, env = process.env) {
       status: bySlug.size > 0 ? 'ok' : 'partial',
       bySlug,
       calls,
-      ...(bySlug.size === 0 ? { error: 'no PurpleAir sensors matched catalog locations' } : {}),
+      ...(bySlug.size === 0 ? { error: 'no AirGradient sensors matched catalog locations' } : {}),
     };
   } catch (err) {
     return {

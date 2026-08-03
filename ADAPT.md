@@ -20,7 +20,7 @@ pnpm test
 npx serve public
 ```
 
-Point GitHub Pages at the `gh-pages` branch (UI from `.github/workflows/pages.yml`; weather JSON from `update-weather.yml`). Keep `clean-exclude` covering `pr-preview` and `data` on `pages.yml` if you use PR previews / UI-only code deploys. Leave `public/.nojekyll` in place so GitHub Pages does not run Jekyll over the static tree. Optional Actions secrets: `PURPLEAIR_API_KEY`, `AIRNOW_API_KEY`, `COTRIP_API_KEY`, `FIRMS_MAP_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values.
+Point GitHub Pages at the `gh-pages` branch (UI from `.github/workflows/pages.yml`; weather JSON from `update-weather.yml`). Keep `clean-exclude` covering `pr-preview` and `data` on `pages.yml` if you use PR previews / UI-only code deploys. Leave `public/.nojekyll` in place so GitHub Pages does not run Jekyll over the static tree. Optional Actions secrets: `AIRNOW_API_KEY`, `COTRIP_API_KEY`, `FIRMS_MAP_KEY`, `NOTIFY_WEBHOOK_URL` — names only; never commit values. AirGradient community PM2.5 needs no secret.
 
 ### GitHub Pages / PR previews
 
@@ -118,7 +118,7 @@ Most sources are national APIs keyed by lat/lon. These are Colorado-hardcoded to
 | [`scripts/fetch/adapters/nws.js`](scripts/fetch/adapters/nws.js)                             | `area=CO` → your state code; `OFFICES = ['BOU','PUB','GJT']` → your WFOs                                                 |
 | [`scripts/fetch/adapters/openmeteo.js`](scripts/fetch/adapters/openmeteo.js)                 | `timezone=America/Denver` → your IANA zone(s)                                                                            |
 | [`scripts/fetch/adapters/openmeteo-aq.js`](scripts/fetch/adapters/openmeteo-aq.js)           | Same timezone                                                                                                            |
-| [`scripts/fetch/adapters/purpleair.js`](scripts/fetch/adapters/purpleair.js)                 | Bounding box constants (N/S/W/E)                                                                                         |
+| [`scripts/fetch/adapters/airgradient.js`](scripts/fetch/adapters/airgradient.js)             | Colorado bbox filter on AirGradient public world feed                                                                    |
 | [`scripts/fetch/adapters/aviation.js`](scripts/fetch/adapters/aviation.js)                   | Seed ICAO list (`KDEN`, …) → major airports in your state                                                                |
 | [`scripts/fetch/adapters/coagmet.js`](scripts/fetch/adapters/coagmet.js)                     | **Colorado-only** (CSU CoAgMET). Replace with your ag network or remove the adapter, orchestrator wiring, and UI section |
 | [`scripts/fetch/adapters/cdot.js`](scripts/fetch/adapters/cdot.js)                           | Colorado DOT cameras / ArcGIS alerts — replace with your DOT traveler feeds or remove                                    |
@@ -202,7 +202,7 @@ If you want a thin proof fork before a full catalog:
 4. Rename brand strings in `index.html` + `app.js`.
 5. `pnpm validate:locations && pnpm fetch:data && npx serve public`.
 
-Then expand the catalog, ZIPs, PurpleAir bbox, aviation ICAOs, and decide on an ag-data adapter.
+Then expand the catalog, ZIPs, AirGradient / CO bbox filter, aviation ICAOs, and decide on an ag-data adapter.
 
 ---
 

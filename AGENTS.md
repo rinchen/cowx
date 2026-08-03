@@ -96,7 +96,7 @@ Optional fields used by adapters (add when known):
 - `pws_id` — Weather Underground station id (**offsite dashboard link only** — not live-fetched)
 - `webcam_links` — array of `{ name, url, kind? }` for municipal/ski/NWS camera portals that must **not** be embedded; UI opens them in a new tab (`https://` only). Prefer official city/county/DOT/NWS pages.
 
-PurpleAir and AirNow resolve by nearest sensor/grid point (no per-location sensor ids in the catalog).
+AirGradient and AirNow resolve by nearest sensor/grid point (no per-location sensor ids in the catalog). Community PM2.5 comes from [AirGradient](https://www.airgradient.com/)’s free public feed (PurpleAir’s paid API is not used).
 
 **Pollen / allergy (Colorado-wide):** There is no free redistributable US pollen API in the fetch budget. At merge time every catalog location gets `links.pollen` from the nearest ZIP in `co-zips.json` (Pollen.com offsite) plus statewide AAAAI NAB reference links. No live pollen grains are fetched or stored.
 
@@ -169,14 +169,13 @@ export async function fetchExample(locations, env = process.env) {
 
 **Optional secrets** (read from `process.env` / GitHub Actions secrets — names only, never commit values):
 
-| Env var             | Adapter                                   |
-| ------------------- | ----------------------------------------- |
-| `PURPLEAIR_API_KEY` | PurpleAir inline sensor data              |
-| `AIRNOW_API_KEY`    | EPA AirNow AQI / observations             |
-| `COTRIP_API_KEY`    | COtrip RWIS / incidents / road conditions |
-| `FIRMS_MAP_KEY`     | NASA FIRMS VIIRS active-fire detections   |
+| Env var          | Adapter                                   |
+| ---------------- | ----------------------------------------- |
+| `AIRNOW_API_KEY` | EPA AirNow AQI / observations             |
+| `COTRIP_API_KEY` | COtrip RWIS / incidents / road conditions |
+| `FIRMS_MAP_KEY`  | NASA FIRMS VIIRS active-fire detections   |
 
-If unset, PurpleAir, AirNow, COtrip, and FIRMS adapters should skip gracefully; the UI falls back to offsite links, cameras, and ArcGIS alerts where available.
+If unset, AirNow, COtrip, and FIRMS adapters should skip gracefully; the UI falls back to offsite links, cameras, and ArcGIS alerts where available. AirGradient needs no key.
 
 ---
 
@@ -186,7 +185,6 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 | Secret name          | Purpose                                                                 |
 | -------------------- | ----------------------------------------------------------------------- |
-| `PURPLEAIR_API_KEY`  | PurpleAir API access for build-time sensor snapshots                    |
 | `AIRNOW_API_KEY`     | AirNow API access for official AQI near locations                       |
 | `COTRIP_API_KEY`     | COtrip JSON feed (weather stations, incidents, events, road conditions) |
 | `FIRMS_MAP_KEY`      | NASA FIRMS MAP_KEY for VIIRS active-fire detections (free registration) |
@@ -208,29 +206,29 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):
 
-| Source                                        | Calls / run (approx @ ~338 locs)                                        | Auth                |
-| --------------------------------------------- | ----------------------------------------------------------------------- | ------------------- |
-| Open-Meteo Forecast                           | ~34+ (chunk 20 + NBM per chunk)                                         | None                |
-| Open-Meteo Air Quality                        | ~9 (chunk 40)                                                           | None                |
-| Open-Meteo ERA5 climatology                   | ~0 most runs; ~monthly / cold-start (capped ~24 locs/run × year slices) | None                |
-| NWS alerts + AFD/HWO/FWF                      | ~13–19 (alerts + AFD/HWO/FWF per office)                                | User-Agent header   |
-| CoAgMET                                       | 1–2                                                                     | None                |
-| Aviation Weather METAR/TAF                    | 1–3 batched                                                             | None                |
-| USGS NWIS                                     | 1                                                                       | None                |
-| SNOTEL                                        | 1–2                                                                     | None                |
-| CDOT cameras + ArcGIS alerts                  | 3                                                                       | None                |
-| COtrip (stations/incidents/events/conditions) | up to ~43 page calls total when keyed (8+10+10+15 across four feeds)    | `COTRIP_API_KEY`    |
-| CWOP / APRS (aprs.me grid)                    | ~35–40                                                                  | None                |
-| NOAA HMS smoke                                | 1–3 (zip download)                                                      | None                |
-| SPC fire weather (Day 1–2)                    | 4 (Wind/RH + DryT GeoJSON)                                              | None                |
-| NIFC WFIGS nearby fires                       | 1 (CO incidents)                                                        | None                |
-| NASA FIRMS VIIRS hotspots                     | 1 (CO bbox, only if key set)                                            | `FIRMS_MAP_KEY`     |
-| CBRFC water-supply guidance                   | 1 (ESP JSON, nearest CO point per location)                             | None                |
-| COEM burn restrictions                        | 1 (HTML status + curated links)                                         | None                |
-| NOAA SWPC space weather                       | ~5 (scales, Kp, Boulder K, SFI, X-ray)                                  | None                |
-| PurpleAir                                     | 1–2 (only if key set)                                                   | `PURPLEAIR_API_KEY` |
-| AirNow                                        | ~200–220 grid points when keyed (@0.2°)                                 | `AIRNOW_API_KEY`    |
-| Catalog `webcam_links` / CAIC offsite links   | 0 (copied into payloads; no CAIC scrape)                                | None                |
+| Source                                        | Calls / run (approx @ ~338 locs)                                        | Auth              |
+| --------------------------------------------- | ----------------------------------------------------------------------- | ----------------- |
+| Open-Meteo Forecast                           | ~34+ (chunk 20 + NBM per chunk)                                         | None              |
+| Open-Meteo Air Quality                        | ~9 (chunk 40)                                                           | None              |
+| Open-Meteo ERA5 climatology                   | ~0 most runs; ~monthly / cold-start (capped ~24 locs/run × year slices) | None              |
+| NWS alerts + AFD/HWO/FWF                      | ~13–19 (alerts + AFD/HWO/FWF per office)                                | User-Agent header |
+| CoAgMET                                       | 1–2                                                                     | None              |
+| Aviation Weather METAR/TAF                    | 1–3 batched                                                             | None              |
+| USGS NWIS                                     | 1                                                                       | None              |
+| SNOTEL                                        | 1–2                                                                     | None              |
+| CDOT cameras + ArcGIS alerts                  | 3                                                                       | None              |
+| COtrip (stations/incidents/events/conditions) | up to ~43 page calls total when keyed (8+10+10+15 across four feeds)    | `COTRIP_API_KEY`  |
+| CWOP / APRS (aprs.me grid)                    | ~35–40                                                                  | None              |
+| NOAA HMS smoke                                | 1–3 (zip download)                                                      | None              |
+| SPC fire weather (Day 1–2)                    | 4 (Wind/RH + DryT GeoJSON)                                              | None              |
+| NIFC WFIGS nearby fires                       | 1 (CO incidents)                                                        | None              |
+| NASA FIRMS VIIRS hotspots                     | 1 (CO bbox, only if key set)                                            | `FIRMS_MAP_KEY`   |
+| CBRFC water-supply guidance                   | 1 (ESP JSON, nearest CO point per location)                             | None              |
+| COEM burn restrictions                        | 1 (HTML status + curated links)                                         | None              |
+| NOAA SWPC space weather                       | ~5 (scales, Kp, Boulder K, SFI, X-ray)                                  | None              |
+| AirGradient                                   | 1 (public world current; CO-filtered)                                   | None              |
+| AirNow                                        | ~200–220 grid points when keyed (@0.2°)                                 | `AIRNOW_API_KEY`  |
+| Catalog `webcam_links` / CAIC offsite links   | 0 (copied into payloads; no CAIC scrape)                                | None              |
 
 Partial adapter failure is acceptable; total failure (zero locations written or all critical adapters down) should fail the workflow so notifications fire.
 
