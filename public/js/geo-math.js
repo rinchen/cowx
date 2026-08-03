@@ -41,6 +41,22 @@ export function roundKm(d) {
   return Math.round(d * 10) / 10;
 }
 
+/** Statute miles per kilometer. */
+const KM_PER_MI = 1.609344;
+
+/**
+ * Format a distance stored in kilometers as a US miles label.
+ * One decimal under 10 mi; whole miles at ≥ 10.
+ * @param {number | null | undefined} km
+ * @returns {string | null}
+ */
+export function fmtDistanceMi(km) {
+  if (km == null || !Number.isFinite(Number(km))) return null;
+  const miles = Number(km) / KM_PER_MI;
+  if (miles >= 10) return `${Math.round(miles)} mi`;
+  return `${(Math.round(miles * 10) / 10).toFixed(1)} mi`;
+}
+
 /**
  * Find the nearest point to a target from a list of candidates.
  * @param {{ lat: number; lon: number }} target
