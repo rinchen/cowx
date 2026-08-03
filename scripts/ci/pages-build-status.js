@@ -150,6 +150,9 @@ function buildAttemptKey(build) {
  *   rerunBuild?: (build: Record<string, unknown>) => Promise<void>,
  *   maxReruns?: number,
  *   rerunDelaySecs?: number,
+ *   requestMissingBuild?: (expectSha: string) => Promise<void>,
+ *   maxMissingBuildRequests?: number,
+ *   missingBuildRequestAfterAttempts?: number,
  *   onAttempt?: (details: {
  *     attempt: number,
  *     maxAttempts: number,
@@ -164,6 +167,11 @@ function buildAttemptKey(build) {
  *     blockingSha?: string | null,
  *     detail?: string,
  *   }) => void,
+ *   onMissingBuildRequest?: (details: {
+ *     requestsUsed: number,
+ *     maxRequests: number,
+ *     expectSha: string,
+ *   }) => void,
  * }} options
  * @returns {Promise<Record<string, unknown>>}
  */
@@ -174,11 +182,17 @@ export async function waitForPagesBuild(options) {
   const sleep = options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   const onAttempt = options.onAttempt ?? (() => {});
   const onRerun = options.onRerun ?? (() => {});
+  const onMissingBuildRequest = options.onMissingBuildRequest ?? (() => {});
   const diagnoseFailure = options.diagnoseFailure ?? null;
   const clearBlockingDeployment = options.clearBlockingDeployment ?? null;
   const rerunBuild = options.rerunBuild ?? null;
+  const requestMissingBuild = options.requestMissingBuild ?? null;
   const maxReruns = options.maxReruns ?? 0;
   const rerunDelaySecs = options.rerunDelaySecs ?? 60;
+  // Rapid gh-pages pushes during an in-flight pages-build-deployment can leave
+  // the tip with no workflow run at all. After a short grace, request one.
+  const maxMissingBuildRequests = options.maxMissingBuildRequests ?? 2;
+  const missingBuildRequestAfterAttempts = options.missingBuildRequestAfterAttempts ?? 12;
 
   if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
     throw new TypeError('maxAttempts must be a positive integer');
@@ -192,10 +206,18 @@ export async function waitForPagesBuild(options) {
   if (!Number.isFinite(rerunDelaySecs) || rerunDelaySecs < 0) {
     throw new TypeError('rerunDelaySecs must be a non-negative number');
   }
+  if (!Number.isInteger(maxMissingBuildRequests) || maxMissingBuildRequests < 0) {
+    throw new TypeError('maxMissingBuildRequests must be a non-negative integer');
+  }
+  if (!Number.isInteger(missingBuildRequestAfterAttempts) || missingBuildRequestAfterAttempts < 1) {
+    throw new TypeError('missingBuildRequestAfterAttempts must be a positive integer');
+  }
 
   let lastStatus = 'not_found';
   let lastBuild = null;
   let rerunsUsed = 0;
+  let missingBuildRequestsUsed = 0;
+  let consecutiveNotFound = 0;
   /** @type {Set<string>} */
   const rerunTriggered = new Set();
 
@@ -208,6 +230,7 @@ export async function waitForPagesBuild(options) {
 
     if (result.state === 'success') return /** @type {Record<string, unknown>} */ (result.build);
     if (result.state === 'error') {
+      consecutiveNotFound = 0;
       const build = /** @type {Record<string, unknown>} */ (result.build);
       const key = buildAttemptKey(build);
       // A re-run was already triggered for this attempt; wait for GitHub to
@@ -255,6 +278,28 @@ export async function waitForPagesBuild(options) {
         build,
       );
     }
+
+    if (result.status === 'not_found') {
+      consecutiveNotFound += 1;
+      const shouldRequest =
+        Boolean(expect) &&
+        Boolean(requestMissingBuild) &&
+        missingBuildRequestsUsed < maxMissingBuildRequests &&
+        consecutiveNotFound >= missingBuildRequestAfterAttempts;
+      if (shouldRequest) {
+        missingBuildRequestsUsed += 1;
+        onMissingBuildRequest({
+          requestsUsed: missingBuildRequestsUsed,
+          maxRequests: maxMissingBuildRequests,
+          expectSha: expect,
+        });
+        await requestMissingBuild(expect);
+        consecutiveNotFound = 0;
+      }
+    } else {
+      consecutiveNotFound = 0;
+    }
+
     if (attempt < maxAttempts) await sleep(sleepSecs * 1000);
   }
 
