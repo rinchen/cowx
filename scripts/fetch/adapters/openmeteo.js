@@ -277,7 +277,10 @@ export function attachAstronomy(payload, lat, lon, now = new Date()) {
  */
 async function fetchAndMergeNbm(chunk, bySlug, errors) {
   try {
-    const data = await fetchJson(buildNbmThunderstormUrl(chunk), { timeoutMs: 90_000 });
+    const data = await fetchJson(buildNbmThunderstormUrl(chunk), {
+      timeoutMs: 90_000,
+      retries: 2,
+    });
     const results = Array.isArray(data) ? data : [data];
     for (let j = 0; j < chunk.length; j += 1) {
       const loc = chunk[j];
@@ -326,7 +329,7 @@ export async function fetchOpenMeteo(locations, opts = {}) {
    */
   async function fetchForecastChunk(chunk) {
     calls += 1;
-    const data = await fetchJson(buildUrl(chunk), { timeoutMs: 90_000 });
+    const data = await fetchJson(buildUrl(chunk), { timeoutMs: 90_000, retries: 2 });
     const results = Array.isArray(data) ? data : [data];
     for (let j = 0; j < chunk.length; j += 1) {
       const loc = chunk[j];
@@ -375,7 +378,7 @@ export async function fetchOpenMeteo(locations, opts = {}) {
       const chunk = missing.slice(i, i + RETRY_CHUNK);
       try {
         calls += 1;
-        const data = await fetchJson(buildUrl(chunk), { timeoutMs: 90_000 });
+        const data = await fetchJson(buildUrl(chunk), { timeoutMs: 90_000, retries: 2 });
         const results = Array.isArray(data) ? data : [data];
         for (let j = 0; j < chunk.length; j += 1) {
           const loc = chunk[j];

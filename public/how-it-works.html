@@ -128,10 +128,10 @@
         conditions, CWOP/APRS neighborhood PWS, NOAA HMS smoke, SPC fire weather outlooks, NIFC
         nearby wildfire locations, NASA FIRMS satellite fire detections (when keyed), CBRFC
         water-supply guidance, Colorado burn-restriction status/links, CAIC avalanche forecast
-        offsite links for mountain regions, NOAA SWPC space weather, and optional PurpleAir and
-        AirNow). Each location payload also gets locally computed astronomy and nearest-ZIP pollen
-        offsite links (no pollen API key). Each source can succeed or fail on its own. Results are
-        merged into:
+        offsite links for mountain regions, NOAA SWPC space weather, and AirGradient community
+        sensors plus optional AirNow). Each location payload also gets locally computed astronomy
+        and nearest-ZIP pollen offsite links (no pollen API key). Each source can succeed or fail on
+        its own. Results are merged into:
       </p>
       <ul>
         <li><code>index.json</code> — slim list for search and the map</li>
@@ -261,8 +261,8 @@
           stores your pin; it stays only in your browser’s <code>localStorage</code>.
         </li>
         <li>
-          API keys for PurpleAir, AirNow, COtrip, and FIRMS are used only in GitHub Actions at build
-          time — never in the browser.
+          API keys for AirNow, COtrip, and FIRMS are used only in GitHub Actions at build time —
+          never in the browser. AirGradient uses a free public feed (no key).
         </li>
       </ul>
 

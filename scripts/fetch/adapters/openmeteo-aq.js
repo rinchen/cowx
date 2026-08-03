@@ -46,28 +46,46 @@ function buildUrl(chunk) {
 /**
  * @param {import('../../lib/types.js').Location[]} chunk
  * @param {Map<string, object>} bySlug
+ * @returns {Promise<number>} API calls made
+ */
+async function fetchChunkOnce(chunk, bySlug) {
+  const data = await fetchJson(buildUrl(chunk), { timeoutMs: 60_000, retries: 2 });
+  const results = Array.isArray(data) ? data : [data];
+  for (let j = 0; j < chunk.length; j += 1) {
+    const loc = chunk[j];
+    const r = results[j];
+    const mapped = mapOpenMeteoAqCurrent(r?.current);
+    if (!mapped) continue;
+    bySlug.set(loc.slug, mapped);
+  }
+  return 1;
+}
+
+/**
+ * Fetch one chunk with an immediate retry on failure (parity with openmeteo forecast).
+ * @param {import('../../lib/types.js').Location[]} chunk
+ * @param {Map<string, object>} bySlug
  * @param {string[]} errors
  * @param {{ rateLimitDelayMs: number, shortBackoffMs: number }} delays
  * @returns {Promise<number>} API calls made
  */
 async function fetchChunk(chunk, bySlug, errors, delays) {
   try {
-    const data = await fetchJson(buildUrl(chunk), { timeoutMs: 60_000 });
-    const results = Array.isArray(data) ? data : [data];
-    for (let j = 0; j < chunk.length; j += 1) {
-      const loc = chunk[j];
-      const r = results[j];
-      const mapped = mapOpenMeteoAqCurrent(r?.current);
-      if (!mapped) continue;
-      bySlug.set(loc.slug, mapped);
-    }
-    return 1;
+    return await fetchChunkOnce(chunk, bySlug);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    errors.push(msg);
-    if (msg.includes('429')) await sleep(delays.rateLimitDelayMs);
-    else await sleep(delays.shortBackoffMs);
-    return 1;
+    try {
+      console.warn(`openmeteo_aq: chunk failed (${msg}); immediate retry`);
+      await sleep(msg.includes('429') ? delays.rateLimitDelayMs : delays.shortBackoffMs);
+      await fetchChunkOnce(chunk, bySlug);
+      return 2;
+    } catch (retryErr) {
+      const retryMsg = retryErr instanceof Error ? retryErr.message : String(retryErr);
+      errors.push(retryMsg);
+      if (retryMsg.includes('429') || msg.includes('429')) await sleep(delays.rateLimitDelayMs);
+      else await sleep(delays.shortBackoffMs);
+      return 2;
+    }
   }
 }
 

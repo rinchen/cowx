@@ -333,7 +333,7 @@
     "afd": { "type": ["object", "null"] },
     "coagmet": { "type": ["object", "null"] },
     "aviation": { "type": ["object", "null"] },
-    "purpleair": { "type": ["object", "null"] },
+    "airgradient": { "type": ["object", "null"] },
     "airnow": { "type": ["object", "null"] },
     "astronomy": {
       "type": ["object", "null"],

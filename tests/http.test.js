@@ -6,6 +6,7 @@ import {
   fetchJson,
   fetchWithTimeout,
   formatFetchErrorCause,
+  isTransientFetchError,
   sanitizeErrorMessage,
   sanitizeUrlForError,
 } from '../scripts/lib/http.js';
@@ -40,9 +41,31 @@ describe('sanitizeUrlForError', () => {
   });
 
   it('redacts X-API-Key header-style secrets', () => {
-    const hdr = sanitizeErrorMessage('upstream echo X-API-Key: pa-super-secret-purpleair');
-    assert.doesNotMatch(hdr, /pa-super-secret-purpleair/);
+    const hdr = sanitizeErrorMessage('upstream echo X-API-Key: pa-super-secret-key');
+    assert.doesNotMatch(hdr, /pa-super-secret-key/);
     assert.match(hdr, /X-API-Key=\[redacted\]/i);
+  });
+});
+
+describe('isTransientFetchError', () => {
+  it('treats connect timeout and abort as transient', () => {
+    const connect = new Error('fetch failed (UND_ERR_CONNECT_TIMEOUT)');
+    connect.cause = { code: 'UND_ERR_CONNECT_TIMEOUT' };
+    assert.equal(isTransientFetchError(connect), true);
+
+    const abort = Object.assign(new Error('Aborted'), { name: 'AbortError' });
+    assert.equal(isTransientFetchError(abort), true);
+  });
+
+  it('does not treat HTTP status errors as transient', () => {
+    assert.equal(
+      isTransientFetchError(new Error('HTTP 402 for https://example.com/: paid')),
+      false,
+    );
+    assert.equal(
+      isTransientFetchError(new Error('HTTP 500 for https://example.com/: boom')),
+      false,
+    );
   });
 });
 
@@ -149,5 +172,47 @@ describe('fetchWithTimeout / fetchJson', () => {
       });
     const data = await fetchJson('https://example.com/ok');
     assert.deepEqual(data, { ok: true });
+  });
+
+  it('retries transient failures then succeeds', async () => {
+    let calls = 0;
+    globalThis.fetch = async () => {
+      calls += 1;
+      if (calls === 1) {
+        const err = new Error('fetch failed');
+        err.cause = { code: 'UND_ERR_CONNECT_TIMEOUT' };
+        throw err;
+      }
+      return /** @type {Response} */ ({
+        ok: true,
+        status: 200,
+        text: async () => '',
+        json: async () => ({ ok: true }),
+      });
+    };
+    const data = await fetchJson('https://example.com/flaky', { retries: 2, timeoutMs: 5_000 });
+    assert.deepEqual(data, { ok: true });
+    assert.equal(calls, 2);
+  });
+
+  it('exhausts retries and throws a sanitized error', async () => {
+    globalThis.fetch = async () => {
+      const err = new Error('fetch failed');
+      err.cause = { code: 'ETIMEDOUT' };
+      throw err;
+    };
+    await assert.rejects(
+      () =>
+        fetchWithTimeout('https://example.com/down?API_KEY=secret', {
+          retries: 1,
+          timeoutMs: 1_000,
+        }),
+      (err) => {
+        assert.ok(err instanceof Error);
+        assert.match(err.message, /ETIMEDOUT|fetch failed/);
+        assert.doesNotMatch(err.message, /secret/);
+        return true;
+      },
+    );
   });
 });

@@ -25,7 +25,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Source identifier (e.g. purpleair, airnow, openmeteo)"
+            "description": "Source identifier (e.g. airgradient, airnow, openmeteo)"
           },
           "status": {
             "type": "string",

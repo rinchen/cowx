@@ -350,7 +350,7 @@ function fmtObserved(observed) {
 function renderLiveSourcesPanel(parent, data, metaSources = []) {
   const links = /** @type {Record<string, string | null>} */ (data.links ?? {});
   const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
-  const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
+  const airgradient = /** @type {Record<string, unknown> | null} */ (data.airgradient ?? null);
   const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
   const coag = /** @type {Record<string, unknown> | null} */ (data.coagmet ?? null);
   const aviation = /** @type {Record<string, unknown> | null} */ (data.aviation ?? null);
@@ -392,31 +392,31 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
     href: links.nws_forecast || 'https://www.weather.gov/',
   });
 
-  if (airnow || purpleair || omaq) {
+  if (airnow || airgradient || omaq) {
     const bits = [];
     if (airnow?.aqi != null) {
       bits.push(
         `AirNow AQI ${airnow.aqi}${airnow.observed ? ` (observed ${fmtObserved(airnow.observed) ?? airnow.observed})` : ''}`,
       );
     }
-    if (purpleair?.aqi_pm25 != null) {
-      bits.push(`PurpleAir est. AQI ${purpleair.aqi_pm25}`);
+    if (airgradient?.aqi_pm25 != null) {
+      bits.push(`AirGradient est. AQI ${airgradient.aqi_pm25}`);
     }
     if (omaq?.us_aqi != null) {
       bits.push(`Open-Meteo model US AQI ${omaq.us_aqi}`);
     }
     const primaryAq = airnow
       ? metaSourceInfo(metaSources, 'airnow')
-      : purpleair
-        ? metaSourceInfo(metaSources, 'purpleair')
+      : airgradient
+        ? metaSourceInfo(metaSources, 'airgradient')
         : metaSourceInfo(metaSources, 'openmeteo_aq');
     rows.push({
       title: 'Air quality',
       body: `${bits.join(' · ')}${primaryAq.fetchedAt ? ` · fetched ${fmtDateTime(primaryAq.fetchedAt)}` : ''}${sourceStatusNote(primaryAq.status)}`,
       href: airnow?.url
         ? String(airnow.url)
-        : purpleair?.url
-          ? String(purpleair.url)
+        : airgradient?.url
+          ? String(airgradient.url)
           : links.airnow || 'https://www.airnow.gov/',
     });
   }
@@ -1601,7 +1601,7 @@ function appendDeepForecast(root, data, ctx) {
     'Air quality & pollen',
     () => {
       const an = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
-      const pa = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
+      const ag = /** @type {Record<string, unknown> | null} */ (data.airgradient ?? null);
       const omaq = /** @type {Record<string, unknown> | null} */ (data.openmeteo_aq ?? null);
       const pollenUrl = safeHttpsUrl(String(links.pollen ?? ''));
       const zip = links.pollen_zip != null ? String(links.pollen_zip) : null;
@@ -1614,17 +1614,17 @@ function appendDeepForecast(root, data, ctx) {
         (Array.isArray(nabLinks) &&
           nabLinks.some((n) => n?.name && safeHttpsUrl(String(n?.url ?? ''))));
 
-      if (!an && !pa && !omaq && !hasPollen) {
+      if (!an && !ag && !omaq && !hasPollen) {
         const frag = document.createDocumentFragment();
         renderEmpty(
           frag,
           'No air quality data',
-          'No AirNow, PurpleAir, or model AQ reading nearby.',
+          'No AirNow, AirGradient, or model AQ reading nearby.',
         );
         return frag;
       }
       const wrap = document.createDocumentFragment();
-      if (an || pa || omaq) {
+      if (an || ag || omaq) {
         const dl = document.createElement('dl');
         dl.className = 'metric-list';
         const parts = [];
@@ -1658,25 +1658,25 @@ function appendDeepForecast(root, data, ctx) {
             }
           }
         }
-        if (pa) {
+        if (ag) {
           const sensorCount =
-            pa.sensor_count != null && Number.isFinite(Number(pa.sensor_count))
-              ? Math.round(Number(pa.sensor_count))
+            ag.sensor_count != null && Number.isFinite(Number(ag.sensor_count))
+              ? Math.round(Number(ag.sensor_count))
               : null;
           parts.push(
-            `<dt>PurpleAir</dt><dd>${pa.name ? escapeHtml(String(pa.name)) : '—'}${pa.distance_km != null ? ` (${pa.distance_km} km median)` : ''}${sensorCount != null ? ` · ${sensorCount} sensor${sensorCount === 1 ? '' : 's'}` : ''}</dd>`,
+            `<dt>AirGradient</dt><dd>${ag.name ? escapeHtml(String(ag.name)) : '—'}${ag.distance_km != null ? ` (${ag.distance_km} km median)` : ''}${sensorCount != null ? ` · ${sensorCount} sensor${sensorCount === 1 ? '' : 's'}` : ''}</dd>`,
           );
           parts.push(
-            `<dt>PurpleAir PM2.5</dt><dd>${pa.pm25 != null ? `${pa.pm25} µg/m³` : '—'}${sensorCount != null && sensorCount > 1 ? ' (median)' : ''}</dd>`,
+            `<dt>AirGradient PM2.5</dt><dd>${ag.pm25 != null ? `${ag.pm25} µg/m³` : '—'}${sensorCount != null && sensorCount > 1 ? ' (median)' : ''}</dd>`,
           );
-          parts.push(`<dt>PurpleAir AQI (est.)</dt><dd>${pa.aqi_pm25 ?? '—'}</dd>`);
-          const paSensors =
+          parts.push(`<dt>AirGradient AQI (est.)</dt><dd>${ag.aqi_pm25 ?? '—'}</dd>`);
+          const agSensors =
             /** @type {{ name?: string, distance_km?: number, pm25?: number }[]} */ (
-              Array.isArray(pa.sensors) ? pa.sensors : []
+              Array.isArray(ag.sensors) ? ag.sensors : []
             );
-          if (paSensors.length > 1) {
+          if (agSensors.length > 1) {
             parts.push(
-              `<dt>PurpleAir sensors</dt><dd>${paSensors
+              `<dt>AirGradient sensors</dt><dd>${agSensors
                 .map((s) => {
                   const nm = s.name ? escapeHtml(String(s.name)) : 'sensor';
                   const d = s.distance_km != null ? `${s.distance_km} km` : '';
@@ -1686,10 +1686,10 @@ function appendDeepForecast(root, data, ctx) {
                 .join('; ')}</dd>`,
             );
           }
-          if (pa.humidity != null)
-            parts.push(`<dt>PurpleAir humidity</dt><dd>${pa.humidity}%</dd>`);
-          if (pa.temperature_f != null) {
-            parts.push(`<dt>PurpleAir temp</dt><dd>${pa.temperature_f}°F</dd>`);
+          if (ag.humidity != null)
+            parts.push(`<dt>AirGradient humidity</dt><dd>${ag.humidity}%</dd>`);
+          if (ag.temperature_f != null) {
+            parts.push(`<dt>AirGradient temp</dt><dd>${ag.temperature_f}°F</dd>`);
           }
         }
         if (omaq) {
@@ -1757,10 +1757,10 @@ function appendDeepForecast(root, data, ctx) {
         an?.url || links.airnow
           ? sourceLink(String(an?.url || links.airnow), 'AirNow', 'btn btn-secondary btn-sm')
           : '',
-        pa?.url || links.purpleair_map
+        ag?.url || links.airgradient
           ? sourceLink(
-              String(pa?.url || links.purpleair_map),
-              'PurpleAir map',
+              String(ag?.url || links.airgradient),
+              'AirGradient',
               'btn btn-secondary btn-sm',
             )
           : '',
@@ -2532,7 +2532,7 @@ function appendDeepForecast(root, data, ctx) {
         ['RainViewer full map', links.rainviewer || imgUrls.rainviewer],
         ['Personal weather station (WU)', links.pws],
         ['Pollen.com (nearest ZIP)', links.pollen],
-        ['PurpleAir map', links.purpleair_map],
+        ['AirGradient', links.airgradient || 'https://www.airgradient.com/'],
         ['AirNow', links.airnow],
         ['CoAgMET', links.coagmet],
         ['Aviation Weather', links.aviation],

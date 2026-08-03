@@ -162,7 +162,7 @@ export async function fetchSnotel(locations) {
 
   try {
     calls += 1;
-    const stationsRaw = await fetchJson(STATIONS_URL, { timeoutMs: 90_000 });
+    const stationsRaw = await fetchJson(STATIONS_URL, { timeoutMs: 90_000, retries: 2 });
     const stations = filterCoSnotelStations(stationsRaw);
     if (stations.length === 0) {
       return { status: 'error', bySlug, error: 'no CO SNOTEL stations found', calls };
@@ -177,7 +177,7 @@ export async function fetchSnotel(locations) {
       `&beginDate=${isoDate(begin)}&endDate=${isoDate(end)}`;
 
     calls += 1;
-    const dataRaw = await fetchJson(dataUrl, { timeoutMs: 120_000 });
+    const dataRaw = await fetchJson(dataUrl, { timeoutMs: 120_000, retries: 2 });
     const merged = mergeSnotelData(stations, dataRaw);
     if (merged.size === 0) {
       return { status: 'error', bySlug, error: 'no SNOTEL readings parsed', calls };

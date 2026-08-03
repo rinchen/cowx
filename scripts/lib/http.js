@@ -4,10 +4,47 @@
  * Fallback: caller handles null/throw; never swallow without status.
  */
 
+import { Agent, setGlobalDispatcher } from 'undici';
+
 const DEFAULT_TIMEOUT_MS = 30_000;
+/** Align TCP/TLS connect budget with typical adapter AbortController timeouts. */
+const CONNECT_TIMEOUT_MS = 60_000;
+const DEFAULT_RETRIES = 0;
+const RETRY_BACKOFFS_MS = [1000, 3000];
 
 /** Query/header param names that must never appear in logs or meta.json. */
 const SECRET_PARAM_RE = /^(?:api[_-]?key|access[_-]?token|token|key|auth|password|secret)$/i;
+
+const TRANSIENT_CODES = new Set([
+  'UND_ERR_CONNECT_TIMEOUT',
+  'ETIMEDOUT',
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'ENOTFOUND',
+  'EAI_AGAIN',
+  'UND_ERR_SOCKET',
+  'UND_ERR_HEADERS_TIMEOUT',
+  'UND_ERR_BODY_TIMEOUT',
+]);
+
+let longConnectInstalled = false;
+
+/**
+ * Install a process-wide undici Agent with a longer connect timeout.
+ * Safe to call repeatedly; no-ops after the first successful install.
+ */
+export function ensureLongConnectTimeout() {
+  if (longConnectInstalled) return;
+  setGlobalDispatcher(
+    new Agent({
+      connect: { timeout: CONNECT_TIMEOUT_MS },
+    }),
+  );
+  longConnectInstalled = true;
+}
+
+// Prefer long connects for all fetch adapters in this process.
+ensureLongConnectTimeout();
 
 /**
  * Redact secret query params from a URL for error messages / meta.json.
@@ -45,7 +82,7 @@ export function sanitizeErrorMessage(message) {
     /([?&](?:api[_-]?key|access[_-]?token|token|key|auth|password|secret)=)[^&\s]*/gi,
     '$1[redacted]',
   );
-  // Header-style secrets (PurpleAir X-API-Key, api-key, etc.)
+  // Header-style secrets (X-API-Key, api-key, etc.)
   s = s.replace(
     /((?:X-)?API[_-]?Key|api[_-]?key|access[_-]?token)\s*[:=]\s*[^\s,;"']+/gi,
     '$1=[redacted]',
@@ -74,35 +111,107 @@ export function formatFetchErrorCause(err) {
 }
 
 /**
- * @param {string} url
- * @param {RequestInit & { timeoutMs?: number }} [options]
- * @returns {Promise<Response>}
+ * Collect error codes / names from an Error and its cause chain.
+ * @param {unknown} err
+ * @returns {string[]}
  */
-export async function fetchWithTimeout(url, options = {}) {
-  const { timeoutMs = DEFAULT_TIMEOUT_MS, ...init } = options;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } catch (err) {
-    const safeUrl = sanitizeUrlForError(url);
-    const base = err instanceof Error ? err.message : String(err);
-    const cause = formatFetchErrorCause(err);
-    const msg = cause ? `${base} (${cause}) for ${safeUrl}` : `${base} for ${safeUrl}`;
-    const wrapped = new Error(sanitizeErrorMessage(msg));
-    if (err instanceof Error) {
-      wrapped.cause = err;
-      if (err.name === 'AbortError') wrapped.name = 'AbortError';
+function collectErrorCodes(err) {
+  /** @type {string[]} */
+  const codes = [];
+  /** @type {unknown} */
+  let cur = err;
+  for (let i = 0; i < 5 && cur; i += 1) {
+    if (cur instanceof Error) {
+      if (cur.name) codes.push(cur.name);
+      const c = /** @type {{ code?: string }} */ (cur);
+      if (c.code) codes.push(String(c.code));
+      const msg = cur.message || '';
+      for (const code of TRANSIENT_CODES) {
+        if (msg.includes(code)) codes.push(code);
+      }
+      if (/\btimeout\b/i.test(msg)) codes.push('timeout');
+      cur = cur.cause;
+    } else if (cur && typeof cur === 'object') {
+      const o = /** @type {{ code?: string, message?: string, cause?: unknown }} */ (cur);
+      if (o.code) codes.push(String(o.code));
+      if (o.message) {
+        for (const code of TRANSIENT_CODES) {
+          if (o.message.includes(code)) codes.push(code);
+        }
+      }
+      cur = o.cause;
+    } else {
+      break;
     }
-    throw wrapped;
-  } finally {
-    clearTimeout(timer);
   }
+  return codes;
+}
+
+/**
+ * True for connect/socket/abort failures worth retrying.
+ * HTTP 4xx/5xx thrown by fetchJson are not transient.
+ * @param {unknown} err
+ * @returns {boolean}
+ */
+export function isTransientFetchError(err) {
+  if (!(err instanceof Error)) return false;
+  if (/^HTTP \d{3}\b/.test(err.message)) return false;
+  const codes = collectErrorCodes(err);
+  if (codes.includes('AbortError') || codes.includes('timeout')) return true;
+  return codes.some((c) => TRANSIENT_CODES.has(c));
 }
 
 /**
  * @param {string} url
- * @param {RequestInit & { timeoutMs?: number }} [options]
+ * @param {RequestInit & { timeoutMs?: number, retries?: number }} [options]
+ * @returns {Promise<Response>}
+ */
+export async function fetchWithTimeout(url, options = {}) {
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, retries = DEFAULT_RETRIES, ...init } = options;
+  const maxAttempts = Math.max(1, 1 + Number(retries) || 0);
+  /** @type {unknown} */
+  let lastErr;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...init, signal: controller.signal });
+    } catch (err) {
+      lastErr = err;
+      const canRetry = attempt < maxAttempts - 1 && isTransientFetchError(wrapFetchError(url, err));
+      if (!canRetry) break;
+      const backoff = RETRY_BACKOFFS_MS[Math.min(attempt, RETRY_BACKOFFS_MS.length - 1)] ?? 1000;
+      await sleep(backoff);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  throw wrapFetchError(url, lastErr);
+}
+
+/**
+ * @param {string} url
+ * @param {unknown} err
+ * @returns {Error}
+ */
+function wrapFetchError(url, err) {
+  const safeUrl = sanitizeUrlForError(url);
+  const base = err instanceof Error ? err.message : String(err);
+  const cause = formatFetchErrorCause(err);
+  const msg = cause ? `${base} (${cause}) for ${safeUrl}` : `${base} for ${safeUrl}`;
+  const wrapped = new Error(sanitizeErrorMessage(msg));
+  if (err instanceof Error) {
+    wrapped.cause = err;
+    if (err.name === 'AbortError') wrapped.name = 'AbortError';
+  }
+  return wrapped;
+}
+
+/**
+ * @param {string} url
+ * @param {RequestInit & { timeoutMs?: number, retries?: number }} [options]
  * @returns {Promise<unknown>}
  */
 export async function fetchJson(url, options = {}) {

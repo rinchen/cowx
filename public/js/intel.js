@@ -358,7 +358,7 @@ export function renderHero(root, data, options = {}) {
   const updatedAt = data.updatedAt ?? data.updated_at ?? null;
 
   const airnow = /** @type {Record<string, unknown> | null} */ (data.airnow ?? null);
-  const purpleair = /** @type {Record<string, unknown> | null} */ (data.purpleair ?? null);
+  const airgradient = /** @type {Record<string, unknown> | null} */ (data.airgradient ?? null);
   /** @type {string[]} */
   const aqiBarParts = [];
   if (airnow?.aqi != null && Number.isFinite(Number(airnow.aqi))) {
@@ -374,18 +374,18 @@ export function renderHero(root, data, options = {}) {
           ${aqiBarHtml(n, { label: `AirNow regional AQI ${n} on a 0 to 500 scale` })}
         </div>`);
   }
-  if (purpleair?.aqi_pm25 != null && Number.isFinite(Number(purpleair.aqi_pm25))) {
-    const n = Math.round(Number(purpleair.aqi_pm25));
+  if (airgradient?.aqi_pm25 != null && Number.isFinite(Number(airgradient.aqi_pm25))) {
+    const n = Math.round(Number(airgradient.aqi_pm25));
     const catLabel = aqiCategory(n).label;
     const count =
-      purpleair.sensor_count != null && Number.isFinite(Number(purpleair.sensor_count))
-        ? Math.round(Number(purpleair.sensor_count))
+      airgradient.sensor_count != null && Number.isFinite(Number(airgradient.sensor_count))
+        ? Math.round(Number(airgradient.sensor_count))
         : null;
     const dist =
-      purpleair.distance_km != null && Number.isFinite(Number(purpleair.distance_km))
-        ? Number(purpleair.distance_km)
+      airgradient.distance_km != null && Number.isFinite(Number(airgradient.distance_km))
+        ? Number(airgradient.distance_km)
         : null;
-    const localBits = ['PurpleAir · local'];
+    const localBits = ['AirGradient · local'];
     if (count != null) localBits.push(count === 1 ? '1 sensor' : `${count} sensors`);
     if (dist != null) localBits.push(`${dist} km`);
     const sourceLabel = localBits.join(' · ');
@@ -394,7 +394,7 @@ export function renderHero(root, data, options = {}) {
             <button type="button" class="glance-aqi-bar__source intel-jump" data-jump-to="aqi-heading" aria-label="${escapeHtml(sourceLabel)}. Open air quality and pollen details.">${escapeHtml(sourceLabel)}</button>
             <span class="glance-aqi-bar__value">${n}${catLabel ? ` · ${escapeHtml(catLabel)}` : ''}</span>
           </div>
-          ${aqiBarHtml(n, { label: `PurpleAir local AQI ${n} on a 0 to 500 scale` })}
+          ${aqiBarHtml(n, { label: `AirGradient local AQI ${n} on a 0 to 500 scale` })}
         </div>`);
   }
   const aqiBarsHtml = aqiBarParts.length
@@ -404,7 +404,7 @@ export function renderHero(root, data, options = {}) {
   const ringSourceAria = (() => {
     const bits = [];
     if (aq.airnow != null) bits.push(`AirNow ${Math.round(aq.airnow)}`);
-    if (aq.purpleair != null) bits.push(`PurpleAir ${Math.round(aq.purpleair)}`);
+    if (aq.airgradient != null) bits.push(`AirGradient ${Math.round(aq.airgradient)}`);
     if (!bits.length && aq.source) bits.push(aq.source);
     return bits.length ? ` from ${bits.join(' and ')}` : aq.source ? ` from ${aq.source}` : '';
   })();
