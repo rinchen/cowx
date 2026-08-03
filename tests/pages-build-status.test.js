@@ -282,4 +282,63 @@ describe('GitHub Pages build polling', () => {
       build: null,
     });
   });
+
+  it('requests a Pages rebuild when the tip never gets a workflow run', async () => {
+    const responses = [
+      [fixtures.unrelated],
+      [fixtures.unrelated],
+      [fixtures.unrelated],
+      [fixtures.building],
+      [fixtures.built],
+    ];
+    let calls = 0;
+    /** @type {string[]} */
+    const requested = [];
+    /** @type {number[]} */
+    const requestLog = [];
+
+    const build = await waitForPagesBuild({
+      fetchBuilds: async () => responses[Math.min(calls++, responses.length - 1)],
+      expect: fixtures.expectedSha,
+      maxAttempts: 10,
+      missingBuildRequestAfterAttempts: 3,
+      maxMissingBuildRequests: 2,
+      requestMissingBuild: async (sha) => {
+        requested.push(sha);
+      },
+      onMissingBuildRequest: ({ requestsUsed }) => {
+        requestLog.push(requestsUsed);
+      },
+      sleep: async () => {},
+    });
+
+    assert.equal(build.conclusion, 'success');
+    assert.deepEqual(requested, [fixtures.expectedSha]);
+    assert.deepEqual(requestLog, [1]);
+  });
+
+  it('does not request a missing build when expect is empty', async () => {
+    let requests = 0;
+
+    await assert.rejects(
+      () =>
+        waitForPagesBuild({
+          fetchBuilds: async () => [],
+          expect: '',
+          maxAttempts: 5,
+          missingBuildRequestAfterAttempts: 1,
+          maxMissingBuildRequests: 2,
+          requestMissingBuild: async () => {
+            requests += 1;
+          },
+          sleep: async () => {},
+        }),
+      (error) => {
+        assert.ok(error instanceof PagesBuildWaitError);
+        assert.equal(error.code, 'timeout');
+        return true;
+      },
+    );
+    assert.equal(requests, 0);
+  });
 });

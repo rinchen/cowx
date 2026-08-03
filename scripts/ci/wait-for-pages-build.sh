@@ -5,6 +5,9 @@
 #
 # Transient "due to in progress deployment" conflicts are self-healed: clear the
 # blocking deployment lock, wait, then re-run the failed Pages workflow.
+#
+# A tip with no pages-build-deployment at all (rapid gh-pages pushes during an
+# in-flight build) is self-healed via POST /pages/builds after a short grace.
 set -euo pipefail
 
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
@@ -14,10 +17,13 @@ MAX_ATTEMPTS="${PAGES_BUILD_MAX_ATTEMPTS:-180}" # ~15 minutes at 5s
 SLEEP_SECS="${PAGES_BUILD_POLL_SECS:-5}"
 MAX_RERUNS="${PAGES_BUILD_MAX_RERUNS:-5}"
 RERUN_DELAY_SECS="${PAGES_BUILD_RERUN_DELAY_SECS:-60}"
+MAX_MISSING_BUILD_REQUESTS="${PAGES_BUILD_MAX_MISSING_REQUESTS:-2}"
+MISSING_BUILD_AFTER_ATTEMPTS="${PAGES_BUILD_MISSING_AFTER_ATTEMPTS:-12}" # ~60s
 
 echo "wait-for-pages-build: polling builds for ${REPO} (expect=${EXPECT_SHA:-any})"
 
 export REPO TOKEN EXPECT_SHA MAX_ATTEMPTS SLEEP_SECS MAX_RERUNS RERUN_DELAY_SECS
+export MAX_MISSING_BUILD_REQUESTS MISSING_BUILD_AFTER_ATTEMPTS
 node --input-type=module <<'NODE'
 import {
   diagnosePagesFailureText,
@@ -31,6 +37,10 @@ const maxAttempts = Number(process.env.MAX_ATTEMPTS || 180);
 const sleepSecs = Number(process.env.SLEEP_SECS || 5);
 const maxReruns = Number(process.env.MAX_RERUNS || 5);
 const rerunDelaySecs = Number(process.env.RERUN_DELAY_SECS || 60);
+const maxMissingBuildRequests = Number(process.env.MAX_MISSING_BUILD_REQUESTS || 2);
+const missingBuildRequestAfterAttempts = Number(
+  process.env.MISSING_BUILD_AFTER_ATTEMPTS || 12,
+);
 
 async function api(path, { method = 'GET', body, okStatuses = null } = {}) {
   const res = await fetch(`https://api.github.com${path}`, {
@@ -166,6 +176,8 @@ try {
     sleepSecs,
     maxReruns,
     rerunDelaySecs,
+    maxMissingBuildRequests,
+    missingBuildRequestAfterAttempts,
     diagnoseFailure: async (build) => {
       const text = await failureTextForBuild(build);
       return diagnosePagesFailureText(text);
@@ -176,9 +188,18 @@ try {
       // both build and deploy once the blocking deployment has settled.
       await api(`/repos/${repo}/actions/runs/${build.id}/rerun`, { method: 'POST' });
     },
+    requestMissingBuild: async () => {
+      // Rebuilds the current gh-pages tip when GitHub never enqueued a workflow.
+      await api(`/repos/${repo}/pages/builds`, { method: 'POST', okStatuses: [201, 409] });
+    },
     onRerun({ rerunsUsed, maxReruns: total, build, blockingSha, detail }) {
       console.log(
         `  re-run ${rerunsUsed}/${total}: run=${build.id ?? '-'} commit=${String(build.head_sha).slice(0, 7)} blocker=${blockingSha ? blockingSha.slice(0, 7) : '-'} delay=${rerunDelaySecs}s${detail ? ` (${detail})` : ''}`,
+      );
+    },
+    onMissingBuildRequest({ requestsUsed, maxRequests, expectSha }) {
+      console.log(
+        `  requesting Pages build ${requestsUsed}/${maxRequests} for tip ${String(expectSha).slice(0, 7)} (no workflow yet)`,
       );
     },
     onAttempt({ attempt, maxAttempts: total, status, error, build }) {
