@@ -1,6 +1,7 @@
 import { escapeHtml, safeHttpsUrl, safeExternalUrl } from './dom.js';
 import { aqiBarHtml } from './aqi.js';
 import { climatologyPeriodLabel, compareDailyToNormal, formatTempDelta } from './climatology.js';
+import { fmtDistanceMi } from './geo-math.js';
 import { isDaytime, weatherIconHtml, wmoLabel, pressureTrendIconHtml } from './icons.js';
 import { imageryUrls } from './imagery.js';
 import { resolveAstronomy, resolveCatalogNow, resolveRfComms } from './live.js';
@@ -425,7 +426,7 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
     const coagInfo = metaSourceInfo(metaSources, 'coagmet');
     rows.push({
       title: 'Agriculture (CoAgMET)',
-      body: `${coag.station_name ?? coag.station_id}${coag.distance_km != null ? ` · ${coag.distance_km} km away` : ''}${coagInfo.fetchedAt ? ` · fetched ${fmtDateTime(coagInfo.fetchedAt)}` : ''}${sourceStatusNote(coagInfo.status)}`,
+      body: `${coag.station_name ?? coag.station_id}${coag.distance_km != null ? ` · ${fmtDistanceMi(/** @type {number} */ (coag.distance_km)) ?? ''} away` : ''}${coagInfo.fetchedAt ? ` · fetched ${fmtDateTime(coagInfo.fetchedAt)}` : ''}${sourceStatusNote(coagInfo.status)}`,
       href: coag.url ? String(coag.url) : links.coagmet || 'https://coagmet.colostate.edu/',
     });
   }
@@ -444,7 +445,7 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
     const usgsInfo = metaSourceInfo(metaSources, 'usgs');
     rows.push({
       title: 'Hydrology (USGS)',
-      body: `${usgs.station_name ?? usgs.station_id}${usgs.discharge_cfs != null ? ` · ${Math.round(Number(usgs.discharge_cfs))} cfs` : ''}${usgs.distance_km != null ? ` · ${usgs.distance_km} km` : ''}${usgsInfo.fetchedAt ? ` · fetched ${fmtDateTime(usgsInfo.fetchedAt)}` : ''}${sourceStatusNote(usgsInfo.status)}`,
+      body: `${usgs.station_name ?? usgs.station_id}${usgs.discharge_cfs != null ? ` · ${Math.round(Number(usgs.discharge_cfs))} cfs` : ''}${usgs.distance_km != null ? ` · ${fmtDistanceMi(/** @type {number} */ (usgs.distance_km)) ?? ''}` : ''}${usgsInfo.fetchedAt ? ` · fetched ${fmtDateTime(usgsInfo.fetchedAt)}` : ''}${sourceStatusNote(usgsInfo.status)}`,
       href: usgs.url ? String(usgs.url) : links.usgs || 'https://waterdata.usgs.gov/',
     });
   }
@@ -469,7 +470,7 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
     const hotspots = /** @type {unknown[]} */ (nearbyFirms?.hotspots ?? []);
     rows.push({
       title: 'Satellite fire detections (FIRMS)',
-      body: `${hotspots.length ? `${hotspots.length} VIIRS hotspot${hotspots.length === 1 ? '' : 's'} within 80 km` : 'No nearby VIIRS hotspots'}${firmsInfo.fetchedAt ? ` · fetched ${fmtDateTime(firmsInfo.fetchedAt)}` : ''}${sourceStatusNote(firmsInfo.status)}`,
+      body: `${hotspots.length ? `${hotspots.length} VIIRS hotspot${hotspots.length === 1 ? '' : 's'} within ${fmtDistanceMi(80) ?? '50 mi'}` : 'No nearby VIIRS hotspots'}${firmsInfo.fetchedAt ? ` · fetched ${fmtDateTime(firmsInfo.fetchedAt)}` : ''}${sourceStatusNote(firmsInfo.status)}`,
       href: links.firms || 'https://firms.modaps.eosdis.nasa.gov/',
     });
   }
@@ -478,7 +479,7 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
     const snInfo = metaSourceInfo(metaSources, 'snotel');
     rows.push({
       title: 'Snowpack (SNOTEL)',
-      body: `${snotel.station_name ?? snotel.station_id}${snotel.snow_depth_in != null ? ` · ${snotel.snow_depth_in} in depth` : ''}${snotel.distance_km != null ? ` · ${snotel.distance_km} km` : ''}${snInfo.fetchedAt ? ` · fetched ${fmtDateTime(snInfo.fetchedAt)}` : ''}${sourceStatusNote(snInfo.status)}`,
+      body: `${snotel.station_name ?? snotel.station_id}${snotel.snow_depth_in != null ? ` · ${snotel.snow_depth_in} in depth` : ''}${snotel.distance_km != null ? ` · ${fmtDistanceMi(/** @type {number} */ (snotel.distance_km)) ?? ''}` : ''}${snInfo.fetchedAt ? ` · fetched ${fmtDateTime(snInfo.fetchedAt)}` : ''}${sourceStatusNote(snInfo.status)}`,
       href: snotel.url
         ? String(snotel.url)
         : links.snotel || 'https://www.nrcs.usda.gov/wps/portal/wcc/home/',
@@ -497,7 +498,7 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
     const cwopInfo = metaSourceInfo(metaSources, 'cwop');
     rows.push({
       title: 'Nearby PWS (CWOP / APRS)',
-      body: `${cwop.callsign}${cwop.distance_km != null ? ` · ${cwop.distance_km} km` : ''}${cwop.temp_f != null ? ` · ${Math.round(Number(cwop.temp_f))}°F` : ''}${cwopInfo.fetchedAt ? ` · fetched ${fmtDateTime(cwopInfo.fetchedAt)}` : ''}${sourceStatusNote(cwopInfo.status)}`,
+      body: `${cwop.callsign}${cwop.distance_km != null ? ` · ${fmtDistanceMi(/** @type {number} */ (cwop.distance_km)) ?? ''}` : ''}${cwop.temp_f != null ? ` · ${Math.round(Number(cwop.temp_f))}°F` : ''}${cwopInfo.fetchedAt ? ` · fetched ${fmtDateTime(cwopInfo.fetchedAt)}` : ''}${sourceStatusNote(cwopInfo.status)}`,
       href:
         pws?.links &&
         typeof pws.links === 'object' &&
@@ -1379,7 +1380,7 @@ function appendDeepForecast(root, data, ctx) {
             .join(' · ');
           li.innerHTML = `
             <strong>${escapeHtml(String(a.title ?? 'Travel alert'))}</strong>
-            ${a.distance_km != null ? `<span class="alert-ends">${escapeHtml(String(a.distance_km))} km</span>` : ''}
+            ${a.distance_km != null ? `<span class="alert-ends">${escapeHtml(fmtDistanceMi(/** @type {number} */ (a.distance_km)) ?? '')}</span>` : ''}
             ${flags ? `<p>${escapeHtml(flags)}</p>` : ''}
             ${a.roads ? `<p>Road: ${escapeHtml(String(a.roads))}</p>` : ''}
             ${a.description ? `<p>${escapeHtml(String(a.description))}</p>` : ''}
@@ -1393,7 +1394,7 @@ function appendDeepForecast(root, data, ctx) {
         const dl = document.createElement('dl');
         dl.className = 'metric-list';
         const rows = [
-          `<dt>Road segment</dt><dd>${escapeHtml(String(roadCondition.name ?? roadCondition.routeName ?? ''))}${roadCondition.distance_km != null ? ` (${roadCondition.distance_km} km)` : ''}</dd>`,
+          `<dt>Road segment</dt><dd>${escapeHtml(String(roadCondition.name ?? roadCondition.routeName ?? ''))}${roadCondition.distance_km != null ? ` (${fmtDistanceMi(/** @type {number} */ (roadCondition.distance_km)) ?? ''})` : ''}</dd>`,
         ];
         if (roadCondition.condition) {
           rows.push(`<dt>Condition</dt><dd>${escapeHtml(String(roadCondition.condition))}</dd>`);
@@ -1413,7 +1414,7 @@ function appendDeepForecast(root, data, ctx) {
         const dl = document.createElement('dl');
         dl.className = 'metric-list';
         const rows = [
-          `<dt>RWIS</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${rwis.distance_km != null ? ` (${rwis.distance_km} km)` : ''}</dd>`,
+          `<dt>RWIS</dt><dd>${escapeHtml(String(rwis.name ?? ''))}${rwis.distance_km != null ? ` (${fmtDistanceMi(/** @type {number} */ (rwis.distance_km)) ?? ''})` : ''}</dd>`,
         ];
         if (liveRwis.air_temp_f != null && Number.isFinite(liveRwis.air_temp_f)) {
           rows.push(`<dt>Air</dt><dd>${Math.round(liveRwis.air_temp_f)}°F</dd>`);
@@ -1464,14 +1465,17 @@ function appendDeepForecast(root, data, ctx) {
         renderEmpty(
           frag,
           'No nearby CoAgMET station',
-          'No agricultural station within ~40 km of this location.',
+          `No agricultural station within ~${fmtDistanceMi(40) ?? '25 mi'} of this location.`,
         );
         return frag;
       }
       const soil5 = coagValue(coag.soil_temp_5cm_f);
       const soil15 = coagValue(coag.soil_temp_15cm_f);
       const rows = [
-        ['Station', `${coag.station_name ?? coag.station_id} (${coag.distance_km} km)`],
+        [
+          'Station',
+          `${coag.station_name ?? coag.station_id}${coag.distance_km != null ? ` (${fmtDistanceMi(/** @type {number} */ (coag.distance_km)) ?? ''})` : ''}`,
+        ],
         ['Soil 5 cm', soil5 != null ? `${soil5}°F` : null],
         ['Soil 15 cm', soil15 != null ? `${soil15}°F` : null],
         [
@@ -1538,7 +1542,10 @@ function appendDeepForecast(root, data, ctx) {
       if (av.wind_kt != null) windBits.push(`${av.wind_kt} kt`);
       if (av.gust_kt != null) windBits.push(`G${av.gust_kt}`);
       const rows = [
-        ['Airport', `${av.icao ?? '—'}${av.distance_km != null ? ` (${av.distance_km} km)` : ''}`],
+        [
+          'Airport',
+          `${av.icao ?? '—'}${av.distance_km != null ? ` (${fmtDistanceMi(/** @type {number} */ (av.distance_km)) ?? ''})` : ''}`,
+        ],
         ['Flight category', av.flight_category != null ? String(av.flight_category) : null],
         ['Temperature', av.temp_f != null ? `${av.temp_f}°F` : null],
         ['Wind', windBits.length ? windBits.join(' ') : null],
@@ -1639,7 +1646,9 @@ function appendDeepForecast(root, data, ctx) {
             parts.push(`<dt>Reporting area</dt><dd>${escapeHtml(String(an.reporting_area))}</dd>`);
           }
           if (an.distance_km != null) {
-            parts.push(`<dt>AirNow distance</dt><dd>${an.distance_km} km</dd>`);
+            parts.push(
+              `<dt>AirNow distance</dt><dd>${fmtDistanceMi(/** @type {number} */ (an.distance_km)) ?? ''}</dd>`,
+            );
           }
           if (an.observed) {
             parts.push(
@@ -1664,7 +1673,7 @@ function appendDeepForecast(root, data, ctx) {
               ? Math.round(Number(ag.sensor_count))
               : null;
           parts.push(
-            `<dt>AirGradient</dt><dd>${ag.name ? escapeHtml(String(ag.name)) : '—'}${ag.distance_km != null ? ` (${ag.distance_km} km median)` : ''}${sensorCount != null ? ` · ${sensorCount} sensor${sensorCount === 1 ? '' : 's'}` : ''}</dd>`,
+            `<dt>AirGradient</dt><dd>${ag.name ? escapeHtml(String(ag.name)) : '—'}${ag.distance_km != null ? ` (${fmtDistanceMi(/** @type {number} */ (ag.distance_km)) ?? ''} median)` : ''}${sensorCount != null ? ` · ${sensorCount} sensor${sensorCount === 1 ? '' : 's'}` : ''}</dd>`,
           );
           parts.push(
             `<dt>AirGradient PM2.5</dt><dd>${ag.pm25 != null ? `${ag.pm25} µg/m³` : '—'}${sensorCount != null && sensorCount > 1 ? ' (median)' : ''}</dd>`,
@@ -1679,7 +1688,7 @@ function appendDeepForecast(root, data, ctx) {
               `<dt>AirGradient sensors</dt><dd>${agSensors
                 .map((s) => {
                   const nm = s.name ? escapeHtml(String(s.name)) : 'sensor';
-                  const d = s.distance_km != null ? `${s.distance_km} km` : '';
+                  const d = s.distance_km != null ? (fmtDistanceMi(s.distance_km) ?? '') : '';
                   const pm = s.pm25 != null ? `${s.pm25} µg/m³` : '';
                   return [nm, d, pm].filter(Boolean).join(' · ');
                 })
@@ -1973,7 +1982,7 @@ function appendDeepForecast(root, data, ctx) {
         if (!nearby || !incidents.length) {
           renderEmpty(
             wrap,
-            'No active incidents within 80 km',
+            `No active incidents within ${fmtDistanceMi(80) ?? '50 mi'}`,
             'NIFC WFIGS current locations near this catalog point.',
           );
         } else {
@@ -1982,7 +1991,7 @@ function appendDeepForecast(root, data, ctx) {
           for (const inc of incidents) {
             const li = document.createElement('li');
             const bits = [escapeHtml(String(inc.name ?? 'Incident'))];
-            if (inc.distance_km != null) bits.push(`${Number(inc.distance_km).toFixed(1)} km`);
+            if (inc.distance_km != null) bits.push(fmtDistanceMi(Number(inc.distance_km)) ?? '');
             if (inc.acres != null) bits.push(`${Math.round(Number(inc.acres))} acres`);
             if (inc.percentContained != null) {
               bits.push(`${Math.round(Number(inc.percentContained))}% contained`);
@@ -2012,7 +2021,7 @@ function appendDeepForecast(root, data, ctx) {
         if (!firms || !hotspots.length) {
           renderEmpty(
             wrap,
-            'No VIIRS hotspots within 80 km',
+            `No VIIRS hotspots within ${fmtDistanceMi(80) ?? '50 mi'}`,
             'NASA FIRMS satellite thermal anomalies (not confirmed incidents). Requires FIRMS_MAP_KEY on the fetch job.',
           );
         } else {
@@ -2021,7 +2030,7 @@ function appendDeepForecast(root, data, ctx) {
           for (const hs of hotspots) {
             const li = document.createElement('li');
             const bits = ['VIIRS hotspot'];
-            if (hs.distance_km != null) bits.push(`${Number(hs.distance_km).toFixed(1)} km`);
+            if (hs.distance_km != null) bits.push(fmtDistanceMi(Number(hs.distance_km)) ?? '');
             if (hs.frp != null) bits.push(`FRP ${Math.round(Number(hs.frp))}`);
             if (hs.confidence) bits.push(`conf ${String(hs.confidence)}`);
             if (hs.observed) bits.push(fmtDateTime(String(hs.observed)));
@@ -2129,14 +2138,18 @@ function appendDeepForecast(root, data, ctx) {
         h.textContent = 'USGS stream gauge';
         wrap.appendChild(h);
         if (!usgs) {
-          renderEmpty(wrap, 'No nearby USGS gauge', 'within 30 km of this location.');
+          renderEmpty(
+            wrap,
+            'No nearby USGS gauge',
+            `within ${fmtDistanceMi(30) ?? '19 mi'} of this location.`,
+          );
         } else {
           const dl = document.createElement('dl');
           dl.className = 'metric-list';
           const rows = [
             [
               'Station',
-              `${usgs.station_name ?? usgs.station_id}${usgs.distance_km != null ? ` (${usgs.distance_km} km)` : ''}`,
+              `${usgs.station_name ?? usgs.station_id}${usgs.distance_km != null ? ` (${fmtDistanceMi(/** @type {number} */ (usgs.distance_km)) ?? ''})` : ''}`,
             ],
             [
               'Discharge',
@@ -2185,7 +2198,7 @@ function appendDeepForecast(root, data, ctx) {
           renderEmpty(
             wrap,
             'No nearby CBRFC forecast point',
-            'Seasonal volume guidance is shown for river-corridor sites within ~60 km of a Colorado Basin RFC point.',
+            `Seasonal volume guidance is shown for river-corridor sites within ~${fmtDistanceMi(60) ?? '37 mi'} of a Colorado Basin RFC point.`,
           );
         } else {
           const dl = document.createElement('dl');
@@ -2193,7 +2206,7 @@ function appendDeepForecast(root, data, ctx) {
           const rows = [
             [
               'Point',
-              `${cbrfc.name}${cbrfc.distance_km != null ? ` (${cbrfc.distance_km} km)` : ''}`,
+              `${cbrfc.name}${cbrfc.distance_km != null ? ` (${fmtDistanceMi(/** @type {number} */ (cbrfc.distance_km)) ?? ''})` : ''}`,
             ],
             ['River', cbrfc.river != null ? String(cbrfc.river) : null],
             ['Period', cbrfc.period != null ? String(cbrfc.period) : null],
@@ -2245,7 +2258,7 @@ function appendDeepForecast(root, data, ctx) {
         renderEmpty(
           frag,
           'No nearby SNOTEL station',
-          'Shown for sites above 7,000 ft when a station is within 50 km.',
+          `Shown for sites above 7,000 ft when a station is within ${fmtDistanceMi(50) ?? '31 mi'}.`,
         );
         return frag;
       }
@@ -2255,7 +2268,7 @@ function appendDeepForecast(root, data, ctx) {
       const rows = [
         [
           'Station',
-          `${sn.station_name ?? sn.station_id}${sn.distance_km != null ? ` (${sn.distance_km} km)` : ''}${sn.elevation_ft != null ? ` · ${Number(sn.elevation_ft).toLocaleString()} ft` : ''}`,
+          `${sn.station_name ?? sn.station_id}${sn.distance_km != null ? ` (${fmtDistanceMi(/** @type {number} */ (sn.distance_km)) ?? ''})` : ''}${sn.elevation_ft != null ? ` · ${Number(sn.elevation_ft).toLocaleString()} ft` : ''}`,
         ],
         ['Snow depth', sn.snow_depth_in != null ? `${sn.snow_depth_in} in` : null],
         ['Snow water equivalent', sn.swe_in != null ? `${sn.swe_in} in` : null],

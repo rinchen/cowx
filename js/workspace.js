@@ -6,6 +6,7 @@
 import { renderDeepForecast } from './dashboard.js';
 import { escapeHtml, jumpToSection } from './dom.js';
 import { getHyperlocalPin, pinDistanceKm } from './geo.js';
+import { fmtDistanceMi } from './geo-math.js';
 import { buildHyperlocalOverlay } from './hyperlocal.js';
 import { renderHero, renderOutlook, renderSpecialtyIntel } from './intel.js';
 import {
@@ -113,7 +114,7 @@ export async function renderWorkspace(root, data, options) {
   const pinNote = pin
     ? `<p class="workspace__pin" role="status">
         <strong>${escapeHtml(pinSourceLabel)} pin</strong>
-        ${catalogDistKm != null ? ` · ${catalogDistKm} km from catalog` : ''}
+        ${catalogDistKm != null ? ` · ${fmtDistanceMi(catalogDistKm) ?? ''} from catalog` : ''}
         ${
           pin.accuracy_m != null && pin.accuracy_m < 5000
             ? ` · ±${Math.round(pin.accuracy_m)} m`
