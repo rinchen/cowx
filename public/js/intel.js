@@ -52,6 +52,7 @@ import {
 } from './sparkline.js';
 import { windCellHtml, windCompassHtml, windDirLabel } from './wind.js';
 import { rwisLiveReadings } from './rwis.js';
+import { fmtDistanceMi } from './geo-math.js';
 
 export { aqiCategory };
 
@@ -61,8 +62,9 @@ export { aqiCategory };
  * @returns {string}
  */
 function distanceLabel(km, fromYou) {
-  if (km == null || !Number.isFinite(Number(km))) return '';
-  return fromYou ? ` · ${km} km from you` : ` · ${km} km`;
+  const label = fmtDistanceMi(km);
+  if (!label) return '';
+  return fromYou ? ` · ${label} from you` : ` · ${label}`;
 }
 
 /**
@@ -383,11 +385,11 @@ export function renderHero(root, data, options = {}) {
         : null;
     const dist =
       airgradient.distance_km != null && Number.isFinite(Number(airgradient.distance_km))
-        ? Number(airgradient.distance_km)
+        ? fmtDistanceMi(Number(airgradient.distance_km))
         : null;
     const localBits = ['AirGradient · local'];
     if (count != null) localBits.push(count === 1 ? '1 sensor' : `${count} sensors`);
-    if (dist != null) localBits.push(`${dist} km`);
+    if (dist != null) localBits.push(dist);
     const sourceLabel = localBits.join(' · ');
     aqiBarParts.push(`<div class="glance-aqi-bar">
           <div class="glance-aqi-bar__meta">
@@ -624,21 +626,21 @@ export function renderHero(root, data, options = {}) {
         }
         if (firesActive) {
           const nearest = incidents[0];
+          const fireDist = fmtDistanceMi(
+            nearest?.distance_km != null ? Number(nearest.distance_km) : null,
+          );
           bits.push(
             `Nearby fire: <strong>${escapeHtml(String(nearest?.name ?? 'Incident'))}</strong>${
-              nearest?.distance_km != null ? ` (${Number(nearest.distance_km).toFixed(1)} km)` : ''
+              fireDist ? ` (${fireDist})` : ''
             }`,
           );
         }
         if (firmsActive) {
           const nearest = firmsHotspots[0];
-          bits.push(
-            `FIRMS hotspot${
-              nearest?.distance_km != null
-                ? ` <strong>${Number(nearest.distance_km).toFixed(1)} km</strong>`
-                : ''
-            }`,
+          const firmsDist = fmtDistanceMi(
+            nearest?.distance_km != null ? Number(nearest.distance_km) : null,
           );
+          bits.push(`FIRMS hotspot${firmsDist ? ` <strong>${firmsDist}</strong>` : ''}`);
         }
         if (banActive) {
           bits.push(
@@ -1372,7 +1374,7 @@ export function renderSpecialtyIntel(root, data, options = {}) {
         }
         localBlocks.push(`<div class="specialty-block" id="snow-intel-heading">
             <h3 class="glass-panel__subtitle">Snowpack</h3>
-            <p class="specialty-inline"><strong>${escapeHtml(String(snotel.station_name ?? snotel.station_id ?? 'SNOTEL'))}</strong>${snotel.distance_km != null ? ` · ${snotel.distance_km} km` : ''}${snowBits.length ? ` · ${escapeHtml(snowBits.join(' · '))}` : ''}</p>
+            <p class="specialty-inline"><strong>${escapeHtml(String(snotel.station_name ?? snotel.station_id ?? 'SNOTEL'))}</strong>${snotel.distance_km != null ? ` · ${fmtDistanceMi(/** @type {number} */ (snotel.distance_km)) ?? ''}` : ''}${snowBits.length ? ` · ${escapeHtml(snowBits.join(' · '))}` : ''}</p>
             <button type="button" class="btn btn-link intel-jump" data-jump-to="snowpack-heading">Full snowpack</button>
           </div>`);
       }

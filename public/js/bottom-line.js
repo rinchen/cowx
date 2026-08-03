@@ -4,6 +4,7 @@
  */
 
 import { pickAqi } from './aqi.js';
+import { fmtDistanceMi } from './geo-math.js';
 import { currentHourIndex, pickNowSky, resolveCatalogNow } from './outlook.js';
 
 /**
@@ -255,8 +256,11 @@ export function synthesizeBottomLine(data, options = {}) {
   if (travelHit) {
     const title = str(travelHit.title || travelHit.roads || 'Road advisory');
     const kind = travelHit.chain_law ? 'Chain law' : 'Road closure';
+    const travelDist = fmtDistanceMi(
+      travelHit.distance_km != null ? Number(travelHit.distance_km) : null,
+    );
     return withJump({
-      headline: `${kind}: ${title}${travelHit.distance_km != null ? ` (${travelHit.distance_km} km)` : ''}`,
+      headline: `${kind}: ${title}${travelDist ? ` (${travelDist})` : ''}`,
       priority: 'travel',
     });
   }

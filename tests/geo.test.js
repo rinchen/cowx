@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   assignNearestWithin,
+  fmtDistanceMi,
   haversineKm,
   nearestPoint,
   nearestPoints,
@@ -20,6 +21,24 @@ describe('haversineKm', () => {
     const boulder = { lat: 40.015, lon: -105.2705 };
     const km = haversineKm(denver, boulder);
     assert.ok(km > 35 && km < 45);
+  });
+});
+
+describe('fmtDistanceMi', () => {
+  it('returns null for non-finite input', () => {
+    assert.equal(fmtDistanceMi(null), null);
+    assert.equal(fmtDistanceMi(undefined), null);
+    assert.equal(fmtDistanceMi(Number.NaN), null);
+  });
+
+  it('uses one decimal under 10 mi', () => {
+    assert.equal(fmtDistanceMi(1.609344), '1.0 mi');
+    assert.equal(fmtDistanceMi(8), '5.0 mi');
+  });
+
+  it('uses whole miles at ≥ 10 mi', () => {
+    assert.equal(fmtDistanceMi(16.09344), '10 mi');
+    assert.equal(fmtDistanceMi(80), '50 mi');
   });
 });
 

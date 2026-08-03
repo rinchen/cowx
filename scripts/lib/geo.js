@@ -6,6 +6,7 @@
 import { nearestPoint } from '../../public/js/geo-math.js';
 
 export {
+  fmtDistanceMi,
   haversineKm,
   nearestPoint,
   nearestPoints,
