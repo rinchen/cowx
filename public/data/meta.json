@@ -1,115 +1,115 @@
 {
-  "generatedAt": "2026-08-03T00:30:18.231Z",
+  "generatedAt": "2026-08-03T04:24:42.120Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "partial",
-      "fetchedAt": "2026-08-03T00:23:11.010Z",
-      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://api.open-meteo.com/v1/forecast?latitude=38.945,38.2544,38.5,38.4519,38.3903,38.4256,38.5347,38.8422,39.2508,39.2247,39.0217,39.4097,39.4589,39.8914,39.945,40.0861,40.1078,40.0589,40.485,40.275&longitude=-105.2894,-104.6091,-104.7236,-105.2425,-105.1186,-105.0228,-105.9989,-106.1311,-106.2925,-105.9989,-105.7958,-105.4733,-105.6592,-105.7631,-105.8172,-105.9394,-106.1028,-106.3889,-106.8317,-106.9583&current=temperature_2m,relative_humidity_2m,ap"
+      "fetchedAt": "2026-08-03T04:17:41.441Z",
+      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://api.open-meteo.com/v1/forecast?latitude=40.3428,40.4419,39.0711,37.7917,37.1853,38.575,40.4383,39.0833,38.8719,38.8409,39.5883,40.2549,39.6339,39.6428,39.3972,39.5828,39.1503,39.1178,39.1875,38.0039&longitude=-105.6836,-105.7556,-106.9892,-105.5947,-108.4619,-107.7417,-108.9736,-108.7333,-104.8864,-105.0423,-105.6439,-105.6158,-105.8175,-105.8214,-106.1064,-105.6686,-107.0839,-106.4453,-106.4756,-107.7925&current=temperature_2m,relative_humidity"
     },
     {
       "id": "openmeteo_aq",
       "status": "partial",
-      "fetchedAt": "2026-08-03T00:26:53.850Z",
-      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://air-quality-api.open-meteo.com/v1/air-quality?latitude=37.505,37.1695,37.4028,36.9931,40.6255,40.2589,40.2503,40.1603,40.1222,40.0758,39.3061,39.3031,39.2636,39.2778,39.1364,38.8214,38.4806,38.4778,37.4083,38.0872,40.5822,40.6411,40.9886,40.1661,40.75,40.0847,40.13,40.7042,40.5825,40.5281,40.215,40.3294,40.5242,40.6,40.52,40.6267,40.6328,40.8056,40.85,40.4236&longitude=-105.0078,-104.5008,-104.6533,-105.0014,-103.2077,-103.6236,-103.7999,-103.21"
+      "fetchedAt": "2026-08-03T04:21:02.113Z",
+      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.1528,40.4856,40.5153,40.0375,40.0875,40.2431,39.6433,39.6314,39.6042,39.6447,39.6556,39.6469,39.65,39.5867,39.5128,39.5022,39.5744,39.6297,39.6297,39.6042,39.4817,39.4306,39.8667,39.1911,39.213,39.3686,39.4022,39.5505,39.5728,39.5486,39.5347,39.4519,39.0639,39.1589,39.1103,39.0919,39.08,39.24,39.3339,39.1958&longitude=-106.9086,-107.2597,-107.5464,-107.9131,-108.8047,-108.9389,-106.3781,-"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-03T00:26:53.971Z"
+      "fetchedAt": "2026-08-03T04:21:02.264Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:26:59.602Z"
+      "fetchedAt": "2026-08-03T04:21:08.664Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:27:00.905Z"
+      "fetchedAt": "2026-08-03T04:21:12.477Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:27:01.596Z"
+      "fetchedAt": "2026-08-03T04:21:13.733Z"
     },
     {
       "id": "purpleair",
       "status": "error",
-      "fetchedAt": "2026-08-03T00:27:01.858Z",
-      "error": "HTTP 402 for https://api.purpleair.com/v1/sensors?fields=name%2Clatitude%2Clongitude%2Cpm2.5_10minute%2Chumidity%2Ctemperature%2Clocation_type&nwlat=41.1&selat=36.9&nwlng=-109.2&selng=-102&max_age=3600: {\n  \"api_version\" : \"V1.2.2-1.1.45\",\n  \"time_stamp\" : 1785716821,\n  \"error\" : \"PaymentRequiredError\",\n  \"description\" : \"Payment is required to make this api call. Current balance is -3309 points.\"\n}"
+      "fetchedAt": "2026-08-03T04:21:13.932Z",
+      "error": "HTTP 402 for https://api.purpleair.com/v1/sensors?fields=name%2Clatitude%2Clongitude%2Cpm2.5_10minute%2Chumidity%2Ctemperature%2Clocation_type&nwlat=41.1&selat=36.9&nwlng=-109.2&selng=-102&max_age=3600: {\n  \"api_version\" : \"V1.2.2-1.1.45\",\n  \"time_stamp\" : 1785730873,\n  \"error\" : \"PaymentRequiredError\",\n  \"description\" : \"Payment is required to make this api call. Current balance is -3309 points.\"\n}"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:28:45.628Z"
+      "fetchedAt": "2026-08-03T04:23:02.960Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:28:46.655Z"
+      "fetchedAt": "2026-08-03T04:23:03.688Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:29:02.178Z"
+      "fetchedAt": "2026-08-03T04:23:24.535Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:29:07.783Z"
+      "fetchedAt": "2026-08-03T04:23:30.248Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:29:32.012Z"
+      "fetchedAt": "2026-08-03T04:23:55.811Z"
     },
     {
       "id": "cwop",
       "status": "error",
-      "fetchedAt": "2026-08-03T00:30:05.111Z",
+      "fetchedAt": "2026-08-03T04:24:28.540Z",
       "error": "HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.7&lon=-104.9&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-; HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.5&lon=-105.1&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if I"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:30:05.604Z"
+      "fetchedAt": "2026-08-03T04:24:28.967Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:30:06.103Z"
+      "fetchedAt": "2026-08-03T04:24:29.671Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:30:06.304Z"
+      "fetchedAt": "2026-08-03T04:24:29.883Z"
     },
     {
       "id": "burn_restrictions",
       "status": "partial",
-      "fetchedAt": "2026-08-03T00:30:14.713Z",
+      "fetchedAt": "2026-08-03T04:24:38.201Z",
       "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:30:14.963Z"
+      "fetchedAt": "2026-08-03T04:24:38.296Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:30:15.237Z"
+      "fetchedAt": "2026-08-03T04:24:38.924Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-03T00:30:18.231Z"
+      "fetchedAt": "2026-08-03T04:24:42.120Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 370,
-  "forecastStaleCount": 30,
-  "openmeteoCoverage": 308
+  "apiCalls": 377,
+  "forecastStaleCount": 5,
+  "openmeteoCoverage": 333
 }

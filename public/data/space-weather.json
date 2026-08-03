@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-08-03T00:30:14.963Z",
+  "generatedAt": "2026-08-03T04:24:38.296Z",
   "kp": {
-    "value": 0.33,
-    "observed": "2026-08-03T00:25:00",
+    "value": 3.67,
+    "observed": "2026-08-03T04:21:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 1.2,
-    "observed": "2026-08-03T00:24:00"
+    "value": 5.04,
+    "observed": "2026-08-03T04:19:00"
   },
   "sfi": {
     "value": 127,
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-08-03T00:29:00Z",
+    "observed": "2026-08-03T04:23:00Z",
     "forecast": [
       {
         "date": "2026-08-03",
@@ -77,30 +77,30 @@
     ]
   },
   "xray": {
-    "class": "B7.8",
-    "flux": 7.753482123007416e-7,
-    "observed": "2026-08-03T00:26:00Z"
+    "class": "B6.8",
+    "flux": 6.824790830251004e-7,
+    "observed": "2026-08-03T04:22:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
-    "detail": "Kp 0.3 — aurora unlikely at Colorado latitudes (estimate)."
+    "detail": "Kp 3.7 — aurora unlikely at Colorado latitudes (estimate)."
   },
   "hf": {
     "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
     "day": {
-      "80m": "fair",
-      "40m": "good",
-      "20m": "good",
-      "15m": "good",
-      "10m": "fair",
+      "80m": "poor",
+      "40m": "fair",
+      "20m": "fair",
+      "15m": "fair",
+      "10m": "poor",
       "6m": "poor"
     },
     "night": {
-      "80m": "excellent",
-      "40m": "excellent",
-      "20m": "fair",
-      "15m": "fair",
-      "10m": "fair",
+      "80m": "good",
+      "40m": "good",
+      "20m": "poor",
+      "15m": "poor",
+      "10m": "poor",
       "6m": "poor"
     }
   },
