@@ -682,7 +682,7 @@ const SOURCE_CHIP_META = {
   firms: { label: 'FIRMS', title: 'NASA FIRMS active fire detections' },
   cbrfc: { label: 'CBRFC', title: 'NOAA CBRFC hydrologic guidance' },
   airnow: { label: 'AirNow', title: 'EPA AirNow AQI' },
-  purpleair: { label: 'PA', title: 'PurpleAir sensors' },
+  airgradient: { label: 'AG', title: 'AirGradient sensors' },
   coagmet: { label: 'CoAg', title: 'CoAgMET agriculture stations' },
   aviation: { label: 'AV', title: 'Aviation Weather METAR/TAF' },
   cwop: { label: 'CWOP', title: 'CWOP / APRS personal weather stations' },
