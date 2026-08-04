@@ -1,112 +1,113 @@
 {
-  "generatedAt": "2026-08-04T09:48:21.511Z",
+  "generatedAt": "2026-08-04T12:08:14.353Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:36:24.739Z"
+      "fetchedAt": "2026-08-04T11:55:13.632Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:44:46.233Z"
+      "fetchedAt": "2026-08-04T12:04:39.364Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-04T09:44:46.389Z"
+      "fetchedAt": "2026-08-04T12:04:39.520Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:44:50.796Z"
+      "fetchedAt": "2026-08-04T12:04:43.299Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:44:52.500Z"
+      "fetchedAt": "2026-08-04T12:04:46.189Z"
     },
     {
       "id": "aviation",
-      "status": "ok",
-      "fetchedAt": "2026-08-04T09:44:54.527Z"
+      "status": "error",
+      "fetchedAt": "2026-08-04T12:04:46.469Z",
+      "error": "fetch failed (ETIMEDOUT) for https://aviationweather.gov/api/data/metar?ids=KDEN%2CKAPA%2CKBJC%2CKBDU%2CKLMO%2CKFNL%2CKGXY%2CKAEJ%2CKCOS%2CKPUB%2CKCSM%2CKANK%2CKLXV%2CKHDN%2CKCAG%2CKRIL%2CKEGE%2CKASE%2CKGWS%2CKGJT%2CKDRO%2CKMTJ%2CKTEX%2CKGUC%2CKPSO%2CKCEZ%2CKALS%2CKTAD%2CKSTK%2CKFMM%2CKAKO%2CKITR%2CKLIC%2CKCYS%2CKLAA%2CKJNB%2CKLHX&format=json"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:44:56.458Z"
+      "fetchedAt": "2026-08-04T12:04:48.828Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:46:52.730Z"
+      "fetchedAt": "2026-08-04T12:06:49.085Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:46:54.392Z"
+      "fetchedAt": "2026-08-04T12:06:49.916Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:47:09.445Z"
+      "fetchedAt": "2026-08-04T12:07:06.306Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:47:10.452Z"
+      "fetchedAt": "2026-08-04T12:07:11.908Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:47:34.972Z"
+      "fetchedAt": "2026-08-04T12:07:36.423Z"
     },
     {
       "id": "cwop",
       "status": "error",
-      "fetchedAt": "2026-08-04T09:48:08.017Z",
+      "fetchedAt": "2026-08-04T12:08:09.222Z",
       "error": "HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.7&lon=-104.9&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-; HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.5&lon=-105.1&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if I"
     },
     {
       "id": "hms",
-      "status": "ok",
-      "fetchedAt": "2026-08-04T09:48:08.694Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-04T12:08:09.412Z",
+      "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:48:09.106Z"
+      "fetchedAt": "2026-08-04T12:08:10.229Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:48:09.329Z"
+      "fetchedAt": "2026-08-04T12:08:10.465Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "partial",
-      "fetchedAt": "2026-08-04T09:48:17.980Z",
-      "error": "HTTP 429 for COEM fire bans page"
+      "status": "ok",
+      "fetchedAt": "2026-08-04T12:08:10.608Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:48:18.266Z"
+      "fetchedAt": "2026-08-04T12:08:10.756Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:48:18.507Z"
+      "fetchedAt": "2026-08-04T12:08:11.175Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-04T09:48:21.511Z"
+      "fetchedAt": "2026-08-04T12:08:14.353Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 357,
+  "apiCalls": 352,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
