@@ -1,109 +1,109 @@
 {
-  "generatedAt": "2026-08-05T04:04:35.697Z",
+  "generatedAt": "2026-08-05T06:39:49.669Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-05T03:53:33.944Z"
+      "fetchedAt": "2026-08-05T06:27:33.564Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:00:53.555Z"
+      "fetchedAt": "2026-08-05T06:34:51.986Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-05T04:00:53.717Z"
+      "fetchedAt": "2026-08-05T06:34:52.119Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:00:58.276Z"
+      "fetchedAt": "2026-08-05T06:34:55.571Z"
     },
     {
       "id": "coagmet",
-      "status": "error",
-      "fetchedAt": "2026-08-05T04:00:58.887Z",
-      "error": "HTTP 502 for https://coagmet.colostate.edu/data/latest.json: <!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\n<html><head>\n<title>502 Proxy Error</title>\n</head><body>\n<h1>Proxy Error</h1>\n<p>The proxy server received a"
+      "status": "ok",
+      "fetchedAt": "2026-08-05T06:34:58.135Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:00:59.176Z"
+      "fetchedAt": "2026-08-05T06:34:58.565Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:01:00.735Z"
+      "fetchedAt": "2026-08-05T06:35:00.725Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:03:02.136Z"
+      "fetchedAt": "2026-08-05T06:36:49.231Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:03:03.286Z"
+      "fetchedAt": "2026-08-05T06:36:57.787Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:03:19.521Z"
+      "fetchedAt": "2026-08-05T06:37:12.014Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:03:26.109Z"
+      "fetchedAt": "2026-08-05T06:37:23.388Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:03:49.575Z"
+      "fetchedAt": "2026-08-05T06:37:46.711Z"
     },
     {
       "id": "cwop",
       "status": "error",
-      "fetchedAt": "2026-08-05T04:04:22.855Z",
+      "fetchedAt": "2026-08-05T06:38:19.651Z",
       "error": "HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.7&lon=-104.9&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-; HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.5&lon=-105.1&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if I"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:04:23.443Z"
+      "fetchedAt": "2026-08-05T06:38:28.257Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:04:23.993Z"
+      "fetchedAt": "2026-08-05T06:38:40.534Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:04:24.154Z"
+      "fetchedAt": "2026-08-05T06:38:40.790Z"
     },
     {
       "id": "burn_restrictions",
       "status": "partial",
-      "fetchedAt": "2026-08-05T04:04:32.227Z",
+      "fetchedAt": "2026-08-05T06:38:49.215Z",
       "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:04:32.355Z"
+      "fetchedAt": "2026-08-05T06:38:49.442Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-05T04:04:32.492Z"
+      "fetchedAt": "2026-08-05T06:38:49.668Z"
     },
     {
       "id": "cbrfc",
-      "status": "ok",
-      "fetchedAt": "2026-08-05T04:04:35.697Z"
+      "status": "error",
+      "fetchedAt": "2026-08-05T06:39:49.669Z",
+      "error": "This operation was aborted (timeout) for https://www.cbrfc.noaa.gov/wsup/graph/espcond_data.py?fdate=LATEST&area=CB&sort=basin&otype=json&qpfdays=0"
     }
   ],
   "locationCount": 338,
