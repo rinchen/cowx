@@ -1,113 +1,113 @@
 {
-  "generatedAt": "2026-08-05T06:39:49.669Z",
+  "generatedAt": "2026-08-05T09:39:10.250Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:27:33.564Z"
+      "fetchedAt": "2026-08-05T09:26:39.104Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:34:51.986Z"
+      "fetchedAt": "2026-08-05T09:31:52.674Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-05T06:34:52.119Z"
+      "fetchedAt": "2026-08-05T09:31:52.823Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:34:55.571Z"
+      "fetchedAt": "2026-08-05T09:31:56.670Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:34:58.135Z"
+      "fetchedAt": "2026-08-05T09:31:58.376Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:34:58.565Z"
+      "fetchedAt": "2026-08-05T09:32:01.646Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:35:00.725Z"
+      "fetchedAt": "2026-08-05T09:32:03.241Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:36:49.231Z"
+      "fetchedAt": "2026-08-05T09:34:44.480Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:36:57.787Z"
+      "fetchedAt": "2026-08-05T09:34:45.881Z"
     },
     {
       "id": "snotel",
-      "status": "ok",
-      "fetchedAt": "2026-08-05T06:37:12.014Z"
+      "status": "error",
+      "fetchedAt": "2026-08-05T09:37:51.215Z",
+      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:37:23.388Z"
+      "fetchedAt": "2026-08-05T09:37:56.708Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:37:46.711Z"
+      "fetchedAt": "2026-08-05T09:38:22.536Z"
     },
     {
       "id": "cwop",
       "status": "error",
-      "fetchedAt": "2026-08-05T06:38:19.651Z",
+      "fetchedAt": "2026-08-05T09:38:55.774Z",
       "error": "HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.7&lon=-104.9&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-; HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.5&lon=-105.1&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if I"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:38:28.257Z"
+      "fetchedAt": "2026-08-05T09:38:56.381Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:38:40.534Z"
+      "fetchedAt": "2026-08-05T09:38:56.613Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:38:40.790Z"
+      "fetchedAt": "2026-08-05T09:38:56.866Z"
     },
     {
       "id": "burn_restrictions",
       "status": "partial",
-      "fetchedAt": "2026-08-05T06:38:49.215Z",
+      "fetchedAt": "2026-08-05T09:39:05.013Z",
       "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:38:49.442Z"
+      "fetchedAt": "2026-08-05T09:39:05.183Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-05T06:38:49.668Z"
+      "fetchedAt": "2026-08-05T09:39:05.297Z"
     },
     {
       "id": "cbrfc",
-      "status": "error",
-      "fetchedAt": "2026-08-05T06:39:49.669Z",
-      "error": "This operation was aborted (timeout) for https://www.cbrfc.noaa.gov/wsup/graph/espcond_data.py?fdate=LATEST&area=CB&sort=basin&otype=json&qpfdays=0"
+      "status": "ok",
+      "fetchedAt": "2026-08-05T09:39:10.250Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 356,
+  "apiCalls": 355,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
