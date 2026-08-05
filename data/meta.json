@@ -1,108 +1,109 @@
 {
-  "generatedAt": "2026-08-05T01:05:11.318Z",
+  "generatedAt": "2026-08-05T04:04:35.697Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-05T00:59:32.621Z"
+      "fetchedAt": "2026-08-05T03:53:33.944Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:01:41.278Z"
+      "fetchedAt": "2026-08-05T04:00:53.555Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-05T01:01:41.437Z"
+      "fetchedAt": "2026-08-05T04:00:53.717Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:01:46.495Z"
+      "fetchedAt": "2026-08-05T04:00:58.276Z"
     },
     {
       "id": "coagmet",
-      "status": "ok",
-      "fetchedAt": "2026-08-05T01:01:49.098Z"
+      "status": "error",
+      "fetchedAt": "2026-08-05T04:00:58.887Z",
+      "error": "HTTP 502 for https://coagmet.colostate.edu/data/latest.json: <!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\n<html><head>\n<title>502 Proxy Error</title>\n</head><body>\n<h1>Proxy Error</h1>\n<p>The proxy server received a"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:01:49.863Z"
+      "fetchedAt": "2026-08-05T04:00:59.176Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:01:51.339Z"
+      "fetchedAt": "2026-08-05T04:01:00.735Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:03:37.694Z"
+      "fetchedAt": "2026-08-05T04:03:02.136Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:03:38.983Z"
+      "fetchedAt": "2026-08-05T04:03:03.286Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:03:54.326Z"
+      "fetchedAt": "2026-08-05T04:03:19.521Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:03:59.897Z"
+      "fetchedAt": "2026-08-05T04:03:26.109Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:04:24.010Z"
+      "fetchedAt": "2026-08-05T04:03:49.575Z"
     },
     {
       "id": "cwop",
       "status": "error",
-      "fetchedAt": "2026-08-05T01:04:58.503Z",
+      "fetchedAt": "2026-08-05T04:04:22.855Z",
       "error": "HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.7&lon=-104.9&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-; HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.5&lon=-105.1&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if I"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:04:58.827Z"
+      "fetchedAt": "2026-08-05T04:04:23.443Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:04:59.112Z"
+      "fetchedAt": "2026-08-05T04:04:23.993Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:04:59.489Z"
+      "fetchedAt": "2026-08-05T04:04:24.154Z"
     },
     {
       "id": "burn_restrictions",
       "status": "partial",
-      "fetchedAt": "2026-08-05T01:05:08.000Z",
+      "fetchedAt": "2026-08-05T04:04:32.227Z",
       "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:05:08.235Z"
+      "fetchedAt": "2026-08-05T04:04:32.355Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:05:08.368Z"
+      "fetchedAt": "2026-08-05T04:04:32.492Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-05T01:05:11.318Z"
+      "fetchedAt": "2026-08-05T04:04:35.697Z"
     }
   ],
   "locationCount": 338,
