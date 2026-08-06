@@ -7,6 +7,8 @@
 # blocking deployment lock, wait, then re-run the failed Pages workflow.
 # Cancelled tip builds / "Deployment cancelled." / deploy-pages timeouts are
 # re-run without cancelling the tip SHA (tip cancel races the next deploy).
+# Prior tips that stay deployment_in_progress after a timeout are cleared on
+# preflight and before each re-run so the tip is not blocked for another ~10m.
 #
 # A tip with no pages-build-deployment at all (rapid gh-pages pushes during an
 # in-flight build) is self-healed via POST /pages/builds after a short grace.
@@ -30,6 +32,8 @@ export MAX_MISSING_BUILD_REQUESTS MISSING_BUILD_AFTER_ATTEMPTS
 node --input-type=module <<'NODE'
 import {
   diagnosePagesFailureText,
+  findWedgedNonTipShas,
+  sameCommitSha,
   waitForPagesBuild,
 } from './scripts/ci/pages-build-status.js';
 
@@ -166,6 +170,65 @@ async function clearBlockingDeployment(blockingSha) {
   }
 }
 
+/**
+ * Discover prior (non-tip) SHAs whose Pages deployment is still in progress.
+ * @param {string} tipSha
+ * @returns {Promise<string[]>}
+ */
+async function findWedgedNonTipDeployments(tipSha) {
+  /** @type {Set<string>} */
+  const candidates = new Set();
+
+  try {
+    const deployments = await api(
+      `/repos/${repo}/deployments?environment=github-pages&per_page=30`,
+    );
+    for (const dep of deployments ?? []) {
+      if (typeof dep?.sha === 'string' && dep.sha) candidates.add(dep.sha);
+    }
+  } catch (err) {
+    console.log(
+      `  wedge scan deployments skipped: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+
+  try {
+    const response = await api(`/repos/${repo}/actions/runs?branch=gh-pages&per_page=20`);
+    for (const run of response?.workflow_runs ?? []) {
+      if (
+        run?.path === 'dynamic/pages/pages-build-deployment' &&
+        typeof run.head_sha === 'string' &&
+        run.head_sha
+      ) {
+        candidates.add(run.head_sha);
+      }
+    }
+  } catch (err) {
+    console.log(
+      `  wedge scan workflow runs skipped: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+
+  /** @type {{ sha: string, status: unknown }[]} */
+  const entries = [];
+  for (const sha of candidates) {
+    if (sameCommitSha(sha, tipSha)) continue;
+    try {
+      const info = await api(`/repos/${repo}/pages/deployments/${sha}`, {
+        okStatuses: [200, 404],
+      });
+      if (!info) continue;
+      entries.push({ sha, status: info.status });
+    } catch (err) {
+      console.log(
+        `  wedge status ${sha.slice(0, 7)} skipped: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  return findWedgedNonTipShas(tipSha, entries);
+}
+
 try {
   const hit = await waitForPagesBuild({
     fetchBuilds: async () => {
@@ -186,6 +249,7 @@ try {
       return diagnosePagesFailureText(text);
     },
     clearBlockingDeployment,
+    findWedgedNonTipDeployments,
     rerunBuild: async (build) => {
       // GitHub reuses the run id and bumps run_attempt; a full re-run re-attempts
       // both build and deploy once the blocking deployment has settled.
@@ -194,6 +258,10 @@ try {
     requestMissingBuild: async () => {
       // Rebuilds the current gh-pages tip when GitHub never enqueued a workflow.
       await api(`/repos/${repo}/pages/builds`, { method: 'POST', okStatuses: [201, 409] });
+    },
+    onClearWedges({ shas, reason }) {
+      const list = shas.map((s) => s.slice(0, 7)).join(', ');
+      console.log(`  cleared non-tip Pages wedge(s) (${reason}): ${list}`);
     },
     onRerun({ rerunsUsed, maxReruns: total, build, blockingSha, detail }) {
       console.log(
