@@ -500,11 +500,12 @@ describe('sourceStatusChips', () => {
       { id: 'openmeteo_climatology', status: 'partial' },
       { id: 'firms', status: 'skipped' },
       { id: 'cbrfc', status: 'ok' },
+      { id: 'colo_smoke_outlook', status: 'ok' },
       { id: 'mystery_source', status: 'skipped' },
       null,
       { status: 'ok' },
     ]);
-    assert.equal(chips.length, 8);
+    assert.equal(chips.length, 9);
     assert.equal(chips[0].label, 'OM');
     assert.equal(chips[0].status, 'ok');
     assert.match(chips[0].title, /Open-Meteo forecast/i);
@@ -517,7 +518,9 @@ describe('sourceStatusChips', () => {
     assert.equal(chips[5].label, 'FIRMS');
     assert.equal(chips[5].status, 'skipped');
     assert.equal(chips[6].label, 'CBRFC');
-    assert.equal(chips[7].label, 'MYSTER');
+    assert.equal(chips[7].label, 'Smoke');
+    assert.match(chips[7].title, /Colorado Smoke Blog/i);
+    assert.equal(chips[8].label, 'MYSTER');
   });
 
   it('returns empty for non-arrays', () => {

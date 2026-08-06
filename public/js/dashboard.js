@@ -1082,6 +1082,7 @@ function buildClimatologyCompareSection(daily, climatology) {
  *   sources?: unknown[],
  *   includeMapSlot?: boolean,
  *   spaceWeather?: Record<string, unknown> | null,
+ *   coloSmokeOutlook?: Record<string, unknown> | null,
  *   hourlyCollapsed?: boolean,
  *   dailyCollapsed?: boolean,
  * }} [options]
@@ -1104,6 +1105,7 @@ export function renderDeepForecast(root, data, options = {}) {
     links,
     includeMapSlot: options.includeMapSlot === true,
     spaceWeather: options.spaceWeather ?? null,
+    coloSmokeOutlook: options.coloSmokeOutlook ?? null,
     hourlyCollapsed: options.hourlyCollapsed === true,
     dailyCollapsed: options.dailyCollapsed === true,
   });
@@ -1120,6 +1122,7 @@ export function renderDeepForecast(root, data, options = {}) {
  *   links: Record<string, string | null>,
  *   includeMapSlot?: boolean,
  *   spaceWeather?: Record<string, unknown> | null,
+ *   coloSmokeOutlook?: Record<string, unknown> | null,
  *   hourlyCollapsed?: boolean,
  *   dailyCollapsed?: boolean,
  * }} ctx
@@ -1132,6 +1135,7 @@ function appendDeepForecast(root, data, ctx) {
     links,
     sources: metaSources,
     spaceWeather = null,
+    coloSmokeOutlook = null,
     hourlyCollapsed = false,
     dailyCollapsed = false,
   } = ctx;
@@ -1907,6 +1911,57 @@ function appendDeepForecast(root, data, ctx) {
       {
         const h = document.createElement('h3');
         h.className = 'dash-subheading';
+        h.textContent = 'Colorado Smoke Outlook';
+        wrap.appendChild(h);
+        const smoke = coloSmokeOutlook;
+        const title = smoke?.title != null ? String(smoke.title).trim() : '';
+        if (!smoke || !title) {
+          renderEmpty(
+            wrap,
+            'No recent Colorado Smoke Blog update',
+            'CDPHE narrative smoke outlook unavailable for this run.',
+          );
+        } else {
+          const published =
+            smoke.publishedAt != null && String(smoke.publishedAt)
+              ? ` · published ${fmtDateTime(String(smoke.publishedAt))}`
+              : '';
+          const carried =
+            smoke.carriedForward === true
+              ? ' Showing last successful teaser — Blogspot pull failed this run.'
+              : '';
+          const box = document.createElement('div');
+          box.className = 'afd-box';
+          const snippet = smoke.snippet != null ? String(smoke.snippet) : '';
+          box.innerHTML = `
+            <p class="afd-snippet"><strong>${escapeHtml(title)}${escapeHtml(published)}:</strong>
+              ${snippet ? escapeHtml(snippet) : ''}</p>
+            <p class="table-hint">Statewide narrative from the CDPHE Air Pollution Control Division Colorado Smoke Blog (not a live sensor reading).${escapeHtml(carried)}</p>
+            <p>
+              ${
+                smoke.url && safeHttpsUrl(String(smoke.url))
+                  ? sourceLink(String(smoke.url), 'Read full Colorado Smoke Blog post')
+                  : ''
+              }
+              ${(() => {
+                const home =
+                  smoke.source && typeof smoke.source === 'object'
+                    ? /** @type {Record<string, unknown>} */ (smoke.source).homeUrl
+                    : null;
+                const homeUrl = home != null ? safeHttpsUrl(String(home)) : null;
+                return homeUrl
+                  ? ` ${sourceLink(homeUrl, 'Colorado Smoke Blog home', 'btn btn-secondary btn-sm')}`
+                  : '';
+              })()}
+            </p>
+          `;
+          wrap.appendChild(box);
+        }
+      }
+
+      {
+        const h = document.createElement('h3');
+        h.className = 'dash-subheading';
         h.textContent = 'SPC fire weather outlook';
         wrap.appendChild(h);
         if (!fw || !fw.day1) {
@@ -2538,6 +2593,10 @@ function appendDeepForecast(root, data, ctx) {
     'External tools & sources',
     () => {
       const caic = /** @type {{ name?: string, url?: string } | null} */ (links.caic ?? null);
+      const smokeHome =
+        coloSmokeOutlook?.source && typeof coloSmokeOutlook.source === 'object'
+          ? /** @type {Record<string, unknown>} */ (coloSmokeOutlook.source).homeUrl
+          : null;
       const entries = [
         ['NWS point forecast', links.nws_forecast || imgUrls.nwsForecast],
         ['NOAA / NWS radar', imgUrls.nwsRadar],
@@ -2552,6 +2611,10 @@ function appendDeepForecast(root, data, ctx) {
         ['USGS stream gauge', links.usgs],
         ['CBRFC water supply', links.cbrfc || 'https://www.cbrfc.noaa.gov/'],
         ['NASA FIRMS fire map', links.firms || 'https://firms.modaps.eosdis.nasa.gov/'],
+        [
+          'Colorado Smoke Blog (CDPHE)',
+          (smokeHome != null && String(smokeHome)) || 'https://colosmokeoutlook.blogspot.com/',
+        ],
         ['SNOTEL snowpack', links.snotel],
         ['COtrip traveler map', links.cotrip || 'https://maps.cotrip.org/'],
         [caic?.name || 'CAIC avalanche forecasts', caic?.url || null],

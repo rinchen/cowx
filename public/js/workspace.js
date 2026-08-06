@@ -37,32 +37,52 @@ function dataWithLiveAlerts(data, pin) {
 }
 
 /**
- * Load statewide space-weather snapshot (planetary; shared for all locations).
+ * Load a statewide JSON snapshot from public/data/.
  * Failure point: file missing or network error.
- * Fallback: null — ham panels hide gracefully.
+ * Fallback: null — callers hide the section gracefully.
  * @param {string} dataBase
+ * @param {string} filename
+ * @param {string} label
  * @returns {Promise<Record<string, unknown> | null>}
  */
-async function loadSpaceWeather(dataBase) {
+async function loadStatewideJson(dataBase, filename, label) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12_000);
   try {
-    const res = await fetch(`${dataBase}/space-weather.json?_=${Date.now()}`, {
+    const res = await fetch(`${dataBase}/${filename}?_=${Date.now()}`, {
       cache: 'no-store',
       signal: controller.signal,
     });
     if (!res.ok) {
-      console.warn('workspace: space-weather.json HTTP %s', res.status);
+      console.warn('workspace: %s HTTP %s', filename, res.status);
       return null;
     }
     const json = await res.json();
     return json && typeof json === 'object' ? /** @type {Record<string, unknown>} */ (json) : null;
   } catch (err) {
-    console.warn('workspace: space-weather.json unavailable', err);
+    console.warn('workspace: %s unavailable', label, err);
     return null;
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Load statewide space-weather snapshot (planetary; shared for all locations).
+ * @param {string} dataBase
+ * @returns {Promise<Record<string, unknown> | null>}
+ */
+async function loadSpaceWeather(dataBase) {
+  return loadStatewideJson(dataBase, 'space-weather.json', 'space-weather.json');
+}
+
+/**
+ * Load CDPHE Colorado Smoke Blog teaser (statewide; shared for all locations).
+ * @param {string} dataBase
+ * @returns {Promise<Record<string, unknown> | null>}
+ */
+async function loadColoSmokeOutlook(dataBase) {
+  return loadStatewideJson(dataBase, 'colo-smoke-outlook.json', 'colo-smoke-outlook.json');
 }
 
 /**
@@ -91,7 +111,7 @@ export async function renderWorkspace(root, data, options) {
   const catalogDistKm = pinDistanceKm(pin, data);
   const dataBase = options.dataBase ?? 'data';
 
-  const [hyperlocalResult, spaceWeather] = await Promise.all([
+  const [hyperlocalResult, spaceWeather, coloSmokeOutlook] = await Promise.all([
     pin
       ? buildHyperlocalOverlay(pin, { dataBase }).catch((err) => {
           console.warn('hyperlocal overlay failed', err);
@@ -100,6 +120,7 @@ export async function renderWorkspace(root, data, options) {
         })
       : Promise.resolve(null),
     loadSpaceWeather(dataBase),
+    loadColoSmokeOutlook(dataBase),
   ]);
 
   if (!stillCurrent()) {
@@ -226,6 +247,7 @@ export async function renderWorkspace(root, data, options) {
       sources: options.sources ?? [],
       includeMapSlot: false,
       spaceWeather,
+      coloSmokeOutlook,
       hourlyCollapsed: true,
       dailyCollapsed: true,
     });

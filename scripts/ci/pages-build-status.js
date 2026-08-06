@@ -41,8 +41,10 @@ export function parseInProgressDeploymentBlocker(text) {
 
 /**
  * Decide whether a pages-build-deployment failure is worth clearing/re-running.
- * Covers the deploy-pages lock conflict and the ~10m native deploy timeout
- * (large gh-pages trees with weather data often land near that limit).
+ * Covers the deploy-pages lock conflict, the ~10m native deploy timeout
+ * (large gh-pages trees with weather data often land near that limit), and
+ * "Deployment cancelled." which often follows a tip-SHA cancel/clear race
+ * (see Update Weather run 31105796205 / pages-build-deployment 31105859939).
  * @param {string} text
  * @returns {{ retryable: boolean, blockingSha: string | null, detail: string }}
  */
@@ -61,6 +63,16 @@ export function diagnosePagesFailureText(text) {
       retryable: true,
       blockingSha: null,
       detail: 'deploy-pages timeout',
+    };
+  }
+  // deploy-pages reports conclusion=failure with this annotation when GitHub
+  // cancels the deployment (supersession, lock race after tip cancel, etc.).
+  // Distinct from workflow conclusion === 'cancelled'.
+  if (/Deployment cancelled\.?/i.test(raw)) {
+    return {
+      retryable: true,
+      blockingSha: null,
+      detail: 'deployment cancelled',
     };
   }
   const compact = raw.replace(/\s+/g, ' ').trim().slice(0, 180);
@@ -264,22 +276,27 @@ export async function waitForPagesBuild(options) {
       };
       if (diagnoseFailure && !result.retryable) {
         diagnosis = await diagnoseFailure(build);
-      } else if (diagnoseFailure && result.retryable) {
+      } else if (result.retryable) {
         // Keep classify-driven retryable (e.g. cancelled) even when a diagnose
         // hook is wired — cancelled jobs rarely have useful failure text.
+        // Do not clear the tip SHA: cancelling the tip after timeout/cancel
+        // races the next deploy into "Deployment cancelled." (run 31105859939).
         diagnosis = {
           retryable: true,
           detail: result.detail,
-          blockingSha: typeof build.head_sha === 'string' ? build.head_sha : null,
+          blockingSha: null,
         };
       }
 
       if (diagnosis.retryable && rerunBuild && rerunsUsed < maxReruns && !rerunTriggered.has(key)) {
         rerunTriggered.add(key);
         rerunsUsed += 1;
-        // Prefer the SHA named in the lock error; for timeouts clear the tip itself.
+        // Only clear when diagnosis named an explicit blocker (lock conflict).
+        // Timeout / cancelled re-runs must not cancel the tip SHA.
         const blockingSha =
-          diagnosis.blockingSha ?? (typeof build.head_sha === 'string' ? build.head_sha : null);
+          typeof diagnosis.blockingSha === 'string' && diagnosis.blockingSha
+            ? diagnosis.blockingSha
+            : null;
         if (blockingSha && clearBlockingDeployment) {
           await clearBlockingDeployment(blockingSha);
         }

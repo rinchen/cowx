@@ -127,11 +127,11 @@
         METAR/TAF, USGS gauges, SNOTEL, CDOT cameras plus keyed COtrip incidents/RWIS/road
         conditions, CWOP/APRS neighborhood PWS, NOAA HMS smoke, SPC fire weather outlooks, NIFC
         nearby wildfire locations, NASA FIRMS satellite fire detections (when keyed), CBRFC
-        water-supply guidance, Colorado burn-restriction status/links, CAIC avalanche forecast
-        offsite links for mountain regions, NOAA SWPC space weather, and AirGradient community
-        sensors plus optional AirNow). Each location payload also gets locally computed astronomy
-        and nearest-ZIP pollen offsite links (no pollen API key). Each source can succeed or fail on
-        its own. Results are merged into:
+        water-supply guidance, Colorado burn-restriction status/links, CDPHE Colorado Smoke Blog
+        teaser (Blogspot RSS), CAIC avalanche forecast offsite links for mountain regions, NOAA SWPC
+        space weather, and AirGradient community sensors plus optional AirNow). Each location
+        payload also gets locally computed astronomy and nearest-ZIP pollen offsite links (no pollen
+        API key). Each source can succeed or fail on its own. Results are merged into:
       </p>
       <ul>
         <li><code>index.json</code> — slim list for search and the map</li>
@@ -145,6 +145,10 @@
         </li>
         <li>
           <code>space-weather.json</code> — statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF cues)
+        </li>
+        <li>
+          <code>colo-smoke-outlook.json</code> — statewide CDPHE Colorado Smoke Blog teaser (title,
+          published time, short snippet, link out)
         </li>
         <li><code>co-zips.json</code> — ZIP search table</li>
         <li>
