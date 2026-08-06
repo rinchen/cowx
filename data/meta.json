@@ -1,114 +1,112 @@
 {
-  "generatedAt": "2026-08-06T10:22:13.424Z",
+  "generatedAt": "2026-08-06T12:50:58.138Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "partial",
-      "fetchedAt": "2026-08-06T10:14:36.082Z",
-      "error": "nbm thunderstorm: HTTP 429 for https://api.open-meteo.com/v1/gfs?latitude=38.945,38.2544,38.5,38.4519,38.3903,38.4256,38.5347,38.8422,39.2508,39.2247,39.0217,39.4097,39.4589,39.8914,39.945,40.0861,40.1078,40.0589,40.485,40.275&longitude=-105.2894,-104.6091,-104.7236,-105.2425,-105.1186,-105.0228,-105.9989,-106.1311,-106.2925,-105.9989,-105.7958,-105.4733,-105.6592,-105.7631,-105.8172,-105.9394,-106.1028,-106.3889,-106.8317,-106.9583&hourly=thunderstorm_probability&models=ncep_nbm_conus&timezone="
+      "status": "ok",
+      "fetchedAt": "2026-08-06T12:39:36.796Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:15:45.872Z"
+      "fetchedAt": "2026-08-06T12:47:57.347Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-06T10:15:46.004Z"
+      "fetchedAt": "2026-08-06T12:47:57.503Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:15:49.880Z"
+      "fetchedAt": "2026-08-06T12:48:01.622Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:15:55.526Z"
+      "fetchedAt": "2026-08-06T12:48:04.787Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:15:56.783Z"
+      "fetchedAt": "2026-08-06T12:48:07.639Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:15:59.142Z"
+      "fetchedAt": "2026-08-06T12:48:09.267Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:17:45.049Z"
+      "fetchedAt": "2026-08-06T12:49:41.610Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:17:46.558Z"
+      "fetchedAt": "2026-08-06T12:49:42.829Z"
     },
     {
       "id": "snotel",
-      "status": "error",
-      "fetchedAt": "2026-08-06T10:20:51.906Z",
-      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations"
+      "status": "ok",
+      "fetchedAt": "2026-08-06T12:49:57.624Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:20:58.182Z"
+      "fetchedAt": "2026-08-06T12:49:58.151Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:21:24.256Z"
+      "fetchedAt": "2026-08-06T12:50:21.242Z"
     },
     {
       "id": "cwop",
       "status": "error",
-      "fetchedAt": "2026-08-06T10:21:59.562Z",
+      "fetchedAt": "2026-08-06T12:50:54.041Z",
       "error": "HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.7&lon=-104.9&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-; HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.5&lon=-105.1&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if I"
     },
     {
       "id": "hms",
-      "status": "ok",
-      "fetchedAt": "2026-08-06T10:22:00.021Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-06T12:50:54.232Z",
+      "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:22:01.086Z"
+      "fetchedAt": "2026-08-06T12:50:54.465Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:22:01.316Z"
+      "fetchedAt": "2026-08-06T12:50:54.612Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "partial",
-      "fetchedAt": "2026-08-06T10:22:09.463Z",
-      "error": "HTTP 429 for COEM fire bans page"
+      "status": "ok",
+      "fetchedAt": "2026-08-06T12:50:54.871Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:22:09.613Z"
+      "fetchedAt": "2026-08-06T12:50:55.105Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:22:10.034Z"
+      "fetchedAt": "2026-08-06T12:50:55.267Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-06T10:22:13.424Z"
+      "fetchedAt": "2026-08-06T12:50:58.138Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 355,
+  "apiCalls": 352,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
