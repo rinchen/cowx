@@ -26,6 +26,12 @@ describe('colo-smoke-outlook helpers', () => {
     assert.equal(decodeBasicEntities('&#x41;'), 'A');
   });
 
+  it('does not double-unescape ampersand-prefixed entities', () => {
+    assert.equal(decodeBasicEntities('&amp;quot;'), '&quot;');
+    assert.equal(decodeBasicEntities('&amp;lt;'), '&lt;');
+    assert.equal(decodeBasicEntities('&amp;amp;'), '&amp;');
+  });
+
   it('strips Blogspot-escaped HTML into a capped snippet', () => {
     const escaped =
       '&lt;p&gt;Air quality remains a concern across large parts of Colorado. It&#39;s a complex scenario.&lt;/p&gt;' +

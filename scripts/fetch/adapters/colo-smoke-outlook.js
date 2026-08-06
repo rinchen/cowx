@@ -14,25 +14,33 @@ export const SNIPPET_MAX_CHARS = 500;
 
 /**
  * Decode a few common XML/HTML entities (Blogspot RSS escapes HTML in description).
+ * Named entities before `&amp;` so `&amp;quot;` becomes `&quot;`, not `"`.
  * @param {string} raw
  * @returns {string}
  */
 export function decodeBasicEntities(raw) {
-  return String(raw ?? '')
-    .replace(/&#(\d+);/g, (_, n) => {
-      const code = Number(n);
-      return Number.isFinite(code) && code > 0 && code < 0x110000 ? String.fromCodePoint(code) : _;
-    })
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => {
-      const code = Number.parseInt(h, 16);
-      return Number.isFinite(code) && code > 0 && code < 0x110000 ? String.fromCodePoint(code) : _;
-    })
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'");
+  return (
+    String(raw ?? '')
+      .replace(/&#(\d+);/g, (_, n) => {
+        const code = Number(n);
+        return Number.isFinite(code) && code > 0 && code < 0x110000
+          ? String.fromCodePoint(code)
+          : _;
+      })
+      .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => {
+        const code = Number.parseInt(h, 16);
+        return Number.isFinite(code) && code > 0 && code < 0x110000
+          ? String.fromCodePoint(code)
+          : _;
+      })
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&quot;/gi, '"')
+      .replace(/&apos;/gi, "'")
+      // Unescape ampersand last to avoid double-unescaping (&amp;quot; → &quot;).
+      .replace(/&amp;/gi, '&')
+  );
 }
 
 /**
