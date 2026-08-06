@@ -5,6 +5,7 @@
 #
 # Transient "due to in progress deployment" conflicts are self-healed: clear the
 # blocking deployment lock, wait, then re-run the failed Pages workflow.
+# Cancelled tip builds (superseded mid-deploy) are also re-run.
 #
 # A tip with no pages-build-deployment at all (rapid gh-pages pushes during an
 # in-flight build) is self-healed via POST /pages/builds after a short grace.
@@ -13,7 +14,8 @@ set -euo pipefail
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
 TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN required}"
 EXPECT_SHA="${1:-}"
-MAX_ATTEMPTS="${PAGES_BUILD_MAX_ATTEMPTS:-180}" # ~15 minutes at 5s
+# ~30 minutes at 5s — covers long Actions queues plus ~10m weather-tree deploys.
+MAX_ATTEMPTS="${PAGES_BUILD_MAX_ATTEMPTS:-360}"
 SLEEP_SECS="${PAGES_BUILD_POLL_SECS:-5}"
 MAX_RERUNS="${PAGES_BUILD_MAX_RERUNS:-5}"
 RERUN_DELAY_SECS="${PAGES_BUILD_RERUN_DELAY_SECS:-60}"
@@ -33,7 +35,7 @@ import {
 const repo = process.env.REPO;
 const token = process.env.TOKEN;
 const expect = process.env.EXPECT_SHA || '';
-const maxAttempts = Number(process.env.MAX_ATTEMPTS || 180);
+const maxAttempts = Number(process.env.MAX_ATTEMPTS || 360);
 const sleepSecs = Number(process.env.SLEEP_SECS || 5);
 const maxReruns = Number(process.env.MAX_RERUNS || 5);
 const rerunDelaySecs = Number(process.env.RERUN_DELAY_SECS || 60);

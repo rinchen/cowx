@@ -89,6 +89,40 @@ describe('GitHub Pages build polling', () => {
     assert.equal(calls, 1);
   });
 
+  it('re-runs a cancelled pages-build-deployment then succeeds', async () => {
+    const responses = [
+      [fixtures.errored],
+      [fixtures.errored],
+      [fixtures.rerunInProgress],
+      [fixtures.rerunSucceeded],
+    ];
+    let calls = 0;
+    /** @type {number[]} */
+    const cleared = [];
+    /** @type {number[]} */
+    const reruns = [];
+
+    const build = await waitForPagesBuild({
+      fetchBuilds: async () => responses[Math.min(calls++, responses.length - 1)],
+      expect: fixtures.expectedSha,
+      maxAttempts: 10,
+      maxReruns: 2,
+      rerunDelaySecs: 0,
+      clearBlockingDeployment: async (sha) => {
+        cleared.push(sha);
+      },
+      rerunBuild: async (b) => {
+        reruns.push(b.id);
+      },
+      sleep: async () => {},
+    });
+
+    assert.equal(build.conclusion, 'success');
+    assert.deepEqual(cleared, [fixtures.expectedSha]);
+    assert.deepEqual(reruns, [fixtures.errored.id]);
+    assert.ok(calls >= 4);
+  });
+
   it('clears the blocker, waits, re-runs, then succeeds', async () => {
     const responses = [
       [fixtures.transientFailure],
