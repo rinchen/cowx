@@ -5,7 +5,8 @@
 #
 # Transient "due to in progress deployment" conflicts are self-healed: clear the
 # blocking deployment lock, wait, then re-run the failed Pages workflow.
-# Cancelled tip builds (superseded mid-deploy) are also re-run.
+# Cancelled tip builds / "Deployment cancelled." / deploy-pages timeouts are
+# re-run without cancelling the tip SHA (tip cancel races the next deploy).
 #
 # A tip with no pages-build-deployment at all (rapid gh-pages pushes during an
 # in-flight build) is self-healed via POST /pages/builds after a short grace.

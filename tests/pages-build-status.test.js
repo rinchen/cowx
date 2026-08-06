@@ -48,6 +48,13 @@ describe('diagnosePagesFailureText', () => {
     assert.match(d.detail, /timeout/i);
   });
 
+  it('marks Deployment cancelled annotations as retryable without a blocker SHA', () => {
+    const d = diagnosePagesFailureText('##[error]Deployment cancelled.\n');
+    assert.equal(d.retryable, true);
+    assert.equal(d.blockingSha, null);
+    assert.match(d.detail, /cancelled/i);
+  });
+
   it('marks unrelated failures as non-retryable', () => {
     const d = diagnosePagesFailureText('Page build failed.');
     assert.equal(d.retryable, false);
@@ -118,7 +125,8 @@ describe('GitHub Pages build polling', () => {
     });
 
     assert.equal(build.conclusion, 'success');
-    assert.deepEqual(cleared, [fixtures.expectedSha]);
+    // Cancelled tip builds re-run without clearing the tip SHA.
+    assert.deepEqual(cleared, []);
     assert.deepEqual(reruns, [fixtures.errored.id]);
     assert.ok(calls >= 4);
   });
@@ -166,7 +174,7 @@ describe('GitHub Pages build polling', () => {
     assert.ok(sleeps.includes(60_000), 'expected rerun delay before re-run');
   });
 
-  it('on timeout, clears the tip SHA then re-runs', async () => {
+  it('on timeout, re-runs without clearing the tip SHA', async () => {
     const responses = [
       [fixtures.transientFailure],
       [fixtures.rerunInProgress],
@@ -175,6 +183,8 @@ describe('GitHub Pages build polling', () => {
     let calls = 0;
     /** @type {string[]} */
     const cleared = [];
+    /** @type {number[]} */
+    const reruns = [];
 
     const build = await waitForPagesBuild({
       fetchBuilds: async () => responses[Math.min(calls++, responses.length - 1)],
@@ -190,13 +200,49 @@ describe('GitHub Pages build polling', () => {
       clearBlockingDeployment: async (sha) => {
         cleared.push(sha);
       },
-      rerunBuild: async () => {},
+      rerunBuild: async (b) => {
+        reruns.push(b.id);
+      },
       sleep: async () => {},
     });
 
     assert.equal(build.conclusion, 'success');
-    // No blocker SHA from diagnosis → clear the failed tip itself.
-    assert.deepEqual(cleared, [fixtures.transientFailure.head_sha]);
+    // Tip cancel after timeout races the next deploy into "Deployment cancelled."
+    assert.deepEqual(cleared, []);
+    assert.deepEqual(reruns, [fixtures.transientFailure.id]);
+  });
+
+  it('re-runs Deployment cancelled failures without clearing the tip', async () => {
+    const responses = [
+      [fixtures.transientFailure],
+      [fixtures.rerunInProgress],
+      [fixtures.rerunSucceeded],
+    ];
+    let calls = 0;
+    /** @type {string[]} */
+    const cleared = [];
+    /** @type {number[]} */
+    const reruns = [];
+
+    const build = await waitForPagesBuild({
+      fetchBuilds: async () => responses[Math.min(calls++, responses.length - 1)],
+      expect: fixtures.expectedSha,
+      maxAttempts: 10,
+      maxReruns: 3,
+      rerunDelaySecs: 0,
+      diagnoseFailure: async () => diagnosePagesFailureText('##[error]Deployment cancelled.'),
+      clearBlockingDeployment: async (sha) => {
+        cleared.push(sha);
+      },
+      rerunBuild: async (b) => {
+        reruns.push(b.id);
+      },
+      sleep: async () => {},
+    });
+
+    assert.equal(build.conclusion, 'success');
+    assert.deepEqual(cleared, []);
+    assert.deepEqual(reruns, [fixtures.transientFailure.id]);
   });
 
   it('fails immediately when diagnosis is not retryable', async () => {
