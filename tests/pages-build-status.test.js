@@ -5,13 +5,18 @@ import {
   PagesBuildWaitError,
   classifyPagesBuild,
   diagnosePagesFailureText,
+  findWedgedNonTipShas,
+  isWedgedPagesDeploymentStatus,
   parseInProgressDeploymentBlocker,
+  sameCommitSha,
   waitForPagesBuild,
 } from '../scripts/ci/pages-build-status.js';
 
 const fixtures = JSON.parse(
   await readFile(new URL('./fixtures/pages-builds.json', import.meta.url), 'utf8'),
 );
+
+const PRIOR_WEDGE_SHA = 'b23f5971663e150a24ee7c7b0d6bcaa858c45788';
 
 describe('parseInProgressDeploymentBlocker', () => {
   it('extracts the blocking SHA from a deploy-pages conflict', () => {
@@ -58,6 +63,37 @@ describe('diagnosePagesFailureText', () => {
   it('marks unrelated failures as non-retryable', () => {
     const d = diagnosePagesFailureText('Page build failed.');
     assert.equal(d.retryable, false);
+  });
+});
+
+describe('wedged non-tip Pages lock helpers', () => {
+  it('sameCommitSha matches full SHAs and unique prefixes', () => {
+    assert.equal(sameCommitSha(fixtures.expectedSha, fixtures.expectedSha), true);
+    assert.equal(sameCommitSha(fixtures.expectedSha, fixtures.expectedSha.slice(0, 7)), true);
+    assert.equal(sameCommitSha(fixtures.expectedSha, PRIOR_WEDGE_SHA), false);
+    assert.equal(sameCommitSha('', fixtures.expectedSha), false);
+  });
+
+  it('isWedgedPagesDeploymentStatus recognizes in-progress shapes', () => {
+    assert.equal(isWedgedPagesDeploymentStatus('deployment_in_progress'), true);
+    assert.equal(isWedgedPagesDeploymentStatus('queued'), true);
+    assert.equal(isWedgedPagesDeploymentStatus('pending'), true);
+    assert.equal(isWedgedPagesDeploymentStatus('in_progress'), true);
+    assert.equal(isWedgedPagesDeploymentStatus('succeed'), false);
+    assert.equal(isWedgedPagesDeploymentStatus('failure'), false);
+  });
+
+  it('findWedgedNonTipShas excludes tip, finished statuses, and duplicates', () => {
+    assert.deepEqual(
+      findWedgedNonTipShas(fixtures.expectedSha, [
+        { sha: fixtures.expectedSha, status: 'deployment_in_progress' },
+        { sha: PRIOR_WEDGE_SHA, status: 'deployment_in_progress' },
+        { sha: PRIOR_WEDGE_SHA, status: 'deployment_in_progress' },
+        { sha: fixtures.unrelated.head_sha, status: 'succeed' },
+        { sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', status: 'queued' },
+      ]),
+      [PRIOR_WEDGE_SHA, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+    );
   });
 });
 
@@ -208,8 +244,89 @@ describe('GitHub Pages build polling', () => {
 
     assert.equal(build.conclusion, 'success');
     // Tip cancel after timeout races the next deploy into "Deployment cancelled."
+    // Without a wedge finder, nothing is cleared.
     assert.deepEqual(cleared, []);
     assert.deepEqual(reruns, [fixtures.transientFailure.id]);
+  });
+
+  it('on timeout, clears wedged non-tip SHAs but never the tip', async () => {
+    const responses = [
+      [fixtures.transientFailure],
+      [fixtures.rerunInProgress],
+      [fixtures.rerunSucceeded],
+    ];
+    let calls = 0;
+    /** @type {string[]} */
+    const cleared = [];
+    /** @type {Array<{ shas: string[], reason: string }>} */
+    const clearLog = [];
+    let wedgeScans = 0;
+
+    const build = await waitForPagesBuild({
+      fetchBuilds: async () => responses[Math.min(calls++, responses.length - 1)],
+      expect: fixtures.expectedSha,
+      maxAttempts: 10,
+      maxReruns: 3,
+      rerunDelaySecs: 0,
+      diagnoseFailure: async () => ({
+        retryable: true,
+        blockingSha: null,
+        detail: 'deploy-pages timeout',
+      }),
+      findWedgedNonTipDeployments: async (tip) => {
+        wedgeScans += 1;
+        assert.equal(tip, fixtures.expectedSha);
+        // Misreport tip as wedged too — waitForPagesBuild must still skip it.
+        return [PRIOR_WEDGE_SHA, fixtures.expectedSha];
+      },
+      clearBlockingDeployment: async (sha) => {
+        cleared.push(sha);
+      },
+      onClearWedges: (details) => {
+        clearLog.push(details);
+      },
+      rerunBuild: async () => {},
+      sleep: async () => {},
+    });
+
+    assert.equal(build.conclusion, 'success');
+    assert.ok(wedgeScans >= 2, 'expected preflight + rerun wedge scans');
+    assert.deepEqual(cleared, [PRIOR_WEDGE_SHA, PRIOR_WEDGE_SHA]);
+    assert.ok(!cleared.includes(fixtures.expectedSha));
+    assert.deepEqual(
+      clearLog.map((e) => e.reason),
+      ['preflight', 'rerun'],
+    );
+  });
+
+  it('preflight clears wedged non-tip locks before the first poll', async () => {
+    /** @type {string[]} */
+    const cleared = [];
+    /** @type {string[]} */
+    const reasons = [];
+    let fetchCalls = 0;
+
+    const build = await waitForPagesBuild({
+      fetchBuilds: async () => {
+        fetchCalls += 1;
+        assert.deepEqual(cleared, [PRIOR_WEDGE_SHA], 'preflight must run before fetchBuilds');
+        return [fixtures.built];
+      },
+      expect: fixtures.expectedSha,
+      findWedgedNonTipDeployments: async () => [PRIOR_WEDGE_SHA],
+      clearBlockingDeployment: async (sha) => {
+        cleared.push(sha);
+      },
+      onClearWedges: ({ reason }) => {
+        reasons.push(reason);
+      },
+      sleep: async () => {},
+    });
+
+    assert.equal(build.head_sha, fixtures.expectedSha);
+    assert.equal(fetchCalls, 1);
+    assert.deepEqual(cleared, [PRIOR_WEDGE_SHA]);
+    assert.deepEqual(reasons, ['preflight']);
   });
 
   it('re-runs Deployment cancelled failures without clearing the tip', async () => {
@@ -245,6 +362,38 @@ describe('GitHub Pages build polling', () => {
     assert.deepEqual(reruns, [fixtures.transientFailure.id]);
   });
 
+  it('never clears the tip when diagnosis names it as the blocker', async () => {
+    const responses = [
+      [fixtures.transientFailure],
+      [fixtures.rerunInProgress],
+      [fixtures.rerunSucceeded],
+    ];
+    let calls = 0;
+    /** @type {string[]} */
+    const cleared = [];
+
+    const build = await waitForPagesBuild({
+      fetchBuilds: async () => responses[Math.min(calls++, responses.length - 1)],
+      expect: fixtures.expectedSha,
+      maxAttempts: 10,
+      maxReruns: 3,
+      rerunDelaySecs: 0,
+      diagnoseFailure: async () => ({
+        retryable: true,
+        blockingSha: fixtures.expectedSha,
+        detail: 'in-progress deployment conflict',
+      }),
+      findWedgedNonTipDeployments: async () => [],
+      clearBlockingDeployment: async (sha) => {
+        cleared.push(sha);
+      },
+      rerunBuild: async () => {},
+      sleep: async () => {},
+    });
+
+    assert.equal(build.conclusion, 'success');
+    assert.deepEqual(cleared, []);
+  });
   it('fails immediately when diagnosis is not retryable', async () => {
     let reruns = 0;
     let clears = 0;

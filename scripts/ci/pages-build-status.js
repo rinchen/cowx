@@ -9,6 +9,11 @@
  * "due to in progress deployment. Please cancel <sha> first" when a prior
  * gh-pages commit's Pages deployment is still settling (or wedged). Re-running
  * alone is not enough — clear the blocker, wait, then re-run.
+ *
+ * Timeout / "Deployment cancelled." retries must not cancel the *tip* SHA
+ * (tip cancel races the next deploy). Prior tips can remain
+ * deployment_in_progress after a ~10m timeout and block the tip — those
+ * non-tip wedges are cleared on preflight and before each re-run.
  */
 
 export class PagesBuildWaitError extends Error {
@@ -84,17 +89,76 @@ export function diagnosePagesFailureText(text) {
 }
 
 /**
+ * Whether two commit SHAs refer to the same commit (full match or unique prefix).
+ * @param {string} a
+ * @param {string} b
+ * @returns {boolean}
+ */
+export function sameCommitSha(a, b) {
+  const left = String(a ?? '')
+    .trim()
+    .toLowerCase();
+  const right = String(b ?? '')
+    .trim()
+    .toLowerCase();
+  if (!left || !right) return false;
+  return left === right || left.startsWith(right) || right.startsWith(left);
+}
+
+/**
+ * True when a Pages deployment status can block a newer tip from publishing.
+ * @param {unknown} status
+ * @returns {boolean}
+ */
+export function isWedgedPagesDeploymentStatus(status) {
+  const s = String(status ?? '')
+    .trim()
+    .toLowerCase();
+  return (
+    s === 'deployment_in_progress' ||
+    s === 'queued' ||
+    s === 'pending' ||
+    // Some API shapes return the bare workflow-style status.
+    s === 'in_progress'
+  );
+}
+
+/**
+ * Filter deployment status entries down to unique non-tip wedged SHAs.
+ * Never returns the tip (even if it is marked in_progress).
+ * @param {string} tipSha
+ * @param {{ sha?: string, status?: unknown }[]} entries
+ * @returns {string[]}
+ */
+export function findWedgedNonTipShas(tipSha, entries) {
+  const tip = String(tipSha ?? '').trim();
+  /** @type {string[]} */
+  const out = [];
+  /** @type {Set<string>} */
+  const seen = new Set();
+  for (const entry of entries ?? []) {
+    const sha = typeof entry?.sha === 'string' ? entry.sha.trim() : '';
+    if (!sha || sameCommitSha(sha, tip)) continue;
+    if (!isWedgedPagesDeploymentStatus(entry?.status)) continue;
+    const key = sha.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(sha);
+  }
+  return out;
+}
+
+/**
  * @param {Record<string, unknown>[]} builds
  * @param {string} expect
  * @returns {Record<string, unknown> | null}
  */
 export function findExpectedBuild(builds, expect) {
   if (!expect) return builds[0] ?? null;
-  const prefix = expect.slice(0, 7);
   return (
     builds.find((build) => {
       const commit = typeof build.head_sha === 'string' ? build.head_sha : '';
-      return commit === expect || commit.startsWith(prefix);
+      return sameCommitSha(commit, expect);
     }) ?? null
   );
 }
@@ -173,6 +237,7 @@ function buildAttemptKey(build) {
  *   sleep?: (ms: number) => Promise<void>,
  *   diagnoseFailure?: (build: Record<string, unknown>) => Promise<PagesFailureDiagnosis>,
  *   clearBlockingDeployment?: (blockingSha: string) => Promise<void>,
+ *   findWedgedNonTipDeployments?: (tipSha: string) => Promise<string[]>,
  *   rerunBuild?: (build: Record<string, unknown>) => Promise<void>,
  *   maxReruns?: number,
  *   rerunDelaySecs?: number,
@@ -193,6 +258,10 @@ function buildAttemptKey(build) {
  *     blockingSha?: string | null,
  *     detail?: string,
  *   }) => void,
+ *   onClearWedges?: (details: {
+ *     shas: string[],
+ *     reason: 'preflight' | 'rerun',
+ *   }) => void,
  *   onMissingBuildRequest?: (details: {
  *     requestsUsed: number,
  *     maxRequests: number,
@@ -211,9 +280,11 @@ export async function waitForPagesBuild(options) {
   const sleep = options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   const onAttempt = options.onAttempt ?? (() => {});
   const onRerun = options.onRerun ?? (() => {});
+  const onClearWedges = options.onClearWedges ?? (() => {});
   const onMissingBuildRequest = options.onMissingBuildRequest ?? (() => {});
   const diagnoseFailure = options.diagnoseFailure ?? null;
   const clearBlockingDeployment = options.clearBlockingDeployment ?? null;
+  const findWedgedNonTipDeployments = options.findWedgedNonTipDeployments ?? null;
   const rerunBuild = options.rerunBuild ?? null;
   const requestMissingBuild = options.requestMissingBuild ?? null;
   const maxReruns = options.maxReruns ?? 0;
@@ -241,6 +312,29 @@ export async function waitForPagesBuild(options) {
   if (!Number.isInteger(missingBuildRequestAfterAttempts) || missingBuildRequestAfterAttempts < 1) {
     throw new TypeError('missingBuildRequestAfterAttempts must be a positive integer');
   }
+
+  /**
+   * Clear prior-tip Pages locks. Never cancels `expect` even if a finder
+   * misreports it as wedged.
+   * @param {'preflight' | 'rerun'} reason
+   * @returns {Promise<string[]>}
+   */
+  async function clearNonTipWedges(reason) {
+    if (!expect || !findWedgedNonTipDeployments || !clearBlockingDeployment) return [];
+    const discovered = await findWedgedNonTipDeployments(expect);
+    const shas = findWedgedNonTipShas(
+      expect,
+      (discovered ?? []).map((sha) => ({ sha, status: 'deployment_in_progress' })),
+    );
+    for (const sha of shas) {
+      await clearBlockingDeployment(sha);
+    }
+    if (shas.length > 0) onClearWedges({ shas, reason });
+    return shas;
+  }
+
+  // Preflight: drop wedged prior tips before burning a ~10m deploy-pages poll.
+  await clearNonTipWedges('preflight');
 
   let lastStatus = 'not_found';
   let lastBuild = null;
@@ -291,20 +385,22 @@ export async function waitForPagesBuild(options) {
       if (diagnosis.retryable && rerunBuild && rerunsUsed < maxReruns && !rerunTriggered.has(key)) {
         rerunTriggered.add(key);
         rerunsUsed += 1;
-        // Only clear when diagnosis named an explicit blocker (lock conflict).
-        // Timeout / cancelled re-runs must not cancel the tip SHA.
-        const blockingSha =
+        // Explicit lock-conflict blocker from error text (never the tip).
+        const namedBlocker =
           typeof diagnosis.blockingSha === 'string' && diagnosis.blockingSha
             ? diagnosis.blockingSha
             : null;
-        if (blockingSha && clearBlockingDeployment) {
-          await clearBlockingDeployment(blockingSha);
+        if (namedBlocker && !sameCommitSha(namedBlocker, expect) && clearBlockingDeployment) {
+          await clearBlockingDeployment(namedBlocker);
         }
+        // Timeout / cancelled: also clear any other non-tip wedges still holding
+        // deployment_in_progress (today's failure mode for prior tips).
+        await clearNonTipWedges('rerun');
         onRerun({
           rerunsUsed,
           maxReruns,
           build,
-          blockingSha,
+          blockingSha: namedBlocker,
           detail: diagnosis.detail,
         });
         // Prior weather deploys can take ~10 minutes; a short poll interval is
