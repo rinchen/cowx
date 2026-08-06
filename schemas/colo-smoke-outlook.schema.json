@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cowx.dev/schemas/colo-smoke-outlook.schema.json",
+  "title": "COWX Colorado Smoke Outlook snapshot",
+  "description": "Statewide CDPHE Colorado Smoke Blog teaser written to public/data/colo-smoke-outlook.json (not per-location).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["generatedAt", "title", "url", "snippet", "source"],
+  "properties": {
+    "generatedAt": { "type": "string" },
+    "carriedForward": { "type": "boolean" },
+    "title": { "type": "string", "minLength": 1 },
+    "publishedAt": { "type": ["string", "null"] },
+    "url": { "type": "string", "minLength": 1 },
+    "snippet": { "type": "string" },
+    "guid": { "type": ["string", "null"] },
+    "source": {
+      "type": "object",
+      "required": ["name", "homeUrl"],
+      "properties": {
+        "name": { "type": "string" },
+        "homeUrl": { "type": "string" },
+        "feedUrl": { "type": "string" }
+      }
+    }
+  }
+}

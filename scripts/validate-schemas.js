@@ -59,12 +59,14 @@ async function main() {
   const meta = await loadSchema('meta.schema.json');
   const indexEntry = await loadSchema('index-entry.schema.json');
   const spaceWeather = await loadSchema('space-weather.schema.json');
+  const coloSmokeOutlook = await loadSchema('colo-smoke-outlook.schema.json');
 
   ajv.addSchema(location);
   ajv.addSchema(locationsArray);
   ajv.addSchema(meta);
   ajv.addSchema(indexEntry);
   ajv.addSchema(spaceWeather);
+  ajv.addSchema(coloSmokeOutlook);
 
   const catalog = JSON.parse(
     await readFile(path.join(ROOT, 'scripts/locations/colorado-locations.json'), 'utf8'),
@@ -89,6 +91,21 @@ async function main() {
   } catch (err) {
     if (/** @type {NodeJS.ErrnoException} */ (err).code !== 'ENOENT') throw err;
     console.warn('validate:schemas: skipping space-weather.json (not present)');
+  }
+
+  const coloSmokePath = path.join(DATA, 'colo-smoke-outlook.json');
+  try {
+    await access(coloSmokePath);
+    const smoke = JSON.parse(await readFile(coloSmokePath, 'utf8'));
+    assertValid(
+      ajv,
+      'colo-smoke-outlook.schema.json',
+      smoke,
+      'public/data/colo-smoke-outlook.json',
+    );
+  } catch (err) {
+    if (/** @type {NodeJS.ErrnoException} */ (err).code !== 'ENOENT') throw err;
+    console.warn('validate:schemas: skipping colo-smoke-outlook.json (not present)');
   }
 
   const indexPath = path.join(DATA, 'index.json');

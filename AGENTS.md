@@ -46,6 +46,7 @@ cowx/   # repo directory (brand: COWX)
 │       ├── spc-firewx.geojson
 │       ├── firms-fires.geojson # NASA FIRMS VIIRS hotspots (when keyed)
 │       ├── space-weather.json # NOAA SWPC planetary snapshot (ham / HF)
+│       ├── colo-smoke-outlook.json # CDPHE Colorado Smoke Blog teaser
 │       └── locations/{slug}.json   # Full per-location payload
 ├── tests/                    # Node test runner (`pnpm test`) — fixtures only, no live APIs
 │   └── fixtures/             # Recorded API responses for adapter/unit tests
@@ -59,14 +60,15 @@ cowx/   # repo directory (brand: COWX)
 
 ### Key artifacts
 
-| Path                                        | Purpose                                                                                                                                                              |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/locations/colorado-locations.json` | Input catalog for fetch; validated by `pnpm validate:locations`                                                                                                      |
-| `public/data/meta.json`                     | `generatedAt`, `version`, `sources[]`, `apiCalls`, `forecastStaleCount`, `locationCount`, `openmeteoCoverage`                                                        |
-| `public/data/index.json`                    | Client lookup: slug, name, lat, lon, summary fields                                                                                                                  |
-| `public/data/locations/{slug}.json`         | Full drill-down weather/AQ payload for one location                                                                                                                  |
-| `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)                                                                                                          |
-| `schemas/*.schema.json`                     | Contracts (`location`, `locations-array`, `weather-payload`, `meta`, `index-entry`, `space-weather`); catalog/meta/index samples enforced by `pnpm validate:schemas` |
+| Path                                        | Purpose                                                                                                                                                                                    |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `scripts/locations/colorado-locations.json` | Input catalog for fetch; validated by `pnpm validate:locations`                                                                                                                            |
+| `public/data/meta.json`                     | `generatedAt`, `version`, `sources[]`, `apiCalls`, `forecastStaleCount`, `locationCount`, `openmeteoCoverage`                                                                              |
+| `public/data/index.json`                    | Client lookup: slug, name, lat, lon, summary fields                                                                                                                                        |
+| `public/data/locations/{slug}.json`         | Full drill-down weather/AQ payload for one location                                                                                                                                        |
+| `public/data/space-weather.json`            | Statewide NOAA SWPC snapshot (Kp, SFI, R/S/G, HF estimates)                                                                                                                                |
+| `public/data/colo-smoke-outlook.json`       | Statewide CDPHE Colorado Smoke Blog teaser (title, publishedAt, snippet, link)                                                                                                             |
+| `schemas/*.schema.json`                     | Contracts (`location`, `locations-array`, `weather-payload`, `meta`, `index-entry`, `space-weather`, `colo-smoke-outlook`); catalog/meta/index samples enforced by `pnpm validate:schemas` |
 
 **PR previews / Pages:** Weather JSON is published only by `update-weather.yml`. Code pushes use `pages.yml` for **UI only** (`clean-exclude: pr-preview` + `data`, omits `public/data` from the payload) so merges cannot roll back live weather. Bot data commits with `GITHUB_TOKEN` do not trigger `pages.yml`. All writers share the `gh-pages` concurrency group. Same-repo PRs get `/pr-preview/pr-N/` via `preview.yml` (treat as untrusted). Previews ship **UI only** (no duplicated `public/data/`) and read live JSON from production `/cowx/data` — legacy Pages builds fail on a full doubled tree. Production deploys strip any leftover `pr-preview/*/data` and **fail the workflow** if the GitHub Pages build errors (so Actions cannot stay green while the CDN is frozen). Keep `public/.nojekyll` so Pages/Jekyll does not rewrite the tree. See README for one-time Pages setup.
 
@@ -156,7 +158,7 @@ export async function fetchExample(locations, env = process.env) {
 1. Load `colorado-locations.json`.
 2. Run each adapter via `runAdapterSafely` (unexpected throws become `status: 'error'`); collect per-source status for `meta.json`.
 3. Merge adapter `bySlug` maps into per-slug payloads (inline).
-4. Write `public/data/index.json`, `locations/{slug}.json`, `meta.json`, `alerts.geojson`, `cdot-cameras.geojson`, `cdot-alerts.geojson`, `cwop.geojson`, `hms-smoke.geojson`, `spc-firewx.geojson`, `space-weather.json`, and copy `co-zips.json`.
+4. Write `public/data/index.json`, `locations/{slug}.json`, `meta.json`, `alerts.geojson`, `cdot-cameras.geojson`, `cdot-alerts.geojson`, `cwop.geojson`, `hms-smoke.geojson`, `spc-firewx.geojson`, `space-weather.json`, `colo-smoke-outlook.json`, and copy `co-zips.json`.
 5. Schemas under `schemas/` are reference contracts — CI currently runs lint/test/`validate:locations` only.
 
 **Resilience rules:**
@@ -226,6 +228,7 @@ Approximate call budget per run (scales with catalog size; actual counts are wri
 | CBRFC water-supply guidance                   | 1 (ESP JSON, nearest CO point per location)                             | None              |
 | COEM burn restrictions                        | 1 (HTML status + curated links)                                         | None              |
 | NOAA SWPC space weather                       | ~5 (scales, Kp, Boulder K, SFI, X-ray)                                  | None              |
+| CDPHE Colorado Smoke Blog (Blogspot RSS)      | 1 (latest post teaser → `colo-smoke-outlook.json`)                      | None              |
 | AirGradient                                   | 1 (public world current; CO-filtered)                                   | None              |
 | AirNow                                        | ~200–220 grid points when keyed (@0.2°)                                 | `AIRNOW_API_KEY`  |
 | Catalog `webcam_links` / CAIC offsite links   | 0 (copied into payloads; no CAIC scrape)                                | None              |
@@ -238,7 +241,7 @@ Partial adapter failure is acceptable; total failure (zero locations written or 
 
 Citizen, pilot, farmer, firefighter, and ham radio operator needs define **what fields the fetch pipeline must collect** (forecast depth, METAR/TAF, CoAgMET, AQI/smoke cues, road alerts, NOAA SWPC space weather / HF cues, etc.). The public workspace shows **all** available sections for every location — there is no persona filter bar.
 
-Locality pages open a dual-pane **workspace**: RainViewer radar map beside an **At a Glance** hero (bottom-line headline, now conditions, AQI, optional pin “At your location” strip), then full-width **Short-Term Outlook** (compact hours + scrubbable 24h meteograms), a specialty band (CDOT cameras/RWIS/road alerts & conditions, local webcam **new-tab links**, nearby PWS/CoAgMET/SNOTEL, astronomy, fire weather cues, ham radio / RF), and collapsed deep panels (48h hourly, 10-day daily, alert text + `alerts.geojson` polygons, air quality & pollen **offsite links**, NOAA/NWS and CSU CIRA imagery). Planetary space weather is written once to `public/data/space-weather.json` (not duplicated per location).
+Locality pages open a dual-pane **workspace**: RainViewer radar map beside an **At a Glance** hero (bottom-line headline, now conditions, AQI, optional pin “At your location” strip), then full-width **Short-Term Outlook** (compact hours + scrubbable 24h meteograms), a specialty band (CDOT cameras/RWIS/road alerts & conditions, local webcam **new-tab links**, nearby PWS/CoAgMET/SNOTEL, astronomy, fire weather cues, ham radio / RF), and collapsed deep panels (48h hourly, 10-day daily, alert text + `alerts.geojson` polygons, air quality & pollen **offsite links**, NOAA/NWS and CSU CIRA imagery). Planetary space weather is written once to `public/data/space-weather.json` (not duplicated per location). The CDPHE Colorado Smoke Blog teaser is written once to `public/data/colo-smoke-outlook.json` (not duplicated per location).
 
 **Hyperlocal pin (client, no API keys):** Locate (high-accuracy GPS), IP “Go to”, or Colorado street-address Set pin (`public/js/geocode.js` → Nominatim, CO-bounded, submit-only) stores a browser-persistent pin (`localStorage` `cowx:hyperlocalPin`; migrates any legacy `sessionStorage` value). Survives refresh and new tabs; cleared when the user searches a catalog city or clears site data. Always force-refresh the workspace after setting a pin even if the catalog slug is unchanged. The workspace still loads the nearest catalog `locations/{slug}.json` for full forecast tables. With a pin, `public/js/hyperlocal.js` re-ranks statewide `cdot-cameras.geojson`, `cdot-alerts.geojson`, and `cwop.geojson` by haversine from the pin, and may fetch **one** keyless Open-Meteo `current=` response for the pin strip (fallback status if that fails). Searching a city clears the pin. Do not add client API **keys**; keep address geocode user-triggered and Colorado-bounded.
 

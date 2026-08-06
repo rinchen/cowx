@@ -37,6 +37,7 @@ import { fetchSpcFireWx } from './adapters/spc-firewx.js';
 import { fetchNifcFires } from './adapters/nifc-fires.js';
 import { fetchBurnRestrictions, mergeFireRestrictions } from './adapters/burn-restrictions.js';
 import { fetchSpaceWeather } from './adapters/space-weather.js';
+import { fetchColoSmokeOutlook } from './adapters/colo-smoke-outlook.js';
 import { fetchFirms } from './adapters/firms.js';
 import { fetchCbrfc } from './adapters/cbrfc.js';
 import { buildCaicLink } from '../lib/caic-links.js';
@@ -205,6 +206,11 @@ export async function runFetch() {
   const spaceWeather = await runAdapter(
     'space_weather',
     () => fetchSpaceWeather(),
+    (r) => (r.snapshot ? '(snapshot)' : ''),
+  );
+  const coloSmokeOutlook = await runAdapter(
+    'colo_smoke_outlook',
+    () => fetchColoSmokeOutlook(),
     (r) => (r.snapshot ? '(snapshot)' : ''),
   );
   const firms = await runAdapter(
@@ -543,6 +549,37 @@ export async function runFetch() {
     await writeFile(
       path.join(DATA_DIR, 'space-weather.json'),
       `${JSON.stringify(spaceWeatherSnapshot, null, 2)}\n`,
+      'utf8',
+    );
+  }
+
+  let coloSmokeSnapshot = coloSmokeOutlook.snapshot ?? null;
+  if (!coloSmokeSnapshot) {
+    try {
+      const priorSmoke = JSON.parse(
+        await readFile(path.join(DATA_DIR, 'colo-smoke-outlook.json'), 'utf8'),
+      );
+      if (priorSmoke && typeof priorSmoke === 'object') {
+        coloSmokeSnapshot = { ...priorSmoke, carriedForward: true };
+        const smokeMeta = sources.find((s) => s.id === 'colo_smoke_outlook');
+        if (smokeMeta) {
+          smokeMeta.status = 'partial';
+          smokeMeta.error = sanitizeErrorMessage(
+            [smokeMeta.error, 'carried forward prior colo-smoke-outlook.json']
+              .filter(Boolean)
+              .join('; '),
+          );
+        }
+      }
+    } catch {
+      /* no prior snapshot */
+    }
+  }
+  if (coloSmokeSnapshot) {
+    if (!coloSmokeSnapshot.generatedAt) coloSmokeSnapshot.generatedAt = updatedAt;
+    await writeFile(
+      path.join(DATA_DIR, 'colo-smoke-outlook.json'),
+      `${JSON.stringify(coloSmokeSnapshot, null, 2)}\n`,
       'utf8',
     );
   }

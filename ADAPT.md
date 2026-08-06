@@ -113,24 +113,25 @@ Keep slug / lat / lon rules unless you have a reason to change them.
 
 Most sources are national APIs keyed by lat/lon. These are Colorado-hardcoded today:
 
-| File                                                                                         | Change                                                                                                                   |
-| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| [`scripts/fetch/adapters/nws.js`](scripts/fetch/adapters/nws.js)                             | `area=CO` → your state code; `OFFICES = ['BOU','PUB','GJT']` → your WFOs                                                 |
-| [`scripts/fetch/adapters/openmeteo.js`](scripts/fetch/adapters/openmeteo.js)                 | `timezone=America/Denver` → your IANA zone(s)                                                                            |
-| [`scripts/fetch/adapters/openmeteo-aq.js`](scripts/fetch/adapters/openmeteo-aq.js)           | Same timezone                                                                                                            |
-| [`scripts/fetch/adapters/airgradient.js`](scripts/fetch/adapters/airgradient.js)             | Colorado bbox filter on AirGradient public world feed                                                                    |
-| [`scripts/fetch/adapters/aviation.js`](scripts/fetch/adapters/aviation.js)                   | Seed ICAO list (`KDEN`, …) → major airports in your state                                                                |
-| [`scripts/fetch/adapters/coagmet.js`](scripts/fetch/adapters/coagmet.js)                     | **Colorado-only** (CSU CoAgMET). Replace with your ag network or remove the adapter, orchestrator wiring, and UI section |
-| [`scripts/fetch/adapters/cdot.js`](scripts/fetch/adapters/cdot.js)                           | Colorado DOT cameras / ArcGIS alerts — replace with your DOT traveler feeds or remove                                    |
-| [`scripts/fetch/adapters/cotrip.js`](scripts/fetch/adapters/cotrip.js)                       | Keyed COtrip traveler JSON (RWIS / incidents / conditions) — skip or replace for non-CO                                  |
-| [`scripts/fetch/adapters/cwop.js`](scripts/fetch/adapters/cwop.js)                           | Adjust CO bbox / sample grid                                                                                             |
-| [`scripts/fetch/adapters/hms.js`](scripts/fetch/adapters/hms.js)                             | National HMS smoke — keep; adjust CO bbox clip if desired                                                                |
-| [`scripts/fetch/adapters/spc-firewx.js`](scripts/fetch/adapters/spc-firewx.js)               | National SPC fire weather — keep; adjust CO bbox clip if desired                                                         |
-| [`scripts/fetch/adapters/nifc-fires.js`](scripts/fetch/adapters/nifc-fires.js)               | Filter `POOState='US-CO'` → your state code                                                                              |
-| [`scripts/fetch/adapters/burn-restrictions.js`](scripts/fetch/adapters/burn-restrictions.js) | Colorado COEM/DFPC links — replace with your state’s restriction aggregator or curated county links                      |
-| [`scripts/fetch/adapters/space-weather.js`](scripts/fetch/adapters/space-weather.js)         | NOAA SWPC planetary snapshot → `space-weather.json`; keep (national). Adjust aurora/HF copy if state-specific            |
-| [`scripts/lib/hf-conditions.js`](scripts/lib/hf-conditions.js)                               | HF band estimate helpers used by space-weather merge / UI — keep or retune heuristics for your latitude                  |
-| [`scripts/lib/http.js`](scripts/lib/http.js)                                                 | NWS `User-Agent` string — use your project name + contact URL/email                                                      |
+| File                                                                                           | Change                                                                                                                   |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [`scripts/fetch/adapters/nws.js`](scripts/fetch/adapters/nws.js)                               | `area=CO` → your state code; `OFFICES = ['BOU','PUB','GJT']` → your WFOs                                                 |
+| [`scripts/fetch/adapters/openmeteo.js`](scripts/fetch/adapters/openmeteo.js)                   | `timezone=America/Denver` → your IANA zone(s)                                                                            |
+| [`scripts/fetch/adapters/openmeteo-aq.js`](scripts/fetch/adapters/openmeteo-aq.js)             | Same timezone                                                                                                            |
+| [`scripts/fetch/adapters/airgradient.js`](scripts/fetch/adapters/airgradient.js)               | Colorado bbox filter on AirGradient public world feed                                                                    |
+| [`scripts/fetch/adapters/aviation.js`](scripts/fetch/adapters/aviation.js)                     | Seed ICAO list (`KDEN`, …) → major airports in your state                                                                |
+| [`scripts/fetch/adapters/coagmet.js`](scripts/fetch/adapters/coagmet.js)                       | **Colorado-only** (CSU CoAgMET). Replace with your ag network or remove the adapter, orchestrator wiring, and UI section |
+| [`scripts/fetch/adapters/cdot.js`](scripts/fetch/adapters/cdot.js)                             | Colorado DOT cameras / ArcGIS alerts — replace with your DOT traveler feeds or remove                                    |
+| [`scripts/fetch/adapters/cotrip.js`](scripts/fetch/adapters/cotrip.js)                         | Keyed COtrip traveler JSON (RWIS / incidents / conditions) — skip or replace for non-CO                                  |
+| [`scripts/fetch/adapters/cwop.js`](scripts/fetch/adapters/cwop.js)                             | Adjust CO bbox / sample grid                                                                                             |
+| [`scripts/fetch/adapters/hms.js`](scripts/fetch/adapters/hms.js)                               | National HMS smoke — keep; adjust CO bbox clip if desired                                                                |
+| [`scripts/fetch/adapters/spc-firewx.js`](scripts/fetch/adapters/spc-firewx.js)                 | National SPC fire weather — keep; adjust CO bbox clip if desired                                                         |
+| [`scripts/fetch/adapters/nifc-fires.js`](scripts/fetch/adapters/nifc-fires.js)                 | Filter `POOState='US-CO'` → your state code                                                                              |
+| [`scripts/fetch/adapters/burn-restrictions.js`](scripts/fetch/adapters/burn-restrictions.js)   | Colorado COEM/DFPC links — replace with your state’s restriction aggregator or curated county links                      |
+| [`scripts/fetch/adapters/space-weather.js`](scripts/fetch/adapters/space-weather.js)           | NOAA SWPC planetary snapshot → `space-weather.json`; keep (national). Adjust aurora/HF copy if state-specific            |
+| [`scripts/fetch/adapters/colo-smoke-outlook.js`](scripts/fetch/adapters/colo-smoke-outlook.js) | CDPHE Colorado Smoke Blog RSS → `colo-smoke-outlook.json` — replace with your state’s smoke/AQ narrative source or drop  |
+| [`scripts/lib/hf-conditions.js`](scripts/lib/hf-conditions.js)                                 | HF band estimate helpers used by space-weather merge / UI — keep or retune heuristics for your latitude                  |
+| [`scripts/lib/http.js`](scripts/lib/http.js)                                                   | NWS `User-Agent` string — use your project name + contact URL/email                                                      |
 
 National / keep with new coords: Open-Meteo forecast & AQ, AirNow (with key), NWS point links. RainViewer radar is **client-side only** (browser CDN/API) — not a fetch adapter.
 
