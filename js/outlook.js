@@ -696,6 +696,7 @@ const SOURCE_CHIP_META = {
   nifc: { label: 'NIFC', title: 'NIFC nearby wildfires' },
   nifc_fires: { label: 'NIFC', title: 'NIFC nearby wildfires' },
   burn_restrictions: { label: 'Burn', title: 'Colorado burn restrictions' },
+  colo_smoke_outlook: { label: 'Smoke', title: 'CDPHE Colorado Smoke Blog' },
   space_weather: { label: 'SWPC', title: 'NOAA SWPC space weather' },
   swpc: { label: 'SWPC', title: 'NOAA SWPC space weather' },
 };
