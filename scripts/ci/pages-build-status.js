@@ -95,6 +95,8 @@ export function findExpectedBuild(builds, expect) {
  *   status: string,
  *   error: string,
  *   build: Record<string, unknown> | null,
+ *   retryable?: boolean,
+ *   detail?: string,
  * }}
  */
 export function classifyPagesBuild(builds, expect) {
@@ -109,6 +111,18 @@ export function classifyPagesBuild(builds, expect) {
 
   if (status !== 'completed') return { state: 'pending', status, error: '-', build };
   if (conclusion === 'success') return { state: 'success', status, error: '-', build };
+  // Cancelled runs are often superseded mid-deploy by a newer gh-pages tip or a
+  // GitHub Actions queue hiccup — treat them as retryable (not hard failures).
+  if (conclusion === 'cancelled') {
+    return {
+      state: 'error',
+      status,
+      error: 'pages-build-deployment concluded cancelled',
+      build,
+      retryable: true,
+      detail: 'cancelled (superseded or interrupted)',
+    };
+  }
   return {
     state: 'error',
     status,
@@ -177,7 +191,10 @@ function buildAttemptKey(build) {
  */
 export async function waitForPagesBuild(options) {
   const expect = options.expect ?? '';
-  const maxAttempts = options.maxAttempts ?? 180;
+  // Large weather trees often need ~10m once deploy starts; GitHub can also
+  // leave pages-build-deployment queued for 10m+ before jobs start. 15m was
+  // too tight when both pile up (see Update Weather run 31101070188).
+  const maxAttempts = options.maxAttempts ?? 360;
   const sleepSecs = options.sleepSecs ?? 5;
   const sleep = options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   const onAttempt = options.onAttempt ?? (() => {});
@@ -241,9 +258,20 @@ export async function waitForPagesBuild(options) {
       }
 
       /** @type {PagesFailureDiagnosis} */
-      let diagnosis = { retryable: Boolean(rerunBuild && maxReruns > 0) };
-      if (diagnoseFailure) {
+      let diagnosis = {
+        retryable: Boolean(result.retryable) || Boolean(rerunBuild && maxReruns > 0),
+        detail: result.detail,
+      };
+      if (diagnoseFailure && !result.retryable) {
         diagnosis = await diagnoseFailure(build);
+      } else if (diagnoseFailure && result.retryable) {
+        // Keep classify-driven retryable (e.g. cancelled) even when a diagnose
+        // hook is wired — cancelled jobs rarely have useful failure text.
+        diagnosis = {
+          retryable: true,
+          detail: result.detail,
+          blockingSha: typeof build.head_sha === 'string' ? build.head_sha : null,
+        };
       }
 
       if (diagnosis.retryable && rerunBuild && rerunsUsed < maxReruns && !rerunTriggered.has(key)) {

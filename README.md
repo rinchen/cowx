@@ -6,7 +6,7 @@
 
 ## Quick start
 
-**Requirements:** Node 20+, [pnpm](https://pnpm.io/) 10+
+**Requirements:** Node 22.19+, [pnpm](https://pnpm.io/) 10+
 
 ```bash
 git clone <repository-url>
