@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-08-07T20:09:26.711Z",
+  "generatedAt": "2026-08-07T21:36:03.595Z",
   "kp": {
     "value": 0,
-    "observed": "2026-08-07T19:58:00",
+    "observed": "2026-08-07T21:32:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 0.80000001,
-    "observed": "2026-08-07T19:55:00"
+    "value": 0.2,
+    "observed": "2026-08-07T21:31:00"
   },
   "sfi": {
-    "value": 101,
-    "observed": "2026-08-06T20:00:00",
+    "value": 97,
+    "observed": "2026-08-07T20:00:00",
     "ninety_day_mean": 132
   },
   "scales": {
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-08-07T20:07:00Z",
+    "observed": "2026-08-07T21:35:00Z",
     "forecast": [
       {
         "date": "2026-08-07",
@@ -77,9 +77,9 @@
     ]
   },
   "xray": {
-    "class": "B2.2",
-    "flux": 2.2244859110287507e-7,
-    "observed": "2026-08-07T20:06:00Z"
+    "class": "B2.6",
+    "flux": 2.5644786205702985e-7,
+    "observed": "2026-08-07T21:32:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
