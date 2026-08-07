@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-08-07T18:04:06.716Z",
+  "generatedAt": "2026-08-07T20:09:26.711Z",
   "kp": {
     "value": 0,
-    "observed": "2026-08-07T18:01:00",
+    "observed": "2026-08-07T19:58:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 2.4000001,
-    "observed": "2026-08-07T17:59:00"
+    "value": 0.80000001,
+    "observed": "2026-08-07T19:55:00"
   },
   "sfi": {
     "value": 101,
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-08-07T18:02:00Z",
+    "observed": "2026-08-07T20:07:00Z",
     "forecast": [
       {
         "date": "2026-08-07",
@@ -77,9 +77,9 @@
     ]
   },
   "xray": {
-    "class": "B3.5",
-    "flux": 3.475159076060663e-7,
-    "observed": "2026-08-07T18:00:00Z"
+    "class": "B2.2",
+    "flux": 2.2244859110287507e-7,
+    "observed": "2026-08-07T20:06:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
