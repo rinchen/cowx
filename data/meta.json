@@ -1,117 +1,117 @@
 {
-  "generatedAt": "2026-08-06T15:45:49.252Z",
+  "generatedAt": "2026-08-07T00:17:39.128Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:35:40.138Z"
+      "fetchedAt": "2026-08-07T00:03:41.852Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:41:58.760Z"
+      "fetchedAt": "2026-08-07T00:11:01.263Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-06T15:41:58.908Z"
+      "fetchedAt": "2026-08-07T00:11:01.413Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:42:03.193Z"
+      "fetchedAt": "2026-08-07T00:11:06.049Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:42:04.778Z"
+      "fetchedAt": "2026-08-07T00:11:10.603Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:42:06.553Z"
+      "fetchedAt": "2026-08-07T00:11:12.041Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:42:08.842Z"
+      "fetchedAt": "2026-08-07T00:11:14.369Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:44:21.685Z"
+      "fetchedAt": "2026-08-07T00:13:39.132Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:44:23.207Z"
+      "fetchedAt": "2026-08-07T00:13:39.941Z"
     },
     {
       "id": "snotel",
-      "status": "ok",
-      "fetchedAt": "2026-08-06T15:44:45.825Z"
+      "status": "error",
+      "fetchedAt": "2026-08-07T00:16:45.274Z",
+      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:44:46.529Z"
+      "fetchedAt": "2026-08-07T00:16:55.371Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:45:10.528Z"
+      "fetchedAt": "2026-08-07T00:17:21.799Z"
     },
     {
       "id": "cwop",
-      "status": "error",
-      "fetchedAt": "2026-08-06T15:45:43.185Z",
-      "error": "HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.7&lon=-104.9&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-; HTTP 502 for https://aprs.me/api/v1/weather/nearby?lat=40.5&lon=-105.1&radius=55&limit=80&hours=6: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if I"
+      "status": "partial",
+      "fetchedAt": "2026-08-07T00:17:31.953Z"
     },
     {
       "id": "hms",
-      "status": "partial",
-      "fetchedAt": "2026-08-06T15:45:43.578Z",
-      "error": "no HMS polygons near Colorado"
+      "status": "ok",
+      "fetchedAt": "2026-08-07T00:17:32.962Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:45:43.982Z"
+      "fetchedAt": "2026-08-07T00:17:33.796Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:45:44.406Z"
+      "fetchedAt": "2026-08-07T00:17:34.100Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:45:44.593Z"
+      "fetchedAt": "2026-08-07T00:17:34.504Z"
     },
     {
       "id": "space_weather",
-      "status": "ok",
-      "fetchedAt": "2026-08-06T15:45:45.176Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-07T00:17:35.071Z",
+      "error": "kp: Unexpected non-whitespace character after JSON at position 26599 (line 1 column 26600)"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:45:45.575Z"
+      "fetchedAt": "2026-08-07T00:17:35.482Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:45:46.074Z"
+      "fetchedAt": "2026-08-07T00:17:35.877Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-06T15:45:49.252Z"
+      "fetchedAt": "2026-08-07T00:17:39.128Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 354,
+  "apiCalls": 355,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
