@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-08-08T20:20:26.751Z",
+  "generatedAt": "2026-08-08T21:21:08.255Z",
   "kp": {
-    "value": 3.33,
-    "observed": "2026-08-08T20:17:00",
+    "value": 1.67,
+    "observed": "2026-08-08T21:16:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 3.3499999,
-    "observed": "2026-08-08T20:14:00"
+    "value": 2.4000001,
+    "observed": "2026-08-08T21:14:00"
   },
   "sfi": {
-    "value": 97,
-    "observed": "2026-08-07T20:00:00",
-    "ninety_day_mean": 132
+    "value": 94,
+    "observed": "2026-08-08T20:00:00",
+    "ninety_day_mean": 131
   },
   "scales": {
     "R": {
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-08-08T20:19:00Z",
+    "observed": "2026-08-08T21:19:00Z",
     "forecast": [
       {
         "date": "2026-08-08",
@@ -40,8 +40,8 @@
           "text": null
         },
         "G": {
-          "scale": 1,
-          "text": "minor"
+          "scale": 0,
+          "text": "none"
         }
       },
       {
@@ -77,30 +77,30 @@
     ]
   },
   "xray": {
-    "class": "B2.7",
-    "flux": 2.66664073933498e-7,
-    "observed": "2026-08-08T20:17:00Z"
+    "class": "B2.2",
+    "flux": 2.2172328328906588e-7,
+    "observed": "2026-08-08T21:17:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
-    "detail": "Kp 3.3 — aurora unlikely at Colorado latitudes (estimate)."
+    "detail": "Kp 1.7 — aurora unlikely at Colorado latitudes (estimate)."
   },
   "hf": {
     "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
     "day": {
-      "80m": "poor",
-      "40m": "fair",
-      "20m": "fair",
-      "15m": "fair",
-      "10m": "poor",
+      "80m": "fair",
+      "40m": "good",
+      "20m": "good",
+      "15m": "good",
+      "10m": "fair",
       "6m": "poor"
     },
     "night": {
-      "80m": "good",
-      "40m": "good",
-      "20m": "poor",
-      "15m": "poor",
-      "10m": "poor",
+      "80m": "excellent",
+      "40m": "excellent",
+      "20m": "fair",
+      "15m": "fair",
+      "10m": "fair",
       "6m": "poor"
     }
   },
