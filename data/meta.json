@@ -1,113 +1,112 @@
 {
-  "generatedAt": "2026-08-08T08:20:34.352Z",
+  "generatedAt": "2026-08-08T09:30:57.888Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "partial",
-      "fetchedAt": "2026-08-08T08:13:30.046Z",
-      "error": "nbm thunderstorm: HTTP 429 for https://api.open-meteo.com/v1/gfs?latitude=40.1528,40.4856,40.5153,40.0375,40.0875,40.2431,39.6433,39.6314,39.6042,39.6447,39.6556,39.6469,39.65,39.5867,39.5128,39.5022,39.5744,39.6297,39.6297,39.6042&longitude=-106.9086,-107.2597,-107.5464,-107.9131,-108.8047,-108.9389,-106.3781,-106.5222,-106.5165,-106.5942,-106.8286,-106.9517,-107.05,-106.4567,-106.3689,-106.1497,-106.0975,-106.0714,-106.0431,-105.9453&hourly=thunderstorm_probability&models=ncep_nbm_conus&timezo"
+      "status": "ok",
+      "fetchedAt": "2026-08-08T09:20:32.451Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:17:40.655Z"
+      "fetchedAt": "2026-08-08T09:27:51.314Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-08T08:17:40.805Z"
+      "fetchedAt": "2026-08-08T09:27:51.463Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:17:44.295Z"
+      "fetchedAt": "2026-08-08T09:27:54.919Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:17:47.753Z"
+      "fetchedAt": "2026-08-08T09:27:57.774Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:17:48.001Z"
+      "fetchedAt": "2026-08-08T09:27:58.938Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:17:49.553Z"
+      "fetchedAt": "2026-08-08T09:28:01.019Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:19:22.388Z"
+      "fetchedAt": "2026-08-08T09:29:42.660Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:19:23.683Z"
+      "fetchedAt": "2026-08-08T09:29:44.144Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:19:45.304Z"
+      "fetchedAt": "2026-08-08T09:30:00.517Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:19:46.209Z"
+      "fetchedAt": "2026-08-08T09:30:07.949Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:20:11.538Z"
+      "fetchedAt": "2026-08-08T09:30:33.972Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-08T08:20:22.044Z"
+      "fetchedAt": "2026-08-08T09:30:43.646Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:20:22.291Z"
+      "fetchedAt": "2026-08-08T09:30:44.389Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:20:22.502Z"
+      "fetchedAt": "2026-08-08T09:30:44.932Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:20:22.640Z"
+      "fetchedAt": "2026-08-08T09:30:45.098Z"
     },
     {
       "id": "burn_restrictions",
       "status": "partial",
-      "fetchedAt": "2026-08-08T08:20:30.882Z",
+      "fetchedAt": "2026-08-08T09:30:53.809Z",
       "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:20:31.124Z"
+      "fetchedAt": "2026-08-08T09:30:53.994Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:20:31.339Z"
+      "fetchedAt": "2026-08-08T09:30:54.404Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:20:31.504Z"
+      "fetchedAt": "2026-08-08T09:30:54.754Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-08T08:20:34.352Z"
+      "fetchedAt": "2026-08-08T09:30:57.888Z"
     }
   ],
   "locationCount": 338,
