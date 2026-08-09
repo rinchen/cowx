@@ -1,116 +1,116 @@
 {
-  "generatedAt": "2026-08-09T22:08:53.668Z",
+  "generatedAt": "2026-08-09T23:18:22.650Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "ok",
-      "fetchedAt": "2026-08-09T21:58:28.769Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-09T23:13:12.937Z",
+      "error": "nbm thunderstorm: HTTP 429 for https://api.open-meteo.com/v1/gfs?latitude=40.4536,40.2044,40.2769,39.9472,39.9161,39.7167,39.5833,39.6778,39.7989,39.6639,39.3667,38.4978,37.4728,37.6931,37.8919,37.7406,37.8208,40.3833,40.5167,40.4833&longitude=-105.4486,-105.5256,-105.435,-105.5828,-105.5014,-105.3833,-105.85,-105.9194,-105.7778,-105.8792,-106.1833,-106.3258,-106.7931,-107.7758,-107.7114,-107.6919,-107.9306,-106.5833,-105.8833,-106.7167&hourly=thunderstorm_probability&models=ncep_nbm_conus&timez"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:05:48.478Z"
+      "fetchedAt": "2026-08-09T23:15:21.478Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-09T22:05:48.635Z"
+      "fetchedAt": "2026-08-09T23:15:21.628Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:05:53.201Z"
+      "fetchedAt": "2026-08-09T23:15:25.417Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:05:54.039Z"
+      "fetchedAt": "2026-08-09T23:15:26.210Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:05:54.742Z"
+      "fetchedAt": "2026-08-09T23:15:26.738Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:05:57.115Z"
+      "fetchedAt": "2026-08-09T23:15:28.184Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:07:39.941Z"
+      "fetchedAt": "2026-08-09T23:17:13.513Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:07:41.357Z"
+      "fetchedAt": "2026-08-09T23:17:15.129Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:08:02.039Z"
+      "fetchedAt": "2026-08-09T23:17:31.700Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:08:02.862Z"
+      "fetchedAt": "2026-08-09T23:17:41.716Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:08:28.385Z"
+      "fetchedAt": "2026-08-09T23:18:06.459Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-09T22:08:39.800Z"
+      "fetchedAt": "2026-08-09T23:18:18.078Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:08:40.027Z"
+      "fetchedAt": "2026-08-09T23:18:18.400Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:08:40.953Z"
+      "fetchedAt": "2026-08-09T23:18:18.698Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:08:41.265Z"
+      "fetchedAt": "2026-08-09T23:18:18.854Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "partial",
-      "fetchedAt": "2026-08-09T22:08:49.676Z",
-      "error": "HTTP 429 for COEM fire bans page"
+      "status": "ok",
+      "fetchedAt": "2026-08-09T23:18:19.053Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:08:49.857Z"
+      "fetchedAt": "2026-08-09T23:18:19.326Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:08:50.086Z"
+      "fetchedAt": "2026-08-09T23:18:19.521Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:08:50.555Z"
+      "fetchedAt": "2026-08-09T23:18:19.732Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-09T22:08:53.668Z"
+      "fetchedAt": "2026-08-09T23:18:22.650Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 357,
+  "apiCalls": 355,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
