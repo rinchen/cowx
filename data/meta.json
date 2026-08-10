@@ -1,114 +1,112 @@
 {
-  "generatedAt": "2026-08-10T19:00:18.161Z",
+  "generatedAt": "2026-08-10T20:12:06.908Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-10T18:48:32.208Z"
+      "fetchedAt": "2026-08-10T19:59:26.379Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-10T18:56:54.618Z"
+      "fetchedAt": "2026-08-10T20:08:52.147Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-10T18:56:54.761Z"
+      "fetchedAt": "2026-08-10T20:08:52.288Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-10T18:56:58.851Z"
+      "fetchedAt": "2026-08-10T20:08:56.483Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-10T18:56:59.423Z"
+      "fetchedAt": "2026-08-10T20:08:59.154Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-10T18:57:00.455Z"
+      "fetchedAt": "2026-08-10T20:08:59.785Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-10T18:57:02.474Z"
+      "fetchedAt": "2026-08-10T20:09:02.199Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-10T18:58:45.885Z"
+      "fetchedAt": "2026-08-10T20:10:51.775Z"
     },
     {
       "id": "usgs",
-      "status": "error",
-      "fetchedAt": "2026-08-10T18:58:48.214Z",
-      "error": "HTTP 503 for https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST: <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Error report</title><style type=\"te"
+      "status": "ok",
+      "fetchedAt": "2026-08-10T20:10:53.256Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-10T18:59:20.718Z"
+      "fetchedAt": "2026-08-10T20:11:14.292Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-10T18:59:21.502Z"
+      "fetchedAt": "2026-08-10T20:11:14.855Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-10T18:59:48.400Z"
+      "fetchedAt": "2026-08-10T20:11:42.265Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-10T18:59:59.966Z"
+      "fetchedAt": "2026-08-10T20:11:53.085Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-10T19:00:00.478Z"
+      "fetchedAt": "2026-08-10T20:11:53.719Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-10T19:00:01.268Z"
+      "fetchedAt": "2026-08-10T20:11:54.387Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-10T19:00:01.606Z"
+      "fetchedAt": "2026-08-10T20:11:54.615Z"
     },
     {
       "id": "burn_restrictions",
       "status": "partial",
-      "fetchedAt": "2026-08-10T19:00:09.677Z",
+      "fetchedAt": "2026-08-10T20:12:02.611Z",
       "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-10T19:00:09.911Z"
+      "fetchedAt": "2026-08-10T20:12:02.810Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-10T19:00:10.149Z"
+      "fetchedAt": "2026-08-10T20:12:03.213Z"
     },
     {
       "id": "firms",
-      "status": "error",
-      "fetchedAt": "2026-08-10T19:00:14.932Z",
-      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://firms.modaps.eosdis.nasa.gov/api/area/csv/[redacted]/VIIRS_SNPP_NRT/-109.2,36.9,-102,41.1/1"
+      "status": "ok",
+      "fetchedAt": "2026-08-10T20:12:03.753Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-10T19:00:18.161Z"
+      "fetchedAt": "2026-08-10T20:12:06.908Z"
     }
   ],
   "locationCount": 338,
