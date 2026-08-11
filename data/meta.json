@@ -1,113 +1,112 @@
 {
-  "generatedAt": "2026-08-11T09:45:18.571Z",
+  "generatedAt": "2026-08-11T11:39:42.958Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:32:04.811Z"
+      "fetchedAt": "2026-08-11T11:26:45.927Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:39:24.641Z"
+      "fetchedAt": "2026-08-11T11:36:11.696Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-11T09:39:24.784Z"
+      "fetchedAt": "2026-08-11T11:36:11.856Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:39:28.413Z"
+      "fetchedAt": "2026-08-11T11:36:16.382Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:39:31.228Z"
+      "fetchedAt": "2026-08-11T11:36:18.716Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:39:31.742Z"
+      "fetchedAt": "2026-08-11T11:36:19.556Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:39:33.903Z"
+      "fetchedAt": "2026-08-11T11:36:21.921Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:41:22.181Z"
+      "fetchedAt": "2026-08-11T11:38:32.146Z"
     },
     {
       "id": "usgs",
-      "status": "error",
-      "fetchedAt": "2026-08-11T09:41:24.506Z",
-      "error": "HTTP 503 for https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST: <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Error report</title><style type=\"te"
+      "status": "ok",
+      "fetchedAt": "2026-08-11T11:38:33.757Z"
     },
     {
       "id": "snotel",
-      "status": "error",
-      "fetchedAt": "2026-08-11T09:44:29.866Z",
-      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations"
+      "status": "ok",
+      "fetchedAt": "2026-08-11T11:38:51.096Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:44:35.709Z"
+      "fetchedAt": "2026-08-11T11:38:56.971Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:45:01.025Z"
+      "fetchedAt": "2026-08-11T11:39:23.620Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-11T09:45:12.265Z"
+      "fetchedAt": "2026-08-11T11:39:37.029Z"
     },
     {
       "id": "hms",
-      "status": "ok",
-      "fetchedAt": "2026-08-11T09:45:12.993Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-11T11:39:37.224Z",
+      "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:45:13.877Z"
+      "fetchedAt": "2026-08-11T11:39:37.484Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:45:14.080Z"
+      "fetchedAt": "2026-08-11T11:39:37.912Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:45:14.309Z"
+      "fetchedAt": "2026-08-11T11:39:38.192Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:45:14.530Z"
+      "fetchedAt": "2026-08-11T11:39:38.806Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:45:14.954Z"
+      "fetchedAt": "2026-08-11T11:39:39.260Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:45:15.351Z"
+      "fetchedAt": "2026-08-11T11:39:39.677Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-11T09:45:18.570Z"
+      "fetchedAt": "2026-08-11T11:39:42.958Z"
     }
   ],
   "locationCount": 338,
