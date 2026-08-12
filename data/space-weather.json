@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-12T15:45:16.472Z",
+  "generatedAt": "2026-08-12T17:03:01.934Z",
   "kp": {
     "value": 0.33,
-    "observed": "2026-08-12T15:42:00",
+    "observed": "2026-08-12T17:00:00",
     "source": "planetary"
   },
   "boulder_kp": {
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-08-12T15:44:00Z",
+    "observed": "2026-08-12T17:01:00Z",
     "forecast": [
       {
         "date": "2026-08-12",
@@ -76,11 +76,7 @@
       }
     ]
   },
-  "xray": {
-    "class": "B2.7",
-    "flux": 2.660050597569352e-7,
-    "observed": "2026-08-12T15:42:00Z"
-  },
+  "xray": null,
   "aurora_co": {
     "chance": "unlikely",
     "detail": "Kp 0.3 — aurora unlikely at Colorado latitudes (estimate)."
