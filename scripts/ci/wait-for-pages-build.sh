@@ -5,8 +5,9 @@
 #
 # Transient "due to in progress deployment" conflicts are self-healed: clear the
 # blocking deployment lock, wait, then re-run the failed Pages workflow.
-# Cancelled tip builds / "Deployment cancelled." / deploy-pages timeouts are
-# re-run without cancelling the tip SHA (tip cancel races the next deploy).
+# Cancelled tip builds / "Deployment cancelled." / deploy-pages timeouts /
+# Pages API 5xx (outage, "re-run later") are re-run without cancelling the
+# tip SHA (tip cancel races the next deploy).
 # Prior tips that stay deployment_in_progress after a timeout are cleared on
 # preflight and before each re-run so the tip is not blocked for another ~10m.
 #
