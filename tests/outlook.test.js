@@ -11,6 +11,7 @@ import {
   peakNextHours,
   pickNowCurrent,
   pickNowSky,
+  remainingHoursToday,
   resolveCatalogNow,
   sliceCompactHours,
   sourceStatusChips,
@@ -617,6 +618,55 @@ describe('peakNextHours', () => {
       thisHourIndex: -1,
     });
   });
+
+  it('sees an afternoon peak beyond 6h when the window is remaining today', () => {
+    const dayTimes = [];
+    const series = [];
+    for (let h = 0; h < 24; h += 1) {
+      dayTimes.push(`2026-07-28T${String(h).padStart(2, '0')}:00`);
+      series.push(h === 15 ? 37 : 5);
+    }
+    const morningMs = Date.parse('2026-07-28T11:15:00Z'); // 05:15 MDT
+    const hi = currentHourIndex(dayTimes, morningMs);
+    assert.equal(hi, 5);
+    const near = peakNextHours(dayTimes, series, { nowMs: morningMs, hours: 6 });
+    assert.equal(near.thisHour, 5);
+    assert.equal(near.peak, 5);
+    const todayHours = remainingHoursToday(dayTimes, morningMs);
+    assert.equal(todayHours, 19);
+    const restOfDay = peakNextHours(dayTimes, series, { nowMs: morningMs, hours: todayHours });
+    assert.equal(restOfDay.thisHour, 5);
+    assert.equal(restOfDay.peak, 37);
+    assert.equal(restOfDay.peakAt, '2026-07-28T15:00');
+  });
+});
+
+describe('remainingHoursToday', () => {
+  const times = [];
+  for (let h = 0; h < 24; h += 1) {
+    times.push(`2026-07-28T${String(h).padStart(2, '0')}:00`);
+  }
+  times.push('2026-07-29T00:00', '2026-07-29T01:00', '2026-07-29T02:00');
+
+  it('counts from the in-progress hour through Denver midnight (morning)', () => {
+    const nowMs = Date.parse('2026-07-28T11:15:00Z'); // 05:15 MDT
+    assert.equal(remainingHoursToday(times, nowMs), 19);
+  });
+
+  it('shrinks to the last evening hours', () => {
+    const nowMs = Date.parse('2026-07-29T04:10:00Z'); // 22:10 MDT
+    assert.equal(remainingHoursToday(times, nowMs), 2);
+  });
+
+  it('rolls to the next Denver calendar day after midnight', () => {
+    const nowMs = Date.parse('2026-07-29T06:20:00Z'); // 00:20 MDT July 29
+    assert.equal(remainingHoursToday(times, nowMs), 3);
+  });
+
+  it('returns at least 1 for empty or exhausted series', () => {
+    assert.equal(remainingHoursToday([], Date.parse('2026-07-28T11:15:00Z')), 1);
+    assert.equal(remainingHoursToday(['2026-07-27T23:00'], Date.parse('2026-07-28T11:15:00Z')), 1);
+  });
 });
 
 describe('formatNearTermChanceLabel', () => {
@@ -672,6 +722,23 @@ describe('formatNearTermChanceLabel', () => {
     assert.deepEqual(label, {
       text: '40% next 6h · 10% this hour',
       aria: '40% next 6h · 10% this hour',
+    });
+  });
+
+  it('falls back to today when scope is today and peakAt is missing', () => {
+    const label = formatNearTermChanceLabel(
+      {
+        peak: 40,
+        peakAt: null,
+        peakIndex: 4,
+        thisHour: 10,
+        thisHourIndex: 1,
+      },
+      { scope: 'today' },
+    );
+    assert.deepEqual(label, {
+      text: '40% today · 10% this hour',
+      aria: '40% today · 10% this hour',
     });
   });
 

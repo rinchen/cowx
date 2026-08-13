@@ -5,6 +5,7 @@
 import {
   currentHourIndex,
   dailyIndexForNow,
+  denverDateKey,
   minutesIntoHour,
   precipTodayInches,
 } from './denver-time.js';
@@ -136,8 +137,27 @@ export function tempTransitionCue(hourly, nowMs = Date.now()) {
   return { next_temp_f: nextTemp, next_time: times[hi + 1], delta_f: delta };
 }
 
-/** Default near-term window for At a Glance precip / thunderstorm chance. */
+/** Default near-term window when callers omit `hours` (hero uses remainingHoursToday). */
 export const NEAR_TERM_HOURS = 6;
+
+/**
+ * Hours from the in-progress slot through the end of the Denver calendar day.
+ * Used so At a Glance precip / thunderstorm chance can show a later-today peak.
+ * @param {string[]} times
+ * @param {number} [nowMs]
+ * @returns {number}
+ */
+export function remainingHoursToday(times, nowMs = Date.now()) {
+  if (!Array.isArray(times) || !times.length) return 1;
+  const today = denverDateKey(nowMs);
+  const hi = currentHourIndex(times, nowMs);
+  let count = 0;
+  for (let i = Math.max(0, hi); i < times.length; i += 1) {
+    if (!String(times[i]).startsWith(today)) break;
+    count += 1;
+  }
+  return Math.max(1, count);
+}
 
 /**
  * Max value over the next N hours from the in-progress hour (inclusive).
@@ -191,7 +211,7 @@ export function peakNextHours(times, series, opts = {}) {
  *   thisHour: number | null,
  *   thisHourIndex: number,
  * } | null | undefined} info
- * @param {{ hours?: number }} [opts]
+ * @param {{ hours?: number, scope?: 'today' }} [opts]
  * @returns {{ text: string, aria: string } | null}
  */
 export function formatNearTermChanceLabel(info, opts = {}) {
@@ -207,7 +227,11 @@ export function formatNearTermChanceLabel(info, opts = {}) {
   }
 
   const when = info.peakAt ? formatCompactHourLabel(info.peakAt) : '';
-  const primary = when ? `${peakPct}% (peaks ${when})` : `${peakPct}% next ${hours}h`;
+  const primary = when
+    ? `${peakPct}% (peaks ${when})`
+    : opts.scope === 'today'
+      ? `${peakPct}% today`
+      : `${peakPct}% next ${hours}h`;
   const text =
     thisPct != null && thisPct !== peakPct ? `${primary} · ${thisPct}% this hour` : primary;
   return { text, aria: text };
