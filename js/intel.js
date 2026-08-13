@@ -30,6 +30,7 @@ import {
   currentHourIndex,
   peakNextHours,
   pickNowSky,
+  remainingHoursToday,
   resolveCatalogNow,
   sliceCompactHours,
   tempTransitionCue,
@@ -237,11 +238,17 @@ export function renderHero(root, data, options = {}) {
       : null;
   const todayNormal = todayIso ? normalForDate(climatology, todayIso) : null;
   const vsTypicalToday = formatTodayVsTypical(todayHi, todayLo, todayNormal);
+  const hoursToday = remainingHoursToday(times);
   const precipNearTerm =
     hourly && Array.isArray(hourly.precipitation_probability)
-      ? peakNextHours(times, /** @type {(number | null)[]} */ (hourly.precipitation_probability))
+      ? peakNextHours(times, /** @type {(number | null)[]} */ (hourly.precipitation_probability), {
+          hours: hoursToday,
+        })
       : null;
-  const precipChanceLabel = formatNearTermChanceLabel(precipNearTerm);
+  const precipChanceLabel = formatNearTermChanceLabel(precipNearTerm, {
+    hours: hoursToday,
+    scope: 'today',
+  });
   const hourDew =
     current?.dewpoint_f != null
       ? Number(current.dewpoint_f)
@@ -307,7 +314,9 @@ export function renderHero(root, data, options = {}) {
           : null;
   const tstormNearTerm =
     hourly && Array.isArray(hourly.thunderstorm_probability)
-      ? peakNextHours(times, /** @type {(number | null)[]} */ (hourly.thunderstorm_probability))
+      ? peakNextHours(times, /** @type {(number | null)[]} */ (hourly.thunderstorm_probability), {
+          hours: hoursToday,
+        })
       : current?.thunderstorm_probability != null
         ? {
             peak: Number(current.thunderstorm_probability),
@@ -317,7 +326,10 @@ export function renderHero(root, data, options = {}) {
             thisHourIndex: -1,
           }
         : null;
-  const tstormChanceLabel = formatNearTermChanceLabel(tstormNearTerm);
+  const tstormChanceLabel = formatNearTermChanceLabel(tstormNearTerm, {
+    hours: hoursToday,
+    scope: 'today',
+  });
 
   const pressureMb =
     current?.pressure_mb != null
