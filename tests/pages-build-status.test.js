@@ -60,6 +60,44 @@ describe('diagnosePagesFailureText', () => {
     assert.match(d.detail, /cancelled/i);
   });
 
+  it('marks Pages API 500 create-deployment errors as retryable', () => {
+    const text =
+      'Error: Failed to create deployment (status: 500) with build version ' +
+      'a4df5b27fc7eeb6b08f14d85e746cd5c0a1162cd. Request ID ' +
+      'FC20:1EDD18:CF6100:2BF0179:6A7DD646 Server error, is githubstatus.com ' +
+      'reporting a Pages outage? Please re-run the deployment at a later time.';
+    const d = diagnosePagesFailureText(text);
+    assert.equal(d.retryable, true);
+    assert.equal(d.blockingSha, null);
+    assert.match(d.detail, /5xx/i);
+  });
+
+  it('marks truncated Pages API 500 annotations as retryable', () => {
+    const text =
+      'Error: Failed to create deployment (status: 500) with build version ' +
+      'a4df5b27fc7eeb6b08f14d85e746cd5c0a1162cd. Request ID ' +
+      'FC20:1EDD18:CF6100:2BF0179:6A7DD646 Server error, is github';
+    const d = diagnosePagesFailureText(text);
+    assert.equal(d.retryable, true);
+    assert.equal(d.blockingSha, null);
+  });
+
+  it('marks Pages API 429 create-deployment errors as retryable', () => {
+    const d = diagnosePagesFailureText(
+      'Error: Failed to create deployment (status: 429) with build version abc.',
+    );
+    assert.equal(d.retryable, true);
+    assert.equal(d.blockingSha, null);
+  });
+
+  it('does not treat 4xx create-deployment errors as API 5xx retries', () => {
+    const d = diagnosePagesFailureText(
+      'Error: Failed to create deployment (status: 400) with build version abc. ' +
+        'No artifacts named "github-pages" were found for this workflow run.',
+    );
+    assert.equal(d.retryable, false);
+  });
+
   it('marks unrelated failures as non-retryable', () => {
     const d = diagnosePagesFailureText('Page build failed.');
     assert.equal(d.retryable, false);

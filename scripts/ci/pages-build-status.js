@@ -10,8 +10,8 @@
  * gh-pages commit's Pages deployment is still settling (or wedged). Re-running
  * alone is not enough — clear the blocker, wait, then re-run.
  *
- * Timeout / "Deployment cancelled." retries must not cancel the *tip* SHA
- * (tip cancel races the next deploy). Prior tips can remain
+ * Timeout / "Deployment cancelled." / Pages API 5xx retries must not cancel
+ * the *tip* SHA (tip cancel races the next deploy). Prior tips can remain
  * deployment_in_progress after a ~10m timeout and block the tip — those
  * non-tip wedges are cleared on preflight and before each re-run.
  */
@@ -47,9 +47,10 @@ export function parseInProgressDeploymentBlocker(text) {
 /**
  * Decide whether a pages-build-deployment failure is worth clearing/re-running.
  * Covers the deploy-pages lock conflict, the ~10m native deploy timeout
- * (large gh-pages trees with weather data often land near that limit), and
- * "Deployment cancelled." which often follows a tip-SHA cancel/clear race
- * (see Update Weather run 31105796205 / pages-build-deployment 31105859939).
+ * (large gh-pages trees with weather data often land near that limit),
+ * "Deployment cancelled." (tip-SHA cancel/clear race — Update Weather run
+ * 31105796205 / pages-build-deployment 31105859939), and Pages API 5xx /
+ * outage errors that ask to re-run later (run 31710989999).
  * @param {string} text
  * @returns {{ retryable: boolean, blockingSha: string | null, detail: string }}
  */
@@ -78,6 +79,19 @@ export function diagnosePagesFailureText(text) {
       retryable: true,
       blockingSha: null,
       detail: 'deployment cancelled',
+    };
+  }
+  // GitHub Pages Deployment API 5xx / 429 / outage — deploy-pages asks to
+  // re-run later. Do not match 4xx lock conflicts here (handled above).
+  if (
+    /Failed to create deployment \(status: (?:5\d\d|429)\)/i.test(raw) ||
+    /githubstatus\.com reporting a Pages outage/i.test(raw) ||
+    /Please re-run the deployment at a later time/i.test(raw)
+  ) {
+    return {
+      retryable: true,
+      blockingSha: null,
+      detail: 'pages deploy API 5xx',
     };
   }
   const compact = raw.replace(/\s+/g, ' ').trim().slice(0, 180);
