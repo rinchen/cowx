@@ -1,13 +1,9 @@
 {
-  "generatedAt": "2026-08-13T22:46:52.267Z",
-  "kp": {
-    "value": 1.67,
-    "observed": "2026-08-13T22:43:00",
-    "source": "planetary"
-  },
+  "generatedAt": "2026-08-14T00:36:16.206Z",
+  "kp": null,
   "boulder_kp": {
-    "value": 2.3,
-    "observed": "2026-08-13T22:41:00"
+    "value": 1.2,
+    "observed": "2026-08-14T00:31:00"
   },
   "sfi": {
     "value": 108,
@@ -27,23 +23,8 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-08-13T22:44:00Z",
+    "observed": "2026-08-14T00:34:00Z",
     "forecast": [
-      {
-        "date": "2026-08-13",
-        "R": {
-          "scale": null,
-          "text": null
-        },
-        "S": {
-          "scale": null,
-          "text": null
-        },
-        "G": {
-          "scale": 0,
-          "text": "none"
-        }
-      },
       {
         "date": "2026-08-14",
         "R": {
@@ -73,37 +54,31 @@
           "scale": 0,
           "text": "none"
         }
+      },
+      {
+        "date": "2026-08-16",
+        "R": {
+          "scale": null,
+          "text": null
+        },
+        "S": {
+          "scale": null,
+          "text": null
+        },
+        "G": {
+          "scale": 0,
+          "text": "none"
+        }
       }
     ]
   },
   "xray": {
-    "class": "B3.9",
-    "flux": 3.901056970789796e-7,
-    "observed": "2026-08-13T22:43:00Z"
+    "class": "B3.7",
+    "flux": 3.67934092082578e-7,
+    "observed": "2026-08-14T00:33:00Z"
   },
-  "aurora_co": {
-    "chance": "unlikely",
-    "detail": "Kp 1.7 — aurora unlikely at Colorado latitudes (estimate)."
-  },
-  "hf": {
-    "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
-    "day": {
-      "80m": "fair",
-      "40m": "good",
-      "20m": "good",
-      "15m": "good",
-      "10m": "fair",
-      "6m": "poor"
-    },
-    "night": {
-      "80m": "excellent",
-      "40m": "excellent",
-      "20m": "fair",
-      "15m": "fair",
-      "10m": "fair",
-      "6m": "poor"
-    }
-  },
+  "aurora_co": null,
+  "hf": null,
   "links": {
     "swpc": "https://www.swpc.noaa.gov/",
     "scales": "https://www.swpc.noaa.gov/noaa-scales-explanation",
