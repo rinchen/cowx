@@ -5,6 +5,7 @@ import {
   alertsForLocation,
   applyAlertResponse,
   buildAlertIndex,
+  collapseAlertsForGlance,
   getAlertsForLocation,
   hasLiveAlerts,
   normalizeAlertFeature,
@@ -250,5 +251,34 @@ describe('nws-alerts live resolve', () => {
     };
     assert.equal(applyAlertResponse(payload).changed, true);
     assert.equal(applyAlertResponse(payload).changed, false);
+  });
+});
+
+describe('collapseAlertsForGlance', () => {
+  it('collapses same event names and keeps the longest-ending advisory', () => {
+    const collapsed = collapseAlertsForGlance([
+      {
+        id: 'a1',
+        event: 'Flood Advisory',
+        severity: 'Minor',
+        ends: '2026-08-15T15:30:00-06:00',
+      },
+      {
+        id: 'a2',
+        event: 'Flood Advisory',
+        severity: 'Minor',
+        ends: '2026-08-15T16:30:00-06:00',
+      },
+      {
+        id: 'w1',
+        event: 'Flash Flood Warning',
+        severity: 'Severe',
+        ends: '2026-08-15T17:45:00-06:00',
+      },
+    ]);
+    assert.equal(collapsed.length, 2);
+    assert.equal(collapsed[0].alert.event, 'Flash Flood Warning');
+    assert.equal(collapsed[1].alert.id, 'a2');
+    assert.equal(collapsed[1].count, 2);
   });
 });

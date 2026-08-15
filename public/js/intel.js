@@ -54,6 +54,7 @@ import {
 import { windCellHtml, windCompassHtml, windDirLabel } from './wind.js';
 import { rwisLiveReadings } from './rwis.js';
 import { fmtDistanceMi } from './geo-math.js';
+import { collapseAlertsForGlance } from './nws-alerts.js';
 
 export { aqiCategory };
 
@@ -295,6 +296,7 @@ export function renderHero(root, data, options = {}) {
   if (windDir) windMetaParts.push(`from ${windDir}`);
 
   const alerts = /** @type {Record<string, unknown>[]} */ (data.alerts ?? []);
+  const glanceAlerts = collapseAlertsForGlance(alerts);
   const hms = /** @type {Record<string, unknown> | null} */ (data.hms_smoke ?? null);
   const fireWeather = /** @type {Record<string, unknown> | null} */ (data.fire_weather ?? null);
   const nearbyFires = /** @type {Record<string, unknown> | null} */ (data.nearby_fires ?? null);
@@ -449,12 +451,14 @@ export function renderHero(root, data, options = {}) {
         }
       </div>
       ${
-        alerts.length
-          ? `<ul class="glance-alert-banners" aria-label="Active NWS alerts">${alerts
+        glanceAlerts.length
+          ? `<ul class="glance-alert-banners" aria-label="Active NWS alerts">${glanceAlerts
               .slice(0, 6)
-              .map((a) => {
+              .map(({ alert: a, count }) => {
                 const sev = String(a.severity ?? 'Unknown');
-                return `<li><button type="button" class="glance-alert-banner glance-alert-banner--${escapeHtml(sev.toLowerCase())}" data-jump-to="alerts-heading"><span class="glance-alert-banner__sev">${escapeHtml(sev)}</span> <span class="glance-alert-banner__event">${escapeHtml(String(a.event ?? 'Alert'))}</span></button></li>`;
+                const event = String(a.event ?? 'Alert');
+                const label = count > 1 ? `${event} · ${count}` : event;
+                return `<li><button type="button" class="glance-alert-banner glance-alert-banner--${escapeHtml(sev.toLowerCase())}" data-jump-to="alerts-heading"><span class="glance-alert-banner__sev">${escapeHtml(sev)}</span> <span class="glance-alert-banner__event">${escapeHtml(label)}</span></button></li>`;
               })
               .join('')}</ul>`
           : ''

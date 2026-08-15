@@ -240,6 +240,58 @@ export function resolveLocationAlerts(data, pin = null) {
   return getAlertsForLocation(lat, lon, String(data.county ?? ''));
 }
 
+const SEVERITY_RANK = Object.freeze({
+  extreme: 4,
+  severe: 3,
+  moderate: 2,
+  minor: 1,
+  unknown: 0,
+});
+
+/**
+ * @param {unknown} severity
+ * @returns {number}
+ */
+function severityRank(severity) {
+  return SEVERITY_RANK[String(severity ?? 'unknown').toLowerCase()] ?? 0;
+}
+
+/**
+ * Collapse same-named events for At a Glance banners (NWS often issues multiple
+ * Flood Advisories that only differ by area/ends — showing two identical pills
+ * looks like a bug). Full alert list keeps every id.
+ * @param {object[]} alerts
+ * @returns {{ alert: object, count: number }[]}
+ */
+export function collapseAlertsForGlance(alerts) {
+  /** @type {Map<string, { alert: object, count: number }>} */
+  const byEvent = new Map();
+  for (const a of Array.isArray(alerts) ? alerts : []) {
+    const event = String(a?.event ?? 'Alert').trim() || 'Alert';
+    const key = event.toLowerCase();
+    const prev = byEvent.get(key);
+    if (!prev) {
+      byEvent.set(key, { alert: a, count: 1 });
+      continue;
+    }
+    prev.count += 1;
+    const prevRank = severityRank(prev.alert.severity);
+    const nextRank = severityRank(a.severity);
+    if (nextRank > prevRank) {
+      prev.alert = a;
+      continue;
+    }
+    if (nextRank < prevRank) continue;
+    const prevEnds = Date.parse(String(prev.alert.ends ?? '')) || 0;
+    const nextEnds = Date.parse(String(a.ends ?? '')) || 0;
+    if (nextEnds > prevEnds) prev.alert = a;
+  }
+
+  return [...byEvent.values()].sort(
+    (x, y) => severityRank(y.alert.severity) - severityRank(x.alert.severity),
+  );
+}
+
 /**
  * @param {object[]} features
  * @returns {string[]}
