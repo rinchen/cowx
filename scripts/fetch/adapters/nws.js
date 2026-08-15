@@ -6,6 +6,7 @@
 
 import { fetchJson, NWS_USER_AGENT, sleep } from '../../lib/http.js';
 import { pointInGeometry, pointInRing } from '../../lib/geometry.js';
+import { countyKeysForAlertProps, normalizeCountyKey } from '../../lib/co-counties.js';
 
 export { pointInGeometry, pointInRing };
 
@@ -28,7 +29,8 @@ export function alertsForLocation(lat, lon, countyKey, byCounty, alertsGeoJson) 
     if (!byKey.has(key)) byKey.set(key, a);
   };
 
-  for (const a of byCounty.get(String(countyKey).toLowerCase()) ?? []) add(a);
+  const county = normalizeCountyKey(countyKey);
+  for (const a of byCounty.get(county) ?? []) add(a);
 
   const features = Array.isArray(alertsGeoJson?.features) ? alertsGeoJson.features : [];
   for (const f of features) {
@@ -198,10 +200,7 @@ export async function fetchNws() {
         url,
       };
 
-      for (const part of String(areas).split(';')) {
-        const county = part.replace(/ County$/i, '').trim();
-        if (!county) continue;
-        const key = county.toLowerCase();
+      for (const key of countyKeysForAlertProps(props)) {
         if (!byCounty.has(key)) byCounty.set(key, []);
         byCounty.get(key).push(summary);
       }
