@@ -83,6 +83,60 @@ describe('nws-alerts normalize + index', () => {
     assert.equal(alertsGeoJson.features.length, 1);
     assert.equal(alertsGeoJson.features[0].properties.id, 'a1');
   });
+
+  it('indexes Denver, CO areaDesc and FIPS for zone watches without geometry', () => {
+    const { byCounty } = buildAlertIndex([
+      {
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [-104.93, 39.63],
+              [-104.68, 39.63],
+              [-104.68, 39.82],
+              [-104.93, 39.82],
+              [-104.93, 39.63],
+            ],
+          ],
+        },
+        properties: {
+          id: 'ffw',
+          event: 'Flash Flood Warning',
+          areaDesc: 'Adams, CO; Western Arapahoe, CO; Denver, CO',
+          severity: 'Severe',
+          ends: null,
+          headline: 'FFW',
+          geocode: { SAME: ['008001', '008005', '008031'], UGC: ['COC001', 'COC005', 'COC031'] },
+        },
+      },
+      {
+        geometry: null,
+        properties: {
+          id: 'flood-watch',
+          event: 'Flood Watch',
+          areaDesc:
+            'North Douglas County Below 6000 Feet/Denver/West Adams and Arapahoe Counties/East Broomfield County',
+          severity: 'Severe',
+          ends: null,
+          headline: 'Flood Watch',
+          geocode: {
+            SAME: ['008031', '008001', '008005', '008035'],
+            UGC: ['COZ041'],
+          },
+        },
+      },
+    ]);
+
+    const denver = byCounty.get('denver') ?? [];
+    assert.equal(denver.length, 2);
+    assert.deepEqual(denver.map((a) => a.id).sort(), ['ffw', 'flood-watch']);
+
+    // Catalog downtown Denver is west of the FFW polygon — county match still applies.
+    const matched = alertsForLocation(39.7392, -104.9903, 'Denver', byCounty, {
+      features: [],
+    });
+    assert.equal(matched.length, 2);
+  });
 });
 
 describe('nws-alerts geometry matching', () => {

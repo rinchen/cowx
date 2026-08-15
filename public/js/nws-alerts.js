@@ -3,6 +3,8 @@
  * Build-time alerts.geojson / payload alerts[] remain the warm cache and fallback.
  */
 
+import { countyKeysForAlertProps, normalizeCountyKey } from './co-counties.js';
+
 export const ALERTS_UPDATED_EVENT = 'cowx:alerts-updated';
 
 const NWS_ACTIVE_CO = 'https://api.weather.gov/alerts/active?area=CO';
@@ -91,6 +93,7 @@ export function pointInGeometry(lon, lat, geometry) {
  *     id: string | null,
  *     url: string | null,
  *   },
+ *   countyKeys: string[],
  *   geometry: object | null,
  * }}
  */
@@ -121,6 +124,7 @@ export function normalizeAlertFeature(feature) {
       id: rawId != null ? String(rawId) : null,
       url,
     },
+    countyKeys: countyKeysForAlertProps(props),
     geometry: feature?.geometry ?? null,
   };
 }
@@ -140,11 +144,8 @@ export function buildAlertIndex(features) {
   const withGeom = [];
 
   for (const f of features) {
-    const { summary, geometry } = normalizeAlertFeature(f);
-    for (const part of String(summary.areaDesc).split(';')) {
-      const county = part.replace(/ County$/i, '').trim();
-      if (!county) continue;
-      const key = county.toLowerCase();
+    const { summary, geometry, countyKeys } = normalizeAlertFeature(f);
+    for (const key of countyKeys) {
       if (!countyMap.has(key)) countyMap.set(key, []);
       countyMap.get(key).push(summary);
     }
@@ -180,7 +181,8 @@ export function alertsForLocation(lat, lon, countyKey, countyIndex, geoJson) {
     if (!byKey.has(key)) byKey.set(key, a);
   };
 
-  for (const a of countyIndex.get(String(countyKey).toLowerCase()) ?? []) add(a);
+  const county = normalizeCountyKey(countyKey);
+  for (const a of countyIndex.get(county) ?? []) add(a);
 
   const features = Array.isArray(geoJson?.features) ? geoJson.features : [];
   for (const f of features) {

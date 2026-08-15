@@ -113,4 +113,20 @@ describe('nws geometry alerts', () => {
     assert.equal(merged.length, 2);
     assert.ok(merged.some((a) => a.id === 'a2'));
   });
+
+  it('matches Denver, CO areaDesc via normalized county key', () => {
+    const byCounty = new Map();
+    const summary = {
+      id: 'ffw',
+      event: 'Flash Flood Warning',
+      ends: null,
+      headline: 'FFW',
+      areaDesc: 'Denver, CO',
+    };
+    // Simulate fixed indexer: key is normalized "denver", not "denver, co".
+    byCounty.set('denver', [summary]);
+    const matched = alertsForLocation(39.7392, -104.9903, 'Denver', byCounty, { features: [] });
+    assert.equal(matched.length, 1);
+    assert.equal(matched[0].id, 'ffw');
+  });
 });
