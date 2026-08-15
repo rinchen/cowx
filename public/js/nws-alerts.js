@@ -302,7 +302,7 @@ export async function fetchActiveAlerts() {
     if (!res.ok) throw new Error(`NWS alerts HTTP ${res.status}`);
     const json = await res.json();
     const { changed } = applyAlertResponse(json);
-    if (changed) {
+    if (changed && typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent(ALERTS_UPDATED_EVENT, {
           detail: { featureCount: alertsGeoJson.features.length },
@@ -336,7 +336,9 @@ function startPollTimer() {
 
 /**
  * Start (or restart) visibility-aware polling of Colorado active alerts.
+ * Returns the in-flight first poll so callers can await it before first paint.
  * @param {{ intervalMs?: number }} [opts]
+ * @returns {Promise<{ changed: boolean, ok: boolean }>}
  */
 export function initAlertPolling(opts = {}) {
   intervalMs = opts.intervalMs ?? DEFAULT_INTERVAL_MS;
@@ -353,8 +355,9 @@ export function initAlertPolling(opts = {}) {
     });
   }
 
-  void fetchActiveAlerts();
+  const firstPoll = fetchActiveAlerts();
   startPollTimer();
+  return firstPoll;
 }
 
 /**

@@ -296,6 +296,8 @@ export async function renderWorkspace(root, data, options) {
     );
   };
   window.addEventListener(ALERTS_UPDATED_EVENT, onAlertsUpdated);
+  // Live poll may finish between first paint and this listener — sync once.
+  if (hasLiveAlerts()) onAlertsUpdated();
 
   const mapDetails = /** @type {HTMLDetailsElement | null} */ (
     root.querySelector('.workspace-map-details')

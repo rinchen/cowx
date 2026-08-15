@@ -7,6 +7,7 @@ import {
   buildAlertIndex,
   getAlertsForLocation,
   hasLiveAlerts,
+  initAlertPolling,
   normalizeAlertFeature,
   pointInGeometry,
   pointInRing,
@@ -250,5 +251,41 @@ describe('nws-alerts live resolve', () => {
     };
     assert.equal(applyAlertResponse(payload).changed, true);
     assert.equal(applyAlertResponse(payload).changed, false);
+  });
+
+  it('initAlertPolling returns the first poll promise and marks live ready', async () => {
+    const squarePoly = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          geometry: { type: 'Polygon', coordinates: [square] },
+          properties: {
+            id: 'poll-1',
+            event: 'Flood Watch',
+            areaDesc: 'Denver, CO',
+            headline: 'Flood Watch',
+            severity: 'Severe',
+            geocode: { SAME: ['008031'], UGC: ['COC031'] },
+          },
+        },
+      ],
+    };
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () =>
+      /** @type {Response} */ ({
+        ok: true,
+        status: 200,
+        json: async () => squarePoly,
+      });
+    try {
+      const result = await initAlertPolling({ intervalMs: 60_000 });
+      assert.equal(result.ok, true);
+      assert.equal(hasLiveAlerts(), true);
+      assert.equal(getAlertsForLocation(39.7392, -104.9903, 'Denver').length, 1);
+    } finally {
+      globalThis.fetch = originalFetch;
+      _resetAlertPollingForTests();
+    }
   });
 });

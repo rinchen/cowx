@@ -929,9 +929,10 @@ async function init() {
   els.dataSources = document.getElementById('data-sources');
 
   bindBackToTop();
-  // Start immediately so the first NWS poll overlaps loadCoreData / first paint.
-  initAlertPolling({ intervalMs: 180_000 });
-  await loadCoreData();
+  // Overlap the first NWS poll with core data load; await both before routing so
+  // the workspace paints live alerts (not a stale payload-only snapshot).
+  const alertsReady = initAlertPolling({ intervalMs: 180_000 });
+  await Promise.all([loadCoreData(), alertsReady]);
   bindHomeNavigation();
   window.addEventListener('hashchange', () => {
     safeVoid(handleRoute());
