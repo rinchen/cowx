@@ -7,6 +7,7 @@
 import { fetchJson, NWS_USER_AGENT, sleep } from '../../lib/http.js';
 import { pointInGeometry, pointInRing } from '../../lib/geometry.js';
 import { countyKeysForAlertProps, normalizeCountyKey } from '../../lib/co-counties.js';
+import { hydrateAlertGeometries } from '../../lib/nws-zone-geometry.js';
 
 export { pointInGeometry, pointInRing };
 
@@ -170,9 +171,21 @@ export async function fetchNws() {
     });
 
     const features = Array.isArray(alerts?.features) ? alerts.features : [];
+    let zoneCalls = 0;
+    const hydrated = await hydrateAlertGeometries(features, {
+      fetchZoneJson: async (url) => {
+        zoneCalls += 1;
+        return fetchJson(url, {
+          headers: { 'User-Agent': NWS_USER_AGENT, Accept: 'application/geo+json' },
+          timeoutMs: 45_000,
+        });
+      },
+      concurrency: 6,
+    });
+    calls += zoneCalls;
     const withGeom = [];
 
-    for (const f of features) {
+    for (const f of hydrated) {
       const props = f.properties ?? {};
       const event = props.event ?? 'Alert';
       const headline = props.headline ?? '';

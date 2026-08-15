@@ -4,6 +4,7 @@
  */
 
 import { countyKeysForAlertProps, normalizeCountyKey } from './co-counties.js';
+import { hydrateAlertGeometries } from './nws-zone-geometry.js';
 
 export const ALERTS_UPDATED_EVENT = 'cowx:alerts-updated';
 
@@ -301,8 +302,23 @@ export async function fetchActiveAlerts() {
     });
     if (!res.ok) throw new Error(`NWS alerts HTTP ${res.status}`);
     const json = await res.json();
-    const { changed } = applyAlertResponse(json);
-    if (changed) {
+    const rawFeatures = Array.isArray(json?.features) ? json.features : [];
+    // Zone watches (Flood Watch, etc.) arrive with geometry: null — hydrate from
+    // COZ/COC polygons so the map can draw every affected area.
+    const features = await hydrateAlertGeometries(rawFeatures, {
+      fetchZoneJson: async (url) => {
+        const zoneRes = await fetch(url, {
+          headers: { Accept: 'application/geo+json' },
+          cache: 'force-cache',
+          signal: controller.signal,
+        });
+        if (!zoneRes.ok) throw new Error(`NWS zone HTTP ${zoneRes.status}`);
+        return zoneRes.json();
+      },
+      concurrency: 6,
+    });
+    const { changed } = applyAlertResponse({ features });
+    if (changed && typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent(ALERTS_UPDATED_EVENT, {
           detail: { featureCount: alertsGeoJson.features.length },
