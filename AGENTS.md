@@ -21,7 +21,8 @@ cowx/   # repo directory (brand: COWX)
 │   │   └── adapters/         # One module per upstream source (add new adapters here)
 │   ├── locations/
 │   │   ├── colorado-locations.json   # Curated Colorado location catalog (source of truth)
-│   │   └── co-zips.json              # ZIP → nearest catalog point (copied to public/data/)
+│   │   ├── co-zips.json              # CO ZIP centroids for search/pollen (copied to public/data/)
+│   │   └── build-co-zips.js          # Rebuild co-zips.json from GeoNames US postal dump
 │   ├── lib/                  # Shared utilities (http, geo, slugify, rf-comms, wmo, etc.)
 │   ├── ci/                   # Pages/stale-data helpers used by GitHub Actions workflows
 │   └── validate-locations.js # Validates catalog (unique slug, CO bbox, region/wfo enums, webcam https)
@@ -122,7 +123,7 @@ AirGradient and AirNow resolve by nearest sensor/grid point (no per-location sen
 2. Ensure `slug` is unique across the file.
 3. Run `pnpm validate:locations`.
 4. Run `pnpm run fetch:data` (or wait for the scheduled Action) so `public/data/` includes the new site. Prefer `pnpm run fetch:data` — bare `pnpm fetch` is a pnpm builtin, not this project's script.
-5. For ZIP search, update `scripts/locations/co-zips.json` (copied to `public/data/co-zips.json` on fetch).
+5. ZIP search uses `scripts/locations/co-zips.json` (copied to `public/data/co-zips.json` on fetch). Rebuild statewide coverage with `pnpm run build:co-zips` (GeoNames US dump → CO filter); do not hand-edit one-off ZIPs.
 
 **Removing a location:** Deleting an entry from the catalog does **not** remove the orphan `public/data/locations/{slug}.json` (or its index row until the next successful fetch rewrite). Delete stale slug files under `public/data/locations/` manually (or wipe and re-fetch) when pruning the catalog.
 

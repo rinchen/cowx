@@ -17,6 +17,7 @@
     "format": "prettier --write .",
     "validate:locations": "node scripts/validate-locations.js",
     "validate:schemas": "node scripts/validate-schemas.js",
+    "build:co-zips": "node scripts/locations/build-co-zips.js",
     "update": "pnpm update && pnpm dedupe",
     "prepare": "husky"
   },
