@@ -92,7 +92,7 @@ Rename the file if you want (e.g. `montana-locations.json`), then update paths i
 - `package.json` (`validate:locations` script)
 - `AGENTS.md` / this doc
 
-**ZIPs:** [`scripts/locations/co-zips.json`](scripts/locations/co-zips.json) powers ZIP search. Replace with your state’s ZIP centroids (or equivalent). Fetch copies it to `public/data/co-zips.json`; if you rename the file, update the fetch writer and [`public/js/app.js`](public/js/app.js) loader.
+**ZIPs:** [`scripts/locations/co-zips.json`](scripts/locations/co-zips.json) powers ZIP search. Rebuild Colorado coverage with `pnpm run build:co-zips` (GeoNames), or replace with your state’s ZIP centroids. Fetch copies it to `public/data/co-zips.json`; if you rename the file, update the fetch writer and [`public/js/app.js`](public/js/app.js) loader.
 
 Nearest-location behavior ([`public/js/geo.js`](public/js/geo.js)) is haversine over the catalog only — out-of-state visitors still get the nearest **catalog** point.
 

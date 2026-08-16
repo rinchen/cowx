@@ -30,6 +30,7 @@ Without running `pnpm run fetch:data`, only committed snapshot data in `public/d
 | `pnpm test`                  | Unit tests (fixtures only — no live API calls)                                |
 | `pnpm lint`                  | ESLint                                                                        |
 | `pnpm validate:locations`    | Validate `scripts/locations/colorado-locations.json` (+ `co-zips.json`)       |
+| `pnpm run build:co-zips`     | Rebuild full CO ZIP table from GeoNames (writes `co-zips.json`)               |
 | `pnpm validate:schemas`      | Ajv-check catalog + sample `public/data` against `schemas/`                   |
 | `pnpm format`                | Prettier                                                                      |
 | `pnpm update`                | Refresh lockfile within ranges (`pnpm update && pnpm dedupe`)                 |

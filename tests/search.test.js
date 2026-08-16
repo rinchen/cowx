@@ -13,6 +13,15 @@ const locations = [
     lon: -104.8214,
     county: 'El Paso',
   },
+  { slug: 'sedalia', name: 'Sedalia', lat: 39.4369, lon: -104.9636, county: 'Douglas' },
+  {
+    slug: 'sedalia-south',
+    name: 'Sedalia South',
+    lat: 39.4,
+    lon: -104.95,
+    county: 'Douglas',
+  },
+  { slug: 'perry-park', name: 'Perry Park', lat: 39.25, lon: -104.9833, county: 'Douglas' },
 ];
 
 describe('searchLocations', () => {
@@ -27,6 +36,15 @@ describe('searchLocations', () => {
     const hits = searchLocations(locations, zips, '80302');
     assert.equal(hits.length, 1);
     assert.equal(hits[0].slug, 'boulder');
+  });
+
+  it('resolves 80135 Sedalia ZIP to nearest Douglas County catalog point', () => {
+    const zips = [
+      { zip: '80135', lat: 39.3113, lon: -105.0676, city: 'Sedalia', county: 'Douglas' },
+    ];
+    const hits = searchLocations(locations, zips, '80135');
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].slug, 'perry-park');
   });
 
   it('returns empty for blank or unknown ZIP', () => {

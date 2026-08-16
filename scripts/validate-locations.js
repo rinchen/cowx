@@ -36,6 +36,9 @@ function isObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/** Minimum Colorado ZIP rows (full GeoNames rebuild is ~600+). */
+export const MIN_CO_ZIPS = 500;
+
 /**
  * Validate ZIP lookup table used for search + pollen links.
  * @param {unknown} data
@@ -48,6 +51,9 @@ export function validateCoZipsData(data) {
   }
   if (data.length === 0) {
     return ['co-zips.json must not be empty'];
+  }
+  if (data.length < MIN_CO_ZIPS) {
+    errors.push(`co-zips.json must have at least ${MIN_CO_ZIPS} ZIPs (got ${data.length})`);
   }
   const seen = new Set();
   for (let i = 0; i < data.length; i += 1) {
