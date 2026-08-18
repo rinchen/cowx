@@ -1,111 +1,113 @@
 {
-  "generatedAt": "2026-08-18T07:21:45.171Z",
+  "generatedAt": "2026-08-18T08:37:15.558Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:11:18.050Z"
+      "fetchedAt": "2026-08-18T08:24:08.341Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:18:37.406Z"
+      "fetchedAt": "2026-08-18T08:31:28.055Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-18T07:18:37.534Z"
+      "fetchedAt": "2026-08-18T08:31:28.201Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:18:42.163Z"
+      "fetchedAt": "2026-08-18T08:31:33.320Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:18:47.010Z"
+      "fetchedAt": "2026-08-18T08:31:37.194Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:18:47.635Z"
+      "fetchedAt": "2026-08-18T08:31:37.773Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:18:49.854Z"
+      "fetchedAt": "2026-08-18T08:31:40.099Z"
     },
     {
       "id": "airnow",
-      "status": "ok",
-      "fetchedAt": "2026-08-18T07:20:38.371Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-18T08:36:11.407Z",
+      "error": "HTTP 502 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted] <html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n</body>\r\n</html>\r\n; HTTP 502 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-104.80000000000001&distance=50&API_KEY=[redacted] <html>\r\n<head><titl"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:20:39.967Z"
+      "fetchedAt": "2026-08-18T08:36:13.018Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:20:54.620Z"
+      "fetchedAt": "2026-08-18T08:36:30.633Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:21:00.273Z"
+      "fetchedAt": "2026-08-18T08:36:31.426Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:21:27.194Z"
+      "fetchedAt": "2026-08-18T08:36:58.041Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-18T07:21:39.035Z"
+      "fetchedAt": "2026-08-18T08:37:09.103Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:21:39.509Z"
+      "fetchedAt": "2026-08-18T08:37:09.796Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:21:40.320Z"
+      "fetchedAt": "2026-08-18T08:37:10.741Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:21:40.787Z"
+      "fetchedAt": "2026-08-18T08:37:10.939Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:21:40.999Z"
+      "fetchedAt": "2026-08-18T08:37:11.081Z"
     },
     {
       "id": "space_weather",
-      "status": "ok",
-      "fetchedAt": "2026-08-18T07:21:41.334Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-18T08:37:11.485Z",
+      "error": "kp: Unexpected non-whitespace character after JSON at position 27925 (line 1 column 27926)"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:21:41.544Z"
+      "fetchedAt": "2026-08-18T08:37:11.681Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:21:41.932Z"
+      "fetchedAt": "2026-08-18T08:37:12.033Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-18T07:21:45.171Z"
+      "fetchedAt": "2026-08-18T08:37:15.558Z"
     }
   ],
   "locationCount": 338,
