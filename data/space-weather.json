@@ -1,13 +1,9 @@
 {
-  "generatedAt": "2026-08-19T16:37:26.079Z",
-  "kp": {
-    "value": 0.67,
-    "observed": "2026-08-19T16:33:00",
-    "source": "planetary"
-  },
+  "generatedAt": "2026-08-19T18:05:01.809Z",
+  "kp": null,
   "boulder_kp": {
-    "value": 2.8,
-    "observed": "2026-08-19T16:32:00"
+    "value": 3.25,
+    "observed": "2026-08-19T17:59:00"
   },
   "sfi": {
     "value": 125,
@@ -27,7 +23,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-08-19T16:35:00Z",
+    "observed": "2026-08-19T18:04:00Z",
     "forecast": [
       {
         "date": "2026-08-19",
@@ -77,33 +73,12 @@
     ]
   },
   "xray": {
-    "class": "C1.7",
-    "flux": 0.0000016715478068363154,
-    "observed": "2026-08-19T16:34:00Z"
+    "class": "C2.1",
+    "flux": 0.0000021142921013961313,
+    "observed": "2026-08-19T18:01:00Z"
   },
-  "aurora_co": {
-    "chance": "unlikely",
-    "detail": "Kp 0.7 — aurora unlikely at Colorado latitudes (estimate)."
-  },
-  "hf": {
-    "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
-    "day": {
-      "80m": "fair",
-      "40m": "good",
-      "20m": "good",
-      "15m": "good",
-      "10m": "fair",
-      "6m": "poor"
-    },
-    "night": {
-      "80m": "excellent",
-      "40m": "excellent",
-      "20m": "fair",
-      "15m": "fair",
-      "10m": "fair",
-      "6m": "poor"
-    }
-  },
+  "aurora_co": null,
+  "hf": null,
   "links": {
     "swpc": "https://www.swpc.noaa.gov/",
     "scales": "https://www.swpc.noaa.gov/noaa-scales-explanation",
