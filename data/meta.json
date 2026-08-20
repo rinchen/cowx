@@ -1,113 +1,111 @@
 {
-  "generatedAt": "2026-08-20T22:34:56.459Z",
+  "generatedAt": "2026-08-20T23:40:44.241Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:21:02.094Z"
+      "fetchedAt": "2026-08-20T23:31:17.364Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:28:19.617Z"
+      "fetchedAt": "2026-08-20T23:37:33.541Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-20T22:28:19.762Z"
+      "fetchedAt": "2026-08-20T23:37:33.683Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:28:23.106Z"
+      "fetchedAt": "2026-08-20T23:37:39.369Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:28:26.807Z"
+      "fetchedAt": "2026-08-20T23:37:42.440Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:28:27.025Z"
+      "fetchedAt": "2026-08-20T23:37:42.911Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:28:28.530Z"
+      "fetchedAt": "2026-08-20T23:37:45.131Z"
     },
     {
       "id": "airnow",
-      "status": "partial",
-      "fetchedAt": "2026-08-20T22:33:48.534Z",
-      "error": "This operation was aborted (timeout) for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=38.2&longitude=-106.60000000000001&distance=50&API_KEY=[redacted] HTTP 502 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=38&longitude=-107.2&distance=50&API_KEY=[redacted] <html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n</body>\r\n</html>\r\n; This operation was "
+      "status": "ok",
+      "fetchedAt": "2026-08-20T23:39:30.465Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:33:49.647Z"
+      "fetchedAt": "2026-08-20T23:39:32.032Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:34:04.890Z"
+      "fetchedAt": "2026-08-20T23:39:50.505Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:34:06.378Z"
+      "fetchedAt": "2026-08-20T23:39:52.550Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:34:32.652Z"
+      "fetchedAt": "2026-08-20T23:40:19.769Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-20T22:34:44.138Z"
+      "fetchedAt": "2026-08-20T23:40:31.187Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:34:44.389Z"
+      "fetchedAt": "2026-08-20T23:40:31.380Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:34:44.865Z"
+      "fetchedAt": "2026-08-20T23:40:32.228Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:34:44.987Z"
+      "fetchedAt": "2026-08-20T23:40:32.574Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "partial",
-      "fetchedAt": "2026-08-20T22:34:52.950Z",
-      "error": "HTTP 429 for COEM fire bans page"
+      "status": "ok",
+      "fetchedAt": "2026-08-20T23:40:40.499Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:34:53.141Z"
+      "fetchedAt": "2026-08-20T23:40:40.638Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:34:53.499Z"
+      "fetchedAt": "2026-08-20T23:40:40.818Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:34:53.631Z"
+      "fetchedAt": "2026-08-20T23:40:41.172Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-20T22:34:56.459Z"
+      "fetchedAt": "2026-08-20T23:40:44.240Z"
     }
   ],
   "locationCount": 338,
