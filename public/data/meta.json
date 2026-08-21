@@ -1,116 +1,117 @@
 {
-  "generatedAt": "2026-08-21T07:03:38.265Z",
+  "generatedAt": "2026-08-21T08:48:46.753Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-21T06:21:18.686Z"
+      "fetchedAt": "2026-08-21T08:10:46.550Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-21T06:28:38.493Z"
+      "fetchedAt": "2026-08-21T08:19:07.126Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "partial",
-      "fetchedAt": "2026-08-21T06:59:59.792Z",
-      "error": "bailey/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.5&longitude=-105.5&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; bailey/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.5&longitude=-105.5&start_date=2001-0"
+      "fetchedAt": "2026-08-21T08:45:43.217Z",
+      "error": "red-cliff/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.5&longitude=-106.25&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; red-cliff/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.5&longitude=-106.25&start_dat"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:00:19.611Z"
+      "fetchedAt": "2026-08-21T08:45:46.199Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:00:24.653Z"
+      "fetchedAt": "2026-08-21T08:45:49.439Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:00:25.052Z"
+      "fetchedAt": "2026-08-21T08:45:49.566Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:00:27.227Z"
+      "fetchedAt": "2026-08-21T08:45:51.220Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:02:27.551Z"
+      "fetchedAt": "2026-08-21T08:47:26.884Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:02:29.144Z"
+      "fetchedAt": "2026-08-21T08:47:28.071Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:02:48.164Z"
+      "fetchedAt": "2026-08-21T08:47:44.877Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:02:54.496Z"
+      "fetchedAt": "2026-08-21T08:47:54.922Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:03:21.157Z"
+      "fetchedAt": "2026-08-21T08:48:21.046Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-21T07:03:31.493Z"
+      "fetchedAt": "2026-08-21T08:48:34.102Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:03:32.238Z"
+      "fetchedAt": "2026-08-21T08:48:34.521Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:03:33.411Z"
+      "fetchedAt": "2026-08-21T08:48:34.901Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:03:33.621Z"
+      "fetchedAt": "2026-08-21T08:48:35.041Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "ok",
-      "fetchedAt": "2026-08-21T07:03:33.845Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-21T08:48:43.306Z",
+      "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:03:33.947Z"
+      "fetchedAt": "2026-08-21T08:48:43.375Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:03:34.125Z"
+      "fetchedAt": "2026-08-21T08:48:43.568Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:03:34.498Z"
+      "fetchedAt": "2026-08-21T08:48:43.658Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-21T07:03:38.265Z"
+      "fetchedAt": "2026-08-21T08:48:46.753Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 413,
+  "apiCalls": 415,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
