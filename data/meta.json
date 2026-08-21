@@ -1,116 +1,117 @@
 {
-  "generatedAt": "2026-08-21T10:12:59.249Z",
+  "generatedAt": "2026-08-21T11:48:47.065Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:02:35.060Z"
+      "fetchedAt": "2026-08-21T11:14:02.663Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:09:53.539Z"
+      "fetchedAt": "2026-08-21T11:21:24.081Z"
     },
     {
       "id": "openmeteo_climatology",
-      "status": "skipped",
-      "fetchedAt": "2026-08-21T10:09:53.646Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-21T11:45:36.431Z",
+      "error": "montrose/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=38.5&longitude=-108&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; montrose/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=38.5&longitude=-108&start_date=2001-0"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:09:57.512Z"
+      "fetchedAt": "2026-08-21T11:45:40.951Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:10:03.981Z"
+      "fetchedAt": "2026-08-21T11:45:44.320Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:10:04.476Z"
+      "fetchedAt": "2026-08-21T11:45:44.754Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:10:06.461Z"
+      "fetchedAt": "2026-08-21T11:45:46.838Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:11:47.152Z"
+      "fetchedAt": "2026-08-21T11:47:32.689Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:11:48.175Z"
+      "fetchedAt": "2026-08-21T11:47:34.315Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:12:02.284Z"
+      "fetchedAt": "2026-08-21T11:47:51.625Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:12:12.729Z"
+      "fetchedAt": "2026-08-21T11:48:01.853Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:12:36.626Z"
+      "fetchedAt": "2026-08-21T11:48:28.323Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-21T10:12:48.919Z"
+      "fetchedAt": "2026-08-21T11:48:40.334Z"
     },
     {
       "id": "hms",
-      "status": "ok",
-      "fetchedAt": "2026-08-21T10:12:49.564Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-21T11:48:40.781Z",
+      "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:12:50.179Z"
+      "fetchedAt": "2026-08-21T11:48:41.731Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:12:50.364Z"
+      "fetchedAt": "2026-08-21T11:48:41.989Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:12:50.616Z"
+      "fetchedAt": "2026-08-21T11:48:42.235Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:12:50.844Z"
+      "fetchedAt": "2026-08-21T11:48:42.765Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:12:51.107Z"
+      "fetchedAt": "2026-08-21T11:48:43.139Z"
     },
     {
       "id": "firms",
-      "status": "error",
-      "fetchedAt": "2026-08-21T10:12:55.887Z",
-      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://firms.modaps.eosdis.nasa.gov/api/area/csv/[redacted]/VIIRS_SNPP_NRT/-109.2,36.9,-102,41.1/1"
+      "status": "ok",
+      "fetchedAt": "2026-08-21T11:48:43.514Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-21T10:12:59.249Z"
+      "fetchedAt": "2026-08-21T11:48:47.065Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 365,
+  "apiCalls": 403,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
