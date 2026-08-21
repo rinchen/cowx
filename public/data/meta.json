@@ -1,117 +1,117 @@
 {
-  "generatedAt": "2026-08-21T18:39:54.674Z",
+  "generatedAt": "2026-08-21T20:36:29.245Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:06:54.993Z"
+      "fetchedAt": "2026-08-21T19:50:58.470Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:15:16.616Z"
+      "fetchedAt": "2026-08-21T19:59:21.277Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "partial",
-      "fetchedAt": "2026-08-21T18:36:53.224Z",
-      "error": "stratton/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.25&longitude=-102.5&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; genoa/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.25&longitude=-103.5&start_date=199"
+      "fetchedAt": "2026-08-21T20:30:24.976Z",
+      "error": "limon/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.25&longitude=-103.75&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; limon/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.25&longitude=-103.75&start_date=2001"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:36:57.672Z"
+      "fetchedAt": "2026-08-21T20:30:33.854Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:37:00.801Z"
+      "fetchedAt": "2026-08-21T20:30:42.326Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:37:01.740Z"
+      "fetchedAt": "2026-08-21T20:30:43.125Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:37:03.682Z"
+      "fetchedAt": "2026-08-21T20:30:45.546Z"
     },
     {
       "id": "airnow",
-      "status": "ok",
-      "fetchedAt": "2026-08-21T18:38:47.289Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-21T20:35:24.649Z",
+      "error": "This operation was aborted (timeout) for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=40&longitude=-105.2&distance=50&API_KEY=[redacted] This operation was aborted (timeout) for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=40.2&longitude=-105.2&distance=50&API_KEY=[redacted]"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:38:48.673Z"
+      "fetchedAt": "2026-08-21T20:35:26.215Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:39:01.751Z"
+      "fetchedAt": "2026-08-21T20:35:42.921Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:39:03.733Z"
+      "fetchedAt": "2026-08-21T20:35:43.601Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:39:28.854Z"
+      "fetchedAt": "2026-08-21T20:36:10.097Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-21T18:39:41.690Z"
+      "fetchedAt": "2026-08-21T20:36:22.222Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:39:41.897Z"
+      "fetchedAt": "2026-08-21T20:36:22.628Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:39:42.255Z"
+      "fetchedAt": "2026-08-21T20:36:23.692Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:39:42.471Z"
+      "fetchedAt": "2026-08-21T20:36:23.888Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "partial",
-      "fetchedAt": "2026-08-21T18:39:50.866Z",
-      "error": "HTTP 429 for COEM fire bans page"
+      "status": "ok",
+      "fetchedAt": "2026-08-21T20:36:24.279Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:39:51.058Z"
+      "fetchedAt": "2026-08-21T20:36:24.802Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:39:51.335Z"
+      "fetchedAt": "2026-08-21T20:36:25.259Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:39:51.583Z"
+      "fetchedAt": "2026-08-21T20:36:25.680Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-21T18:39:54.674Z"
+      "fetchedAt": "2026-08-21T20:36:29.245Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 402,
+  "apiCalls": 412,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
