@@ -1,112 +1,113 @@
 {
-  "generatedAt": "2026-08-23T02:25:11.405Z",
+  "generatedAt": "2026-08-23T03:43:48.680Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:11:48.050Z"
+      "fetchedAt": "2026-08-23T03:29:44.939Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:21:12.063Z"
+      "fetchedAt": "2026-08-23T03:37:04.569Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-23T02:21:12.213Z"
+      "fetchedAt": "2026-08-23T03:37:04.714Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:21:16.367Z"
+      "fetchedAt": "2026-08-23T03:37:09.438Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:21:19.280Z"
+      "fetchedAt": "2026-08-23T03:37:12.805Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:21:19.865Z"
+      "fetchedAt": "2026-08-23T03:37:13.917Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:21:21.668Z"
+      "fetchedAt": "2026-08-23T03:37:16.367Z"
     },
     {
       "id": "airnow",
-      "status": "ok",
-      "fetchedAt": "2026-08-23T02:23:02.600Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-23T03:42:27.284Z",
+      "error": "HTTP 504 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted] <html>\r\n<head><title>504 Gateway Time-out</title></head>\r\n<body>\r\n<center><h1>504 Gateway Time-out</h1></center>\r\n</body>\r\n</html>\r\n; This operation was aborted (timeout) for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-104.80000000000001&distance=50&"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:23:03.845Z"
+      "fetchedAt": "2026-08-23T03:42:28.097Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:23:19.659Z"
+      "fetchedAt": "2026-08-23T03:42:43.978Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:23:33.965Z"
+      "fetchedAt": "2026-08-23T03:42:50.179Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:23:57.556Z"
+      "fetchedAt": "2026-08-23T03:43:15.528Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-23T02:24:09.734Z"
+      "fetchedAt": "2026-08-23T03:43:26.398Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:24:10.199Z"
+      "fetchedAt": "2026-08-23T03:43:26.950Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:24:10.538Z"
+      "fetchedAt": "2026-08-23T03:43:27.525Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:24:10.742Z"
+      "fetchedAt": "2026-08-23T03:43:27.750Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:24:10.952Z"
+      "fetchedAt": "2026-08-23T03:43:27.893Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:24:11.066Z"
+      "fetchedAt": "2026-08-23T03:43:28.073Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-23T02:24:11.253Z"
+      "fetchedAt": "2026-08-23T03:43:28.318Z"
     },
     {
       "id": "firms",
-      "status": "ok",
-      "fetchedAt": "2026-08-23T02:24:11.403Z"
+      "status": "error",
+      "fetchedAt": "2026-08-23T03:43:33.090Z",
+      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://firms.modaps.eosdis.nasa.gov/api/area/csv/[redacted]/VIIRS_SNPP_NRT/-109.2,36.9,-102,41.1/1"
     },
     {
       "id": "cbrfc",
-      "status": "error",
-      "fetchedAt": "2026-08-23T02:25:11.405Z",
-      "error": "This operation was aborted (timeout) for https://www.cbrfc.noaa.gov/wsup/graph/espcond_data.py?fdate=LATEST&area=CB&sort=basin&otype=json&qpfdays=0"
+      "status": "ok",
+      "fetchedAt": "2026-08-23T03:43:48.680Z"
     }
   ],
   "locationCount": 338,
