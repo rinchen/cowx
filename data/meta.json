@@ -1,114 +1,111 @@
 {
-  "generatedAt": "2026-08-24T15:35:44.246Z",
+  "generatedAt": "2026-08-24T17:15:07.448Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "partial",
-      "fetchedAt": "2026-08-24T15:27:02.050Z",
-      "error": "nbm thunderstorm: HTTP 429 for https://api.open-meteo.com/v1/gfs?latitude=39.4817,39.4306,39.8667,39.1911,39.213,39.3686,39.4022,39.5505,39.5728,39.5486,39.5347,39.4519,39.0639,39.1589,39.1103,39.0919,39.08,39.24,39.3339,39.1958&longitude=-106.0384,-106.0436,-106.3,-106.8175,-106.9378,-107.0328,-107.2113,-107.3248,-107.5364,-107.6561,-107.7831,-108.0528,-108.5506,-108.7289,-108.3528,-108.4489,-108.635,-107.9614,-108.2169,-108.8131&hourly=thunderstorm_probability&models=ncep_nbm_conus&timezone=Am"
+      "status": "ok",
+      "fetchedAt": "2026-08-24T17:04:31.686Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:31:14.562Z"
+      "fetchedAt": "2026-08-24T17:11:52.211Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-24T15:31:14.722Z"
+      "fetchedAt": "2026-08-24T17:11:52.337Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:31:21.585Z"
+      "fetchedAt": "2026-08-24T17:11:56.668Z"
     },
     {
       "id": "coagmet",
-      "status": "error",
-      "fetchedAt": "2026-08-24T15:31:22.180Z",
-      "error": "HTTP 502 for https://coagmet.colostate.edu/data/latest.json: <!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\n<html><head>\n<title>502 Proxy Error</title>\n</head><body>\n<h1>Proxy Error</h1>\n<p>The proxy server received a"
+      "status": "ok",
+      "fetchedAt": "2026-08-24T17:11:59.816Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:31:22.530Z"
+      "fetchedAt": "2026-08-24T17:12:19.510Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:31:24.271Z"
+      "fetchedAt": "2026-08-24T17:12:21.413Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:34:41.306Z"
+      "fetchedAt": "2026-08-24T17:14:10.390Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:34:42.408Z"
+      "fetchedAt": "2026-08-24T17:14:11.666Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:34:56.531Z"
+      "fetchedAt": "2026-08-24T17:14:26.041Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:35:02.112Z"
+      "fetchedAt": "2026-08-24T17:14:26.726Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:35:28.950Z"
+      "fetchedAt": "2026-08-24T17:14:50.900Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-24T15:35:39.397Z"
+      "fetchedAt": "2026-08-24T17:15:02.009Z"
     },
     {
       "id": "hms",
-      "status": "partial",
-      "fetchedAt": "2026-08-24T15:35:39.617Z",
-      "error": "no HMS polygons near Colorado"
+      "status": "ok",
+      "fetchedAt": "2026-08-24T17:15:02.197Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:35:39.920Z"
+      "fetchedAt": "2026-08-24T17:15:02.636Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:35:40.145Z"
+      "fetchedAt": "2026-08-24T17:15:02.801Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:35:40.387Z"
+      "fetchedAt": "2026-08-24T17:15:03.041Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:35:40.631Z"
+      "fetchedAt": "2026-08-24T17:15:03.230Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:35:40.806Z"
+      "fetchedAt": "2026-08-24T17:15:03.519Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:35:41.153Z"
+      "fetchedAt": "2026-08-24T17:15:04.103Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-24T15:35:44.246Z"
+      "fetchedAt": "2026-08-24T17:15:07.448Z"
     }
   ],
   "locationCount": 338,
