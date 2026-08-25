@@ -1,112 +1,112 @@
 {
-  "generatedAt": "2026-08-25T06:31:03.286Z",
+  "generatedAt": "2026-08-25T08:23:05.595Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:20:22.693Z"
+      "fetchedAt": "2026-08-25T08:12:53.326Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:27:44.431Z"
+      "fetchedAt": "2026-08-25T08:20:11.488Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-25T06:27:44.590Z"
+      "fetchedAt": "2026-08-25T08:20:11.636Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:27:49.215Z"
+      "fetchedAt": "2026-08-25T08:20:15.452Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:27:52.543Z"
+      "fetchedAt": "2026-08-25T08:20:15.907Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:27:53.555Z"
+      "fetchedAt": "2026-08-25T08:20:16.141Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:27:55.853Z"
+      "fetchedAt": "2026-08-25T08:20:17.994Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:29:47.103Z"
+      "fetchedAt": "2026-08-25T08:21:54.293Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:29:47.978Z"
+      "fetchedAt": "2026-08-25T08:21:55.558Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:30:01.565Z"
+      "fetchedAt": "2026-08-25T08:22:12.029Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:30:07.377Z"
+      "fetchedAt": "2026-08-25T08:22:21.970Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:30:33.563Z"
+      "fetchedAt": "2026-08-25T08:22:45.949Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-25T06:30:43.008Z"
+      "fetchedAt": "2026-08-25T08:22:56.136Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:30:43.421Z"
+      "fetchedAt": "2026-08-25T08:22:56.756Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:30:43.552Z"
+      "fetchedAt": "2026-08-25T08:22:57.062Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:30:43.771Z"
+      "fetchedAt": "2026-08-25T08:22:57.228Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:30:43.937Z"
+      "fetchedAt": "2026-08-25T08:22:57.445Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:30:44.021Z"
+      "fetchedAt": "2026-08-25T08:22:57.680Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:30:44.202Z"
+      "fetchedAt": "2026-08-25T08:22:57.836Z"
     },
     {
       "id": "firms",
       "status": "error",
-      "fetchedAt": "2026-08-25T06:30:49.007Z",
+      "fetchedAt": "2026-08-25T08:23:02.614Z",
       "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://firms.modaps.eosdis.nasa.gov/api/area/csv/[redacted]/VIIRS_SNPP_NRT/-109.2,36.9,-102,41.1/1"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-25T06:31:03.285Z"
+      "fetchedAt": "2026-08-25T08:23:05.595Z"
     }
   ],
   "locationCount": 338,
