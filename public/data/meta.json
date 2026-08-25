@@ -1,113 +1,111 @@
 {
-  "generatedAt": "2026-08-25T00:56:15.259Z",
+  "generatedAt": "2026-08-25T02:07:42.511Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "partial",
-      "fetchedAt": "2026-08-25T00:49:58.005Z",
-      "error": "nbm thunderstorm: HTTP 429 for https://api.open-meteo.com/v1/gfs?latitude=40.4536,40.2044,40.2769,39.9472,39.9161,39.7167,39.5833,39.6778,39.7989,39.6639,39.3667,38.4978,37.4728,37.6931,37.8919,37.7406,37.8208,40.3833,40.5167,40.4833&longitude=-105.4486,-105.5256,-105.435,-105.5828,-105.5014,-105.3833,-105.85,-105.9194,-105.7778,-105.8792,-106.1833,-106.3258,-106.7931,-107.7758,-107.7114,-107.6919,-107.9306,-106.5833,-105.8833,-106.7167&hourly=thunderstorm_probability&models=ncep_nbm_conus&timez"
+      "status": "ok",
+      "fetchedAt": "2026-08-25T01:59:32.100Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:53:07.503Z"
+      "fetchedAt": "2026-08-25T02:04:48.537Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-25T00:53:07.658Z"
+      "fetchedAt": "2026-08-25T02:04:48.662Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:53:11.631Z"
+      "fetchedAt": "2026-08-25T02:04:53.748Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:53:15.239Z"
+      "fetchedAt": "2026-08-25T02:04:56.279Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:53:36.656Z"
+      "fetchedAt": "2026-08-25T02:04:56.547Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:53:38.290Z"
+      "fetchedAt": "2026-08-25T02:04:58.405Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:55:13.921Z"
+      "fetchedAt": "2026-08-25T02:06:40.991Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:55:15.054Z"
+      "fetchedAt": "2026-08-25T02:06:42.611Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:55:30.164Z"
+      "fetchedAt": "2026-08-25T02:07:00.091Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:55:30.920Z"
+      "fetchedAt": "2026-08-25T02:07:01.170Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:55:55.475Z"
+      "fetchedAt": "2026-08-25T02:07:26.668Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-25T00:56:05.825Z"
+      "fetchedAt": "2026-08-25T02:07:37.115Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:56:06.064Z"
+      "fetchedAt": "2026-08-25T02:07:37.589Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:56:06.542Z"
+      "fetchedAt": "2026-08-25T02:07:38.060Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:56:06.793Z"
+      "fetchedAt": "2026-08-25T02:07:38.371Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:56:06.966Z"
+      "fetchedAt": "2026-08-25T02:07:38.615Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:56:07.195Z"
+      "fetchedAt": "2026-08-25T02:07:38.827Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:56:07.463Z"
+      "fetchedAt": "2026-08-25T02:07:39.226Z"
     },
     {
       "id": "firms",
-      "status": "error",
-      "fetchedAt": "2026-08-25T00:56:12.232Z",
-      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://firms.modaps.eosdis.nasa.gov/api/area/csv/[redacted]/VIIRS_SNPP_NRT/-109.2,36.9,-102,41.1/1"
+      "status": "ok",
+      "fetchedAt": "2026-08-25T02:07:39.452Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-25T00:56:15.259Z"
+      "fetchedAt": "2026-08-25T02:07:42.511Z"
     }
   ],
   "locationCount": 338,
