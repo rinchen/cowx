@@ -1,117 +1,116 @@
 {
-  "generatedAt": "2026-08-26T05:23:28.636Z",
+  "generatedAt": "2026-08-26T06:36:15.299Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "partial",
-      "fetchedAt": "2026-08-26T05:13:54.879Z",
-      "error": "nbm thunderstorm: HTTP 429 for https://api.open-meteo.com/v1/gfs?latitude=38.0717,37.8397,37.9131,39.64,39.5361,39.3667,38.45,40.2522,40.2,40.15,39.8833,39.6,39.2667,39.0833,37,38.0667,40.75,39,37.5,37.5&longitude=-107.4628,-107.9925,-107.5042,-104.85,-105.0706,-106.8167,-107.3333,-105.8231,-105.85,-105.85,-106.3333,-106.0667,-106.4,-106.3833,-107.65,-102.9333,-106.25,-105.9,-105.8,-103.5&hourly=thunderstorm_probability&models=ncep_nbm_conus&timezone=America%2FDenver&forecast_days=10: {\"reason\":"
+      "status": "ok",
+      "fetchedAt": "2026-08-26T06:23:09.663Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:20:12.295Z"
+      "fetchedAt": "2026-08-26T06:31:30.271Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-26T05:20:12.419Z"
+      "fetchedAt": "2026-08-26T06:31:30.400Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:20:17.574Z"
+      "fetchedAt": "2026-08-26T06:31:34.244Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:20:20.417Z"
+      "fetchedAt": "2026-08-26T06:31:38.065Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:20:30.476Z"
+      "fetchedAt": "2026-08-26T06:31:38.158Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:20:32.581Z"
+      "fetchedAt": "2026-08-26T06:31:39.918Z"
     },
     {
       "id": "airnow",
-      "status": "ok",
-      "fetchedAt": "2026-08-26T05:22:19.551Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-26T06:35:14.720Z",
+      "error": "This operation was aborted (timeout) for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted]"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:22:22.590Z"
+      "fetchedAt": "2026-08-26T06:35:15.951Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:22:39.942Z"
+      "fetchedAt": "2026-08-26T06:35:31.864Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:22:41.375Z"
+      "fetchedAt": "2026-08-26T06:35:37.103Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:23:04.739Z"
+      "fetchedAt": "2026-08-26T06:36:01.234Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-26T05:23:15.352Z"
+      "fetchedAt": "2026-08-26T06:36:10.644Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:23:15.844Z"
+      "fetchedAt": "2026-08-26T06:36:10.926Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:23:16.173Z"
+      "fetchedAt": "2026-08-26T06:36:11.287Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:23:16.357Z"
+      "fetchedAt": "2026-08-26T06:36:11.408Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "partial",
-      "fetchedAt": "2026-08-26T05:23:24.682Z",
-      "error": "HTTP 429 for COEM fire bans page"
+      "status": "ok",
+      "fetchedAt": "2026-08-26T06:36:11.666Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:23:24.873Z"
+      "fetchedAt": "2026-08-26T06:36:11.898Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:23:25.178Z"
+      "fetchedAt": "2026-08-26T06:36:12.013Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:23:25.638Z"
+      "fetchedAt": "2026-08-26T06:36:12.117Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-26T05:23:28.636Z"
+      "fetchedAt": "2026-08-26T06:36:15.299Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 361,
+  "apiCalls": 359,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
