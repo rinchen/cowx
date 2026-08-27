@@ -992,7 +992,13 @@
     "elevation_ft": 9100,
     "icao": "KAEJ",
     "pws_id": null,
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Winter Park mountain report",
+        "url": "https://www.winterparkresort.com/the-mountain/mountain-report"
+      }
+    ]
   },
   {
     "slug": "fraser",
@@ -1057,7 +1063,13 @@
     "elevation_ft": 6724,
     "icao": "KHDN",
     "pws_id": "KCOSTEAM41",
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Steamboat mountain report",
+        "url": "https://www.steamboat.com/the-mountain/mountain-report"
+      }
+    ]
   },
   {
     "slug": "oak-creek",
@@ -1161,7 +1173,13 @@
     "elevation_ft": 8150,
     "icao": "KEGE",
     "pws_id": "KCOVAIL32",
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Vail snow & weather report",
+        "url": "https://www.vail.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx"
+      }
+    ]
   },
   {
     "slug": "avon",
@@ -1187,7 +1205,13 @@
     "elevation_ft": 8100,
     "icao": "KEGE",
     "pws_id": null,
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Beaver Creek snow & weather report",
+        "url": "https://www.beavercreek.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx"
+      }
+    ]
   },
   {
     "slug": "edwards",
@@ -1278,7 +1302,13 @@
     "elevation_ft": 9700,
     "icao": "KEGE",
     "pws_id": null,
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Copper Mountain snow report",
+        "url": "https://www.coppercolorado.com/the-mountain/conditions-weather/snow-report/"
+      }
+    ]
   },
   {
     "slug": "frisco",
@@ -1330,7 +1360,13 @@
     "elevation_ft": 9280,
     "icao": "KEGE",
     "pws_id": null,
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Keystone snow & weather report",
+        "url": "https://www.keystoneresort.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx"
+      }
+    ]
   },
   {
     "slug": "breckenridge",
@@ -1343,7 +1379,13 @@
     "elevation_ft": 9600,
     "icao": "KEGE",
     "pws_id": "KCOBRECK28",
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Breckenridge snow & weather report",
+        "url": "https://www.breckenridge.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx"
+      }
+    ]
   },
   {
     "slug": "blue-river",
@@ -1382,7 +1424,13 @@
     "elevation_ft": 7908,
     "icao": "KASE",
     "pws_id": "KCOASPEN45",
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Aspen Mountain snow & grooming report",
+        "url": "https://www.aspensnowmass.com/four-mountains/aspen-mountain/snow-and-grooming-report"
+      }
+    ]
   },
   {
     "slug": "snowmass-village",
@@ -1668,7 +1716,13 @@
     "elevation_ft": 8750,
     "icao": "KTEX",
     "pws_id": "KCOTELLU19",
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Telluride snow report",
+        "url": "https://tellurideskiresort.com/snow-report/"
+      }
+    ]
   },
   {
     "slug": "mountain-village",
@@ -1681,7 +1735,13 @@
     "elevation_ft": 9524,
     "icao": "KTEX",
     "pws_id": null,
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Telluride snow report",
+        "url": "https://tellurideskiresort.com/snow-report/"
+      }
+    ]
   },
   {
     "slug": "ouray",
@@ -1720,7 +1780,13 @@
     "elevation_ft": 9318,
     "icao": "KAEJ",
     "pws_id": null,
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Silverton Mountain snow report",
+        "url": "https://silvertonmountain.com/mountain/snow-report/"
+      }
+    ]
   },
   {
     "slug": "lake-city",
@@ -1746,7 +1812,13 @@
     "elevation_ft": 8860,
     "icao": "KGUC",
     "pws_id": null,
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Crested Butte weather report",
+        "url": "https://www.skicb.com/the-mountain/mountain-conditions/weather-report.aspx"
+      }
+    ]
   },
   {
     "slug": "gunnison",
@@ -2682,7 +2754,13 @@
     "elevation_ft": 9200,
     "icao": "KBDU",
     "pws_id": null,
-    "coagmet_id": null
+    "coagmet_id": null,
+    "snow_report_links": [
+      {
+        "name": "Eldora snow report & weather",
+        "url": "https://www.eldora.com/the-mountain/current-conditions/snow-report-weather/"
+      }
+    ]
   },
   {
     "slug": "rollinsville",

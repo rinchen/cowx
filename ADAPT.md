@@ -59,7 +59,8 @@ Replace every entry with sites in your state. Each object needs at least:
 | `elevation_ft` | Elevation                                                                                                                                                                                                                                            |
 
 Useful optional fields: `icao`, `pws_id` (WU dashboard link only), `coagmet_id`,
-`webcam_links` (municipal/ski/NWS camera **portals** as new-tab links — do not scrape or hotlink stills).
+`webcam_links` (municipal/ski/NWS camera **portals** as new-tab links — do not scrape or hotlink stills),
+`snow_report_links` (official resort snow/conditions pages — new-tab only; do not scrape).
 
 ### Local webcam links (forking)
 

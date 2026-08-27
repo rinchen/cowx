@@ -100,6 +100,32 @@ export function sanitizeWebcamLinks(links) {
 }
 
 /**
+ * Keep only snow_report_links that pass the same https:// rule as validate-locations.
+ * Invalid entries are dropped (not written into payloads).
+ * @param {unknown} links
+ * @returns {{ name: string, url: string }[]}
+ */
+export function sanitizeSnowReportLinks(links) {
+  if (!Array.isArray(links)) return [];
+  /** @type {{ name: string, url: string }[]} */
+  const out = [];
+  for (const link of links) {
+    if (!link || typeof link !== 'object') continue;
+    const name = /** @type {{ name?: unknown }} */ (link).name;
+    const url = /** @type {{ url?: unknown }} */ (link).url;
+    if (typeof name !== 'string' || !name.trim()) continue;
+    if (typeof url !== 'string' || !/^https:\/\//.test(url)) continue;
+    try {
+      if (new URL(url).protocol !== 'https:') continue;
+    } catch {
+      continue;
+    }
+    out.push({ name: name.trim(), url });
+  }
+  return out;
+}
+
+/**
  * @param {string} slug
  * @returns {Promise<object | null>}
  */
@@ -352,6 +378,7 @@ export async function runFetch() {
       );
       const cbrfcRec = cbrfc.bySlug.get(loc.slug) ?? null;
       const webcamLinks = sanitizeWebcamLinks(loc.webcam_links);
+      const snowReportLinks = sanitizeSnowReportLinks(loc.snow_report_links);
       const caicLink = buildCaicLink(loc);
 
       const climatologyRec =
@@ -421,6 +448,7 @@ export async function runFetch() {
           firms: 'https://firms.modaps.eosdis.nasa.gov/',
           caic: caicLink,
           webcam_links: webcamLinks,
+          snow_report_links: snowReportLinks,
         },
       };
 

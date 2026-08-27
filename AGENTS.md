@@ -98,12 +98,15 @@ Optional fields used by adapters (add when known):
 - `coagmet_id` — CoAgMET station crosswalk
 - `pws_id` — Weather Underground station id (**offsite dashboard link only** — not live-fetched)
 - `webcam_links` — array of `{ name, url, kind? }` for municipal/ski/NWS camera portals that must **not** be embedded; UI opens them in a new tab (`https://` only). Prefer official city/county/DOT/NWS pages.
+- `snow_report_links` — array of `{ name, url }` for official ski-resort snow/conditions pages (new-tab only — **do not scrape**). Prefer the resort’s own HTTPS snow-report URL. Locations with this field are also eligible for nearest SNOTEL assignment even when under 7,000 ft.
 
 AirGradient and AirNow resolve by nearest sensor/grid point (no per-location sensor ids in the catalog). Community PM2.5 comes from [AirGradient](https://www.airgradient.com/)’s free public feed (PurpleAir’s paid API is not used).
 
 **Pollen / allergy (Colorado-wide):** There is no free redistributable US pollen API in the fetch budget. At merge time every catalog location gets `links.pollen` from the nearest ZIP in `co-zips.json` (Pollen.com offsite) plus statewide AAAAI NAB reference links. No live pollen grains are fetched or stored.
 
 **Astronomy:** Sun/moon/twilight times are computed locally per location lat/lon (`scripts/lib/astronomy.js`) and written into each payload as `astronomy` — no network call.
+
+**Snowpack:** NRCS SNOTEL (nearest CO station within 50 km for sites above 7,000 ft, or any site with `snow_report_links`) writes depth, SWE, liquid 24h precip, and `snow_depth_24h_delta_in` (day-over-day station depth change — settling/melt possible; not resort-reported new snow). Resort base/new-snow figures are offsite via `snow_report_links` only.
 
 **Webcam link example:**
 
@@ -113,6 +116,17 @@ AirGradient and AirNow resolve by nearest sensor/grid point (no per-location sen
     "name": "Longmont street snow cams",
     "url": "https://longmontcolorado.gov/transportation/snow-ice-control/street-snow-cams/",
     "kind": "city"
+  }
+]
+```
+
+**Resort snow-report link example:**
+
+```json
+"snow_report_links": [
+  {
+    "name": "Vail snow & weather report",
+    "url": "https://www.vail.com/the-mountain/mountain-conditions/snow-and-weather-report.aspx"
   }
 ]
 ```
@@ -209,30 +223,30 @@ Configure in **GitHub Actions → Secrets** (repository settings) or a local `.e
 
 Approximate call budget per run (scales with catalog size; actual counts are written to `meta.json` as `apiCalls`):
 
-| Source                                        | Calls / run (approx @ ~338 locs)                                        | Auth              |
-| --------------------------------------------- | ----------------------------------------------------------------------- | ----------------- |
-| Open-Meteo Forecast                           | ~34+ (chunk 20 + NBM per chunk)                                         | None              |
-| Open-Meteo Air Quality                        | ~9 (chunk 40)                                                           | None              |
-| Open-Meteo ERA5 climatology                   | ~0 most runs; ~monthly / cold-start (capped ~24 locs/run × year slices) | None              |
-| NWS alerts + AFD/HWO/FWF                      | ~13–19 (alerts + AFD/HWO/FWF per office)                                | User-Agent header |
-| CoAgMET                                       | 1–2                                                                     | None              |
-| Aviation Weather METAR/TAF                    | 1–3 batched                                                             | None              |
-| USGS NWIS                                     | 1                                                                       | None              |
-| SNOTEL                                        | 1–2                                                                     | None              |
-| CDOT cameras + ArcGIS alerts                  | 3                                                                       | None              |
-| COtrip (stations/incidents/events/conditions) | up to ~43 page calls total when keyed (8+10+10+15 across four feeds)    | `COTRIP_API_KEY`  |
-| CWOP / APRS (aprs.me grid)                    | ~35–40                                                                  | None              |
-| NOAA HMS smoke                                | 1–3 (zip download)                                                      | None              |
-| SPC fire weather (Day 1–2)                    | 4 (Wind/RH + DryT GeoJSON)                                              | None              |
-| NIFC WFIGS nearby fires                       | 1 (CO incidents)                                                        | None              |
-| NASA FIRMS VIIRS hotspots                     | 1 (CO bbox, only if key set)                                            | `FIRMS_MAP_KEY`   |
-| CBRFC water-supply guidance                   | 1 (ESP JSON, nearest CO point per location)                             | None              |
-| COEM burn restrictions                        | 1 (HTML status + curated links)                                         | None              |
-| NOAA SWPC space weather                       | ~5 (scales, Kp, Boulder K, SFI, X-ray)                                  | None              |
-| CDPHE Colorado Smoke Blog (Blogspot RSS)      | 1 (latest post teaser → `colo-smoke-outlook.json`)                      | None              |
-| AirGradient                                   | 1 (public world current; CO-filtered)                                   | None              |
-| AirNow                                        | ~200–220 grid points when keyed (@0.2°)                                 | `AIRNOW_API_KEY`  |
-| Catalog `webcam_links` / CAIC offsite links   | 0 (copied into payloads; no CAIC scrape)                                | None              |
+| Source                                              | Calls / run (approx @ ~338 locs)                                        | Auth              |
+| --------------------------------------------------- | ----------------------------------------------------------------------- | ----------------- |
+| Open-Meteo Forecast                                 | ~34+ (chunk 20 + NBM per chunk)                                         | None              |
+| Open-Meteo Air Quality                              | ~9 (chunk 40)                                                           | None              |
+| Open-Meteo ERA5 climatology                         | ~0 most runs; ~monthly / cold-start (capped ~24 locs/run × year slices) | None              |
+| NWS alerts + AFD/HWO/FWF                            | ~13–19 (alerts + AFD/HWO/FWF per office)                                | User-Agent header |
+| CoAgMET                                             | 1–2                                                                     | None              |
+| Aviation Weather METAR/TAF                          | 1–3 batched                                                             | None              |
+| USGS NWIS                                           | 1                                                                       | None              |
+| SNOTEL                                              | 1–2                                                                     | None              |
+| CDOT cameras + ArcGIS alerts                        | 3                                                                       | None              |
+| COtrip (stations/incidents/events/conditions)       | up to ~43 page calls total when keyed (8+10+10+15 across four feeds)    | `COTRIP_API_KEY`  |
+| CWOP / APRS (aprs.me grid)                          | ~35–40                                                                  | None              |
+| NOAA HMS smoke                                      | 1–3 (zip download)                                                      | None              |
+| SPC fire weather (Day 1–2)                          | 4 (Wind/RH + DryT GeoJSON)                                              | None              |
+| NIFC WFIGS nearby fires                             | 1 (CO incidents)                                                        | None              |
+| NASA FIRMS VIIRS hotspots                           | 1 (CO bbox, only if key set)                                            | `FIRMS_MAP_KEY`   |
+| CBRFC water-supply guidance                         | 1 (ESP JSON, nearest CO point per location)                             | None              |
+| COEM burn restrictions                              | 1 (HTML status + curated links)                                         | None              |
+| NOAA SWPC space weather                             | ~5 (scales, Kp, Boulder K, SFI, X-ray)                                  | None              |
+| CDPHE Colorado Smoke Blog (Blogspot RSS)            | 1 (latest post teaser → `colo-smoke-outlook.json`)                      | None              |
+| AirGradient                                         | 1 (public world current; CO-filtered)                                   | None              |
+| AirNow                                              | ~200–220 grid points when keyed (@0.2°)                                 | `AIRNOW_API_KEY`  |
+| Catalog `webcam_links` / CAIC / `snow_report_links` | 0 (copied into payloads; no CAIC or resort scrape)                      | None              |
 
 Partial adapter failure is acceptable; total failure (zero locations written or all critical adapters down) should fail the workflow so notifications fire.
 

@@ -74,6 +74,22 @@
           }
         }
       }
+    },
+    "snow_report_links": {
+      "type": ["array", "null"],
+      "description": "Official resort snow/conditions pages (new-tab only — do not scrape)",
+      "items": {
+        "type": "object",
+        "required": ["name", "url"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "url": {
+            "type": "string",
+            "pattern": "^https://"
+          }
+        }
+      }
     }
   }
 }

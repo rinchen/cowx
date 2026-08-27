@@ -1,5 +1,6 @@
 /**
- * NRCS SNOTEL snowpack adapter — nearest CO SNTL site within 50 km for high elevation.
+ * NRCS SNOTEL snowpack adapter — nearest CO SNTL site within 50 km for high elevation
+ * or catalog sites with snow_report_links. Includes day-over-day snow depth change.
  * Failure point: AWDB REST timeout / empty parse.
  * Fallback: status error/partial; location payloads get snotel: null.
  */
@@ -81,6 +82,36 @@ export function precip24hFromPrec(values) {
 }
 
 /**
+ * 24h snow-depth change from daily SNWD (day N − day N-1).
+ * Negative deltas are kept (settling / melt); not the same as resort "new snow".
+ * @param {{ date?: string, value?: unknown }[] | undefined} values
+ * @returns {number | null}
+ */
+export function snowDepth24hDelta(values) {
+  if (!Array.isArray(values) || values.length < 2) return null;
+  const sorted = [...values].sort((a, b) =>
+    String(a.date ?? '').localeCompare(String(b.date ?? '')),
+  );
+  const a = toFiniteNumber(sorted[sorted.length - 2]?.value);
+  const b = toFiniteNumber(sorted[sorted.length - 1]?.value);
+  if (a == null || b == null) return null;
+  return Math.round((b - a) * 100) / 100;
+}
+
+/**
+ * Locations eligible for nearest-SNOTEL assignment: high elevation, or ski towns
+ * with curated snow_report_links (even when the town site is under 7,000 ft).
+ * @param {import('../../lib/types.js').Location} loc
+ * @returns {boolean}
+ */
+export function isSnotelEligibleLocation(loc) {
+  if (!loc) return false;
+  if (loc.elevation_ft != null && Number(loc.elevation_ft) > MIN_ELEVATION_FT) return true;
+  const links = loc.snow_report_links;
+  return Array.isArray(links) && links.length > 0;
+}
+
+/**
  * Merge station metadata with AWDB data payload.
  * @param {ReturnType<typeof filterCoSnotelStations>} stations
  * @param {unknown} dataRaw
@@ -115,6 +146,7 @@ export function mergeSnotelData(stations, dataRaw) {
       lon: meta.lon,
       elevation_ft: meta.elevation_ft,
       snow_depth_in: snwd.value,
+      snow_depth_24h_delta_in: snowDepth24hDelta(elements.SNWD),
       swe_in: wteq.value,
       air_temp_f: tobs.value,
       precipitation_24h_in: precip24hFromPrec(elements.PREC),
@@ -132,10 +164,8 @@ export function mergeSnotelData(stations, dataRaw) {
  */
 export function assignNearestSnotel(locations, stationsByTriplet) {
   const candidates = [...stationsByTriplet.values()];
-  const highElev = locations.filter(
-    (loc) => loc.elevation_ft != null && Number(loc.elevation_ft) > MIN_ELEVATION_FT,
-  );
-  return assignNearestWithin(highElev, candidates, MAX_DISTANCE_KM, (nearest) => {
+  const eligible = locations.filter(isSnotelEligibleLocation);
+  return assignNearestWithin(eligible, candidates, MAX_DISTANCE_KM, (nearest) => {
     const s = nearest.point;
     return {
       station_name: s.station_name,
@@ -143,6 +173,7 @@ export function assignNearestSnotel(locations, stationsByTriplet) {
       distance_km: roundKm(nearest.distanceKm),
       elevation_ft: s.elevation_ft,
       snow_depth_in: s.snow_depth_in,
+      snow_depth_24h_delta_in: s.snow_depth_24h_delta_in,
       swe_in: s.swe_in,
       air_temp_f: s.air_temp_f,
       precipitation_24h_in: s.precipitation_24h_in,

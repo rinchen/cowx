@@ -7,8 +7,10 @@ import {
   assignNearestSnotel,
   fetchSnotel,
   filterCoSnotelStations,
+  isSnotelEligibleLocation,
   mergeSnotelData,
   precip24hFromPrec,
+  snowDepth24hDelta,
 } from '../scripts/fetch/adapters/snotel.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -55,6 +57,54 @@ describe('snotel helpers', () => {
     assert.equal(precip24hFromPrec([{ date: '2026-07-19', value: 24.0 }]), null);
   });
 
+  it('computes 24h snow-depth delta including negatives', () => {
+    assert.equal(
+      snowDepth24hDelta([
+        { date: '2026-01-18', value: 40 },
+        { date: '2026-01-19', value: 46 },
+      ]),
+      6,
+    );
+    assert.equal(
+      snowDepth24hDelta([
+        { date: '2026-01-18', value: 40 },
+        { date: '2026-01-19', value: 38.5 },
+      ]),
+      -1.5,
+    );
+    assert.equal(snowDepth24hDelta([{ date: '2026-01-19', value: 40 }]), null);
+    assert.equal(snowDepth24hDelta(undefined), null);
+  });
+
+  it('treats snow_report_links sites as SNOTEL-eligible below 7000 ft', () => {
+    assert.equal(
+      isSnotelEligibleLocation({
+        slug: 'steamboat-springs',
+        name: 'Steamboat Springs',
+        lat: 40.48,
+        lon: -106.83,
+        elevation_ft: 6724,
+        snow_report_links: [
+          {
+            name: 'Steamboat snow report',
+            url: 'https://www.steamboat.com/the-mountain/mountain-report',
+          },
+        ],
+      }),
+      true,
+    );
+    assert.equal(
+      isSnotelEligibleLocation({
+        slug: 'steamboat-springs',
+        name: 'Steamboat Springs',
+        lat: 40.48,
+        lon: -106.83,
+        elevation_ft: 6724,
+      }),
+      false,
+    );
+  });
+
   it('merges data and assigns nearest high-elevation site', () => {
     const stations = filterCoSnotelStations([
       {
@@ -74,7 +124,10 @@ describe('snotel helpers', () => {
         data: [
           {
             stationElement: { elementCode: 'SNWD' },
-            values: [{ date: '2026-07-19', value: 12 }],
+            values: [
+              { date: '2026-07-18', value: 10 },
+              { date: '2026-07-19', value: 12 },
+            ],
           },
           {
             stationElement: { elementCode: 'WTEQ' },
@@ -95,6 +148,7 @@ describe('snotel helpers', () => {
       },
     ]);
     assert.equal(merged.get('1130:CO:SNTL').snow_depth_in, 12);
+    assert.equal(merged.get('1130:CO:SNTL').snow_depth_24h_delta_in, 2);
     assert.equal(merged.get('1130:CO:SNTL').swe_in, 4.2);
 
     const bySlug = assignNearestSnotel(
@@ -112,7 +166,58 @@ describe('snotel helpers', () => {
     );
     assert.equal(bySlug.size, 1);
     assert.equal(bySlug.get('berthoud-pass').station_id, '1130');
+    assert.equal(bySlug.get('berthoud-pass').snow_depth_24h_delta_in, 2);
     assert.equal(bySlug.has('denver'), false);
+  });
+
+  it('assigns SNOTEL to sub-7000 ft locations with snow_report_links', () => {
+    const stations = filterCoSnotelStations([
+      {
+        stationTriplet: '1061:CO:SNTL',
+        stationId: '1061',
+        stateCode: 'CO',
+        networkCode: 'SNTL',
+        name: 'Dry Lake',
+        latitude: 40.53,
+        longitude: -106.78,
+        elevation: 8200,
+      },
+    ]);
+    const merged = mergeSnotelData(stations, [
+      {
+        stationTriplet: '1061:CO:SNTL',
+        data: [
+          {
+            stationElement: { elementCode: 'SNWD' },
+            values: [
+              { date: '2026-01-18', value: 30 },
+              { date: '2026-01-19', value: 28 },
+            ],
+          },
+        ],
+      },
+    ]);
+    const bySlug = assignNearestSnotel(
+      [
+        {
+          slug: 'steamboat-springs',
+          name: 'Steamboat Springs',
+          lat: 40.48,
+          lon: -106.83,
+          elevation_ft: 6724,
+          snow_report_links: [
+            {
+              name: 'Steamboat snow report',
+              url: 'https://www.steamboat.com/the-mountain/mountain-report',
+            },
+          ],
+        },
+      ],
+      merged,
+    );
+    assert.equal(bySlug.size, 1);
+    assert.equal(bySlug.get('steamboat-springs').station_id, '1061');
+    assert.equal(bySlug.get('steamboat-springs').snow_depth_24h_delta_in, -2);
   });
 
   it('loads the CO SNOTEL stations fixture', () => {

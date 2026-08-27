@@ -477,9 +477,15 @@ function renderLiveSourcesPanel(parent, data, metaSources = []) {
 
   if (snotel) {
     const snInfo = metaSourceInfo(metaSources, 'snotel');
+    const delta =
+      snotel.snow_depth_24h_delta_in != null &&
+      Number.isFinite(Number(snotel.snow_depth_24h_delta_in))
+        ? Number(snotel.snow_depth_24h_delta_in)
+        : null;
+    const deltaBit = delta != null ? ` · Δ24h ${delta > 0 ? '+' : ''}${delta} in` : '';
     rows.push({
       title: 'Snowpack (SNOTEL)',
-      body: `${snotel.station_name ?? snotel.station_id}${snotel.snow_depth_in != null ? ` · ${snotel.snow_depth_in} in depth` : ''}${snotel.distance_km != null ? ` · ${fmtDistanceMi(/** @type {number} */ (snotel.distance_km)) ?? ''}` : ''}${snInfo.fetchedAt ? ` · fetched ${fmtDateTime(snInfo.fetchedAt)}` : ''}${sourceStatusNote(snInfo.status)}`,
+      body: `${snotel.station_name ?? snotel.station_id}${snotel.snow_depth_in != null ? ` · ${snotel.snow_depth_in} in depth` : ''}${deltaBit}${snotel.distance_km != null ? ` · ${fmtDistanceMi(/** @type {number} */ (snotel.distance_km)) ?? ''}` : ''}${snInfo.fetchedAt ? ` · fetched ${fmtDateTime(snInfo.fetchedAt)}` : ''}${sourceStatusNote(snInfo.status)}`,
       href: snotel.url
         ? String(snotel.url)
         : links.snotel || 'https://www.nrcs.usda.gov/wps/portal/wcc/home/',
@@ -2308,24 +2314,44 @@ function appendDeepForecast(root, data, ctx) {
     'Snowpack (SNOTEL)',
     () => {
       const sn = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
+      const snowReportLinks = /** @type {{ name?: string, url?: string }[]} */ (
+        links.snow_report_links ?? []
+      );
       if (!sn) {
         const frag = document.createDocumentFragment();
         renderEmpty(
           frag,
           'No nearby SNOTEL station',
-          `Shown for sites above 7,000 ft when a station is within ${fmtDistanceMi(50) ?? '31 mi'}.`,
+          `Shown for sites above 7,000 ft (or ski towns with a resort snow-report link) when a station is within ${fmtDistanceMi(50) ?? '31 mi'}.`,
         );
+        if (snowReportLinks.length) {
+          const p = document.createElement('p');
+          p.className = 'section-cta';
+          p.innerHTML = snowReportLinks
+            .filter((l) => l?.url && l?.name)
+            .map((l) => sourceLink(String(l.url), String(l.name), 'btn btn-secondary btn-sm'))
+            .join(' ');
+          if (p.innerHTML) frag.appendChild(p);
+        }
         return frag;
       }
       const wrap = document.createDocumentFragment();
       const dl = document.createElement('dl');
       dl.className = 'metric-list';
+      let depthDeltaLabel = null;
+      if (sn.snow_depth_24h_delta_in != null) {
+        const d = Number(sn.snow_depth_24h_delta_in);
+        if (Number.isFinite(d)) {
+          depthDeltaLabel = `${d > 0 ? '+' : ''}${d} in`;
+        }
+      }
       const rows = [
         [
           'Station',
           `${sn.station_name ?? sn.station_id}${sn.distance_km != null ? ` (${fmtDistanceMi(/** @type {number} */ (sn.distance_km)) ?? ''})` : ''}${sn.elevation_ft != null ? ` · ${Number(sn.elevation_ft).toLocaleString()} ft` : ''}`,
         ],
         ['Snow depth', sn.snow_depth_in != null ? `${sn.snow_depth_in} in` : null],
+        ['24h snow depth change', depthDeltaLabel],
         ['Snow water equivalent', sn.swe_in != null ? `${sn.swe_in} in` : null],
         ['Air temp', sn.air_temp_f != null ? `${sn.air_temp_f}°F` : null],
         [
@@ -2338,9 +2364,21 @@ function appendDeepForecast(root, data, ctx) {
         .map(([k, v]) => `<dt>${escapeHtml(String(k))}</dt><dd>${escapeHtml(String(v))}</dd>`)
         .join('');
       wrap.appendChild(dl);
+      if (depthDeltaLabel) {
+        const note = document.createElement('p');
+        note.className = 'section-note';
+        note.textContent =
+          '24h snow depth change is station depth (settling/melt possible), not resort-reported new snow.';
+        wrap.appendChild(note);
+      }
       const p = document.createElement('p');
       p.className = 'section-cta';
       const linkBits = [];
+      for (const l of snowReportLinks) {
+        if (l?.url && l?.name) {
+          linkBits.push(sourceLink(String(l.url), String(l.name), 'btn btn-secondary btn-sm'));
+        }
+      }
       if (sn.url) {
         linkBits.push(sourceLink(String(sn.url), 'SNOTEL site page', 'btn btn-secondary btn-sm'));
       }
@@ -2619,6 +2657,13 @@ function appendDeepForecast(root, data, ctx) {
         ['COtrip traveler map', links.cotrip || 'https://maps.cotrip.org/'],
         [caic?.name || 'CAIC avalanche forecasts', caic?.url || null],
       ].filter(([, url]) => Boolean(url));
+
+      const snowReportLinks = /** @type {{ name?: string, url?: string }[]} */ (
+        links.snow_report_links ?? []
+      );
+      for (const l of snowReportLinks) {
+        if (l?.url && l?.name) entries.push([String(l.name), String(l.url)]);
+      }
 
       const webcamLinks = /** @type {{ name?: string, url?: string }[]} */ (
         links.webcam_links ?? []
