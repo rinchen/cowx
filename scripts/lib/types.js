@@ -12,6 +12,7 @@
  *   pws_id?: string | null,
  *   coagmet_id?: string | null,
  *   webcam_links?: { name: string, url: string, kind?: string }[] | null,
+ *   snow_report_links?: { name: string, url: string }[] | null,
  * }} Location
  */
 

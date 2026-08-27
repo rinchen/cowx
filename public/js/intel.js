@@ -1125,6 +1125,9 @@ export function renderSpecialtyIntel(root, data, options = {}) {
       ? /** @type {Record<string, unknown>} */ (pws.links)
       : {};
   const webcamLinks = /** @type {{ name?: string, url?: string }[]} */ (links.webcam_links ?? []);
+  const snowReportLinks = /** @type {{ name?: string, url?: string }[]} */ (
+    links.snow_report_links ?? []
+  );
 
   let rf = resolveRfComms(
     resolveCatalogNow(
@@ -1335,7 +1338,7 @@ export function renderSpecialtyIntel(root, data, options = {}) {
   {
     const astro = resolveAstronomy(data);
     const moon = /** @type {Record<string, unknown> | null} */ (astro?.moon ?? null);
-    const showSnow = Boolean(snotel && Number(data.elevation_ft) >= 7000);
+    const showSnow = Boolean(snotel || snowReportLinks.length);
     const showLocal = Boolean(pwsPrimary || cwop || coag || astro || showSnow);
 
     if (showLocal) {
@@ -1377,17 +1380,37 @@ export function renderSpecialtyIntel(root, data, options = {}) {
           </div>`);
       }
 
-      if (showSnow && snotel) {
+      if (showSnow) {
         const snowBits = [];
-        if (snotel.snow_depth_in != null) snowBits.push(`Depth ${String(snotel.snow_depth_in)} in`);
-        if (snotel.swe_in != null) snowBits.push(`SWE ${String(snotel.swe_in)} in`);
-        if (snotel.precipitation_24h_in != null) {
-          snowBits.push(`24h ${String(snotel.precipitation_24h_in)} in`);
+        if (snotel?.snow_depth_in != null)
+          snowBits.push(`Depth ${String(snotel.snow_depth_in)} in`);
+        if (snotel?.snow_depth_24h_delta_in != null) {
+          const d = Number(snotel.snow_depth_24h_delta_in);
+          if (Number.isFinite(d)) {
+            const signed = d > 0 ? `+${d}` : String(d);
+            snowBits.push(`Δ24h ${signed} in`);
+          }
         }
+        if (snotel?.swe_in != null) snowBits.push(`SWE ${String(snotel.swe_in)} in`);
+        if (snotel?.precipitation_24h_in != null) {
+          snowBits.push(`24h precip ${String(snotel.precipitation_24h_in)} in`);
+        }
+        const resortActions = snowReportLinks
+          .filter((l) => l?.url && safeHttpsUrl(String(l.url)))
+          .map(
+            (l) =>
+              `<a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(String(l.url))))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(String(l.name ?? 'Resort snow report'))} (opens in new tab)">${escapeHtml(String(l.name ?? 'Resort snow report'))}</a>`,
+          )
+          .join(' ');
         localBlocks.push(`<div class="specialty-block" id="snow-intel-heading">
             <h3 class="glass-panel__subtitle">Snowpack</h3>
-            <p class="specialty-inline"><strong>${escapeHtml(String(snotel.station_name ?? snotel.station_id ?? 'SNOTEL'))}</strong>${snotel.distance_km != null ? ` · ${fmtDistanceMi(/** @type {number} */ (snotel.distance_km)) ?? ''}` : ''}${snowBits.length ? ` · ${escapeHtml(snowBits.join(' · '))}` : ''}</p>
-            <button type="button" class="btn btn-link intel-jump" data-jump-to="snowpack-heading">Full snowpack</button>
+            ${
+              snotel
+                ? `<p class="specialty-inline"><strong>${escapeHtml(String(snotel.station_name ?? snotel.station_id ?? 'SNOTEL'))}</strong>${snotel.distance_km != null ? ` · ${fmtDistanceMi(/** @type {number} */ (snotel.distance_km)) ?? ''}` : ''}${snowBits.length ? ` · ${escapeHtml(snowBits.join(' · '))}` : ''}</p>`
+                : `<p class="specialty-inline">Official resort snow reports (offsite) — COWX does not ingest resort base or new-snow figures.</p>`
+            }
+            ${resortActions ? `<p class="specialty-actions">${resortActions}</p>` : ''}
+            ${snotel ? `<button type="button" class="btn btn-link intel-jump" data-jump-to="snowpack-heading">Full snowpack</button>` : ''}
           </div>`);
       }
 

@@ -128,10 +128,12 @@
         conditions, CWOP/APRS neighborhood PWS, NOAA HMS smoke, SPC fire weather outlooks, NIFC
         nearby wildfire locations, NASA FIRMS satellite fire detections (when keyed), CBRFC
         water-supply guidance, Colorado burn-restriction status/links, CDPHE Colorado Smoke Blog
-        teaser (Blogspot RSS), CAIC avalanche forecast offsite links for mountain regions, NOAA SWPC
-        space weather, and AirGradient community sensors plus optional AirNow). Each location
-        payload also gets locally computed astronomy and nearest-ZIP pollen offsite links (no pollen
-        API key). Each source can succeed or fail on its own. Results are merged into:
+        teaser (Blogspot RSS), CAIC avalanche forecast offsite links for mountain regions, curated
+        ski-resort snow-report offsite links (no scrape), NOAA SWPC space weather, and AirGradient
+        community sensors plus optional AirNow). Each location payload also gets locally computed
+        astronomy and nearest-ZIP pollen offsite links (no pollen API key). SNOTEL payloads include
+        day-over-day snow-depth change where available. Each source can succeed or fail on its own.
+        Results are merged into:
       </p>
       <ul>
         <li><code>index.json</code> — slim list for search and the map</li>

@@ -273,6 +273,7 @@
         "distance_km": { "type": "number" },
         "elevation_ft": { "type": ["number", "null"] },
         "snow_depth_in": { "type": ["number", "null"] },
+        "snow_depth_24h_delta_in": { "type": ["number", "null"] },
         "swe_in": { "type": ["number", "null"] },
         "air_temp_f": { "type": ["number", "null"] },
         "precipitation_24h_in": { "type": ["number", "null"] },
@@ -379,7 +380,17 @@
             }
           }
         },
-        "webcam_links": { "type": "array" }
+        "webcam_links": { "type": "array" },
+        "snow_report_links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "url": { "type": "string" }
+            }
+          }
+        }
       }
     }
   }

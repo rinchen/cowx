@@ -208,6 +208,27 @@ export function validateLocationsData(data) {
         }
       }
     }
+
+    if ('snow_report_links' in entry && entry.snow_report_links != null) {
+      if (!Array.isArray(entry.snow_report_links)) {
+        errors.push(`${prefix}: snow_report_links must be an array or null`);
+      } else {
+        for (let j = 0; j < entry.snow_report_links.length; j += 1) {
+          const link = entry.snow_report_links[j];
+          const lp = `${prefix}.snow_report_links[${j}]`;
+          if (!isObject(link)) {
+            errors.push(`${lp}: must be an object`);
+            continue;
+          }
+          if (typeof link.name !== 'string' || !link.name.trim()) {
+            errors.push(`${lp}: name must be a non-empty string`);
+          }
+          if (typeof link.url !== 'string' || !/^https:\/\//.test(link.url)) {
+            errors.push(`${lp}: url must be an https:// URL`);
+          }
+        }
+      }
+    }
   }
 
   return errors;
