@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-08-27T18:16:42.400Z",
+  "generatedAt": "2026-08-28T00:14:20.798Z",
   "kp": {
     "value": 0,
-    "observed": "2026-08-27T18:13:00",
+    "observed": "2026-08-28T00:10:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 0,
-    "observed": "2026-08-27T18:10:00"
+    "value": 0.2,
+    "observed": "2026-08-28T00:09:00"
   },
   "sfi": {
-    "value": 131,
-    "observed": "2026-08-26T20:00:00",
+    "value": 122,
+    "observed": "2026-08-27T20:00:00",
     "ninety_day_mean": 131
   },
   "scales": {
@@ -27,23 +27,8 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-08-27T18:14:00Z",
+    "observed": "2026-08-28T00:12:00Z",
     "forecast": [
-      {
-        "date": "2026-08-27",
-        "R": {
-          "scale": null,
-          "text": null
-        },
-        "S": {
-          "scale": null,
-          "text": null
-        },
-        "G": {
-          "scale": 0,
-          "text": "none"
-        }
-      },
       {
         "date": "2026-08-28",
         "R": {
@@ -73,13 +58,28 @@
           "scale": 2,
           "text": "moderate"
         }
+      },
+      {
+        "date": "2026-08-30",
+        "R": {
+          "scale": null,
+          "text": null
+        },
+        "S": {
+          "scale": null,
+          "text": null
+        },
+        "G": {
+          "scale": 0,
+          "text": "none"
+        }
       }
     ]
   },
   "xray": {
-    "class": "B4.8",
-    "flux": 4.787317493537557e-7,
-    "observed": "2026-08-27T18:13:00Z"
+    "class": "B5.4",
+    "flux": 5.356347401175299e-7,
+    "observed": "2026-08-28T00:11:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
@@ -90,18 +90,18 @@
     "day": {
       "80m": "fair",
       "40m": "good",
-      "20m": "excellent",
-      "15m": "excellent",
-      "10m": "good",
-      "6m": "good"
+      "20m": "good",
+      "15m": "good",
+      "10m": "fair",
+      "6m": "poor"
     },
     "night": {
       "80m": "excellent",
       "40m": "excellent",
-      "20m": "good",
+      "20m": "fair",
       "15m": "fair",
       "10m": "fair",
-      "6m": "fair"
+      "6m": "poor"
     }
   },
   "links": {
