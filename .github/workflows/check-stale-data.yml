@@ -3,7 +3,8 @@ name: Check Stale Data
 # Two-tier watchdog on production meta.json age:
 #   >= STALE_MINUTES  — dispatch Update Weather (self-heal) and stay green/quiet.
 #   >= NOTIFY_MINUTES — dispatch, wait up to ~20m for live meta to recover, then
-#                       Discord-alert and fail only if still unrecovered.
+#                       Discord-alert and fail only if still unrecovered and no
+#                       Update Weather run is still in progress.
 # GitHub often delays weather crons by 1–3h, so the recoverable tier must not
 # page anyone; an in-flight fetch must not look like a failed mitigation either.
 # GitHub can also starve both schedules simultaneously. An independent
@@ -78,11 +79,37 @@ jobs:
           POLL_SECS: '30'
         run: bash scripts/ci/wait-for-fresh-live-meta.sh
 
-      # Only fires when live meta stays past NOTIFY_MINUTES after the wait (or the
-      # CDN copy is unreachable) — i.e. mitigations actually failed to recover.
+      # A full fetch+deploy can run 30–45m, longer than the wait above, so a run
+      # still in progress means the mitigation is working — not that it failed.
+      - name: Check for in-flight Update Weather
+        id: inflight
+        if: |
+          steps.age.outputs.notify == 'true' &&
+          (steps.age.outputs.reachable != 'true' || steps.recovery.outputs.recovered != 'true')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          count="$(gh run list --repo "${{ github.repository }}" \
+            --workflow update-weather.yml --status in_progress --limit 1 --json databaseId \
+            --jq 'length' || echo 0)"
+          queued="$(gh run list --repo "${{ github.repository }}" \
+            --workflow update-weather.yml --status queued --limit 1 --json databaseId \
+            --jq 'length' || echo 0)"
+          if [ "${count}" != "0" ] || [ "${queued}" != "0" ]; then
+            echo "Update Weather still running; suppressing alert this tick"
+            echo "inflight=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "inflight=false" >>"$GITHUB_OUTPUT"
+          fi
+
+      # Only fires when live meta stays past NOTIFY_MINUTES after the wait, with no
+      # fetch still running (or the CDN copy is unreachable) — i.e. mitigations
+      # actually failed to recover.
       - name: Notify Discord — self-heal failed
         if: |
           steps.age.outputs.notify == 'true' &&
+          steps.inflight.outputs.inflight != 'true' &&
           (steps.age.outputs.reachable != 'true' || steps.recovery.outputs.recovered != 'true')
         env:
           NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
@@ -109,6 +136,7 @@ jobs:
       - name: Fail run when self-heal failed
         if: |
           steps.age.outputs.notify == 'true' &&
+          steps.inflight.outputs.inflight != 'true' &&
           (steps.age.outputs.reachable != 'true' || steps.recovery.outputs.recovered != 'true')
         # Red in Actions even when NOTIFY_WEBHOOK_URL is unset. The recoverable
         # 90m tier stays green so routine cron delays do not send failure mail.
