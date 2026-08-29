@@ -35,7 +35,7 @@ import {
   sliceCompactHours,
   tempTransitionCue,
 } from './outlook.js';
-import { dailyIndexForNow, resolveAstronomy, resolveRfComms } from './live.js';
+import { dailyIndexForNow } from './live.js';
 import {
   bindMeteogramScrubber,
   detectPressureDip,
@@ -66,33 +66,6 @@ function distanceLabel(km, fromYou) {
   const label = fmtDistanceMi(km);
   if (!label) return '';
   return fromYou ? ` · ${label} from you` : ` · ${label}`;
-}
-
-/**
- * @param {unknown} iso
- * @returns {string}
- */
-function fmtIntelClock(iso) {
-  if (!iso) return '—';
-  try {
-    return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(
-      new Date(String(iso)),
-    );
-  } catch {
-    return String(iso);
-  }
-}
-
-/**
- * @param {number | null | undefined} seconds
- * @returns {string | null}
- */
-function fmtDuration(seconds) {
-  if (seconds == null || !Number.isFinite(Number(seconds))) return null;
-  const s = Math.max(0, Math.round(Number(seconds)));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  return `${h} h ${String(m).padStart(2, '0')} m`;
 }
 
 /**
@@ -161,32 +134,6 @@ function bindCamErrors(root) {
       img.parentElement?.appendChild(note);
     });
   });
-}
-
-/**
- * @param {string} letter
- * @param {unknown} block
- */
-function scaleChip(letter, block) {
-  const b = /** @type {Record<string, unknown> | null} */ (
-    block && typeof block === 'object' ? block : null
-  );
-  const scale = b?.scale != null && Number.isFinite(Number(b.scale)) ? Number(b.scale) : null;
-  const text = b?.text != null ? String(b.text) : scale == null ? 'n/a' : '';
-  const label = scale != null ? `${letter}${scale}` : letter;
-  const detail = text && text !== 'none' ? ` ${text}` : scale === 0 ? ' none' : '';
-  const sev =
-    scale == null
-      ? 'unknown'
-      : scale >= 4
-        ? 'extreme'
-        : scale >= 3
-          ? 'strong'
-          : scale >= 1
-            ? 'minor'
-            : 'none';
-  const title = `${letter} scale${detail}`;
-  return `<span class="sw-scale sw-scale--${sev}" title="${escapeHtml(title)}"><span class="sw-scale__code">${escapeHtml(label)}</span><span class="sw-scale__text">${escapeHtml(detail.trim() || 'none')}</span></span>`;
 }
 
 /**
@@ -1089,14 +1036,12 @@ export function renderOutlook(root, data, options = {}) {
  *     pws?: Record<string, unknown> | null,
  *     current?: Record<string, unknown> | null,
  *   } | null,
- *   spaceWeather?: Record<string, unknown> | null,
  * }} [options]
  */
 export function renderSpecialtyIntel(root, data, options = {}) {
   const pin = options.pin ?? null;
   const hyperlocal = options.hyperlocal ?? null;
   const fromYou = Boolean(pin);
-  const spaceWeather = options.spaceWeather ?? null;
 
   const roads = /** @type {Record<string, unknown> | null} */ (data.cdot_roads ?? null);
   const catalogCams = /** @type {Record<string, unknown>[]} */ (
@@ -1111,62 +1056,8 @@ export function renderSpecialtyIntel(root, data, options = {}) {
   );
   const catalogRoadAlerts = /** @type {Record<string, unknown>[]} */ (roads?.alerts ?? []);
   const roadAlerts = hyperlocal?.alerts?.length ? hyperlocal.alerts : catalogRoadAlerts;
-  const catalogPws = /** @type {Record<string, unknown> | null} */ (data.pws ?? null);
-  const pws = hyperlocal?.pws && typeof hyperlocal.pws === 'object' ? hyperlocal.pws : catalogPws;
-  const pwsPrimary = /** @type {Record<string, unknown> | null} */ (pws?.primary ?? null);
-  const cwop = pwsPrimary ?? /** @type {Record<string, unknown> | null} */ (data.cwop ?? null);
-  const coag = /** @type {Record<string, unknown> | null} */ (data.coagmet ?? null);
-  const snotel = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
-  const cbrfc = /** @type {Record<string, unknown> | null} */ (data.cbrfc ?? null);
   const links = /** @type {Record<string, unknown>} */ (data.links ?? {});
-  const caic = /** @type {{ name?: string, url?: string } | null} */ (links.caic ?? null);
-  const pwsLinks =
-    pws?.links && typeof pws.links === 'object'
-      ? /** @type {Record<string, unknown>} */ (pws.links)
-      : {};
   const webcamLinks = /** @type {{ name?: string, url?: string }[]} */ (links.webcam_links ?? []);
-  const snowReportLinks = /** @type {{ name?: string, url?: string }[]} */ (
-    links.snow_report_links ?? []
-  );
-
-  let rf = resolveRfComms(
-    resolveCatalogNow(
-      /** @type {Record<string, unknown> | null} */ (data.current ?? null),
-      /** @type {Record<string, unknown> | null} */ (data.hourly ?? null),
-    ),
-    /** @type {Record<string, unknown> | null} */ (data.hourly ?? null),
-    data.elevation_ft != null ? Number(data.elevation_ft) : null,
-    /** @type {Record<string, unknown> | null} */ (data.rf_comms ?? null),
-  );
-  const rfClass =
-    rf?.status === 'ducting_likely'
-      ? 'rf-badge--ducting'
-      : rf?.status === 'poor'
-        ? 'rf-badge--poor'
-        : 'rf-badge--nominal';
-  const rfLabel =
-    rf?.status === 'ducting_likely'
-      ? 'Ducting likely'
-      : rf?.status === 'poor'
-        ? 'Poor'
-        : rf
-          ? 'Nominal'
-          : null;
-
-  const sw = spaceWeather;
-  const swScales = /** @type {Record<string, unknown> | null} */ (sw?.scales ?? null);
-  const swKp = /** @type {Record<string, unknown> | null} */ (sw?.kp ?? null);
-  const swBoulder = /** @type {Record<string, unknown> | null} */ (sw?.boulder_kp ?? null);
-  const swSfi = /** @type {Record<string, unknown> | null} */ (sw?.sfi ?? null);
-  const swAurora = /** @type {Record<string, unknown> | null} */ (sw?.aurora_co ?? null);
-  const swHf = /** @type {Record<string, unknown> | null} */ (sw?.hf ?? null);
-  const swDay = /** @type {Record<string, string> | null} */ (swHf?.day ?? null);
-  const swNight = /** @type {Record<string, string> | null} */ (swHf?.night ?? null);
-  const hfSummaryBits = [];
-  if (swDay?.['20m']) hfSummaryBits.push(`20m day: ${swDay['20m']}`);
-  if (swNight?.['40m']) hfSummaryBits.push(`40m night: ${swNight['40m']}`);
-  if (swDay?.['10m']) hfSummaryBits.push(`10m day: ${swDay['10m']}`);
-  const showHamPanel = Boolean(rfLabel || sw);
 
   const parts = [];
 
@@ -1282,191 +1173,6 @@ export function renderSpecialtyIntel(root, data, options = {}) {
               : ''
           }
         </section>`);
-  }
-
-  if (showHamPanel) {
-    parts.push(`<section class="glass-panel specialty-card" aria-labelledby="rf-heading">
-          <h2 id="rf-heading" class="glass-panel__title">Ham radio / RF</h2>
-          ${
-            swScales
-              ? `<div class="sw-scales" role="group" aria-label="NOAA space weather scales">
-                  ${scaleChip('R', swScales.R)}
-                  ${scaleChip('S', swScales.S)}
-                  ${scaleChip('G', swScales.G)}
-                </div>`
-              : ''
-          }
-          ${
-            swSfi || swKp
-              ? `<p class="specialty-inline">${[
-                  swSfi?.value != null
-                    ? `<span class="specialty-inline__label">SFI</span> ${Math.round(Number(swSfi.value))}${swSfi.ninety_day_mean != null ? ` <span class="intel-muted">(90d ${Math.round(Number(swSfi.ninety_day_mean))})</span>` : ''}`
-                    : '',
-                  swKp?.value != null
-                    ? `<span class="specialty-inline__label">Kp</span> ${Number(swKp.value).toFixed(1)}${swBoulder?.value != null ? ` <span class="intel-muted">· Boulder ${Number(swBoulder.value).toFixed(1)}</span>` : ''}`
-                    : '',
-                ]
-                  .filter(Boolean)
-                  .join('<span class="specialty-inline__sep" aria-hidden="true">·</span>')}</p>`
-              : ''
-          }
-          ${
-            swAurora
-              ? `<p class="sw-aurora sw-aurora--${escapeHtml(String(swAurora.chance ?? 'unlikely'))}"><span class="sw-aurora__label">Aurora (CO): ${escapeHtml(String(swAurora.chance ?? 'unlikely'))}</span>
-                  <span class="sw-aurora__detail">${escapeHtml(String(swAurora.detail ?? ''))}</span></p>`
-              : ''
-          }
-          ${
-            hfSummaryBits.length
-              ? `<p class="sw-hf-summary"><span class="sw-hf-summary__label">HF</span> ${escapeHtml(hfSummaryBits.join(' · '))}</p>`
-              : ''
-          }
-          ${
-            rfLabel
-              ? `<p class="rf-badge ${rfClass}"><span class="rf-badge__status">VHF/UHF: ${escapeHtml(rfLabel)}</span>
-                  <span class="rf-badge__detail">${escapeHtml(String(rf?.detail ?? 'Model-derived estimate'))}</span></p>`
-              : ''
-          }
-          ${
-            sw
-              ? `<button type="button" class="btn btn-link intel-jump" data-jump-to="ham-heading">Full ham &amp; space weather</button>`
-              : ''
-          }
-        </section>`);
-  }
-
-  {
-    const astro = resolveAstronomy(data);
-    const moon = /** @type {Record<string, unknown> | null} */ (astro?.moon ?? null);
-    const showSnow = Boolean(snotel || snowReportLinks.length);
-    const showLocal = Boolean(pwsPrimary || cwop || coag || astro || showSnow);
-
-    if (showLocal) {
-      const localBlocks = [];
-
-      if (pwsPrimary || cwop) {
-        const pwsBits = [];
-        if (cwop?.temp_f != null) pwsBits.push(`${Math.round(Number(cwop.temp_f))}°F`);
-        if (cwop?.humidity != null) pwsBits.push(`${Math.round(Number(cwop.humidity))}% RH`);
-        if (cwop?.wind_speed_mph != null) {
-          pwsBits.push(`${Math.round(Number(cwop.wind_speed_mph))} mph`);
-        }
-        const pwsLink =
-          pwsLinks.aprs && safeHttpsUrl(String(pwsLinks.aprs))
-            ? `<a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(String(pwsLinks.aprs))))}" target="_blank" rel="noopener noreferrer" aria-label="Open station on aprs.fi (opens in new tab)">aprs.fi</a>`
-            : safeHttpsUrl(links.pws)
-              ? `<a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(links.pws)))}" target="_blank" rel="noopener noreferrer" aria-label="Weather Underground PWS (opens in new tab)">Weather Underground</a>`
-              : '';
-        localBlocks.push(`<div class="specialty-block" id="pws-heading">
-            <h3 class="glass-panel__subtitle">Nearby PWS</h3>
-            <p class="specialty-inline"><strong>${escapeHtml(String(cwop?.callsign ?? 'Station'))}</strong>${cwop?.network ? ` · ${escapeHtml(String(cwop.network))}` : ''}${distanceLabel(/** @type {number | null} */ (cwop?.distance_km), fromYou && Boolean(hyperlocal?.pws))}${pwsBits.length ? ` · ${escapeHtml(pwsBits.join(' · '))}` : ''}</p>
-            ${cwop?.observed ? `<p class="intel-muted">Observed ${escapeHtml(String(cwop.observed))}</p>` : ''}
-            ${pwsLink ? `<p class="specialty-actions">${pwsLink}</p>` : ''}
-          </div>`);
-      }
-
-      if (coag) {
-        const soilBits = [];
-        if (coag.soil_temp_5cm_f != null) soilBits.push(`5 cm ${coag.soil_temp_5cm_f}°F`);
-        if (coag.soil_temp_15cm_f != null) soilBits.push(`15 cm ${coag.soil_temp_15cm_f}°F`);
-        if (coag.soil_moisture_5cm != null) {
-          soilBits.push(`Moisture ${String(coag.soil_moisture_5cm)}`);
-        }
-        if (coag.eto_in != null) soilBits.push(`ET₀ ${String(coag.eto_in)}`);
-        localBlocks.push(`<div class="specialty-block" id="soil-heading">
-            <h3 class="glass-panel__subtitle">CoAgMET soil</h3>
-            <p class="specialty-inline"><strong>${escapeHtml(String(coag.station_name ?? coag.station_id ?? 'Station'))}</strong>${soilBits.length ? ` · ${escapeHtml(soilBits.join(' · '))}` : ''}</p>
-            <button type="button" class="btn btn-link intel-jump" data-jump-to="coagmet-heading">Full agriculture</button>
-          </div>`);
-      }
-
-      if (showSnow) {
-        const snowBits = [];
-        if (snotel?.snow_depth_in != null)
-          snowBits.push(`Depth ${String(snotel.snow_depth_in)} in`);
-        if (snotel?.snow_depth_24h_delta_in != null) {
-          const d = Number(snotel.snow_depth_24h_delta_in);
-          if (Number.isFinite(d)) {
-            const signed = d > 0 ? `+${d}` : String(d);
-            snowBits.push(`Δ24h ${signed} in`);
-          }
-        }
-        if (snotel?.swe_in != null) snowBits.push(`SWE ${String(snotel.swe_in)} in`);
-        if (snotel?.precipitation_24h_in != null) {
-          snowBits.push(`24h precip ${String(snotel.precipitation_24h_in)} in`);
-        }
-        const resortActions = snowReportLinks
-          .filter((l) => l?.url && safeHttpsUrl(String(l.url)))
-          .map(
-            (l) =>
-              `<a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(String(l.url))))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(String(l.name ?? 'Resort snow report'))} (opens in new tab)">${escapeHtml(String(l.name ?? 'Resort snow report'))}</a>`,
-          )
-          .join(' ');
-        localBlocks.push(`<div class="specialty-block" id="snow-intel-heading">
-            <h3 class="glass-panel__subtitle">Snowpack</h3>
-            ${
-              snotel
-                ? `<p class="specialty-inline"><strong>${escapeHtml(String(snotel.station_name ?? snotel.station_id ?? 'SNOTEL'))}</strong>${snotel.distance_km != null ? ` · ${fmtDistanceMi(/** @type {number} */ (snotel.distance_km)) ?? ''}` : ''}${snowBits.length ? ` · ${escapeHtml(snowBits.join(' · '))}` : ''}</p>`
-                : `<p class="specialty-inline">Official resort snow reports (offsite) — COWX does not ingest resort base or new-snow figures.</p>`
-            }
-            ${resortActions ? `<p class="specialty-actions">${resortActions}</p>` : ''}
-            ${snotel ? `<button type="button" class="btn btn-link intel-jump" data-jump-to="snowpack-heading">Full snowpack</button>` : ''}
-          </div>`);
-      }
-
-      if (cbrfc?.name) {
-        const pct =
-          cbrfc.pctAvg != null && Number.isFinite(Number(cbrfc.pctAvg))
-            ? `${Math.round(Number(cbrfc.pctAvg))}% of avg`
-            : null;
-        localBlocks.push(`<div class="specialty-block" id="cbrfc-intel-heading">
-            <h3 class="glass-panel__subtitle">Water-supply guidance</h3>
-            <p class="specialty-inline"><strong>${escapeHtml(String(cbrfc.name))}</strong>${cbrfc.period ? ` · ${escapeHtml(String(cbrfc.period))}` : ''}${pct ? ` · ${escapeHtml(pct)}` : ''}</p>
-            <p class="intel-muted">CBRFC unregulated seasonal volume — not a day-to-day forecast.</p>
-            <button type="button" class="btn btn-link intel-jump" data-jump-to="hydrology-heading">Full hydrology</button>
-          </div>`);
-      }
-
-      if (caic?.url && safeHttpsUrl(String(caic.url))) {
-        localBlocks.push(`<div class="specialty-block" id="caic-intel-heading">
-            <h3 class="glass-panel__subtitle">Avalanche forecast</h3>
-            <p class="specialty-inline">Check CAIC before entering avalanche terrain.</p>
-            <p class="specialty-actions"><a class="btn btn-secondary btn-sm" href="${escapeHtml(String(safeHttpsUrl(String(caic.url))))}" target="_blank" rel="noopener noreferrer" aria-label="Open CAIC avalanche forecasts (opens in new tab)">${escapeHtml(String(caic.name || 'CAIC forecasts'))}</a></p>
-          </div>`);
-      }
-
-      if (astro) {
-        const civil = /** @type {Record<string, unknown>} */ (astro.civil_twilight ?? {});
-        const dayLen = fmtDuration(/** @type {number | null} */ (astro.day_length_s ?? null));
-        const sunBits = [
-          `Rise ${fmtIntelClock(astro.sunrise)}`,
-          `Set ${fmtIntelClock(astro.sunset)}`,
-          dayLen ? dayLen : null,
-        ].filter(Boolean);
-        const moonBits = moon
-          ? [
-              String(moon.phase_label ?? '—'),
-              moon.illumination_pct != null
-                ? `${Math.round(Number(moon.illumination_pct))}% lit`
-                : null,
-              `Rise ${fmtIntelClock(moon.rise)}`,
-              `Set ${fmtIntelClock(moon.set)}`,
-            ].filter(Boolean)
-          : [];
-        localBlocks.push(`<div class="specialty-block" id="astro-intel-heading">
-            <h3 class="glass-panel__subtitle">Astronomy</h3>
-            <p class="specialty-inline"><span class="specialty-inline__label">Sun</span> ${escapeHtml(sunBits.join(' · '))}</p>
-            <p class="specialty-inline"><span class="specialty-inline__label">Twilight</span> ${escapeHtml(fmtIntelClock(civil.begin))} – ${escapeHtml(fmtIntelClock(civil.end))}</p>
-            ${moonBits.length ? `<p class="specialty-inline"><span class="specialty-inline__label">Moon</span> ${escapeHtml(moonBits.join(' · '))}</p>` : ''}
-            <button type="button" class="btn btn-link intel-jump" data-jump-to="astronomy-heading">Full astronomy</button>
-          </div>`);
-      }
-
-      parts.push(`<section class="glass-panel specialty-card" aria-labelledby="local-obs-heading">
-          <h2 id="local-obs-heading" class="glass-panel__title">Local observations</h2>
-          ${localBlocks.join('\n')}
-        </section>`);
-    }
   }
 
   root.innerHTML = parts.join('\n');
