@@ -637,6 +637,42 @@ function renderForecastCard(parent, headingId, title, body) {
 }
 
 /**
+ * Alphabetical by section title, with external tools and live sources pinned last.
+ * Forecast sections live outside this container and keep their own top placement.
+ */
+const DEEP_SECTION_ORDER = [
+  'coagmet-heading', // Agriculture (CoAgMET)
+  'aqi-heading', // Air quality & pollen
+  'alerts-heading', // Alerts & discussion
+  'astronomy-heading', // Astronomy
+  'metar-heading', // Aviation (METAR / TAF)
+  'smoke-heading', // Fire weather & restrictions
+  'ham-heading', // Ham radio & space weather
+  'hydrology-heading', // Hydrology
+  'pws-heading', // Nearby PWS (CWOP / APRS)
+  'roads-heading', // Roads & passes (CDOT)
+  'snowpack-heading', // Snowpack (SNOTEL)
+  'links-heading', // External tools & sources
+  'sources-heading', // Live data sources
+];
+
+/**
+ * @param {HTMLElement} container
+ */
+function orderDeepSections(container) {
+  const children = Array.from(container.children);
+  const rank = (/** @type {Element} */ el) => {
+    const id = el.querySelector(':scope > summary')?.id ?? '';
+    const i = DEEP_SECTION_ORDER.indexOf(id);
+    return i === -1 ? DEEP_SECTION_ORDER.length : i;
+  };
+  children
+    .map((el, i) => ({ el, i, rank: rank(el) }))
+    .sort((a, b) => a.rank - b.rank || a.i - b.i)
+    .forEach(({ el }) => container.appendChild(el));
+}
+
+/**
  * @param {HTMLElement} parent
  * @param {string} headingId
  * @param {string} title
@@ -2620,6 +2656,81 @@ function appendDeepForecast(root, data, ctx) {
     { open: false },
   );
 
+  renderCollapsibleSection(
+    sections,
+    'pws-heading',
+    'Nearby PWS (CWOP / APRS)',
+    () => {
+      const pwsData = /** @type {Record<string, unknown> | null} */ (data.pws ?? null);
+      const station = /** @type {Record<string, unknown> | null} */ (
+        pwsData?.primary ?? data.cwop ?? null
+      );
+      const stationLinks = /** @type {Record<string, unknown>} */ (pwsData?.links ?? {});
+      const wrap = document.createDocumentFragment();
+
+      if (!station) {
+        renderEmpty(
+          wrap,
+          'No nearby PWS',
+          'No CWOP / APRS citizen weather station reported near this location on the last run.',
+        );
+      } else {
+        const rows = [
+          [
+            'Station',
+            `${station.callsign ?? 'Station'}${station.network ? ` · ${station.network}` : ''}${station.distance_km != null ? ` (${fmtDistanceMi(/** @type {number} */ (station.distance_km)) ?? ''})` : ''}`,
+          ],
+          [
+            'Temperature',
+            station.temp_f != null ? `${Math.round(Number(station.temp_f))}°F` : null,
+          ],
+          [
+            'Humidity',
+            station.humidity != null ? `${Math.round(Number(station.humidity))}%` : null,
+          ],
+          [
+            'Wind',
+            station.wind_speed_mph != null
+              ? `${Math.round(Number(station.wind_speed_mph))} mph`
+              : null,
+          ],
+          ['Observed', station.observed ? String(station.observed) : null],
+        ].filter(([, v]) => v != null && v !== '');
+        const dl = document.createElement('dl');
+        dl.className = 'metric-list';
+        dl.innerHTML = rows
+          .map(([k, v]) => `<dt>${escapeHtml(String(k))}</dt><dd>${escapeHtml(String(v))}</dd>`)
+          .join('');
+        wrap.appendChild(dl);
+        const note = document.createElement('p');
+        note.className = 'section-note';
+        note.textContent =
+          'Citizen-run station — siting and calibration vary, so readings can differ from official observations.';
+        wrap.appendChild(note);
+      }
+
+      const linkBits = [];
+      if (stationLinks.aprs) {
+        linkBits.push(
+          sourceLink(String(stationLinks.aprs), 'Station on aprs.fi', 'btn btn-secondary btn-sm'),
+        );
+      }
+      if (links.pws) {
+        linkBits.push(
+          sourceLink(String(links.pws), 'Weather Underground', 'btn btn-secondary btn-sm'),
+        );
+      }
+      if (linkBits.length) {
+        const p = document.createElement('p');
+        p.className = 'section-cta';
+        p.innerHTML = linkBits.join(' ');
+        wrap.appendChild(p);
+      }
+      return wrap;
+    },
+    { open: false },
+  );
+
   const imgUrls = imageryUrls(
     /** @type {number | null} */ (data.lat ?? null),
     /** @type {number | null} */ (data.lon ?? null),
@@ -2705,6 +2816,7 @@ function appendDeepForecast(root, data, ctx) {
   );
 
   renderLiveSourcesPanel(sections, data, metaSources);
+  orderDeepSections(sections);
   root.appendChild(sections);
   bindDetailJumps(root);
 }
