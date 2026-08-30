@@ -1628,7 +1628,7 @@ body.workspace-active #main-content {
 .workspace__specialty {
   display: grid;
   gap: 0.55rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   margin-top: 0.25rem;
   align-items: start;
 }
@@ -1732,17 +1732,6 @@ body.workspace-active #main-content {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
     grid-template-rows: auto;
     align-items: stretch;
-  }
-
-  /* auto-fit collapses unused tracks so a single card spans the full band */
-  .workspace__specialty {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
-  }
-}
-
-@media (max-width: 959px) and (min-width: 640px) {
-  .workspace__specialty {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
   }
 }
 
