@@ -266,7 +266,6 @@ export async function renderWorkspace(root, data, options) {
     onJump: jumpToSection,
     pin,
     hyperlocal,
-    spaceWeather,
   });
 
   const favBtn = /** @type {HTMLButtonElement | null} */ (root.querySelector('#btn-favorite'));
