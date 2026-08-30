@@ -1,111 +1,113 @@
 {
-  "generatedAt": "2026-08-30T18:05:36.577Z",
+  "generatedAt": "2026-08-30T20:34:58.302Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-08-30T17:55:13.401Z"
+      "fetchedAt": "2026-08-30T20:21:12.618Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:02:32.990Z"
+      "fetchedAt": "2026-08-30T20:28:30.124Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-08-30T18:02:33.137Z"
+      "fetchedAt": "2026-08-30T20:28:30.277Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:02:37.914Z"
+      "fetchedAt": "2026-08-30T20:28:34.825Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:02:41.356Z"
+      "fetchedAt": "2026-08-30T20:28:39.942Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:02:43.280Z"
+      "fetchedAt": "2026-08-30T20:28:40.101Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:02:45.623Z"
+      "fetchedAt": "2026-08-30T20:28:41.749Z"
     },
     {
       "id": "airnow",
-      "status": "ok",
-      "fetchedAt": "2026-08-30T18:04:33.824Z"
+      "status": "partial",
+      "fetchedAt": "2026-08-30T20:33:55.569Z",
+      "error": "This operation was aborted (timeout) for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=38.400000000000006&longitude=-105.80000000000001&distance=50&API_KEY=[redacted] HTTP 502 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=38&longitude=-103.80000000000001&distance=50&API_KEY=[redacted] <html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n</body>\r\n</h"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:04:35.396Z"
+      "fetchedAt": "2026-08-30T20:33:56.781Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:04:50.963Z"
+      "fetchedAt": "2026-08-30T20:34:12.368Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:04:52.212Z"
+      "fetchedAt": "2026-08-30T20:34:13.879Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:05:18.793Z"
+      "fetchedAt": "2026-08-30T20:34:39.323Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-08-30T18:05:31.225Z"
+      "fetchedAt": "2026-08-30T20:34:49.230Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:05:31.395Z"
+      "fetchedAt": "2026-08-30T20:34:49.481Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:05:31.978Z"
+      "fetchedAt": "2026-08-30T20:34:49.681Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:05:32.337Z"
+      "fetchedAt": "2026-08-30T20:34:49.899Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:05:32.481Z"
+      "fetchedAt": "2026-08-30T20:34:50.130Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:05:32.597Z"
+      "fetchedAt": "2026-08-30T20:34:50.364Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:05:32.893Z"
+      "fetchedAt": "2026-08-30T20:34:50.652Z"
     },
     {
       "id": "firms",
-      "status": "ok",
-      "fetchedAt": "2026-08-30T18:05:33.321Z"
+      "status": "error",
+      "fetchedAt": "2026-08-30T20:34:55.414Z",
+      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://firms.modaps.eosdis.nasa.gov/api/area/csv/[redacted]/VIIRS_SNPP_NRT/-109.2,36.9,-102,41.1/1"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-08-30T18:05:36.577Z"
+      "fetchedAt": "2026-08-30T20:34:58.302Z"
     }
   ],
   "locationCount": 338,
