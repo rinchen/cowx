@@ -1,112 +1,113 @@
 {
-  "generatedAt": "2026-09-10T14:28:00.501Z",
+  "generatedAt": "2026-09-10T15:27:52.334Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "ok",
-      "fetchedAt": "2026-09-10T14:15:40.139Z"
+      "status": "partial",
+      "fetchedAt": "2026-09-10T15:20:44.009Z",
+      "error": "nbm thunderstorm: HTTP 429 for https://api.open-meteo.com/v1/gfs?latitude=38.7422,38.4783,38.605,38.2189,38.1314,37.9375,37.9344,38.0228,38.1528,37.8119,38.0297,38.8697,38.5458,39.0722,38.8683,38.7997,38.7042,37.2753,37.2261,37.115&longitude=-108.0689,-107.8762,-107.9822,-108.5689,-108.2919,-107.8123,-107.8567,-107.6714,-107.7614,-107.6645,-107.3153,-106.9878,-106.9253,-107.1894,-107.592,-107.7197,-107.6103,-107.8801,-107.5981,-107.6331&hourly=thunderstorm_probability&models=ncep_nbm_conus&timez"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:25:04.736Z"
+      "fetchedAt": "2026-09-10T15:24:56.631Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-09-10T14:25:04.892Z"
+      "fetchedAt": "2026-09-10T15:24:56.786Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:25:08.880Z"
+      "fetchedAt": "2026-09-10T15:25:00.520Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:25:11.958Z"
+      "fetchedAt": "2026-09-10T15:25:02.979Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:25:18.513Z"
+      "fetchedAt": "2026-09-10T15:25:08.385Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:25:20.513Z"
+      "fetchedAt": "2026-09-10T15:25:09.958Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:27:05.101Z"
+      "fetchedAt": "2026-09-10T15:26:51.242Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:27:08.758Z"
+      "fetchedAt": "2026-09-10T15:26:52.406Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:27:25.233Z"
+      "fetchedAt": "2026-09-10T15:27:18.406Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:27:25.842Z"
+      "fetchedAt": "2026-09-10T15:27:19.158Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:27:43.823Z"
+      "fetchedAt": "2026-09-10T15:27:36.838Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-09-10T14:27:55.296Z"
+      "fetchedAt": "2026-09-10T15:27:47.728Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-09-10T14:27:55.563Z",
+      "fetchedAt": "2026-09-10T15:27:47.877Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:27:56.004Z"
+      "fetchedAt": "2026-09-10T15:27:48.375Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:27:56.189Z"
+      "fetchedAt": "2026-09-10T15:27:48.565Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:27:56.420Z"
+      "fetchedAt": "2026-09-10T15:27:48.739Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:27:56.616Z"
+      "fetchedAt": "2026-09-10T15:27:48.949Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:27:56.965Z"
+      "fetchedAt": "2026-09-10T15:27:49.128Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:27:57.225Z"
+      "fetchedAt": "2026-09-10T15:27:49.290Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-09-10T14:28:00.501Z"
+      "fetchedAt": "2026-09-10T15:27:52.333Z"
     }
   ],
   "locationCount": 338,
