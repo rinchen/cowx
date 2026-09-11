@@ -8,4 +8,5 @@ Path layout matches the [CDN docs](https://meteocons.com/docs/cdn/):
 
 Vendored from `https://cdn.meteocons.com/3.0.0-next.10/` (`latest` and `1.0.0` currently 404).
 Also includes At a Glance metric glyphs (`barometer`, `humidity`, `uv-index`, `thermometer-water`, `umbrella`, `raindrop`, `cloudy`) and moon-phase glyphs (`moon-new`, `moon-waxing-crescent`, `moon-first-quarter`, `moon-waxing-gibbous`, `moon-full`, `moon-waning-gibbous`, `moon-last-quarter`, `moon-waning-crescent`) from `@meteocons/svg@3.0.0-next.10` via CDN.
+Unlit moon fill recolored from `#e2e8f0` → `#64748b` so phases read on light glass panels.
 Re-download when upgrading the icon set.
