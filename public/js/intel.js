@@ -20,6 +20,7 @@ import {
   meteoconIconHtml,
   pressureTrendIconHtml,
   metricValueWithIcon,
+  moonPhaseToMeteoconSlug,
 } from './icons.js';
 import {
   buildOutlookHighlights,
@@ -35,7 +36,7 @@ import {
   sliceCompactHours,
   tempTransitionCue,
 } from './outlook.js';
-import { dailyIndexForNow } from './live.js';
+import { dailyIndexForNow, resolveAstronomy } from './live.js';
 import {
   bindMeteogramScrubber,
   detectPressureDip,
@@ -250,6 +251,27 @@ export function renderHero(root, data, options = {}) {
     data.fire_restrictions ?? null
   );
   const snotel = /** @type {Record<string, unknown> | null} */ (data.snotel ?? null);
+  const astro = resolveAstronomy(data);
+  const moon = /** @type {Record<string, unknown> | null} */ (astro?.moon ?? null);
+  const moonSlug =
+    moon?.phase != null ? moonPhaseToMeteoconSlug(/** @type {number} */ (moon.phase)) : null;
+  const moonLabel = moon?.phase_label != null ? String(moon.phase_label) : null;
+  const moonIllum =
+    moon?.illumination_pct != null && Number.isFinite(Number(moon.illumination_pct))
+      ? Math.round(Number(moon.illumination_pct))
+      : null;
+  const moonMetricText =
+    moonLabel != null ? (moonIllum != null ? `${moonLabel} · ${moonIllum}%` : moonLabel) : null;
+  const moonMetricHtml =
+    moonMetricText != null && moonSlug
+      ? metricValueWithIcon(moonSlug, moonMetricText)
+      : moonMetricText;
+  const moonAria =
+    moonLabel != null
+      ? moonIllum != null
+        ? `${moonLabel}, ${moonIllum}% illuminated`
+        : moonLabel
+      : null;
 
   const hourUv =
     current?.uv_index != null
@@ -551,6 +573,10 @@ export function renderHero(root, data, options = {}) {
           'hourly-heading',
           tstormChanceLabel ? { ariaValue: tstormChanceLabel.aria } : {},
         )}
+        ${metricRow('Moon', moonMetricHtml, moonMetricHtml ? 'astronomy-heading' : null, {
+          html: Boolean(moonSlug),
+          ariaValue: moonAria ?? undefined,
+        })}
         ${metricRow('Aviation', flightCat, flightCat ? 'metar-heading' : null)}
       </div>
       ${aqiBarsHtml}
