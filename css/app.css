@@ -2704,6 +2704,25 @@ button.glance-aqi-bar__source.intel-jump {
   font-size: 0.9375rem;
 }
 
+.astronomy-moon-phase {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.astronomy-next-phases {
+  list-style: none;
+  padding-left: 0;
+}
+
+.astronomy-next-phases li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0;
+}
+
 .section-note {
   margin: 0 0 0.75rem;
   color: var(--muted, var(--glass-muted));

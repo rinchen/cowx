@@ -2,7 +2,15 @@ import { escapeHtml, safeHttpsUrl, safeExternalUrl } from './dom.js';
 import { aqiBarHtml } from './aqi.js';
 import { climatologyPeriodLabel, compareDailyToNormal, formatTempDelta } from './climatology.js';
 import { fmtDistanceMi } from './geo-math.js';
-import { isDaytime, weatherIconHtml, wmoLabel, pressureTrendIconHtml } from './icons.js';
+import {
+  isDaytime,
+  weatherIconHtml,
+  wmoLabel,
+  pressureTrendIconHtml,
+  meteoconIconHtml,
+  moonPhaseToMeteoconSlug,
+  moonPhaseNameToMeteoconSlug,
+} from './icons.js';
 import { imageryUrls } from './imagery.js';
 import { resolveAstronomy, resolveCatalogNow, resolveRfComms } from './live.js';
 import { formatInHg, pressureTrend } from './sparkline.js';
@@ -1864,6 +1872,28 @@ function appendDeepForecast(root, data, ctx) {
       dl.className = 'metric-list';
       const dayLen = fmtLen(/** @type {number | null} */ (astro.day_length_s ?? null));
       const visLen = fmtLen(/** @type {number | null} */ (astro.visible_light_s ?? null));
+      const moonSlug =
+        moon?.phase != null
+          ? moonPhaseToMeteoconSlug(/** @type {number} */ (moon.phase))
+          : moon?.phase_label != null
+            ? moonPhaseNameToMeteoconSlug(String(moon.phase_label))
+            : null;
+      const moonIcon =
+        moonSlug != null
+          ? meteoconIconHtml(moonSlug, {
+              size: 48,
+              alt: '',
+              className: 'meteocon-icon astronomy-moon-icon',
+            })
+          : '';
+      const moonPhaseDd =
+        moon != null
+          ? `${moonIcon ? `${moonIcon} ` : ''}${escapeHtml(String(moon.phase_label ?? '—'))}${
+              moon.illumination_pct != null
+                ? ` · ${Math.round(Number(moon.illumination_pct))}% illuminated`
+                : ''
+            }`
+          : '';
       dl.innerHTML = [
         astro.date
           ? `<dt>Date</dt><dd>${escapeHtml(String(astro.date))} (America/Denver)</dd>`
@@ -1876,11 +1906,7 @@ function appendDeepForecast(root, data, ctx) {
         `<dt>Nautical twilight</dt><dd>${escapeHtml(fmtClock(nautical.begin))} – ${escapeHtml(fmtClock(nautical.end))}</dd>`,
         `<dt>Astronomical twilight</dt><dd>${escapeHtml(fmtClock(astronomical.begin))} – ${escapeHtml(fmtClock(astronomical.end))}</dd>`,
         moon
-          ? `<dt>Moon phase</dt><dd>${escapeHtml(String(moon.phase_label ?? '—'))}${
-              moon.illumination_pct != null
-                ? ` · ${Math.round(Number(moon.illumination_pct))}% illuminated`
-                : ''
-            }</dd>
+          ? `<dt>Moon phase</dt><dd class="astronomy-moon-phase">${moonPhaseDd}</dd>
              <dt>Moonrise</dt><dd>${escapeHtml(fmtClock(moon.rise))}</dd>
              <dt>Moonset</dt><dd>${escapeHtml(fmtClock(moon.set))}</dd>`
           : '',
@@ -1896,11 +1922,19 @@ function appendDeepForecast(root, data, ctx) {
         h.textContent = 'Upcoming moon phases';
         wrap.appendChild(h);
         const ul = document.createElement('ul');
-        ul.className = 'plain-list';
+        ul.className = 'plain-list astronomy-next-phases';
         for (const p of phases) {
           if (!p?.name || !p?.date) continue;
           const li = document.createElement('li');
-          li.textContent = `${p.name} — ${p.date}`;
+          const phaseSlug = moonPhaseNameToMeteoconSlug(p.name);
+          const phaseIcon = phaseSlug
+            ? meteoconIconHtml(phaseSlug, {
+                size: 20,
+                alt: '',
+                className: 'meteocon-icon astronomy-next-phase-icon',
+              })
+            : '';
+          li.innerHTML = `${phaseIcon}${phaseIcon ? ' ' : ''}<span>${escapeHtml(p.name)} — ${escapeHtml(p.date)}</span>`;
           ul.appendChild(li);
         }
         wrap.appendChild(ul);
