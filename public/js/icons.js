@@ -22,7 +22,7 @@ const METEOCONS_BASE = new URL('../img/meteocons/', import.meta.url);
 /** Base URL for Weather Icons subset (…/img/weather-icons/). */
 const WEATHER_ICONS_BASE = new URL('../img/weather-icons/', import.meta.url);
 
-/** Allowed non-WMO Meteocons slugs for metric glyphs. */
+/** Allowed non-WMO Meteocons slugs for metric / moon glyphs. */
 const METEOCON_SLUGS = new Set([
   'barometer',
   'humidity',
@@ -31,7 +31,56 @@ const METEOCON_SLUGS = new Set([
   'umbrella',
   'raindrop',
   'cloudy',
+  'moon-new',
+  'moon-waxing-crescent',
+  'moon-first-quarter',
+  'moon-waxing-gibbous',
+  'moon-full',
+  'moon-waning-gibbous',
+  'moon-last-quarter',
+  'moon-waning-crescent',
 ]);
+
+/** @type {Record<string, string>} */
+const MOON_PHASE_NAME_TO_SLUG = {
+  'New Moon': 'moon-new',
+  'Waxing Crescent': 'moon-waxing-crescent',
+  'First Quarter': 'moon-first-quarter',
+  'Waxing Gibbous': 'moon-waxing-gibbous',
+  'Full Moon': 'moon-full',
+  'Waning Gibbous': 'moon-waning-gibbous',
+  'Last Quarter': 'moon-last-quarter',
+  'Waning Crescent': 'moon-waning-crescent',
+};
+
+/**
+ * Map lunar cycle phase (0–1) to a vendored Meteocons moon slug.
+ * Thresholds match `moonPhaseLabel` in astronomy.js.
+ * @param {number | null | undefined} phase
+ * @returns {string | null}
+ */
+export function moonPhaseToMeteoconSlug(phase) {
+  if (phase == null || !Number.isFinite(Number(phase))) return null;
+  const p = ((Number(phase) % 1) + 1) % 1;
+  if (p < 0.03 || p >= 0.97) return 'moon-new';
+  if (p < 0.22) return 'moon-waxing-crescent';
+  if (p < 0.28) return 'moon-first-quarter';
+  if (p < 0.47) return 'moon-waxing-gibbous';
+  if (p < 0.53) return 'moon-full';
+  if (p < 0.72) return 'moon-waning-gibbous';
+  if (p < 0.78) return 'moon-last-quarter';
+  return 'moon-waning-crescent';
+}
+
+/**
+ * Map a human moon-phase label to a vendored Meteocons moon slug.
+ * @param {string | null | undefined} name
+ * @returns {string | null}
+ */
+export function moonPhaseNameToMeteoconSlug(name) {
+  if (name == null || name === '') return null;
+  return MOON_PHASE_NAME_TO_SLUG[String(name)] ?? null;
+}
 
 /**
  * @param {number | null | undefined} code

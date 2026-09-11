@@ -8,6 +8,8 @@ import {
   metricValueWithIcon,
   pressureTrendIconHtml,
   isDaytime,
+  moonPhaseToMeteoconSlug,
+  moonPhaseNameToMeteoconSlug,
 } from '../public/js/icons.js';
 
 describe('wmoToMeteoconSlug', () => {
@@ -37,6 +39,9 @@ describe('meteoconIconHtml', () => {
       'umbrella',
       'raindrop',
       'cloudy',
+      'moon-full',
+      'moon-new',
+      'moon-waxing-crescent',
     ]) {
       const html = meteoconIconHtml(slug, { alt: slug });
       assert.match(
@@ -48,6 +53,41 @@ describe('meteoconIconHtml', () => {
 
   it('rejects unknown slugs', () => {
     assert.equal(meteoconIconHtml('not-a-real-icon'), '');
+  });
+});
+
+describe('moonPhaseToMeteoconSlug', () => {
+  it('maps representative phases to vendored slugs', () => {
+    assert.equal(moonPhaseToMeteoconSlug(0), 'moon-new');
+    assert.equal(moonPhaseToMeteoconSlug(0.99), 'moon-new');
+    assert.equal(moonPhaseToMeteoconSlug(0.1), 'moon-waxing-crescent');
+    assert.equal(moonPhaseToMeteoconSlug(0.25), 'moon-first-quarter');
+    assert.equal(moonPhaseToMeteoconSlug(0.4), 'moon-waxing-gibbous');
+    assert.equal(moonPhaseToMeteoconSlug(0.5), 'moon-full');
+    assert.equal(moonPhaseToMeteoconSlug(0.65), 'moon-waning-gibbous');
+    assert.equal(moonPhaseToMeteoconSlug(0.75), 'moon-last-quarter');
+    assert.equal(moonPhaseToMeteoconSlug(0.9), 'moon-waning-crescent');
+  });
+
+  it('returns null for invalid phase', () => {
+    assert.equal(moonPhaseToMeteoconSlug(null), null);
+    assert.equal(moonPhaseToMeteoconSlug(undefined), null);
+    assert.equal(moonPhaseToMeteoconSlug(Number.NaN), null);
+  });
+});
+
+describe('moonPhaseNameToMeteoconSlug', () => {
+  it('maps phase labels to vendored slugs', () => {
+    assert.equal(moonPhaseNameToMeteoconSlug('New Moon'), 'moon-new');
+    assert.equal(moonPhaseNameToMeteoconSlug('Full Moon'), 'moon-full');
+    assert.equal(moonPhaseNameToMeteoconSlug('Last Quarter'), 'moon-last-quarter');
+    assert.equal(moonPhaseNameToMeteoconSlug('Waning Crescent'), 'moon-waning-crescent');
+  });
+
+  it('returns null for unknown names', () => {
+    assert.equal(moonPhaseNameToMeteoconSlug('Blue Moon'), null);
+    assert.equal(moonPhaseNameToMeteoconSlug(''), null);
+    assert.equal(moonPhaseNameToMeteoconSlug(null), null);
   });
 });
 
