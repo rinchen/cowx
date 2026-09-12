@@ -1,118 +1,118 @@
 {
-  "generatedAt": "2026-09-12T11:05:01.505Z",
+  "generatedAt": "2026-09-12T13:28:33.144Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-09-12T10:54:21.401Z"
+      "fetchedAt": "2026-09-12T13:19:06.045Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:01:41.074Z"
+      "fetchedAt": "2026-09-12T13:25:23.590Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-09-12T11:01:41.217Z"
+      "fetchedAt": "2026-09-12T13:25:23.733Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:01:45.571Z"
+      "fetchedAt": "2026-09-12T13:25:27.538Z"
     },
     {
       "id": "coagmet",
-      "status": "error",
-      "fetchedAt": "2026-09-12T11:01:45.872Z",
-      "error": "HTTP 503 for https://coagmet.colostate.edu/data/metadata.json: <!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\n<html><head>\n<title>503 Service Unavailable</title>\n</head><body>\n<h1>Service Unavailable</h1>\n<p>The server "
+      "status": "ok",
+      "fetchedAt": "2026-09-12T13:25:28.488Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:01:46.253Z"
+      "fetchedAt": "2026-09-12T13:25:29.527Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:01:48.283Z"
+      "fetchedAt": "2026-09-12T13:25:31.326Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:03:36.006Z"
+      "fetchedAt": "2026-09-12T13:27:18.032Z"
     },
     {
       "id": "usgs",
-      "status": "error",
-      "fetchedAt": "2026-09-12T11:04:02.408Z",
-      "error": "HTTP 503 for https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST: <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Error report</title><style type=\"te"
+      "status": "ok",
+      "fetchedAt": "2026-09-12T13:27:19.027Z"
     },
     {
       "id": "snotel",
-      "status": "ok",
-      "fetchedAt": "2026-09-12T11:04:18.657Z"
+      "status": "error",
+      "fetchedAt": "2026-09-12T13:27:42.313Z",
+      "error": "HTTP 500 for https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/data?stationTriplets=1344:CO:SNTL,303:CO:SNTL,1030:CO:SNTL,322:CO:SNTL,1061:CO:SNTL,327:CO:SNTL,1041:CO:SNTL,335:CO:SNTL,345:CO:SNTL,1185:CO:SNTL,1161:CO:SNTL,369:CO:SNTL,938:CO:SNTL,913:CO:SNTL,378:CO:SNTL,380:CO:SNTL,387:CO:SNTL,1326:CO:SNTL,1101:CO:SNTL,1059:CO:SNTL,408:CO:SNTL,409:CO:SNTL,904:CO:SNTL,412:CO:SNTL,415:CO:SNTL,426:CO:SNTL,430:CO:SNTL,431:CO:SNTL,438:CO:SNTL,457:CO:SNTL,936:CO:SNTL,465:CO:SNTL,467:CO:SNTL,1252:CO:"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:04:28.899Z"
+      "fetchedAt": "2026-09-12T13:27:53.232Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:04:43.370Z"
+      "fetchedAt": "2026-09-12T13:28:07.795Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-09-12T11:04:55.939Z"
+      "fetchedAt": "2026-09-12T13:28:18.916Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-09-12T11:04:56.035Z",
+      "fetchedAt": "2026-09-12T13:28:19.135Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:04:57.051Z"
+      "fetchedAt": "2026-09-12T13:28:20.331Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:04:57.285Z"
+      "fetchedAt": "2026-09-12T13:28:20.567Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "ok",
-      "fetchedAt": "2026-09-12T11:04:57.452Z"
+      "status": "partial",
+      "fetchedAt": "2026-09-12T13:28:29.218Z",
+      "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:04:57.655Z"
+      "fetchedAt": "2026-09-12T13:28:29.427Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:04:57.878Z"
+      "fetchedAt": "2026-09-12T13:28:29.702Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:04:58.270Z"
+      "fetchedAt": "2026-09-12T13:28:29.932Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-09-12T11:05:01.505Z"
+      "fetchedAt": "2026-09-12T13:28:33.144Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 346,
+  "apiCalls": 349,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
