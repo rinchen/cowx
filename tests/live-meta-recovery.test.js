@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   ageMinutesFromIso,
+  cacheBustLiveMetaUrl,
   liveMetaRecovered,
   parseGeneratedAt,
+  updateWeatherMitigationActive,
 } from '../scripts/ci/live-meta-recovery.js';
 
 describe('parseGeneratedAt', () => {
@@ -79,6 +81,64 @@ describe('liveMetaRecovered', () => {
         ageMinutes: 120,
         baselineGeneratedAt: '2026-07-27T02:46:38.487Z',
         recoveredMaxAgeMinutes: 90,
+      }),
+      false,
+    );
+  });
+});
+
+describe('cacheBustLiveMetaUrl', () => {
+  it('appends cowx_cb on a path-only URL', () => {
+    assert.equal(
+      cacheBustLiveMetaUrl('https://rinchen.github.io/cowx/data/meta.json', 1757791769000),
+      'https://rinchen.github.io/cowx/data/meta.json?cowx_cb=1757791769000',
+    );
+  });
+
+  it('replaces an existing cowx_cb query param', () => {
+    assert.equal(
+      cacheBustLiveMetaUrl('https://rinchen.github.io/cowx/data/meta.json?cowx_cb=1', 99),
+      'https://rinchen.github.io/cowx/data/meta.json?cowx_cb=99',
+    );
+  });
+});
+
+describe('updateWeatherMitigationActive', () => {
+  const now = Date.parse('2026-09-13T19:29:29Z');
+
+  it('is active while a run is in progress or queued', () => {
+    assert.equal(updateWeatherMitigationActive({ inProgressCount: 1, nowMs: now }), true);
+    assert.equal(updateWeatherMitigationActive({ queuedCount: 1, nowMs: now }), true);
+  });
+
+  it('is active when a successful run finished inside the grace window', () => {
+    assert.equal(
+      updateWeatherMitigationActive({
+        latestSuccessCompletedAt: '2026-09-13T19:29:15Z',
+        nowMs: now,
+        recentSuccessGraceMinutes: 10,
+      }),
+      true,
+    );
+  });
+
+  it('is inactive when the last success is older than the grace window', () => {
+    assert.equal(
+      updateWeatherMitigationActive({
+        latestSuccessCompletedAt: '2026-09-13T19:00:00Z',
+        nowMs: now,
+        recentSuccessGraceMinutes: 10,
+      }),
+      false,
+    );
+  });
+
+  it('ignores recent success when grace is 0 (pre-dispatch)', () => {
+    assert.equal(
+      updateWeatherMitigationActive({
+        latestSuccessCompletedAt: '2026-09-13T19:29:15Z',
+        nowMs: now,
+        recentSuccessGraceMinutes: 0,
       }),
       false,
     );

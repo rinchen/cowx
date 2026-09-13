@@ -50,9 +50,13 @@ unreachable() {
   exit 0
 }
 
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+# shellcheck source=scripts/ci/live-meta-curl.sh
+source "${ROOT}/scripts/ci/live-meta-curl.sh"
+
 echo "check-stale-live-meta: fetching ${LIVE_META_URL}"
 # Retry so a transient CDN blip does not masquerade as a broken site.
-body="$(curl -fsS --max-time 30 --retry 3 --retry-delay 5 --retry-all-errors "${LIVE_META_URL}")" ||
+body="$(curl_live_meta "${LIVE_META_URL}" --retry 3 --retry-delay 5 --retry-all-errors)" ||
   unreachable "Could not fetch live meta.json from ${LIVE_META_URL}"
 
 generated_at="$(printf '%s' "${body}" | node -e '

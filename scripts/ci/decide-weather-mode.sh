@@ -13,6 +13,10 @@ LIVE_META_URL="${LIVE_META_URL:?LIVE_META_URL required}"
 MAIN_META_PATH="${MAIN_META_PATH:-public/data/meta.json}"
 FRESH_MINUTES="${FRESH_MINUTES:-40}"
 
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+# shellcheck source=scripts/ci/live-meta-curl.sh
+source "${ROOT}/scripts/ci/live-meta-curl.sh"
+
 now_ms="$(node -e 'process.stdout.write(String(Date.now()))')"
 
 age_minutes_from_iso() {
@@ -30,7 +34,7 @@ age_minutes_from_iso() {
 live_iso=""
 live_age=""
 live_ok=0
-if live_body="$(curl -fsS --max-time 30 "${LIVE_META_URL}" 2>/dev/null)"; then
+if live_body="$(curl_live_meta "${LIVE_META_URL}" 2>/dev/null)"; then
   live_iso="$(printf '%s' "${live_body}" | node -e '
     let s = "";
     process.stdin.on("data", (c) => { s += c; });
