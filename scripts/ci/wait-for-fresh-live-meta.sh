@@ -22,6 +22,8 @@ POLL_SECS="${POLL_SECS:-30}"
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 RECOVERY_JS="${ROOT}/scripts/ci/live-meta-recovery.js"
+# shellcheck source=scripts/ci/live-meta-curl.sh
+source "${ROOT}/scripts/ci/live-meta-curl.sh"
 
 deadline_ms="$(node -e "process.stdout.write(String(Date.now() + ${WAIT_TIMEOUT_MINUTES} * 60000))")"
 recovered="false"
@@ -67,27 +69,41 @@ process.stdout.write(
 NODE
 }
 
+poll_once() {
+  local now_ms="$1"
+  local body=""
+  local readout=""
+  if ! body="$(curl_live_meta "${LIVE_META_URL}" 2>/dev/null)"; then
+    echo "wait-for-fresh-live-meta: fetch failed; retrying"
+    return 1
+  fi
+  readout="$(read_live_meta "${body}" "${now_ms}")" || readout=$'\t\tfalse'
+  IFS=$'\t' read -r final_generated_at final_age_minutes recovered <<<"${readout}"
+  echo "wait-for-fresh-live-meta: generatedAt=${final_generated_at:--} age_minutes=${final_age_minutes:--} recovered=${recovered}"
+  [[ "${recovered}" == "true" ]]
+}
+
 echo "wait-for-fresh-live-meta: url=${LIVE_META_URL} baseline=${BASELINE_GENERATED_AT:--} recovered_max_age=${RECOVERED_MAX_AGE_MINUTES}m timeout=${WAIT_TIMEOUT_MINUTES}m poll=${POLL_SECS}s"
 
 while true; do
   now_ms="$(node -e 'process.stdout.write(String(Date.now()))')"
   if [[ "${now_ms}" -ge "${deadline_ms}" ]]; then
-    echo "wait-for-fresh-live-meta: timeout after ${WAIT_TIMEOUT_MINUTES}m (last generatedAt=${final_generated_at:--} age=${final_age_minutes:--}m)"
-    break
-  fi
-
-  body=""
-  if ! body="$(curl -fsS --max-time 30 "${LIVE_META_URL}" 2>/dev/null)"; then
-    echo "wait-for-fresh-live-meta: fetch failed; retrying"
-  else
-    readout="$(read_live_meta "${body}" "${now_ms}")" || readout=$'\t\tfalse'
-    IFS=$'\t' read -r final_generated_at final_age_minutes recovered <<<"${readout}"
-    echo "wait-for-fresh-live-meta: generatedAt=${final_generated_at:--} age_minutes=${final_age_minutes:--} recovered=${recovered}"
-    if [[ "${recovered}" == "true" ]]; then
+    # Poll once more after the last sleep — a deploy can land in that gap
+    # (run 34776810979: last poll 19:28:59, Pages 19:29:02, timeout 19:29:29).
+    echo "wait-for-fresh-live-meta: timeout after ${WAIT_TIMEOUT_MINUTES}m; final poll"
+    if poll_once "${now_ms}"; then
       echo "wait-for-fresh-live-meta: recovery observed"
       emit_outputs
       exit 0
     fi
+    echo "wait-for-fresh-live-meta: still stale (last generatedAt=${final_generated_at:--} age=${final_age_minutes:--}m)"
+    break
+  fi
+
+  if poll_once "${now_ms}"; then
+    echo "wait-for-fresh-live-meta: recovery observed"
+    emit_outputs
+    exit 0
   fi
 
   sleep "${POLL_SECS}"
