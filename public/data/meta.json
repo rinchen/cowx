@@ -1,112 +1,113 @@
 {
-  "generatedAt": "2026-09-15T10:43:46.722Z",
+  "generatedAt": "2026-09-15T12:00:10.332Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "ok",
-      "fetchedAt": "2026-09-15T10:32:21.453Z"
+      "status": "partial",
+      "fetchedAt": "2026-09-15T11:54:21.555Z",
+      "error": "nbm thunderstorm: HTTP 429 for https://api.open-meteo.com/v1/gfs?latitude=38.945,38.2544,38.5,38.4519,38.3903,38.4256,38.5347,38.8422,39.2508,39.2247,39.0217,39.4097,39.4589,39.8914,39.945,40.0861,40.1078,40.0589,40.485,40.275&longitude=-105.2894,-104.6091,-104.7236,-105.2425,-105.1186,-105.0228,-105.9989,-106.1311,-106.2925,-105.9989,-105.7958,-105.4733,-105.6592,-105.7631,-105.8172,-105.9394,-106.1028,-106.3889,-106.8317,-106.9583&hourly=thunderstorm_probability&models=ncep_nbm_conus&timezone="
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:40:42.060Z"
+      "fetchedAt": "2026-09-15T11:57:31.125Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-09-15T10:40:42.200Z"
+      "fetchedAt": "2026-09-15T11:57:31.273Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:40:45.815Z"
+      "fetchedAt": "2026-09-15T11:57:34.589Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:40:52.513Z"
+      "fetchedAt": "2026-09-15T11:57:36.329Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:40:52.638Z"
+      "fetchedAt": "2026-09-15T11:57:36.491Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:40:54.179Z"
+      "fetchedAt": "2026-09-15T11:57:37.805Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:42:53.018Z"
+      "fetchedAt": "2026-09-15T11:59:16.277Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:42:54.046Z"
+      "fetchedAt": "2026-09-15T11:59:17.445Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:43:07.414Z"
+      "fetchedAt": "2026-09-15T11:59:33.989Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:43:13.650Z"
+      "fetchedAt": "2026-09-15T11:59:34.802Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:43:26.456Z"
+      "fetchedAt": "2026-09-15T11:59:48.236Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-09-15T10:43:36.447Z"
+      "fetchedAt": "2026-09-15T11:59:57.923Z"
     },
     {
       "id": "hms",
-      "status": "ok",
-      "fetchedAt": "2026-09-15T10:43:36.732Z"
+      "status": "partial",
+      "fetchedAt": "2026-09-15T11:59:58.111Z",
+      "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:43:36.902Z"
+      "fetchedAt": "2026-09-15T11:59:58.741Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:43:37.095Z"
+      "fetchedAt": "2026-09-15T11:59:58.939Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:43:37.287Z"
+      "fetchedAt": "2026-09-15T12:00:01.570Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:43:37.519Z"
+      "fetchedAt": "2026-09-15T12:00:01.840Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:43:37.660Z"
+      "fetchedAt": "2026-09-15T12:00:01.992Z"
     },
     {
       "id": "firms",
-      "status": "error",
-      "fetchedAt": "2026-09-15T10:43:42.428Z",
-      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://firms.modaps.eosdis.nasa.gov/api/area/csv/[redacted]/VIIRS_SNPP_NRT/-109.2,36.9,-102,41.1/1"
+      "status": "ok",
+      "fetchedAt": "2026-09-15T12:00:02.375Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-09-15T10:43:46.722Z"
+      "fetchedAt": "2026-09-15T12:00:10.332Z"
     }
   ],
   "locationCount": 338,
