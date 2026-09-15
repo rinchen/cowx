@@ -1,1 +1,1 @@
-{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-103.88668,38.11338]},"properties":{"brightness":300.48,"frp":0.46,"confidence":"n","observed":"2026-09-15T09:04:00Z","satellite":"N"}}]}
+{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-103.88668,38.11338]},"properties":{"brightness":300.48,"frp":0.47,"confidence":"n","observed":"2026-09-15T09:05:00Z","satellite":"N"}}]}
