@@ -1,112 +1,111 @@
 {
-  "generatedAt": "2026-09-19T17:06:26.405Z",
+  "generatedAt": "2026-09-19T19:23:33.436Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-09-19T16:55:34.840Z"
+      "fetchedAt": "2026-09-19T19:08:47.533Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:02:52.410Z"
+      "fetchedAt": "2026-09-19T19:19:13.736Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-09-19T17:02:52.555Z"
+      "fetchedAt": "2026-09-19T19:19:13.861Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:02:55.676Z"
+      "fetchedAt": "2026-09-19T19:19:17.580Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:02:59.208Z"
+      "fetchedAt": "2026-09-19T19:19:20.058Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:02:59.355Z"
+      "fetchedAt": "2026-09-19T19:19:40.165Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:03:00.772Z"
+      "fetchedAt": "2026-09-19T19:19:41.907Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:04:37.094Z"
+      "fetchedAt": "2026-09-19T19:21:27.756Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:04:38.365Z"
+      "fetchedAt": "2026-09-19T19:21:29.241Z"
     },
     {
       "id": "snotel",
-      "status": "error",
-      "fetchedAt": "2026-09-19T17:04:45.732Z",
-      "error": "HTTP 403 for https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/data?stationTriplets=1344:CO:SNTL,303:CO:SNTL,1030:CO:SNTL,322:CO:SNTL,1061:CO:SNTL,327:CO:SNTL,1041:CO:SNTL,335:CO:SNTL,345:CO:SNTL,1185:CO:SNTL,1161:CO:SNTL,369:CO:SNTL,938:CO:SNTL,913:CO:SNTL,378:CO:SNTL,380:CO:SNTL,387:CO:SNTL,1326:CO:SNTL,1101:CO:SNTL,1059:CO:SNTL,408:CO:SNTL,409:CO:SNTL,904:CO:SNTL,412:CO:SNTL,415:CO:SNTL,426:CO:SNTL,430:CO:SNTL,431:CO:SNTL,438:CO:SNTL,457:CO:SNTL,936:CO:SNTL,465:CO:SNTL,467:CO:SNTL,1252:CO:"
+      "status": "ok",
+      "fetchedAt": "2026-09-19T19:21:50.123Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:04:50.953Z"
+      "fetchedAt": "2026-09-19T19:21:55.566Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:05:15.344Z"
+      "fetchedAt": "2026-09-19T19:22:18.889Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-09-19T17:05:24.861Z"
+      "fetchedAt": "2026-09-19T19:22:30.785Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:05:25.008Z"
+      "fetchedAt": "2026-09-19T19:22:31.182Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:05:25.244Z"
+      "fetchedAt": "2026-09-19T19:22:32.017Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:05:25.438Z"
+      "fetchedAt": "2026-09-19T19:22:32.237Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:05:25.589Z"
+      "fetchedAt": "2026-09-19T19:22:32.507Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:05:25.805Z"
+      "fetchedAt": "2026-09-19T19:22:32.667Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:05:26.302Z"
+      "fetchedAt": "2026-09-19T19:22:32.993Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-09-19T17:05:26.401Z"
+      "fetchedAt": "2026-09-19T19:22:33.433Z"
     },
     {
       "id": "cbrfc",
       "status": "error",
-      "fetchedAt": "2026-09-19T17:06:26.405Z",
+      "fetchedAt": "2026-09-19T19:23:33.436Z",
       "error": "This operation was aborted (timeout) for https://www.cbrfc.noaa.gov/wsup/graph/espcond_data.py?fdate=LATEST&area=CB&sort=basin&otype=json&qpfdays=0"
     }
   ],
