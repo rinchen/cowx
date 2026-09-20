@@ -1,117 +1,117 @@
 {
-  "generatedAt": "2026-09-20T19:38:11.889Z",
+  "generatedAt": "2026-09-20T22:05:45.008Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-09-20T18:59:34.487Z"
+      "fetchedAt": "2026-09-20T21:22:11.159Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:04:50.238Z"
+      "fetchedAt": "2026-09-20T21:31:36.219Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "partial",
-      "fetchedAt": "2026-09-20T19:34:45.902Z",
-      "error": "gypsum/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.75&longitude=-107&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; gypsum/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.75&longitude=-107&start_date=2001-01-"
+      "fetchedAt": "2026-09-20T22:02:34.903Z",
+      "error": "de-beque/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.25&longitude=-108.25&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; de-beque/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.25&longitude=-108.25&start_dat"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:34:50.518Z"
+      "fetchedAt": "2026-09-20T22:02:38.984Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:34:53.086Z"
+      "fetchedAt": "2026-09-20T22:02:42.050Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:34:53.485Z"
+      "fetchedAt": "2026-09-20T22:02:57.733Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:34:55.565Z"
+      "fetchedAt": "2026-09-20T22:02:59.540Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:36:59.010Z"
+      "fetchedAt": "2026-09-20T22:04:41.372Z"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:37:00.693Z"
+      "fetchedAt": "2026-09-20T22:04:43.570Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:37:17.271Z"
+      "fetchedAt": "2026-09-20T22:04:57.518Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:37:27.841Z"
+      "fetchedAt": "2026-09-20T22:05:03.767Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:37:53.828Z"
+      "fetchedAt": "2026-09-20T22:05:27.053Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-09-20T19:38:06.162Z"
+      "fetchedAt": "2026-09-20T22:05:39.728Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-09-20T19:38:06.683Z",
+      "fetchedAt": "2026-09-20T22:05:39.981Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:38:07.398Z"
+      "fetchedAt": "2026-09-20T22:05:40.492Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:38:07.608Z"
+      "fetchedAt": "2026-09-20T22:05:40.676Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:38:07.818Z"
+      "fetchedAt": "2026-09-20T22:05:40.924Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:38:08.019Z"
+      "fetchedAt": "2026-09-20T22:05:41.100Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:38:08.193Z"
+      "fetchedAt": "2026-09-20T22:05:41.491Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:38:08.554Z"
+      "fetchedAt": "2026-09-20T22:05:41.865Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-09-20T19:38:11.889Z"
+      "fetchedAt": "2026-09-20T22:05:45.008Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 403,
+  "apiCalls": 407,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
