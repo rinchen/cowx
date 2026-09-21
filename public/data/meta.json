@@ -1,119 +1,118 @@
 {
-  "generatedAt": "2026-09-21T07:36:27.391Z",
+  "generatedAt": "2026-09-21T14:03:59.787Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "ok",
-      "fetchedAt": "2026-09-21T06:52:28.216Z"
+      "status": "partial",
+      "fetchedAt": "2026-09-21T13:47:14.049Z",
+      "error": "Expected ',' or '}' after property value in JSON at position 74448 (line 1 column 74449); Unexpected token 'U', \"Unexpected\"... is not valid JSON; Expected ',' or ']' after array element in JSON at position 24575 (line 1 column 24576)"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-09-21T06:59:47.362Z"
+      "fetchedAt": "2026-09-21T13:48:21.614Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "partial",
-      "fetchedAt": "2026-09-21T07:29:41.480Z",
-      "error": "cheyenne-wells/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=38.75&longitude=-102.25&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; cheyenne-wells/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=38.75&longitude=-102."
+      "fetchedAt": "2026-09-21T14:00:53.425Z",
+      "error": "lizard-head-pass/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=37.75&longitude=-108&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; lizard-head-pass/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=37.75&longitude=-108"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:29:46.530Z"
+      "fetchedAt": "2026-09-21T14:01:00.191Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:29:47.918Z"
+      "fetchedAt": "2026-09-21T14:01:13.148Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:29:48.214Z"
+      "fetchedAt": "2026-09-21T14:01:15.296Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:29:50.151Z"
+      "fetchedAt": "2026-09-21T14:01:16.754Z"
     },
     {
       "id": "airnow",
-      "status": "partial",
-      "fetchedAt": "2026-09-21T07:35:15.126Z",
-      "error": "This operation was aborted (timeout) for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.6&longitude=-105.2&distance=50&API_KEY=[redacted] HTTP 502 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.400000000000006&longitude=-105&distance=50&API_KEY=[redacted] <html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n</body>\r\n</html>\r\n; HTTP 502 for https"
+      "status": "ok",
+      "fetchedAt": "2026-09-21T14:03:01.255Z"
     },
     {
       "id": "usgs",
-      "status": "error",
-      "fetchedAt": "2026-09-21T07:35:20.694Z",
-      "error": "HTTP 503 for https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST: <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Error report</title><style type=\"te"
+      "status": "ok",
+      "fetchedAt": "2026-09-21T14:03:02.549Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:35:36.771Z"
+      "fetchedAt": "2026-09-21T14:03:19.223Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:35:42.947Z"
+      "fetchedAt": "2026-09-21T14:03:20.374Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:36:07.616Z"
+      "fetchedAt": "2026-09-21T14:03:44.961Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-09-21T07:36:21.316Z"
+      "fetchedAt": "2026-09-21T14:03:55.220Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-09-21T07:36:21.889Z",
+      "fetchedAt": "2026-09-21T14:03:55.484Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:36:22.658Z"
+      "fetchedAt": "2026-09-21T14:03:55.759Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:36:22.946Z"
+      "fetchedAt": "2026-09-21T14:03:55.898Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:36:23.145Z"
+      "fetchedAt": "2026-09-21T14:03:56.101Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:36:23.532Z"
+      "fetchedAt": "2026-09-21T14:03:56.331Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:36:23.789Z"
+      "fetchedAt": "2026-09-21T14:03:56.502Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:36:24.194Z"
+      "fetchedAt": "2026-09-21T14:03:56.723Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-09-21T07:36:27.390Z"
+      "fetchedAt": "2026-09-21T14:03:59.787Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 411,
+  "apiCalls": 412,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
