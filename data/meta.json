@@ -1,114 +1,112 @@
 {
-  "generatedAt": "2026-09-23T01:56:37.594Z",
+  "generatedAt": "2026-09-23T07:07:18.122Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:45:15.025Z"
+      "fetchedAt": "2026-09-23T06:55:01.948Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:53:37.137Z"
+      "fetchedAt": "2026-09-23T07:04:25.526Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-09-23T01:53:37.288Z"
+      "fetchedAt": "2026-09-23T07:04:25.676Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:53:41.394Z"
+      "fetchedAt": "2026-09-23T07:04:28.813Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:53:44.481Z"
+      "fetchedAt": "2026-09-23T07:04:31.322Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:53:44.861Z"
+      "fetchedAt": "2026-09-23T07:04:38.423Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:53:46.824Z"
+      "fetchedAt": "2026-09-23T07:04:39.735Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:55:33.437Z"
+      "fetchedAt": "2026-09-23T07:06:17.670Z"
     },
     {
       "id": "usgs",
-      "status": "error",
-      "fetchedAt": "2026-09-23T01:55:35.703Z",
-      "error": "HTTP 503 for https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST: <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Error report</title><style type=\"te"
+      "status": "ok",
+      "fetchedAt": "2026-09-23T07:06:21.272Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:55:52.056Z"
+      "fetchedAt": "2026-09-23T07:06:36.680Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:55:53.221Z"
+      "fetchedAt": "2026-09-23T07:06:42.510Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:56:14.053Z"
+      "fetchedAt": "2026-09-23T07:07:03.838Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-09-23T01:56:27.247Z"
+      "fetchedAt": "2026-09-23T07:07:13.084Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-09-23T01:56:28.007Z",
+      "fetchedAt": "2026-09-23T07:07:13.311Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:56:28.550Z"
+      "fetchedAt": "2026-09-23T07:07:13.589Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:56:28.736Z"
+      "fetchedAt": "2026-09-23T07:07:14.291Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:56:28.990Z"
+      "fetchedAt": "2026-09-23T07:07:14.495Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:56:29.216Z"
+      "fetchedAt": "2026-09-23T07:07:14.743Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:56:29.583Z"
+      "fetchedAt": "2026-09-23T07:07:14.912Z"
     },
     {
       "id": "firms",
-      "status": "error",
-      "fetchedAt": "2026-09-23T01:56:34.364Z",
-      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://firms.modaps.eosdis.nasa.gov/api/area/csv/[redacted]/VIIRS_SNPP_NRT/-109.2,36.9,-102,41.1/1"
+      "status": "ok",
+      "fetchedAt": "2026-09-23T07:07:15.047Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-09-23T01:56:37.594Z"
+      "fetchedAt": "2026-09-23T07:07:18.122Z"
     }
   ],
   "locationCount": 338,
