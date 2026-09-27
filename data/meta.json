@@ -1,117 +1,117 @@
 {
-  "generatedAt": "2026-09-27T21:09:01.809Z",
+  "generatedAt": "2026-09-27T22:36:40.042Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "partial",
-      "fetchedAt": "2026-09-27T20:58:05.654Z",
-      "error": "Expected ',' or ']' after array element in JSON at position 12278 (line 1 column 12279); Unexpected token 'U', \"Unexpected\"... is not valid JSON"
+      "status": "ok",
+      "fetchedAt": "2026-09-27T22:22:31.062Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:06:26.261Z"
+      "fetchedAt": "2026-09-27T22:30:53.746Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-09-27T21:06:26.380Z"
+      "fetchedAt": "2026-09-27T22:30:53.901Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:06:29.234Z"
+      "fetchedAt": "2026-09-27T22:31:00.835Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:06:33.024Z"
+      "fetchedAt": "2026-09-27T22:31:01.449Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:06:33.160Z"
+      "fetchedAt": "2026-09-27T22:31:01.938Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:06:34.621Z"
+      "fetchedAt": "2026-09-27T22:31:03.910Z"
     },
     {
       "id": "airnow",
-      "status": "ok",
-      "fetchedAt": "2026-09-27T21:08:09.309Z"
+      "status": "partial",
+      "fetchedAt": "2026-09-27T22:35:19.949Z",
+      "error": "This operation was aborted (timeout) for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted]"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:08:10.359Z"
+      "fetchedAt": "2026-09-27T22:35:30.640Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:08:24.551Z"
+      "fetchedAt": "2026-09-27T22:35:56.744Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:08:25.363Z"
+      "fetchedAt": "2026-09-27T22:35:58.076Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:08:47.594Z"
+      "fetchedAt": "2026-09-27T22:36:22.079Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-09-27T21:08:57.145Z"
+      "fetchedAt": "2026-09-27T22:36:34.643Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-09-27T21:08:57.285Z",
+      "fetchedAt": "2026-09-27T22:36:34.830Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:08:57.919Z"
+      "fetchedAt": "2026-09-27T22:36:35.713Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:08:58.111Z"
+      "fetchedAt": "2026-09-27T22:36:35.936Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:08:58.306Z"
+      "fetchedAt": "2026-09-27T22:36:36.062Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:08:58.506Z"
+      "fetchedAt": "2026-09-27T22:36:36.217Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:08:58.694Z"
+      "fetchedAt": "2026-09-27T22:36:36.470Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:08:58.798Z"
+      "fetchedAt": "2026-09-27T22:36:36.840Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-09-27T21:09:01.809Z"
+      "fetchedAt": "2026-09-27T22:36:40.042Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 381,
+  "apiCalls": 375,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
