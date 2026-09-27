@@ -1,112 +1,114 @@
 {
-  "generatedAt": "2026-09-27T18:16:01.831Z",
+  "generatedAt": "2026-09-27T19:36:40.011Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:03:44.540Z"
+      "fetchedAt": "2026-09-27T19:22:49.996Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:13:06.174Z"
+      "fetchedAt": "2026-09-27T19:31:12.760Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-09-27T18:13:06.323Z"
+      "fetchedAt": "2026-09-27T19:31:12.906Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:13:09.943Z"
+      "fetchedAt": "2026-09-27T19:31:17.751Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:13:13.596Z"
+      "fetchedAt": "2026-09-27T19:31:21.869Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:13:13.757Z"
+      "fetchedAt": "2026-09-27T19:31:22.727Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:13:15.184Z"
+      "fetchedAt": "2026-09-27T19:31:24.909Z"
     },
     {
       "id": "airnow",
-      "status": "ok",
-      "fetchedAt": "2026-09-27T18:14:49.829Z"
+      "status": "partial",
+      "fetchedAt": "2026-09-27T19:35:28.870Z",
+      "error": "This operation was aborted (timeout) for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted]"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:14:51.622Z"
+      "fetchedAt": "2026-09-27T19:35:30.617Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:15:16.261Z"
+      "fetchedAt": "2026-09-27T19:35:51.262Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:15:17.057Z"
+      "fetchedAt": "2026-09-27T19:35:52.640Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:15:39.152Z"
+      "fetchedAt": "2026-09-27T19:36:17.742Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-09-27T18:15:49.210Z"
+      "fetchedAt": "2026-09-27T19:36:30.604Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-09-27T18:15:49.434Z",
+      "fetchedAt": "2026-09-27T19:36:30.787Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:15:49.842Z"
+      "fetchedAt": "2026-09-27T19:36:31.298Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:15:50.059Z"
+      "fetchedAt": "2026-09-27T19:36:31.503Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:15:57.972Z"
+      "fetchedAt": "2026-09-27T19:36:31.671Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:15:58.202Z"
+      "fetchedAt": "2026-09-27T19:36:31.813Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:15:58.383Z"
+      "fetchedAt": "2026-09-27T19:36:32.040Z"
     },
     {
       "id": "firms",
-      "status": "ok",
-      "fetchedAt": "2026-09-27T18:15:58.523Z"
+      "status": "error",
+      "fetchedAt": "2026-09-27T19:36:36.847Z",
+      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://firms.modaps.eosdis.nasa.gov/api/area/csv/[redacted]/VIIRS_SNPP_NRT/-109.2,36.9,-102,41.1/1"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-09-27T18:16:01.831Z"
+      "fetchedAt": "2026-09-27T19:36:40.011Z"
     }
   ],
   "locationCount": 338,
