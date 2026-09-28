@@ -1,113 +1,113 @@
 {
-  "generatedAt": "2026-09-28T20:25:54.672Z",
+  "generatedAt": "2026-09-28T23:03:21.814Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:14:33.565Z"
+      "fetchedAt": "2026-09-28T22:51:38.276Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:20:49.927Z"
+      "fetchedAt": "2026-09-28T22:58:57.959Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-09-28T20:20:50.045Z"
+      "fetchedAt": "2026-09-28T22:58:58.106Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:20:54.686Z"
+      "fetchedAt": "2026-09-28T22:59:03.005Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:20:57.200Z"
+      "fetchedAt": "2026-09-28T22:59:04.669Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:20:59.734Z"
+      "fetchedAt": "2026-09-28T22:59:05.096Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:21:01.647Z"
+      "fetchedAt": "2026-09-28T22:59:07.235Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:22:52.772Z"
+      "fetchedAt": "2026-09-28T23:01:37.979Z"
     },
     {
       "id": "usgs",
       "status": "error",
-      "fetchedAt": "2026-09-28T20:24:22.773Z",
-      "error": "This operation was aborted (timeout) for https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST"
+      "fetchedAt": "2026-09-28T23:01:43.098Z",
+      "error": "HTTP 503 for https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST: <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Error report</title><style type=\"te"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:25:01.316Z"
+      "fetchedAt": "2026-09-28T23:02:19.683Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:25:02.897Z"
+      "fetchedAt": "2026-09-28T23:02:31.019Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:25:27.371Z"
+      "fetchedAt": "2026-09-28T23:02:55.418Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-09-28T20:25:40.777Z"
+      "fetchedAt": "2026-09-28T23:03:08.322Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:25:40.995Z"
+      "fetchedAt": "2026-09-28T23:03:08.456Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:25:41.598Z"
+      "fetchedAt": "2026-09-28T23:03:09.111Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:25:41.886Z"
+      "fetchedAt": "2026-09-28T23:03:09.309Z"
     },
     {
       "id": "burn_restrictions",
       "status": "partial",
-      "fetchedAt": "2026-09-28T20:25:50.118Z",
+      "fetchedAt": "2026-09-28T23:03:17.662Z",
       "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:25:50.504Z"
+      "fetchedAt": "2026-09-28T23:03:17.894Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:25:50.753Z"
+      "fetchedAt": "2026-09-28T23:03:18.058Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:25:51.124Z"
+      "fetchedAt": "2026-09-28T23:03:18.418Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-09-28T20:25:54.672Z"
+      "fetchedAt": "2026-09-28T23:03:21.814Z"
     }
   ],
   "locationCount": 338,
