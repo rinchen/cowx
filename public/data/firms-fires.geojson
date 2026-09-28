@@ -1,1 +1,1 @@
-{"type":"FeatureCollection","features":[]}
+{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"Point","coordinates":[-104.70776,39.65277]},"properties":{"brightness":297.15,"frp":0.66,"confidence":"n","observed":"2026-09-28T08:20:00Z","satellite":"N"}}]}
