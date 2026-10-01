@@ -1,117 +1,118 @@
 {
-  "generatedAt": "2026-10-01T02:41:48.786Z",
+  "generatedAt": "2026-10-01T07:12:50.523Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:29:55.271Z"
+      "fetchedAt": "2026-10-01T07:00:16.891Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:38:16.553Z"
+      "fetchedAt": "2026-10-01T07:08:38.908Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-10-01T02:38:16.709Z"
+      "fetchedAt": "2026-10-01T07:08:39.052Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:38:20.298Z"
+      "fetchedAt": "2026-10-01T07:08:42.876Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:38:20.717Z"
+      "fetchedAt": "2026-10-01T07:08:43.187Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:38:20.953Z"
+      "fetchedAt": "2026-10-01T07:08:43.556Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:38:22.548Z"
+      "fetchedAt": "2026-10-01T07:08:45.479Z"
     },
     {
       "id": "airnow",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:39:58.943Z"
+      "fetchedAt": "2026-10-01T07:10:24.853Z"
     },
     {
       "id": "usgs",
-      "status": "ok",
-      "fetchedAt": "2026-10-01T02:39:59.990Z"
+      "status": "error",
+      "fetchedAt": "2026-10-01T07:10:35.527Z",
+      "error": "HTTP 503 for https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST: <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Error report</title><style type=\"te"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:41:00.115Z"
+      "fetchedAt": "2026-10-01T07:12:02.760Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:41:05.557Z"
+      "fetchedAt": "2026-10-01T07:12:05.063Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:41:25.654Z"
+      "fetchedAt": "2026-10-01T07:12:25.205Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-10-01T02:41:36.777Z"
+      "fetchedAt": "2026-10-01T07:12:37.300Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-10-01T02:41:37.163Z",
+      "fetchedAt": "2026-10-01T07:12:37.815Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:41:37.419Z"
+      "fetchedAt": "2026-10-01T07:12:38.318Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:41:37.567Z"
+      "fetchedAt": "2026-10-01T07:12:38.571Z"
     },
     {
       "id": "burn_restrictions",
       "status": "partial",
-      "fetchedAt": "2026-10-01T02:41:45.993Z",
+      "fetchedAt": "2026-10-01T07:12:46.932Z",
       "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:41:46.202Z"
+      "fetchedAt": "2026-10-01T07:12:47.270Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:41:46.382Z"
+      "fetchedAt": "2026-10-01T07:12:47.677Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:41:46.540Z"
+      "fetchedAt": "2026-10-01T07:12:48.047Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-10-01T02:41:48.786Z"
+      "fetchedAt": "2026-10-01T07:12:50.523Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 393,
+  "apiCalls": 379,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
