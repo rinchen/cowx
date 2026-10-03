@@ -1,113 +1,112 @@
 {
-  "generatedAt": "2026-10-03T08:18:43.394Z",
+  "generatedAt": "2026-10-03T09:41:36.241Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:09:52.819Z"
+      "fetchedAt": "2026-10-03T09:30:58.523Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:16:10.312Z"
+      "fetchedAt": "2026-10-03T09:39:19.200Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-10-03T08:16:10.435Z"
+      "fetchedAt": "2026-10-03T09:39:19.349Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:16:13.856Z"
+      "fetchedAt": "2026-10-03T09:39:22.461Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:16:17.965Z"
+      "fetchedAt": "2026-10-03T09:39:25.360Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:16:18.275Z"
+      "fetchedAt": "2026-10-03T09:39:25.454Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:16:19.946Z"
+      "fetchedAt": "2026-10-03T09:39:26.930Z"
     },
     {
       "id": "airnow",
       "status": "error",
-      "fetchedAt": "2026-10-03T08:17:38.145Z",
+      "fetchedAt": "2026-10-03T09:40:44.562Z",
       "error": "HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted] {\"WebServiceError\":[{\"Message\":\"This web service has been retired as of October 1, 2026. For more information, see https://docs.airnowapi.org/webservices/retired\"}]}; HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-104.80000000000001&distanc"
     },
     {
       "id": "usgs",
-      "status": "error",
-      "fetchedAt": "2026-10-03T08:17:47.731Z",
-      "error": "HTTP 503 for https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=CO&parameterCd=00060,00065,00010&siteStatus=active&siteType=ST: <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Error report</title><style type=\"te"
+      "status": "ok",
+      "fetchedAt": "2026-10-03T09:40:45.941Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:18:03.206Z"
+      "fetchedAt": "2026-10-03T09:40:58.917Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:18:04.647Z"
+      "fetchedAt": "2026-10-03T09:40:59.419Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:18:27.885Z"
+      "fetchedAt": "2026-10-03T09:41:21.750Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-10-03T08:18:38.577Z"
+      "fetchedAt": "2026-10-03T09:41:32.016Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:18:39.158Z"
+      "fetchedAt": "2026-10-03T09:41:32.314Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:18:39.687Z"
+      "fetchedAt": "2026-10-03T09:41:32.851Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:18:39.857Z"
+      "fetchedAt": "2026-10-03T09:41:33.119Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:18:40.110Z"
+      "fetchedAt": "2026-10-03T09:41:33.440Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:18:40.520Z"
+      "fetchedAt": "2026-10-03T09:41:33.639Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:18:40.763Z"
+      "fetchedAt": "2026-10-03T09:41:33.801Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:18:41.015Z"
+      "fetchedAt": "2026-10-03T09:41:33.912Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-10-03T08:18:43.393Z"
+      "fetchedAt": "2026-10-03T09:41:36.240Z"
     }
   ],
   "locationCount": 338,
