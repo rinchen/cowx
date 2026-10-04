@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-10-04T18:46:10.237Z",
+  "generatedAt": "2026-10-04T20:41:18.592Z",
   "kp": {
-    "value": 4.67,
-    "observed": "2026-10-04T18:42:00",
+    "value": 5.33,
+    "observed": "2026-10-04T20:37:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 4.8000002,
-    "observed": "2026-10-04T18:37:00"
+    "value": 4.9333301,
+    "observed": "2026-10-04T20:36:00"
   },
   "sfi": {
     "value": 93,
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-10-04T18:42:00Z",
+    "observed": "2026-10-04T20:38:00Z",
     "forecast": [
       {
         "date": "2026-10-04",
@@ -40,8 +40,8 @@
           "text": null
         },
         "G": {
-          "scale": 1,
-          "text": "minor"
+          "scale": 2,
+          "text": "moderate"
         }
       },
       {
@@ -55,8 +55,8 @@
           "text": null
         },
         "G": {
-          "scale": 0,
-          "text": "none"
+          "scale": 1,
+          "text": "minor"
         }
       },
       {
@@ -77,27 +77,27 @@
     ]
   },
   "xray": {
-    "class": "B1.7",
-    "flux": 1.725825740095388e-7,
-    "observed": "2026-10-04T18:41:00Z"
+    "class": "B1.9",
+    "flux": 1.9428208020144666e-7,
+    "observed": "2026-10-04T20:36:00Z"
   },
   "aurora_co": {
-    "chance": "unlikely",
-    "detail": "Kp 4.7 — aurora unlikely at Colorado latitudes (estimate)."
+    "chance": "possible",
+    "detail": "Kp 5.3 — aurora possible on northern Colorado horizon (estimate)."
   },
   "hf": {
     "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
     "day": {
       "80m": "poor",
-      "40m": "fair",
-      "20m": "fair",
-      "15m": "fair",
+      "40m": "poor",
+      "20m": "poor",
+      "15m": "poor",
       "10m": "poor",
       "6m": "poor"
     },
     "night": {
-      "80m": "good",
-      "40m": "good",
+      "80m": "fair",
+      "40m": "fair",
       "20m": "poor",
       "15m": "poor",
       "10m": "poor",
