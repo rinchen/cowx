@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-10-04T23:42:28.152Z",
+  "generatedAt": "2026-10-05T01:11:59.584Z",
   "kp": {
-    "value": 4,
-    "observed": "2026-10-04T23:36:00",
+    "value": 2.67,
+    "observed": "2026-10-05T01:06:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 3.8,
-    "observed": "2026-10-04T23:34:00"
+    "value": 3.45,
+    "observed": "2026-10-05T01:05:00"
   },
   "sfi": {
     "value": 92,
@@ -27,23 +27,8 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-10-04T23:41:00Z",
+    "observed": "2026-10-05T01:08:00Z",
     "forecast": [
-      {
-        "date": "2026-10-04",
-        "R": {
-          "scale": null,
-          "text": null
-        },
-        "S": {
-          "scale": null,
-          "text": null
-        },
-        "G": {
-          "scale": 2,
-          "text": "moderate"
-        }
-      },
       {
         "date": "2026-10-05",
         "R": {
@@ -73,34 +58,49 @@
           "scale": 0,
           "text": "none"
         }
+      },
+      {
+        "date": "2026-10-07",
+        "R": {
+          "scale": null,
+          "text": null
+        },
+        "S": {
+          "scale": null,
+          "text": null
+        },
+        "G": {
+          "scale": 0,
+          "text": "none"
+        }
       }
     ]
   },
   "xray": {
-    "class": "B2.3",
-    "flux": 2.3015027750261652e-7,
-    "observed": "2026-10-04T23:38:00Z"
+    "class": "B3.0",
+    "flux": 3.01426524629278e-7,
+    "observed": "2026-10-05T01:09:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
-    "detail": "Kp 4.0 — aurora unlikely at Colorado latitudes (estimate)."
+    "detail": "Kp 2.7 — aurora unlikely at Colorado latitudes (estimate)."
   },
   "hf": {
     "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
     "day": {
-      "80m": "poor",
-      "40m": "fair",
-      "20m": "fair",
-      "15m": "fair",
-      "10m": "poor",
+      "80m": "fair",
+      "40m": "good",
+      "20m": "good",
+      "15m": "good",
+      "10m": "fair",
       "6m": "poor"
     },
     "night": {
-      "80m": "good",
-      "40m": "good",
-      "20m": "poor",
-      "15m": "poor",
-      "10m": "poor",
+      "80m": "excellent",
+      "40m": "excellent",
+      "20m": "fair",
+      "15m": "fair",
+      "10m": "fair",
       "6m": "poor"
     }
   },
