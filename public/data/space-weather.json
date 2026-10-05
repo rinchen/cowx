@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-10-05T18:57:10.307Z",
+  "generatedAt": "2026-10-05T22:28:51.717Z",
   "kp": {
-    "value": 2.67,
-    "observed": "2026-10-05T18:50:00",
+    "value": 3.67,
+    "observed": "2026-10-05T22:25:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 1.6,
-    "observed": "2026-10-05T18:48:00"
+    "value": 3.5999999,
+    "observed": "2026-10-05T22:23:00"
   },
   "sfi": {
-    "value": 92,
-    "observed": "2026-10-04T20:00:00",
+    "value": 100,
+    "observed": "2026-10-05T20:00:00",
     "ninety_day_mean": 114
   },
   "scales": {
     "R": {
-      "scale": 1,
-      "text": "minor"
+      "scale": 0,
+      "text": "none"
     },
     "S": {
       "scale": 0,
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-10-05T18:54:00Z",
+    "observed": "2026-10-05T22:27:00Z",
     "forecast": [
       {
         "date": "2026-10-05",
@@ -77,30 +77,30 @@
     ]
   },
   "xray": {
-    "class": "C9.7",
-    "flux": 0.000009736539141158573,
-    "observed": "2026-10-05T18:51:00Z"
+    "class": "B6.5",
+    "flux": 6.524788318529318e-7,
+    "observed": "2026-10-05T22:24:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
-    "detail": "Kp 2.7 — aurora unlikely at Colorado latitudes (estimate)."
+    "detail": "Kp 3.7 — aurora unlikely at Colorado latitudes (estimate)."
   },
   "hf": {
     "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
     "day": {
-      "80m": "fair",
-      "40m": "good",
-      "20m": "good",
-      "15m": "good",
-      "10m": "fair",
+      "80m": "poor",
+      "40m": "fair",
+      "20m": "fair",
+      "15m": "fair",
+      "10m": "poor",
       "6m": "poor"
     },
     "night": {
-      "80m": "excellent",
-      "40m": "excellent",
-      "20m": "fair",
-      "15m": "fair",
-      "10m": "fair",
+      "80m": "good",
+      "40m": "good",
+      "20m": "poor",
+      "15m": "poor",
+      "10m": "poor",
       "6m": "poor"
     }
   },
