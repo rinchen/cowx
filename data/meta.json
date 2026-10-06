@@ -1,119 +1,117 @@
 {
-  "generatedAt": "2026-10-06T21:25:46.923Z",
+  "generatedAt": "2026-10-06T23:31:23.708Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "partial",
-      "fetchedAt": "2026-10-06T21:13:48.950Z",
-      "error": "nbm thunderstorm: Unexpected token 'U', \"Unexpected\"... is not valid JSON"
+      "status": "ok",
+      "fetchedAt": "2026-10-06T23:22:18.741Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:23:10.503Z"
+      "fetchedAt": "2026-10-06T23:28:37.397Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-10-06T21:23:10.622Z"
+      "fetchedAt": "2026-10-06T23:28:37.494Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:23:14.218Z"
+      "fetchedAt": "2026-10-06T23:28:42.356Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:23:14.825Z"
+      "fetchedAt": "2026-10-06T23:28:42.875Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:23:15.785Z"
+      "fetchedAt": "2026-10-06T23:28:43.233Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:23:17.196Z"
+      "fetchedAt": "2026-10-06T23:28:45.323Z"
     },
     {
       "id": "airnow",
       "status": "error",
-      "fetchedAt": "2026-10-06T21:24:35.748Z",
+      "fetchedAt": "2026-10-06T23:30:15.154Z",
       "error": "HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted] {\"WebServiceError\":[{\"Message\":\"This web service has been retired as of October 1, 2026. For more information, see https://docs.airnowapi.org/webservices/retired\"}]}; HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-104.80000000000001&distanc"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:24:37.931Z"
+      "fetchedAt": "2026-10-06T23:30:17.123Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:24:52.256Z"
+      "fetchedAt": "2026-10-06T23:30:33.013Z"
     },
     {
       "id": "cdot",
-      "status": "partial",
-      "fetchedAt": "2026-10-06T21:25:04.217Z",
-      "error": "alerts-points: HTTP 500 for https://maps.codot.gov/server/rest/services/Hosted/CoTrip_Alerts_Points_(Live)_Public_View/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson: <html lang=\"en\">\r\n<head>\r\n<title>\r\nError: The connection attempt failed.</title>\r\n<link href=\"/server/rest/static/main.css\" rel=\"stylesheet\" type=\"text/css\"/>\r\n</head>\r\n<body>\r\n<table width=\"100%\" cla; alerts-polyline: HTTP 500 for https://maps.codot.gov/server/rest/services/Hosted/CoTrip_Ale"
+      "status": "ok",
+      "fetchedAt": "2026-10-06T23:30:34.318Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:25:25.661Z"
+      "fetchedAt": "2026-10-06T23:30:57.178Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-10-06T21:25:35.965Z"
+      "fetchedAt": "2026-10-06T23:31:11.434Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:25:36.338Z"
+      "fetchedAt": "2026-10-06T23:31:11.633Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:25:36.495Z"
+      "fetchedAt": "2026-10-06T23:31:12.066Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:25:36.640Z"
+      "fetchedAt": "2026-10-06T23:31:12.280Z"
     },
     {
       "id": "burn_restrictions",
       "status": "partial",
-      "fetchedAt": "2026-10-06T21:25:44.575Z",
+      "fetchedAt": "2026-10-06T23:31:20.739Z",
       "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:25:44.777Z"
+      "fetchedAt": "2026-10-06T23:31:20.889Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:25:45.047Z"
+      "fetchedAt": "2026-10-06T23:31:21.136Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:25:45.176Z"
+      "fetchedAt": "2026-10-06T23:31:21.572Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-10-06T21:25:46.922Z"
+      "fetchedAt": "2026-10-06T23:31:23.707Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 354,
+  "apiCalls": 356,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
