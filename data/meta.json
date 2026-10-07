@@ -1,113 +1,112 @@
 {
-  "generatedAt": "2026-10-07T02:51:54.330Z",
+  "generatedAt": "2026-10-07T06:57:42.822Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:41:51.395Z"
+      "fetchedAt": "2026-10-07T06:47:53.613Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:49:10.723Z"
+      "fetchedAt": "2026-10-07T06:55:12.165Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-10-07T02:49:10.838Z"
+      "fetchedAt": "2026-10-07T06:55:12.304Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:49:15.015Z"
+      "fetchedAt": "2026-10-07T06:55:17.593Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:49:15.711Z"
+      "fetchedAt": "2026-10-07T06:55:18.070Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:49:16.055Z"
+      "fetchedAt": "2026-10-07T06:55:18.368Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:49:17.894Z"
+      "fetchedAt": "2026-10-07T06:55:20.040Z"
     },
     {
       "id": "airnow",
       "status": "error",
-      "fetchedAt": "2026-10-07T02:50:44.611Z",
+      "fetchedAt": "2026-10-07T06:56:40.730Z",
       "error": "HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted] {\"WebServiceError\":[{\"Message\":\"This web service has been retired as of October 1, 2026. For more information, see https://docs.airnowapi.org/webservices/retired\"}]}; HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-104.80000000000001&distanc"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:50:48.431Z"
+      "fetchedAt": "2026-10-07T06:56:42.054Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:51:04.337Z"
+      "fetchedAt": "2026-10-07T06:56:57.709Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:51:05.277Z"
+      "fetchedAt": "2026-10-07T06:56:58.886Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:51:27.012Z"
+      "fetchedAt": "2026-10-07T06:57:19.627Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-10-07T02:51:40.885Z"
+      "fetchedAt": "2026-10-07T06:57:30.809Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:51:41.871Z"
+      "fetchedAt": "2026-10-07T06:57:31.346Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:51:42.824Z"
+      "fetchedAt": "2026-10-07T06:57:31.635Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:51:43.169Z"
+      "fetchedAt": "2026-10-07T06:57:31.899Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "partial",
-      "fetchedAt": "2026-10-07T02:51:51.373Z",
-      "error": "HTTP 429 for COEM fire bans page"
+      "status": "ok",
+      "fetchedAt": "2026-10-07T06:57:40.101Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:51:51.664Z"
+      "fetchedAt": "2026-10-07T06:57:40.517Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:51:51.838Z"
+      "fetchedAt": "2026-10-07T06:57:40.731Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:51:52.212Z"
+      "fetchedAt": "2026-10-07T06:57:40.918Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-10-07T02:51:54.330Z"
+      "fetchedAt": "2026-10-07T06:57:42.822Z"
     }
   ],
   "locationCount": 338,
