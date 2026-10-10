@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-10-10T06:28:44.476Z",
+  "generatedAt": "2026-10-10T09:26:31.423Z",
   "kp": {
     "value": 0.67,
-    "observed": "2026-10-10T06:27:00",
+    "observed": "2026-10-10T09:23:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 1.6,
-    "observed": "2026-10-10T06:23:00"
+    "value": 2.8,
+    "observed": "2026-10-10T09:22:00"
   },
   "sfi": {
     "value": 121,
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-10-10T06:26:00Z",
+    "observed": "2026-10-10T09:24:00Z",
     "forecast": [
       {
         "date": "2026-10-10",
@@ -76,11 +76,7 @@
       }
     ]
   },
-  "xray": {
-    "class": "B7.4",
-    "flux": 7.368516889982857e-7,
-    "observed": "2026-10-10T06:24:00Z"
-  },
+  "xray": null,
   "aurora_co": {
     "chance": "unlikely",
     "detail": "Kp 0.7 — aurora unlikely at Colorado latitudes (estimate)."
