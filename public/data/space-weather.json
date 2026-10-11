@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-10-11T13:54:49.851Z",
+  "generatedAt": "2026-10-11T16:10:41.690Z",
   "kp": {
-    "value": 2,
-    "observed": "2026-10-11T13:51:00",
+    "value": 1.67,
+    "observed": "2026-10-11T16:07:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 2.5999999,
-    "observed": "2026-10-11T13:50:00"
+    "value": 2,
+    "observed": "2026-10-11T16:05:00"
   },
   "sfi": {
     "value": 126,
@@ -27,25 +27,10 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-10-11T13:53:00Z",
+    "observed": "2026-10-11T16:08:00Z",
     "forecast": [
       {
         "date": "2026-10-11",
-        "R": {
-          "scale": null,
-          "text": null
-        },
-        "S": {
-          "scale": null,
-          "text": null
-        },
-        "G": {
-          "scale": 1,
-          "text": "minor"
-        }
-      },
-      {
-        "date": "2026-10-12",
         "R": {
           "scale": null,
           "text": null
@@ -60,7 +45,7 @@
         }
       },
       {
-        "date": "2026-10-13",
+        "date": "2026-10-12",
         "R": {
           "scale": null,
           "text": null
@@ -73,17 +58,32 @@
           "scale": 0,
           "text": "none"
         }
+      },
+      {
+        "date": "2026-10-13",
+        "R": {
+          "scale": null,
+          "text": null
+        },
+        "S": {
+          "scale": null,
+          "text": null
+        },
+        "G": {
+          "scale": 1,
+          "text": "minor"
+        }
       }
     ]
   },
   "xray": {
-    "class": "B7.8",
-    "flux": 7.7659075259362e-7,
-    "observed": "2026-10-11T13:50:00Z"
+    "class": "B6.7",
+    "flux": 6.701166626044142e-7,
+    "observed": "2026-10-11T16:07:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
-    "detail": "Kp 2.0 — aurora unlikely at Colorado latitudes (estimate)."
+    "detail": "Kp 1.7 — aurora unlikely at Colorado latitudes (estimate)."
   },
   "hf": {
     "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
