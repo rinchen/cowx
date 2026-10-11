@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-10-10T23:13:08.912Z",
+  "generatedAt": "2026-10-11T01:48:19.305Z",
   "kp": {
-    "value": 5,
-    "observed": "2026-10-10T23:09:00",
+    "value": 3.67,
+    "observed": "2026-10-11T01:44:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 4.7333298,
-    "observed": "2026-10-10T23:07:00"
+    "value": 3.7,
+    "observed": "2026-10-11T01:42:00"
   },
   "sfi": {
     "value": 126,
@@ -24,26 +24,11 @@
       "text": "none"
     },
     "G": {
-      "scale": 1,
-      "text": "minor"
+      "scale": 0,
+      "text": "none"
     },
-    "observed": "2026-10-10T23:11:00Z",
+    "observed": "2026-10-11T01:46:00Z",
     "forecast": [
-      {
-        "date": "2026-10-10",
-        "R": {
-          "scale": null,
-          "text": null
-        },
-        "S": {
-          "scale": null,
-          "text": null
-        },
-        "G": {
-          "scale": 3,
-          "text": "strong"
-        }
-      },
       {
         "date": "2026-10-11",
         "R": {
@@ -70,6 +55,21 @@
           "text": null
         },
         "G": {
+          "scale": 2,
+          "text": "moderate"
+        }
+      },
+      {
+        "date": "2026-10-13",
+        "R": {
+          "scale": null,
+          "text": null
+        },
+        "S": {
+          "scale": null,
+          "text": null
+        },
+        "G": {
           "scale": 0,
           "text": "none"
         }
@@ -77,27 +77,27 @@
     ]
   },
   "xray": {
-    "class": "C2.4",
-    "flux": 0.0000024128428322001128,
-    "observed": "2026-10-10T23:10:00Z"
+    "class": "C1.0",
+    "flux": 0.0000010189598924625898,
+    "observed": "2026-10-11T01:45:00Z"
   },
   "aurora_co": {
-    "chance": "possible",
-    "detail": "Kp 5.0 — aurora possible on northern Colorado horizon (estimate)."
+    "chance": "unlikely",
+    "detail": "Kp 3.7 — aurora unlikely at Colorado latitudes (estimate)."
   },
   "hf": {
     "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
     "day": {
       "80m": "poor",
-      "40m": "poor",
-      "20m": "poor",
-      "15m": "poor",
+      "40m": "fair",
+      "20m": "fair",
+      "15m": "fair",
       "10m": "poor",
       "6m": "poor"
     },
     "night": {
-      "80m": "fair",
-      "40m": "fair",
+      "80m": "good",
+      "40m": "good",
       "20m": "poor",
       "15m": "poor",
       "10m": "poor",
