@@ -95,11 +95,11 @@ export function initStateMap(container, locations, activeSlug, onSelect, options
     touchZoom: !fixedView,
   });
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  // OpenStreetMap standard tiles: keyless and free to use with attribution.
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: RAINVIEWER_MAX_ZOOM,
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
   }).addTo(stateMap);
 
   if (showMarkers) {
