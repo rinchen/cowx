@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-10-16T04:23:11.690Z",
+  "generatedAt": "2026-10-16T05:59:28.737Z",
   "kp": {
-    "value": 0.33,
-    "observed": "2026-10-16T04:18:00",
+    "value": 1.33,
+    "observed": "2026-10-16T05:54:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 1.6,
-    "observed": "2026-10-16T04:16:00"
+    "value": 2.3,
+    "observed": "2026-10-16T05:52:00"
   },
   "sfi": {
     "value": 126,
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-10-16T04:21:00Z",
+    "observed": "2026-10-16T05:57:00Z",
     "forecast": [
       {
         "date": "2026-10-16",
@@ -77,13 +77,13 @@
     ]
   },
   "xray": {
-    "class": "B8.4",
-    "flux": 8.430163802586321e-7,
-    "observed": "2026-10-16T04:20:00Z"
+    "class": "B6.8",
+    "flux": 6.775957785976061e-7,
+    "observed": "2026-10-16T05:55:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
-    "detail": "Kp 0.3 — aurora unlikely at Colorado latitudes (estimate)."
+    "detail": "Kp 1.3 — aurora unlikely at Colorado latitudes (estimate)."
   },
   "hf": {
     "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
