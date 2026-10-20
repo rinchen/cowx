@@ -1,118 +1,119 @@
 {
-  "generatedAt": "2026-10-20T15:33:36.355Z",
+  "generatedAt": "2026-10-20T19:44:01.864Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-10-20T14:52:22.276Z"
+      "fetchedAt": "2026-10-20T19:01:47.830Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:01:48.028Z"
+      "fetchedAt": "2026-10-20T19:10:08.446Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "partial",
-      "fetchedAt": "2026-10-20T15:30:41.103Z",
-      "error": "georgetown/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.75&longitude=-105.75&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; georgetown/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.75&longitude=-105.75&start"
+      "fetchedAt": "2026-10-20T19:41:09.128Z",
+      "error": "hartsel/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39&longitude=-105.75&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; hartsel/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39&longitude=-105.75&start_date=2001-0"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:30:45.284Z"
+      "fetchedAt": "2026-10-20T19:41:14.084Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:30:45.868Z"
+      "fetchedAt": "2026-10-20T19:41:14.589Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:30:47.145Z"
+      "fetchedAt": "2026-10-20T19:41:14.921Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:30:49.107Z"
+      "fetchedAt": "2026-10-20T19:41:16.362Z"
     },
     {
       "id": "airnow",
       "status": "error",
-      "fetchedAt": "2026-10-20T15:32:16.353Z",
+      "fetchedAt": "2026-10-20T19:42:33.276Z",
       "error": "HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted] {\"WebServiceError\":[{\"Message\":\"This web service has been retired as of October 1, 2026. For more information, see https://docs.airnowapi.org/webservices/retired\"}]}; HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-104.80000000000001&distanc"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:32:18.272Z"
+      "fetchedAt": "2026-10-20T19:42:34.743Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:32:45.330Z"
+      "fetchedAt": "2026-10-20T19:43:10.385Z"
     },
     {
       "id": "cdot",
-      "status": "ok",
-      "fetchedAt": "2026-10-20T15:32:46.198Z"
+      "status": "partial",
+      "fetchedAt": "2026-10-20T19:43:12.791Z",
+      "error": "alerts-points: HTTP 500 for https://maps.codot.gov/server/rest/services/Hosted/CoTrip_Alerts_Points_(Live)_Public_View/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson: <html lang=\"en\">\r\n<head>\r\n<title>\r\nError: Connection to CDOTESPRDS01.DOT.STATE.CO.US:9876 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.; alerts-polyline: HTTP 500 for https://maps.codot.gov/server/rest/services/Hosted/CoTrip_Ale"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:33:10.087Z"
+      "fetchedAt": "2026-10-20T19:43:36.624Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-10-20T15:33:23.715Z"
+      "fetchedAt": "2026-10-20T19:43:47.320Z"
     },
     {
       "id": "hms",
-      "status": "partial",
-      "fetchedAt": "2026-10-20T15:33:23.835Z",
-      "error": "no HMS polygons near Colorado"
+      "status": "ok",
+      "fetchedAt": "2026-10-20T19:43:47.487Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:33:24.365Z"
+      "fetchedAt": "2026-10-20T19:43:47.910Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:33:24.553Z"
+      "fetchedAt": "2026-10-20T19:43:48.118Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:33:24.827Z"
+      "fetchedAt": "2026-10-20T19:43:48.303Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:33:25.372Z"
+      "fetchedAt": "2026-10-20T19:43:48.504Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:33:25.514Z"
+      "fetchedAt": "2026-10-20T19:43:48.640Z"
     },
     {
       "id": "firms",
-      "status": "ok",
-      "fetchedAt": "2026-10-20T15:33:25.921Z"
+      "status": "error",
+      "fetchedAt": "2026-10-20T19:43:53.419Z",
+      "error": "fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://firms.modaps.eosdis.nasa.gov/api/area/csv/[redacted]/VIIRS_SNPP_NRT/-109.2,36.9,-102,41.1/1"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-10-20T15:33:36.355Z"
+      "fetchedAt": "2026-10-20T19:44:01.864Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 401,
+  "apiCalls": 406,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
