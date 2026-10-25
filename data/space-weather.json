@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-10-25T19:52:58.004Z",
+  "generatedAt": "2026-10-25T22:25:18.501Z",
   "kp": {
     "value": 0.33,
-    "observed": "2026-10-25T19:48:00",
+    "observed": "2026-10-25T22:21:00",
     "source": "planetary"
   },
   "boulder_kp": {
     "value": 1,
-    "observed": "2026-10-25T19:47:00"
+    "observed": "2026-10-25T22:19:00"
   },
   "sfi": {
-    "value": 93,
-    "observed": "2026-10-24T20:00:00",
-    "ninety_day_mean": 114
+    "value": 89,
+    "observed": "2026-10-25T20:00:00",
+    "ninety_day_mean": 113
   },
   "scales": {
     "R": {
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-10-25T19:51:00Z",
+    "observed": "2026-10-25T22:23:00Z",
     "forecast": [
       {
         "date": "2026-10-25",
@@ -77,9 +77,9 @@
     ]
   },
   "xray": {
-    "class": "B4.2",
-    "flux": 4.2143346945522353e-7,
-    "observed": "2026-10-25T19:50:00Z"
+    "class": "B2.7",
+    "flux": 2.675241717042809e-7,
+    "observed": "2026-10-25T22:21:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
@@ -91,16 +91,16 @@
       "80m": "fair",
       "40m": "good",
       "20m": "good",
-      "15m": "good",
-      "10m": "fair",
+      "15m": "fair",
+      "10m": "poor",
       "6m": "poor"
     },
     "night": {
       "80m": "excellent",
       "40m": "excellent",
       "20m": "fair",
-      "15m": "fair",
-      "10m": "fair",
+      "15m": "poor",
+      "10m": "poor",
       "6m": "poor"
     }
   },
