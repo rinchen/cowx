@@ -1,112 +1,112 @@
 {
-  "generatedAt": "2026-10-30T01:55:10.587Z",
+  "generatedAt": "2026-10-30T03:03:41.877Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:43:24.280Z"
+      "fetchedAt": "2026-10-30T02:52:54.108Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:51:46.878Z"
+      "fetchedAt": "2026-10-30T03:00:15.683Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-10-30T01:51:47.031Z"
+      "fetchedAt": "2026-10-30T03:00:15.829Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:52:23.523Z"
+      "fetchedAt": "2026-10-30T03:00:29.154Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:52:24.079Z"
+      "fetchedAt": "2026-10-30T03:00:30.052Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:52:24.437Z"
+      "fetchedAt": "2026-10-30T03:00:32.462Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:52:26.150Z"
+      "fetchedAt": "2026-10-30T03:00:34.049Z"
     },
     {
       "id": "airnow",
       "status": "error",
-      "fetchedAt": "2026-10-30T01:53:54.885Z",
+      "fetchedAt": "2026-10-30T03:02:01.498Z",
       "error": "HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted] {\"WebServiceError\":[{\"Message\":\"This web service has been retired as of October 1, 2026. For more information, see https://docs.airnowapi.org/webservices/retired\"}]}; HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-104.80000000000001&distanc"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:53:56.777Z"
+      "fetchedAt": "2026-10-30T03:02:14.522Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:54:26.266Z"
+      "fetchedAt": "2026-10-30T03:02:56.093Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:54:27.375Z"
+      "fetchedAt": "2026-10-30T03:02:58.338Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:54:50.729Z"
+      "fetchedAt": "2026-10-30T03:03:22.186Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-10-30T01:55:06.007Z"
+      "fetchedAt": "2026-10-30T03:03:37.172Z"
     },
     {
       "id": "hms",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:55:06.590Z"
+      "fetchedAt": "2026-10-30T03:03:37.580Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:55:06.777Z"
+      "fetchedAt": "2026-10-30T03:03:38.230Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:55:07.161Z"
+      "fetchedAt": "2026-10-30T03:03:38.475Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:55:07.330Z"
+      "fetchedAt": "2026-10-30T03:03:38.730Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:55:07.499Z"
+      "fetchedAt": "2026-10-30T03:03:38.827Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:55:07.737Z"
+      "fetchedAt": "2026-10-30T03:03:39.055Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:55:08.108Z"
+      "fetchedAt": "2026-10-30T03:03:39.417Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-10-30T01:55:10.586Z"
+      "fetchedAt": "2026-10-30T03:03:41.877Z"
     }
   ],
   "locationCount": 338,
