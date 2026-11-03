@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-03T20:33:49.047Z",
+  "generatedAt": "2026-11-03T23:19:47.281Z",
   "kp": {
-    "value": 0.33,
-    "observed": "2026-11-03T20:29:00",
+    "value": 0,
+    "observed": "2026-11-03T23:15:00",
     "source": "planetary"
   },
   "boulder_kp": {
@@ -10,8 +10,8 @@
     "observed": "2026-11-02T22:28:00"
   },
   "sfi": {
-    "value": 97,
-    "observed": "2026-11-02T20:00:00",
+    "value": 100,
+    "observed": "2026-11-03T20:00:00",
     "ninety_day_mean": 109
   },
   "scales": {
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-11-03T20:32:00Z",
+    "observed": "2026-11-03T23:18:00Z",
     "forecast": [
       {
         "date": "2026-11-03",
@@ -77,13 +77,13 @@
     ]
   },
   "xray": {
-    "class": null,
-    "flux": 0,
-    "observed": "2026-11-03T20:30:00Z"
+    "class": "B4.1",
+    "flux": 4.0692864899938286e-7,
+    "observed": "2026-11-03T23:16:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
-    "detail": "Kp 0.3 — aurora unlikely at Colorado latitudes (estimate)."
+    "detail": "Kp 0.0 — aurora unlikely at Colorado latitudes (estimate)."
   },
   "hf": {
     "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
