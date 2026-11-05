@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-05T09:12:15.000Z",
+  "generatedAt": "2026-11-05T13:01:04.976Z",
   "kp": {
     "value": 0,
-    "observed": "2026-11-05T09:08:00",
+    "observed": "2026-11-05T12:56:00",
     "source": "planetary"
   },
   "boulder_kp": {
@@ -27,7 +27,7 @@
       "scale": 0,
       "text": "none"
     },
-    "observed": "2026-11-05T09:10:00Z",
+    "observed": "2026-11-05T12:59:00Z",
     "forecast": [
       {
         "date": "2026-11-05",
@@ -77,9 +77,9 @@
     ]
   },
   "xray": {
-    "class": "B6.6",
-    "flux": 6.575529596375418e-7,
-    "observed": "2026-11-05T09:08:00Z"
+    "class": "B6.9",
+    "flux": 6.855070751043968e-7,
+    "observed": "2026-11-05T12:57:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
