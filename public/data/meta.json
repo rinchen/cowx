@@ -1,114 +1,114 @@
 {
-  "generatedAt": "2026-11-17T03:47:50.270Z",
+  "generatedAt": "2026-11-17T08:31:58.782Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:35:51.304Z"
+      "fetchedAt": "2026-11-17T08:22:54.468Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:45:15.815Z"
+      "fetchedAt": "2026-11-17T08:28:08.920Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-11-17T03:45:15.896Z"
+      "fetchedAt": "2026-11-17T08:28:09.003Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:45:20.242Z"
+      "fetchedAt": "2026-11-17T08:28:12.797Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:45:20.590Z"
+      "fetchedAt": "2026-11-17T08:28:13.151Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:45:20.944Z"
+      "fetchedAt": "2026-11-17T08:28:33.383Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:45:22.321Z"
+      "fetchedAt": "2026-11-17T08:28:34.783Z"
     },
     {
       "id": "airnow",
       "status": "error",
-      "fetchedAt": "2026-11-17T03:46:40.906Z",
+      "fetchedAt": "2026-11-17T08:29:53.037Z",
       "error": "HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted] {\"WebServiceError\":[{\"Message\":\"This web service has been retired as of October 1, 2026. For more information, see https://docs.airnowapi.org/webservices/retired\"}]}; HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-104.80000000000001&distanc"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:46:50.576Z"
+      "fetchedAt": "2026-11-17T08:30:11.022Z"
     },
     {
       "id": "snotel",
-      "status": "error",
-      "fetchedAt": "2026-11-17T03:46:50.866Z",
-      "error": "HTTP 502 for https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations: <html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n</body>\r\n</html>\r\n"
+      "status": "ok",
+      "fetchedAt": "2026-11-17T08:30:27.703Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:46:51.535Z"
+      "fetchedAt": "2026-11-17T08:30:28.452Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:47:11.081Z"
+      "fetchedAt": "2026-11-17T08:30:48.084Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-11-17T03:47:21.192Z"
+      "fetchedAt": "2026-11-17T08:30:56.782Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-11-17T03:47:21.653Z",
+      "fetchedAt": "2026-11-17T08:30:57.454Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:47:22.026Z"
+      "fetchedAt": "2026-11-17T08:30:57.721Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:47:22.183Z"
+      "fetchedAt": "2026-11-17T08:30:57.927Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:47:24.720Z"
+      "fetchedAt": "2026-11-17T08:30:58.161Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:47:24.954Z"
+      "fetchedAt": "2026-11-17T08:30:58.384Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:47:25.470Z"
+      "fetchedAt": "2026-11-17T08:30:58.563Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-11-17T03:47:25.679Z"
+      "fetchedAt": "2026-11-17T08:30:58.781Z"
     },
     {
       "id": "cbrfc",
-      "status": "ok",
-      "fetchedAt": "2026-11-17T03:47:50.270Z"
+      "status": "error",
+      "fetchedAt": "2026-11-17T08:31:58.782Z",
+      "error": "This operation was aborted (timeout) for https://www.cbrfc.noaa.gov/wsup/graph/espcond_data.py?fdate=LATEST&area=CB&sort=basin&otype=json&qpfdays=0"
     }
   ],
   "locationCount": 338,
