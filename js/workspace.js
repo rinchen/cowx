@@ -111,7 +111,10 @@ export async function renderWorkspace(root, data, options) {
   const catalogDistKm = pinDistanceKm(pin, data);
   const dataBase = options.dataBase ?? 'data';
 
-  const [hyperlocalResult, spaceWeather, coloSmokeOutlook] = await Promise.all([
+  // Optional enrichment (statewide snapshots + pin overlay) loads in the
+  // background. The workspace paints from the bundled payload first so a slow
+  // or hung fetch can never leave the page stuck on a header/map skeleton.
+  const enrichment = Promise.all([
     pin
       ? buildHyperlocalOverlay(pin, { dataBase }).catch((err) => {
           console.warn('hyperlocal overlay failed', err);
@@ -123,11 +126,13 @@ export async function renderWorkspace(root, data, options) {
     loadColoSmokeOutlook(dataBase),
   ]);
 
-  if (!stillCurrent()) {
-    return { headline: '', destroy: () => destroyMap() };
-  }
+  /** @type {Record<string, unknown> | null} */
+  let hyperlocal = null;
+  /** @type {Record<string, unknown> | null} */
+  let spaceWeather = null;
+  /** @type {Record<string, unknown> | null} */
+  let coloSmokeOutlook = null;
 
-  const hyperlocal = hyperlocalResult;
   let viewData = dataWithLiveAlerts(data, pin);
 
   const pinSourceLabel =
@@ -230,11 +235,14 @@ export async function renderWorkspace(root, data, options) {
   let headline = '';
 
   /**
-   * @param {Record<string, unknown>} nextData
+   * Repaint the alert-driven sections (hero + deep panels). Runs on first
+   * paint, again when background enrichment lands, and on every live NWS alert
+   * change; both renderers replace their container, so repaints never stack
+   * duplicate sections.
    */
-  function paintAlertConsumers(nextData) {
+  function paintAlertConsumers() {
     destroyHero?.();
-    const heroApi = renderHero(heroRoot, nextData, {
+    const heroApi = renderHero(heroRoot, viewData, {
       onJump: jumpToSection,
       pin,
       hyperlocal,
@@ -243,7 +251,7 @@ export async function renderWorkspace(root, data, options) {
     destroyHero = heroApi.destroy;
     headline = heroApi.headline;
 
-    renderDeepForecast(deepRoot, nextData, {
+    renderDeepForecast(deepRoot, viewData, {
       sources: options.sources ?? [],
       includeMapSlot: false,
       spaceWeather,
@@ -253,7 +261,7 @@ export async function renderWorkspace(root, data, options) {
     });
   }
 
-  paintAlertConsumers(viewData);
+  paintAlertConsumers();
 
   const outlookApi = renderOutlook(outlookRoot, viewData, {
     onJump: jumpToSection,
@@ -289,7 +297,7 @@ export async function renderWorkspace(root, data, options) {
   const onAlertsUpdated = () => {
     if (!stillCurrent()) return;
     viewData = dataWithLiveAlerts(data, pin);
-    paintAlertConsumers(viewData);
+    paintAlertConsumers();
     setAlertPolygons(getAlertPolygons(), (msg) =>
       options.onAnnounce?.(`Alert map unavailable: ${msg}`),
     );
@@ -317,6 +325,33 @@ export async function renderWorkspace(root, data, options) {
     }
   });
 
+  // Background enrichment: fold in statewide snapshots (and the pin overlay)
+  // now that the first paint is on screen, then repaint what uses them.
+  const [hyperlocalResult, spaceWeatherResult, smokeOutlookResult] = await enrichment;
+  hyperlocal = hyperlocalResult;
+  spaceWeather = spaceWeatherResult;
+  coloSmokeOutlook = smokeOutlookResult;
+
+  if (!stillCurrent()) {
+    window.removeEventListener(ALERTS_UPDATED_EVENT, onAlertsUpdated);
+    mapDetails?.removeEventListener('toggle', onMapDetailsToggle);
+    destroyHero?.();
+    destroyOutlook?.();
+    destroyMap();
+    return { headline, destroy: () => {} };
+  }
+
+  if (hyperlocal || spaceWeather || coloSmokeOutlook) {
+    paintAlertConsumers();
+  }
+  if (hyperlocal) {
+    renderSpecialtyIntel(specialtyRoot, viewData, {
+      onJump: jumpToSection,
+      pin,
+      hyperlocal,
+    });
+  }
+
   const radarOk = await bindRadarLoopControls(radarControls, {
     defaultOn: true,
     onStatus: (msg) => {
@@ -332,15 +367,6 @@ export async function renderWorkspace(root, data, options) {
       options.onAnnounce?.(msg);
     },
   });
-
-  if (!stillCurrent()) {
-    window.removeEventListener(ALERTS_UPDATED_EVENT, onAlertsUpdated);
-    mapDetails?.removeEventListener('toggle', onMapDetailsToggle);
-    destroyHero?.();
-    destroyOutlook?.();
-    destroyMap();
-    return { headline, destroy: () => {} };
-  }
 
   if (!radarOk) {
     options.onAnnounce?.('RainViewer radar could not load; map basemap is still available.');

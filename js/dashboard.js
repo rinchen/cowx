@@ -1126,6 +1126,9 @@ function buildClimatologyCompareSection(daily, climatology) {
 
 /**
  * Hourly/daily tables + collapsible detail sections (no summary header or map).
+ * Paints the container: any previously rendered sections are replaced, so this
+ * can be called again (live alert updates, background enrichment) without
+ * stacking a second copy of every panel.
  * @param {HTMLElement} root
  * @param {Record<string, unknown>} data
  * @param {{
@@ -1147,6 +1150,7 @@ export function renderDeepForecast(root, data, options = {}) {
       : null;
   const links = /** @type {Record<string, string | null>} */ (data.links ?? {});
   const metaSources = Array.isArray(options.sources) ? options.sources : [];
+  root.replaceChildren();
   appendDeepForecast(root, data, {
     sources: metaSources,
     sunrises,
