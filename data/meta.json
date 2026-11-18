@@ -1,117 +1,117 @@
 {
-  "generatedAt": "2026-11-18T19:56:15.262Z",
+  "generatedAt": "2026-11-18T23:31:14.503Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:45:38.075Z"
+      "fetchedAt": "2026-11-18T23:21:22.205Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:52:55.655Z"
+      "fetchedAt": "2026-11-18T23:27:39.747Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "skipped",
-      "fetchedAt": "2026-11-18T19:52:55.767Z"
+      "fetchedAt": "2026-11-18T23:27:39.868Z"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:52:59.336Z"
+      "fetchedAt": "2026-11-18T23:27:43.221Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:52:59.869Z"
+      "fetchedAt": "2026-11-18T23:27:43.605Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:53:15.303Z"
+      "fetchedAt": "2026-11-18T23:27:43.925Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:53:16.384Z"
+      "fetchedAt": "2026-11-18T23:27:45.274Z"
     },
     {
       "id": "airnow",
       "status": "error",
-      "fetchedAt": "2026-11-18T19:54:35.509Z",
+      "fetchedAt": "2026-11-18T23:29:04.108Z",
       "error": "HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted] {\"WebServiceError\":[{\"Message\":\"This web service has been retired as of October 1, 2026. For more information, see https://docs.airnowapi.org/webservices/retired\"}]}; HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-104.80000000000001&distanc"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:54:53.463Z"
+      "fetchedAt": "2026-11-18T23:29:20.316Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:55:08.828Z"
+      "fetchedAt": "2026-11-18T23:29:42.853Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:55:09.306Z"
+      "fetchedAt": "2026-11-18T23:29:43.378Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:55:28.993Z"
+      "fetchedAt": "2026-11-18T23:30:01.749Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-11-18T19:55:38.336Z"
+      "fetchedAt": "2026-11-18T23:30:10.716Z"
     },
     {
       "id": "hms",
-      "status": "partial",
-      "fetchedAt": "2026-11-18T19:55:38.539Z",
-      "error": "no HMS polygons near Colorado"
+      "status": "ok",
+      "fetchedAt": "2026-11-18T23:30:10.946Z"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:55:38.838Z"
+      "fetchedAt": "2026-11-18T23:30:11.369Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:55:39.079Z"
+      "fetchedAt": "2026-11-18T23:30:11.524Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "ok",
-      "fetchedAt": "2026-11-18T19:55:46.951Z"
+      "status": "partial",
+      "fetchedAt": "2026-11-18T23:30:19.888Z",
+      "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:55:47.073Z"
+      "fetchedAt": "2026-11-18T23:30:20.108Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:55:47.235Z"
+      "fetchedAt": "2026-11-18T23:30:20.413Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:55:47.368Z"
+      "fetchedAt": "2026-11-18T23:30:20.678Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-11-18T19:56:15.262Z"
+      "fetchedAt": "2026-11-18T23:31:14.503Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 361,
+  "apiCalls": 355,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
