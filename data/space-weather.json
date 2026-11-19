@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-11-18T23:30:20.108Z",
+  "generatedAt": "2026-11-19T01:49:17.528Z",
   "kp": {
-    "value": 0.67,
-    "observed": "2026-11-18T23:27:00",
+    "value": 4.67,
+    "observed": "2026-11-19T01:44:00",
     "source": "planetary"
   },
   "boulder_kp": {
-    "value": 1.4,
-    "observed": "2026-11-18T23:26:00"
+    "value": 4.2333298,
+    "observed": "2026-11-19T01:42:00"
   },
   "sfi": {
     "value": 118,
@@ -24,26 +24,11 @@
       "text": "none"
     },
     "G": {
-      "scale": 0,
-      "text": "none"
+      "scale": 1,
+      "text": "minor"
     },
-    "observed": "2026-11-18T23:28:00Z",
+    "observed": "2026-11-19T01:46:00Z",
     "forecast": [
-      {
-        "date": "2026-11-18",
-        "R": {
-          "scale": null,
-          "text": null
-        },
-        "S": {
-          "scale": null,
-          "text": null
-        },
-        "G": {
-          "scale": 1,
-          "text": "minor"
-        }
-      },
       {
         "date": "2026-11-19",
         "R": {
@@ -55,8 +40,8 @@
           "text": null
         },
         "G": {
-          "scale": 0,
-          "text": "none"
+          "scale": 1,
+          "text": "minor"
         }
       },
       {
@@ -73,34 +58,49 @@
           "scale": 0,
           "text": "none"
         }
+      },
+      {
+        "date": "2026-11-21",
+        "R": {
+          "scale": null,
+          "text": null
+        },
+        "S": {
+          "scale": null,
+          "text": null
+        },
+        "G": {
+          "scale": 0,
+          "text": "none"
+        }
       }
     ]
   },
   "xray": {
-    "class": "B8.5",
-    "flux": 8.489994911542453e-7,
-    "observed": "2026-11-18T23:27:00Z"
+    "class": "C1.1",
+    "flux": 0.0000010616765848681098,
+    "observed": "2026-11-19T01:45:00Z"
   },
   "aurora_co": {
     "chance": "unlikely",
-    "detail": "Kp 0.7 — aurora unlikely at Colorado latitudes (estimate)."
+    "detail": "Kp 4.7 — aurora unlikely at Colorado latitudes (estimate)."
   },
   "hf": {
     "disclaimer": "Heuristic from SFI/Kp — not a real-time MUF product. Check SWPC / prop maps for openings.",
     "day": {
-      "80m": "fair",
-      "40m": "good",
-      "20m": "good",
-      "15m": "good",
-      "10m": "fair",
+      "80m": "poor",
+      "40m": "fair",
+      "20m": "fair",
+      "15m": "fair",
+      "10m": "poor",
       "6m": "poor"
     },
     "night": {
-      "80m": "excellent",
-      "40m": "excellent",
-      "20m": "fair",
-      "15m": "fair",
-      "10m": "fair",
+      "80m": "good",
+      "40m": "good",
+      "20m": "poor",
+      "15m": "poor",
+      "10m": "poor",
       "6m": "poor"
     }
   },
