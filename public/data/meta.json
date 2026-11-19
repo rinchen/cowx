@@ -1,119 +1,119 @@
 {
-  "generatedAt": "2026-11-19T18:54:33.443Z",
+  "generatedAt": "2026-11-19T22:42:40.818Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "partial",
-      "fetchedAt": "2026-11-19T18:12:19.318Z",
-      "error": "nbm thunderstorm: HTTP 429 for https://api.open-meteo.com/v1/gfs?latitude=38.945,38.2544,38.5,38.4519,38.3903,38.4256,38.5347,38.8422,39.2508,39.2247,39.0217,39.4097,39.4589,39.8914,39.945,40.0861,40.1078,40.0589,40.485,40.275&longitude=-105.2894,-104.6091,-104.7236,-105.2425,-105.1186,-105.0228,-105.9989,-106.1311,-106.2925,-105.9989,-105.7958,-105.4733,-105.6592,-105.7631,-105.8172,-105.9394,-106.1028,-106.3889,-106.8317,-106.9583&hourly=thunderstorm_probability&models=ncep_nbm_conus&timezone="
+      "status": "ok",
+      "fetchedAt": "2026-11-19T22:03:51.254Z"
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:21:45.056Z"
+      "fetchedAt": "2026-11-19T22:11:10.846Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "partial",
-      "fetchedAt": "2026-11-19T18:50:52.919Z",
-      "error": "georgetown/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.75&longitude=-105.75&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; georgetown/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39.75&longitude=-105.75&start"
+      "fetchedAt": "2026-11-19T22:39:31.157Z",
+      "error": "hartsel/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39&longitude=-105.75&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; hartsel/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=39&longitude=-105.75&start_date=2001-0"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:50:57.226Z"
+      "fetchedAt": "2026-11-19T22:39:35.152Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:50:57.767Z"
+      "fetchedAt": "2026-11-19T22:39:35.674Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:51:14.787Z"
+      "fetchedAt": "2026-11-19T22:39:35.784Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:51:16.547Z"
+      "fetchedAt": "2026-11-19T22:39:36.937Z"
     },
     {
       "id": "airnow",
       "status": "error",
-      "fetchedAt": "2026-11-19T18:52:43.115Z",
+      "fetchedAt": "2026-11-19T22:40:56.483Z",
       "error": "HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted] {\"WebServiceError\":[{\"Message\":\"This web service has been retired as of October 1, 2026. For more information, see https://docs.airnowapi.org/webservices/retired\"}]}; HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-104.80000000000001&distanc"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:52:50.409Z"
+      "fetchedAt": "2026-11-19T22:41:30.483Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:53:23.256Z"
+      "fetchedAt": "2026-11-19T22:41:44.159Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:53:33.808Z"
+      "fetchedAt": "2026-11-19T22:41:44.804Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:53:52.916Z"
+      "fetchedAt": "2026-11-19T22:42:04.966Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-11-19T18:54:02.308Z"
+      "fetchedAt": "2026-11-19T22:42:14.865Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-11-19T18:54:02.496Z",
+      "fetchedAt": "2026-11-19T22:42:15.086Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:54:03.135Z"
+      "fetchedAt": "2026-11-19T22:42:15.254Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:54:03.316Z"
+      "fetchedAt": "2026-11-19T22:42:15.438Z"
     },
     {
       "id": "burn_restrictions",
-      "status": "ok",
-      "fetchedAt": "2026-11-19T18:54:03.520Z"
+      "status": "partial",
+      "fetchedAt": "2026-11-19T22:42:23.570Z",
+      "error": "HTTP 429 for COEM fire bans page"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:54:03.660Z"
+      "fetchedAt": "2026-11-19T22:42:23.729Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:54:03.902Z"
+      "fetchedAt": "2026-11-19T22:42:24.089Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:54:04.257Z"
+      "fetchedAt": "2026-11-19T22:42:24.194Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-11-19T18:54:33.443Z"
+      "fetchedAt": "2026-11-19T22:42:40.818Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 403,
+  "apiCalls": 402,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
