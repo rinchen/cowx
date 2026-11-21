@@ -1,118 +1,119 @@
 {
-  "generatedAt": "2026-11-20T23:45:43.494Z",
+  "generatedAt": "2026-11-21T01:31:16.409Z",
   "version": "1.2.0",
   "sources": [
     {
       "id": "openmeteo",
-      "status": "ok",
-      "fetchedAt": "2026-11-20T23:07:42.612Z"
+      "status": "partial",
+      "fetchedAt": "2026-11-21T00:46:27.467Z",
+      "error": "nbm thunderstorm: HTTP 429 for https://api.open-meteo.com/v1/gfs?latitude=38.945,38.2544,38.5,38.4519,38.3903,38.4256,38.5347,38.8422,39.2508,39.2247,39.0217,39.4097,39.4589,39.8914,39.945,40.0861,40.1078,40.0589,40.485,40.275&longitude=-105.2894,-104.6091,-104.7236,-105.2425,-105.1186,-105.0228,-105.9989,-106.1311,-106.2925,-105.9989,-105.7958,-105.4733,-105.6592,-105.7631,-105.8172,-105.9394,-106.1028,-106.3889,-106.8317,-106.9583&hourly=thunderstorm_probability&models=ncep_nbm_conus&timezone="
     },
     {
       "id": "openmeteo_aq",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:14:00.121Z"
+      "fetchedAt": "2026-11-21T00:55:52.653Z"
     },
     {
       "id": "openmeteo_climatology",
       "status": "partial",
-      "fetchedAt": "2026-11-20T23:42:47.768Z",
-      "error": "allenspark/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=40.25&longitude=-105.5&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; allenspark/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=40.25&longitude=-105.5&start_d"
+      "fetchedAt": "2026-11-21T01:27:00.165Z",
+      "error": "green-mountain-reservoir/1991-01-01…2000-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=40&longitude=-106.25&start_date=1991-01-01&end_date=2000-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FDenver; green-mountain-reservoir/2001-01-01…2010-12-31: fetch failed (UND_ERR_CONNECT_TIMEOUT) for https://archive-api.open-meteo.com/v1/archive?latitude=40&l"
     },
     {
       "id": "nws",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:42:53.690Z"
+      "fetchedAt": "2026-11-21T01:27:03.945Z"
     },
     {
       "id": "coagmet",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:42:54.111Z"
+      "fetchedAt": "2026-11-21T01:27:04.779Z"
     },
     {
       "id": "aviation",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:42:55.395Z"
+      "fetchedAt": "2026-11-21T01:27:05.238Z"
     },
     {
       "id": "airgradient",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:42:56.793Z"
+      "fetchedAt": "2026-11-21T01:27:06.731Z"
     },
     {
       "id": "airnow",
       "status": "error",
-      "fetchedAt": "2026-11-20T23:44:19.690Z",
+      "fetchedAt": "2026-11-21T01:28:32.656Z",
       "error": "HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-105&distance=50&API_KEY=[redacted] {\"WebServiceError\":[{\"Message\":\"This web service has been retired as of October 1, 2026. For more information, see https://docs.airnowapi.org/webservices/retired\"}]}; HTTP 410 for https://www.airnowapi.org/aq/observation/latLong/current/?format=application%2Fjson&latitude=39.800000000000004&longitude=-104.80000000000001&distanc"
     },
     {
       "id": "usgs",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:44:37.429Z"
+      "fetchedAt": "2026-11-21T01:28:50.666Z"
     },
     {
       "id": "snotel",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:44:52.482Z"
+      "fetchedAt": "2026-11-21T01:29:59.392Z"
     },
     {
       "id": "cdot",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:44:53.127Z"
+      "fetchedAt": "2026-11-21T01:30:00.220Z"
     },
     {
       "id": "cotrip",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:45:11.539Z"
+      "fetchedAt": "2026-11-21T01:30:19.434Z"
     },
     {
       "id": "cwop",
       "status": "partial",
-      "fetchedAt": "2026-11-20T23:45:21.427Z"
+      "fetchedAt": "2026-11-21T01:30:30.092Z"
     },
     {
       "id": "hms",
       "status": "partial",
-      "fetchedAt": "2026-11-20T23:45:21.647Z",
+      "fetchedAt": "2026-11-21T01:30:30.392Z",
       "error": "no HMS polygons near Colorado"
     },
     {
       "id": "spc_firewx",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:45:21.946Z"
+      "fetchedAt": "2026-11-21T01:30:31.131Z"
     },
     {
       "id": "nifc_fires",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:45:22.134Z"
+      "fetchedAt": "2026-11-21T01:30:31.402Z"
     },
     {
       "id": "burn_restrictions",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:45:22.403Z"
+      "fetchedAt": "2026-11-21T01:30:31.756Z"
     },
     {
       "id": "space_weather",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:45:22.596Z"
+      "fetchedAt": "2026-11-21T01:30:32.145Z"
     },
     {
       "id": "colo_smoke_outlook",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:45:22.825Z"
+      "fetchedAt": "2026-11-21T01:30:32.485Z"
     },
     {
       "id": "firms",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:45:23.036Z"
+      "fetchedAt": "2026-11-21T01:30:32.892Z"
     },
     {
       "id": "cbrfc",
       "status": "ok",
-      "fetchedAt": "2026-11-20T23:45:43.494Z"
+      "fetchedAt": "2026-11-21T01:31:16.409Z"
     }
   ],
   "locationCount": 338,
-  "apiCalls": 399,
+  "apiCalls": 400,
   "forecastStaleCount": 0,
   "openmeteoCoverage": 338
 }
